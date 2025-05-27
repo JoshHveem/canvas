@@ -465,7 +465,6 @@
               }
             }
           }`;
-          console.log(query);
 
           const res = await $.post("/api/graphql", { query });
           const conn = res.data.course[connectionField];
