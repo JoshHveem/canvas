@@ -380,67 +380,67 @@
         return yearMatch ? yearMatch[1] : null;
       },
 
-      // async getGraphQLData(course) {
-      //   let query = `{
-      //     course(id: "${course.id}") {
-      //       id
-      //       submissionsConnection(studentIds: "${this.userId}") {
-      //         nodes {
-      //           id
-      //           assignmentId
-      //           assignment {
-      //             name
-      //             published
-      //             pointsPossible
-      //           }
-      //           submittedAt
-      //           grade
-      //           gradedAt
-      //           score
-      //           userId
-      //         }
-      //       }
-      //       name
-      //       assignmentGroupsConnection {
-      //         nodes {
-      //           name
-      //           groupWeight
-      //           state
+      async getGraphQLDataOld(course) {
+        let query = `{
+          course(id: "${course.id}") {
+            id
+            submissionsConnection(studentIds: "${this.userId}") {
+              nodes {
+                id
+                assignmentId
+                assignment {
+                  name
+                  published
+                  pointsPossible
+                }
+                submittedAt
+                grade
+                gradedAt
+                score
+                userId
+              }
+            }
+            name
+            assignmentGroupsConnection {
+              nodes {
+                name
+                groupWeight
+                state
 
-      //           assignmentsConnection {
-      //             nodes {
-      //               _id
-      //               name
-      //               published
-      //               pointsPossible
-      //             }
-      //           }
-      //         }
-      //       }
-      //     }
-      //   }`;
-      //   try {
-      //     let res = await $.post(`/api/graphql`, {
-      //       query: query
-      //     });
-      //     let data = res.data.course;
-      //     return {
-      //       name: data.name,
-      //       assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
-      //         group.assignments = group.assignmentsConnection.nodes;
-      //         return group;
-      //       }),
-      //       submissions: data.submissionsConnection.nodes
-      //     }
-      //   } catch (err) {
-      //     console.error(err);
-      //     return {
-      //       name: course.name,
-      //       assignment_groups: [],
-      //       submissions: []
-      //     }
-      //   }
-      // },
+                assignmentsConnection {
+                  nodes {
+                    _id
+                    name
+                    published
+                    pointsPossible
+                  }
+                }
+              }
+            }
+          }
+        }`;
+        try {
+          let res = await $.post(`/api/graphql`, {
+            query: query
+          });
+          let data = res.data.course;
+          return {
+            name: data.name,
+            assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
+              group.assignments = group.assignmentsConnection.nodes;
+              return group;
+            }),
+            submissions: data.submissionsConnection.nodes
+          }
+        } catch (err) {
+          console.error(err);
+          return {
+            name: course.name,
+            assignment_groups: [],
+            submissions: []
+          }
+        }
+      },
       async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection = '') {
         const pageSize = 50;    // bump up/down as you like
         let allNodes = [];
@@ -541,7 +541,6 @@
       },
 
       async getGraphQLData(course) {
-        console.log(course.id);
         try {
           // 1. Pull groups
           const groupQuery = `{
@@ -573,7 +572,6 @@
             assignment_groups: groups,
             submissions: submissions
           };
-          console.log(data);
           return data;
 
         } catch (err) {
@@ -624,7 +622,11 @@
           this.loadingProgress += (50 / courses.length) * 0.5;
 
           this.loadingMessage = "Loading Assignment Data for Course " + course.id;
+          console.log(course.id);
           let additionalData = await this.getGraphQLData(course);
+          console.log(additionalData);
+          let additionalDataOld = await this.getGraphQLDataOld(course);
+          console.log(additionalDataOld);
           course.additionalData = additionalData;
           course.assignments = additionalData.submissions;
           // await this.getAssignmentData(course);
