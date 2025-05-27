@@ -384,58 +384,165 @@
         return yearMatch ? yearMatch[1] : null;
       },
 
-      async getGraphQLData(course) {
-        let query = `{
+      // async getGraphQLData(course) {
+      //   let query = `{
+      //     course(id: "${course.id}") {
+      //       id
+      //       submissionsConnection(studentIds: "${this.userId}") {
+      //         nodes {
+      //           id
+      //           assignmentId
+      //           assignment {
+      //             name
+      //             published
+      //             pointsPossible
+      //           }
+      //           submittedAt
+      //           grade
+      //           gradedAt
+      //           score
+      //           userId
+      //         }
+      //       }
+      //       name
+      //       assignmentGroupsConnection {
+      //         nodes {
+      //           name
+      //           groupWeight
+      //           state
+
+      //           assignmentsConnection {
+      //             nodes {
+      //               _id
+      //               name
+      //               published
+      //               pointsPossible
+      //             }
+      //           }
+      //         }
+      //       }
+      //     }
+      //   }`;
+      //   try {
+      //     let res = await $.post(`/api/graphql`, {
+      //       query: query
+      //     });
+      //     let data = res.data.course;
+      //     return {
+      //       name: data.name,
+      //       assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
+      //         group.assignments = group.assignmentsConnection.nodes;
+      //         return group;
+      //       }),
+      //       submissions: data.submissionsConnection.nodes
+      //     }
+      //   } catch (err) {
+      //     console.error(err);
+      //     return {
+      //       name: course.name,
+      //       assignment_groups: [],
+      //       submissions: []
+      //     }
+      //   }
+      // },
+      async getAllAssignmentGroupsWithAssignments(course) {
+        // 1️⃣ get all groups (no pagination here if you expect < 20)
+        const groupQuery = `{
           course(id: "${course.id}") {
-            id
-            submissionsConnection(studentIds: "${this.userId}") {
-              nodes {
-                id
-                assignmentId
-                assignment {
-                  name
-                  published
-                  pointsPossible
-                }
-                submittedAt
-                grade
-                gradedAt
-                score
-                userId
-              }
-            }
-            name
             assignmentGroupsConnection {
               nodes {
+                id
                 name
                 groupWeight
                 state
-
-                assignmentsConnection {
-                  nodes {
-                    _id
-                    name
-                    published
-                    pointsPossible
-                  }
-                }
               }
             }
           }
         }`;
+        const groupRes = await $.post("/api/graphql", { query: groupQuery });
+        const groups = groupRes.data.course.assignmentGroupsConnection.nodes
+          .filter(g => g.state === "available");
+
+        // 2️⃣ for each group, page through that group’s assignments
+        for (let group of groups) {
+          const assignments = await fetchAllConnection(
+            course.id,
+            "assignmentGroupsConnection",
+            { /* we need to scope to this one group: */
+              first: 1,
+              // tricky: Relay lets you filter by “ids:[…]” in some schemas,
+              // but Canvas GraphQL doesn’t let you pass a groupId directly into assignmentGroupsConnection
+              // So instead you page assignmentGroupsConnection? Let’s instead do a second query:
+            },
+            // actually it’s simpler to do a standalone assignmentsConnection on Course:
+          );
+        }
+      },
+
+      async getAllAssignmentsByGroup(course) {
+        // Pull every assignment in the course
+        const assignments = await fetchAllConnection(
+          course.id,
+          "assignmentsConnection",
+          {},                             // no args
+          `(nodes { _id name published pointsPossible assignmentGroupId } )`
+        );
+
+        // Group in JS:
+        const byGroup = assignments.reduce((map, a) => {
+          const gid = a.assignmentGroupId || "__ungrouped";
+          if (!map[gid]) map[gid] = [];
+          map[gid].push(a);
+          return map;
+        }, {});
+
+        return byGroup;  // { groupId1: […], groupId2: […], … }
+      },
+      async getAllSubmissions(course) {
+        return fetchAllConnection(
+          course.id,
+          "submissionsConnection",
+          { studentIds: this.userId },
+          `(nodes {
+            id assignmentId submittedAt grade gradedAt score userId
+            assignment { name published pointsPossible }
+          })`
+        );
+      },
+
+      async getGraphQLData(course) {
         try {
-          let res = await $.post(`/api/graphql`, {
-            query: query
+          // 1. Pull groups
+          const groupQuery = `{
+            course(id: "${course.id}") {
+              assignmentGroupsConnection {
+                nodes {
+                  id name groupWeight state
+                }
+              }
+            }
+          }`;
+          const groupRes = await $.post("/api/graphql", { query: groupQuery });
+          const groups = groupRes.data.course.assignmentGroupsConnection.nodes
+            .filter(g => g.state === "available");
+
+          // 2. Pull all assignments in the course, then bucket by group
+          const assignmentsByGroup = await this.getAllAssignmentsByGroup(course);
+
+          // 3. Pull all submissions for this user
+          const submissions = await this.getAllSubmissions.call(this, course);
+
+          // 4. Attach assignments to each group object
+          groups.forEach(g => {
+            g.assignments = assignmentsByGroup[g.id] || [];
           });
-          let data = res.data.course;
+
           return {
-            name: data.name,
-            assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
-              group.assignments = group.assignmentsConnection.nodes;
-              return group;
-            }),
-            submissions: data.submissionsConnection.nodes
-          }
+            name: course.name,
+            assignment_groups: groups,
+            submissions: submissions
+          };
+
         } catch (err) {
           console.error(err);
           return {
@@ -445,6 +552,7 @@
           }
         }
       },
+
       async getCourseData() {
         let courses = [];
         let coursesActive = await canvasGet(`/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term&enrollment_state=active&state[]=available&state[]=completed`)
