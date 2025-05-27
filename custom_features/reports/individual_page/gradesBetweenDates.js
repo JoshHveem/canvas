@@ -235,7 +235,8 @@
 
       for (let i = 0; i < this.courses.length; i++) {
         const course = this.courses[i];
-        console.log(course)
+        console.log(course.id);
+        console.log(course);
         
         // Update progress and message
         this.loadingMessage = `Loading Submissions for Course ${course.course_id}`;
@@ -250,6 +251,7 @@
           //push each submission in the submissions array
           submissions.push(...course.additionalData.submissions);
         }
+        console.log(this.submissionData[course.id]);
 
         // Update assignment group data
         this.loadingMessage = `Loading Assignment Groups for Course ${course.id}`;
