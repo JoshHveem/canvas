@@ -242,7 +242,11 @@
 
         // Collect submission data
         if (course.additionalData?.submissions) {
+          // pop the course id onto each submission
+          course.additionalData.submissions.map(sub => sub.course_id = course.id);
+          // set up course level submissions data
           this.submissionData[course.id] = course.additionalData.submissions;
+          //push each submission in the submissions array
           submissions.push(...course.additionalData.submissions);
         }
 
