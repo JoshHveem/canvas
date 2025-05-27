@@ -235,6 +235,7 @@
 
       for (let i = 0; i < this.courses.length; i++) {
         const course = this.courses[i];
+        console.log(course)
         
         // Update progress and message
         this.loadingMessage = `Loading Submissions for Course ${course.course_id}`;
