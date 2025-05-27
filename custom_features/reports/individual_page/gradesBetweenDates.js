@@ -445,6 +445,41 @@
       //     }
       //   }
       // },
+      async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection) {
+        const pageSize = 50;    // bump up/down as you like
+        let allNodes = [];
+        let hasNext = true;
+        let after = null;
+
+        while (hasNext) {
+          // Build the GraphQL query
+          const argsStr = Object.entries({ ...args, first: pageSize, after })
+            .map(([k,v]) => `${k}: ${JSON.stringify(v)}`)
+            .join(", ");
+
+          const query = `{
+            course(id: "${courseId}") {
+              ${connectionField}(${argsStr}) {
+                nodes ${nodeSelection}
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          }`;
+
+          const res = await $.post("/api/graphql", { query });
+          const conn = res.data.course[connectionField];
+
+          allNodes.push(...conn.nodes);
+          hasNext = conn.pageInfo.hasNextPage;
+          after   = conn.pageInfo.endCursor;
+        }
+
+        return allNodes;
+      },
+
       async getAllAssignmentGroupsWithAssignments(course) {
         // 1️⃣ get all groups (no pagination here if you expect < 20)
         const groupQuery = `{
@@ -465,7 +500,7 @@
 
         // 2️⃣ for each group, page through that group’s assignments
         for (let group of groups) {
-          const assignments = await fetchAllConnection(
+          const assignments = await this.fetchAllConnection(
             course.id,
             "assignmentGroupsConnection",
             { /* we need to scope to this one group: */
@@ -481,7 +516,7 @@
 
       async getAllAssignmentsByGroup(course) {
         // Pull every assignment in the course
-        const assignments = await fetchAllConnection(
+        const assignments = await this.fetchAllConnection(
           course.id,
           "assignmentsConnection",
           {},                             // no args
@@ -499,7 +534,7 @@
         return byGroup;  // { groupId1: […], groupId2: […], … }
       },
       async getAllSubmissions(course) {
-        return fetchAllConnection(
+        return this.fetchAllConnection(
           course.id,
           "submissionsConnection",
           { studentIds: this.userId },
