@@ -235,8 +235,6 @@
 
       for (let i = 0; i < this.courses.length; i++) {
         const course = this.courses[i];
-        console.log(course.id);
-        console.log(course);
         
         // Update progress and message
         this.loadingMessage = `Loading Submissions for Course ${course.course_id}`;
@@ -251,7 +249,6 @@
           //push each submission in the submissions array
           submissions.push(...course.additionalData.submissions);
         }
-        console.log(this.submissionData[course.id]);
 
         // Update assignment group data
         this.loadingMessage = `Loading Assignment Groups for Course ${course.id}`;
@@ -288,7 +285,6 @@
           const submittedDate = submission.submittedAt;
           return submittedDate >= startDate && submittedDate <= endDate;
         });
-        console.log(submissions);
         
         const submissionsGrouped = d3.rollup(
           submissions,
@@ -546,6 +542,7 @@
       },
 
       async getGraphQLData(course) {
+        console.log(course.id);
         try {
           // 1. Pull groups
           const groupQuery = `{
@@ -557,16 +554,18 @@
               }
             }
           }`;
-          console.log(groupQuery)
           const groupRes = await $.post("/api/graphql", { query: groupQuery });
+          console.log(groupRes);
           const groups = groupRes.data.course.assignmentGroupsConnection.nodes
             .filter(g => g.state === "available");
 
           // 2. Pull all assignments in the course, then bucket by group
           const assignmentsByGroup = await this.getAllAssignmentsByGroup(course);
+          console.log(assignmentsByGroup);
 
           // 3. Pull all submissions for this user
           const submissions = await this.getAllSubmissions.call(this, course);
+          console.log(submissions);
 
           // 4. Attach assignments to each group object
           groups.forEach(g => {
