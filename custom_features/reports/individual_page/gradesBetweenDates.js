@@ -517,6 +517,7 @@
           {},                             // no args
           `nodes { _id name published pointsPossible assignmentGroupId }`
         );
+        console.log(assignments);
 
         // Group in JS:
         const byGroup = assignments.reduce((map, a) => {
@@ -547,7 +548,7 @@
             course(id: "${course.id}") {
               assignmentGroupsConnection {
                 nodes {
-                  id name groupWeight state
+                  _id name groupWeight state
                 }
               }
             }
@@ -564,7 +565,7 @@
 
           // 4. Attach assignments to each group object
           groups.forEach(g => {
-            g.assignments = assignmentsByGroup[g.id] || [];
+            g.assignments = assignmentsByGroup[g._id] || [];
           });
 
           data = {
@@ -625,8 +626,8 @@
           console.log(course.id);
           let additionalData = await this.getGraphQLData(course);
           console.log(additionalData);
-          let additionalDataOld = await this.getGraphQLDataOld(course);
-          console.log(additionalDataOld);
+          // let additionalDataOld = await this.getGraphQLDataOld(course);
+          // console.log(additionalDataOld);
           course.additionalData = additionalData;
           course.assignments = additionalData.submissions;
           // await this.getAssignmentData(course);
