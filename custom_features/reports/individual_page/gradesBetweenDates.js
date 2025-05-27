@@ -441,7 +441,7 @@
       //     }
       //   }
       // },
-      async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection) {
+      async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection = '') {
         const pageSize = 50;    // bump up/down as you like
         let allNodes = [];
         let hasNext = true;
@@ -457,7 +457,7 @@
           const query = `{
             course(id: "${courseId}") {
               ${connectionField}(${argsStr}) {
-                ${nodeSelection[0]}
+                ${nodeSelection}
                 pageInfo {
                   hasNextPage
                   endCursor
@@ -518,7 +518,7 @@
           course.id,
           "assignmentsConnection",
           {},                             // no args
-          `(nodes { _id name published pointsPossible assignmentGroupId } )`
+          `nodes { _id name published pointsPossible assignmentGroupId }`
         );
 
         // Group in JS:
@@ -536,10 +536,10 @@
           course.id,
           "submissionsConnection",
           { studentIds: this.userId },
-          `(nodes {
+          `nodes {
             id assignmentId submittedAt grade gradedAt score userId
             assignment { name published pointsPossible }
-          })`
+          }`
         );
       },
 
