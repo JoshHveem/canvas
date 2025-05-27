@@ -446,8 +446,6 @@
         let allNodes = [];
         let hasNext = true;
         let after = null;
-        console.log(nodeSelection)
-
         while (hasNext) {
           // Build the GraphQL query
           const argsStr = Object.entries({ ...args, first: pageSize, after })
