@@ -554,28 +554,27 @@
             }
           }`;
           const groupRes = await $.post("/api/graphql", { query: groupQuery });
-          console.log(groupRes);
           const groups = groupRes.data.course.assignmentGroupsConnection.nodes
             .filter(g => g.state === "available");
 
           // 2. Pull all assignments in the course, then bucket by group
           const assignmentsByGroup = await this.getAllAssignmentsByGroup(course);
-          console.log(assignmentsByGroup);
 
           // 3. Pull all submissions for this user
           const submissions = await this.getAllSubmissions.call(this, course);
-          console.log(submissions);
 
           // 4. Attach assignments to each group object
           groups.forEach(g => {
             g.assignments = assignmentsByGroup[g.id] || [];
           });
 
-          return {
+          data = {
             name: course.name,
             assignment_groups: groups,
             submissions: submissions
           };
+          console.log(data);
+          return data;
 
         } catch (err) {
           console.error(err);
