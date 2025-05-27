@@ -557,6 +557,7 @@
               }
             }
           }`;
+          console.log(groupQuery)
           const groupRes = await $.post("/api/graphql", { query: groupQuery });
           const groups = groupRes.data.course.assignmentGroupsConnection.nodes
             .filter(g => g.state === "available");
@@ -580,7 +581,6 @@
 
         } catch (err) {
           console.error(err);
-          console.log(groupQuery)
           return {
             name: course.name,
             assignment_groups: [],
