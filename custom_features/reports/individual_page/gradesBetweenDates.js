@@ -580,6 +580,7 @@
 
         } catch (err) {
           console.error(err);
+          console.log(groupQuery)
           return {
             name: course.name,
             assignment_groups: [],
