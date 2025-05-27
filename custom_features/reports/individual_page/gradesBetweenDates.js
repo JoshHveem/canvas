@@ -281,6 +281,7 @@
           const submittedDate = submission.submittedAt;
           return submittedDate >= startDate && submittedDate <= endDate;
         });
+        console.log(submissions);
         
         const submissionsGrouped = d3.rollup(
           submissions,
