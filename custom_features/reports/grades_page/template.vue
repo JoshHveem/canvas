@@ -77,7 +77,7 @@
               style="
                 padding: .25rem .5rem;
                 display: grid;
-                grid-template-columns: 20% 20% 4.5rem 4.5rem 10rem 7rem 5rem;
+                grid-template-columns: 20% 20% 4.5rem 4.5rem 10rem 7rem 5rem 5rem;
                 align-items: center;
                 font-size: 0.75rem;
               "
