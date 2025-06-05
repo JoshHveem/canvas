@@ -266,7 +266,7 @@
           student.in_course = diff_days;
           student.to_date = current_score;
           student.final = final_score;
-          student.days_to_end = enrollment.end_date ? diff_days_end : null;
+          student.days_to_end = enrollment.end_at ? diff_days_end : null;
           console.log(student);
 
           //there might need to be a check to see if this is a numbe
