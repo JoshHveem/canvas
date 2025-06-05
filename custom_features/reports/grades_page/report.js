@@ -196,6 +196,7 @@
 
           await $.get(url, function (data) {
             app.studentData = data;
+            console.log(data);
           });
         },
         async getSectionData() {

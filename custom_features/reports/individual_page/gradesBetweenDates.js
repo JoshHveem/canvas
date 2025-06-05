@@ -475,40 +475,6 @@
         return allNodes;
       },
 
-      async getAllAssignmentGroupsWithAssignments(course) {
-        // 1️⃣ get all groups (no pagination here if you expect < 20)
-        const groupQuery = `{
-          course(id: "${course.id}") {
-            assignmentGroupsConnection {
-              nodes {
-                id
-                name
-                groupWeight
-                state
-              }
-            }
-          }
-        }`;
-        const groupRes = await $.post("/api/graphql", { query: groupQuery });
-        const groups = groupRes.data.course.assignmentGroupsConnection.nodes
-          .filter(g => g.state === "available");
-
-        // 2️⃣ for each group, page through that group’s assignments
-        for (let group of groups) {
-          const assignments = await this.fetchAllConnection(
-            course.id,
-            "assignmentGroupsConnection",
-            { /* we need to scope to this one group: */
-              first: 1,
-              // tricky: Relay lets you filter by “ids:[…]” in some schemas,
-              // but Canvas GraphQL doesn’t let you pass a groupId directly into assignmentGroupsConnection
-              // So instead you page assignmentGroupsConnection? Let’s instead do a second query:
-            },
-            // actually it’s simpler to do a standalone assignmentsConnection on Course:
-          );
-        }
-      },
-
       async getAllAssignmentsByGroup(course) {
         // Pull every assignment in the course
         const assignments = await this.fetchAllConnection(
