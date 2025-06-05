@@ -205,6 +205,7 @@
           let url = "/api/v1/courses/" + app.courseId + "/sections?per_page=100&include[]=students";
           await $.get(url, function (data) {
             app.sections = data;
+            console.log(data);
           });
         },
         getStudentSection(studentId) {
