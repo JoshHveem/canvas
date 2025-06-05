@@ -58,7 +58,8 @@
             new Column('Final', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', 3, true, 'number'),
             new Column('Progress Estimate', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', 12, true, 'number'),
             new Column('Last Submit', 'The number of days since the student\'s last submission.', 3, true, 'number'),
-            new Column('In Course', 'The number of days since the student began the course.', true, 3, 'number')
+            new Column('In Course', 'The number of days since the student began the course.', true, 3, 'number'),
+            new Column('Days Remaining', 'The number of days until the student will be removed from the course.', true, 3, 'number')
             // new Column('Ungraded', '', true, 3, 'number')
           ],
           sections: [],
@@ -178,6 +179,7 @@
           student.final = "N/A";
           student.ungraded = 0;
           student.submissions = 0;
+          student.days_to_end = 0;
           //this will probably be deleted, but keeping for reference on how to format in vue
           student.nameHTML = "<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/users/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/grades/" + id + "'>grades</a>)";
           return student;
@@ -196,7 +198,6 @@
 
           await $.get(url, function (data) {
             app.studentData = data;
-            console.log(data);
           });
         },
         async getSectionData() {
@@ -247,9 +248,12 @@
 
         processEnrollment(student, enrollment) {
           let start_date = Date.parse(enrollment.created_at);
+          let end_date = Date.parse(enrollment.end_date);
           let now_date = Date.now();
           let diff_time = Math.abs(now_date - start_date);
           let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+          let diff_time_end = Math.abs(end_date - start_date);
+          let diff_days_end = Math.ceil(diff_time_end / (1000 * 60 * 60 * 24));
           let grades = enrollment.grades;
           let current_score = grades.current_score;
           if (current_score === null) current_score = 0;
@@ -260,6 +264,7 @@
           student.in_course = diff_days;
           student.to_date = current_score;
           student.final = final_score;
+          student.days_to_end = diff_days_end;
 
           //there might need to be a check to see if this is a numbe
           if (student.to_date > 0 && student.to_date != null) {

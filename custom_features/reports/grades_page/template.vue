@@ -148,6 +148,11 @@
               >
                 {{student.in_course}} days
               </div>
+              <div 
+                style="display: inline-block;"
+              >
+                {{student.days_to_end}} days
+              </div>
             </div>
           </div>
         </div>
