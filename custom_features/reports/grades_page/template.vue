@@ -151,8 +151,17 @@
               <div 
                 style="display: inline-block;"
               >
-                <span v-if="student.days_to_end">{{student.days_to_end}} days</span>
-                <span v-else>n/a</span>
+                <span 
+                  class="btech-pill-text" 
+                  v-if="student.days_to_end"
+                  :style="{
+                    'background-color': (student.days_to_end < 3) ? colors.red : (student.days_to_end < 7 ? colors.yellow : colors.green),
+                    'color': colors.white,
+                  }"
+                >{{student.days_to_end}} days</span>
+                <span 
+                  v-else
+                >n/a</span>
               </div>
             </div>
           </div>
