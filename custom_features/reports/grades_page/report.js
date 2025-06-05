@@ -265,6 +265,7 @@
           student.to_date = current_score;
           student.final = final_score;
           student.days_to_end = diff_days_end;
+          console.log(student);
 
           //there might need to be a check to see if this is a numbe
           if (student.to_date > 0 && student.to_date != null) {
