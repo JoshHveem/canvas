@@ -151,7 +151,8 @@
               <div 
                 style="display: inline-block;"
               >
-                {{student.days_to_end}} days
+                <span v-if="student.days_to_end">{{student.days_to_end}} days</span>
+                <span v-else>n/a</span>
               </div>
             </div>
           </div>
