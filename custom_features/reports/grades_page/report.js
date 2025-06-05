@@ -250,7 +250,7 @@
         processEnrollment(student, enrollment) {
           let start_date = Date.parse(enrollment.created_at);
           let end_date = Date.parse(enrollment.end_at);
-          console.log()
+          console.log(end_date);
           let now_date = Date.now();
           let diff_time = Math.abs(now_date - start_date);
           let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
