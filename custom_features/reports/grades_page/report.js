@@ -88,7 +88,7 @@
         // does not currently handle pagination
         async loadEnrollments(courseId) {
           let queryString = `
-          query MyQuery {
+          {
             course(${courseId}){
               enrollmentsConnection(filter: {states: active, types: StudentEnrollment, firts: 100}) {
                 nodes {
