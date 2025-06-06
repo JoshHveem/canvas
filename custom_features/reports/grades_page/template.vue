@@ -28,7 +28,7 @@
             style="
               padding: .25rem .5rem;
               display: grid;
-              grid-template-columns: auto 10rem 4.5rem 4.5rem 10rem 7rem 5rem 5rem;
+              grid-template-columns: auto 10rem 4.5rem 4.5rem 10rem 3.5rem 3.5rem 3.5rem;
               align-items: center;
               font-size: 0.75rem;
               cursor: help;
@@ -77,7 +77,7 @@
               style="
                 padding: .25rem .5rem;
                 display: grid;
-                grid-template-columns: auto 10rem 4.5rem 4.5rem 10rem 7rem 5rem 5rem;
+                grid-template-columns: auto 10rem 4.5rem 4.5rem 10rem 3.5rem 3.5rem 3.5rem;
                 align-items: center;
                 font-size: 0.75rem;
               "
@@ -140,13 +140,13 @@
                     'background-color': (student.last_submit >= 10) ? colors.red : (student.last_submit >= 7 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }">
-                  {{student.last_submit}} days
+                  {{student.last_submit}}
                 </span>
               </div>
               <div 
                 style="display: inline-block;"
               >
-                {{student.in_course}} days
+                {{student.in_course}}
               </div>
               <div 
                 style="display: inline-block;"
@@ -158,7 +158,7 @@
                     'background-color': (student.days_remaining < 3) ? colors.red : (student.days_remaining < 7 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }"
-                >{{student.days_remaining}} days</span>
+                >{{student.days_remaining}}</span>
                 <span 
                   v-else
                 >n/a</span>
