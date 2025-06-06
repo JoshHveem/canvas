@@ -67,9 +67,6 @@
             // new Column('Ungraded', '', true, 3, 'number')
           ],
           enrollments: [],
-          sections: [],
-          courseEnrollments: {},
-          studentsData: {},
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
           progress_method: "points_weighted",
@@ -126,6 +123,7 @@
           console.log(queryString);
           let res = await $.post("/api/graphql", { query: queryString });
           let courseData = res.data.course;
+          console.log(courseData);
           let enrollments = courseData.enrollmentsConnnection.nodes;
           let submissions = courseData.submissionsConnnection.nodes;
           for (let e = 0; e < enrollments.length; e++) {
