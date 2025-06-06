@@ -89,7 +89,7 @@
         async loadEnrollments(courseId) {
           let queryString = `
           {
-            course(${courseId}){
+            course(id: "${courseId}"){
               enrollmentsConnection(filter: {states: active, types: StudentEnrollment, firts: 100}) {
                 nodes {
                   _id
