@@ -55,7 +55,6 @@
         return {
           courseId: null,
           colors: bridgetools.colors,
-          students: [],
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 10, false, 'string'),
             new Column('Course Name', 'The course in which the student is enrolled.', 10, false, 'string'),
@@ -185,7 +184,7 @@
               sortType = this.columns[c].sort_type;
             }
           }
-          this.students.sort(function (a, b) {
+          this.enrollments.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
             //convert strings to upper case to ignore case when sorting
