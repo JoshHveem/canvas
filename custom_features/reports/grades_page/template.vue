@@ -168,8 +168,8 @@
             </div>
           </div>
         </div>
-        {{ enrollments }}
       </div>
+        {{ enrollments }}
     </div>
   </div>
 </template>
