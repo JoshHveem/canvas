@@ -23,6 +23,7 @@ var ISDIDS= [
   2188338, // Lindsey 
   2200750, // Lara 
   1575318, // Hannah
+  2210696, // Logan
 ];
 
 function getCSSVar(cssvar) {
