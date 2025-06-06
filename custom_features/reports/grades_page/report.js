@@ -127,10 +127,10 @@
           let res = await $.post("/api/graphql", { query: queryString });
           let courseData = res.data.course;
           console.log(courseData);
-          let enrollments = courseData.enrollmentsConnection.nodes;
-          let submissions = courseData.submissionsConnection.nodes;
-          for (let e = 0; e < enrollments.length; e++) {
-            let enrollmentData = enrollments[e];
+          let enrollmentsData = courseData.enrollmentsConnection.nodes;
+          let submissionsData = courseData.submissionsConnection.nodes;
+          for (let e = 0; e < enrollmentsData.length; e++) {
+            let enrollmentData = enrollmentsData[e];
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
