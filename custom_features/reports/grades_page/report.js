@@ -40,6 +40,7 @@
         let courseId = ENV.current_context.id;
         console.log(courseId);
         let course = (await canvasGet(`/api/v1/courses/${courseId}`))[0];
+        console.log(course);
 
         await this.createGradesReport(course.id);
         await this.processStudentsData(course);
