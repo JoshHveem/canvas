@@ -131,7 +131,7 @@
                 style="display: inline-block"
               >
                 <course-progress-bar-ind
-                  :progress="student.progress"
+                  :progress="student.progress * 100"
                   :barwidth="9"
                   :colors="colors"
                 ></course-progress-bar-ind>
