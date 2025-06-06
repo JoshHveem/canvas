@@ -96,6 +96,11 @@
               <div 
                 style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
               >
+                {{student.course_name}}
+              </div>
+              <div 
+                style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+              >
                 {{student.section_name}}
               </div>
               <div 
