@@ -109,7 +109,7 @@
               }
               courseCode
               name
-               submissionsConnection(filter: {states: submitted}) {
+               submissionsConnection(filter: {states: [submitted, ungraded]}) {
                 nodes {
                   enrollmentsConnection {
                     nodes {
@@ -148,6 +148,14 @@
             };
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
+          }
+          for (let s = 0; s < submissionsData.length; s++) {
+            let submissionData = submissionsData[s];
+            for (let e = 0; e < enrollments.length; e++) {
+              if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
+                enrollments[e].ungraded_submissions += 1;
+              }
+            }
           }
           return enrollments;
         },
