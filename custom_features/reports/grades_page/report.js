@@ -38,15 +38,14 @@
       mounted: async function () {
         // let courseId = ENV.context_asset_string.replace("course_", "");
         let courseId = ENV.current_context.id;
-        console.log(courseId);
         let course = (await canvasGet(`/api/v1/courses/${courseId}`))[0];
         console.log(course);
-
-        await this.createGradesReport(course.id);
-        await this.processStudentsData(course);
-        this.updateStudents();
-        await this.processStudentsAssignmentData();
-        this.updateStudents();
+        await this.loadEnrollments(course.id);
+        // await this.createGradesReport(course.id);
+        // await this.processStudentsData(course);
+        // this.updateStudents();
+        // await this.processStudentsAssignmentData();
+        // this.updateStudents();
         this.loading = false;
       },
 
@@ -67,6 +66,7 @@
             new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
             // new Column('Ungraded', '', true, 3, 'number')
           ],
+          enrollments: [],
           sections: [],
           courseEnrollments: {},
           studentsData: {},
@@ -85,51 +85,88 @@
         }
       },
       methods: {
-        updateStudents() {
-          let students = [];
-          for (s in this.studentsData) {
-            let student = this.studentsData[s];
-            students.push(student);
-          }
-          this.students = students;
-        },
-        async processStudentsData(course) {
-          let enrollments = this.courseEnrollments[course.id];
-          for (let s = 0; s < enrollments.length; s++) {
-            let enrollmentData = enrollments[s];
-            let userId = studentData.id;
-            let enrollment = null;
+        // does not currently handle pagination
+        async loadEnrollments(courseId) {
+          let queryString = `
+          query MyQuery {
+            course(${courseId}){
+              enrollmentsConnection(filter: {states: active, types: StudentEnrollment, firts: 100}) {
+                nodes {
+                  _id
+                  createdAt
+                  grades {
+                    currentScore
+                    finalScore
+                  }
+                  user {
+                    name
+                    _id
+                  }
 
-            for (let e = 0; e < enrollmentData.enrollments.length; e++) {
-              if (studentData.enrollments[e].type === "StudentEnrollment") {
-                enrollment = studentData.enrollments[e];
+                  section {
+                    name
+                  }
+                }
               }
-            }
-            if (enrollment !== null) {
-              this.studentsData[enrollment.id] = this.newStudent(userId, studentData.sortable_name, course.id, this);
-              this.processEnrollment(this.studentsData[enrollment.id], enrollment);
-              this.studentsData[enrollment.id].section = this.getStudentSection(userId);
+              courseCode
+              name
+              submissionsConnection(filter: {states: submitted}) {
+                edges {
+                  node {
+                    id
+                  }
+                }
+              }
+              _id
             }
           }
+          `
+          const res = await $.post("/api/graphql", { queryString });
         },
-        async processStudentsAssignmentData() {
-          for (let s = 0; s < this.studentData.length; s++) {
-            let studentData = this.studentData[s];
-            let userId = studentData.id;
-            let enrollment = null;
+        // updateStudents() {
+        //   let students = [];
+        //   for (s in this.studentsData) {
+        //     let student = this.studentsData[s];
+        //     students.push(student);
+        //   }
+        //   this.students = students;
+        // },
+        // async processStudentsData(course) {
+        //   let enrollments = this.courseEnrollments[course.id];
+        //   for (let s = 0; s < enrollments.length; s++) {
+        //     let enrollmentData = enrollments[s];
+        //     let userId = studentData.id;
+        //     let enrollment = null;
 
-            for (let e = 0; e < studentData.enrollments.length; e++) {
-              if (studentData.enrollments[e].type === "StudentEnrollment") {
-                enrollment = studentData.enrollments[e];
-              }
-            }
-            if (enrollment !== null) {
-              await this.getAssignmentData(this.studentsData[enrollment.id], enrollment);
-            }
-          }
-        },
+        //     for (let e = 0; e < enrollmentData.enrollments.length; e++) {
+        //       if (studentData.enrollments[e].type === "StudentEnrollment") {
+        //         enrollment = studentData.enrollments[e];
+        //       }
+        //     }
+        //     if (enrollment !== null) {
+        //       this.studentsData[enrollment.id] = this.newStudent(userId, enrollment.id, studentData.sortable_name, course.id, this);
+        //       this.processEnrollment(this.studentsData[enrollment.id], enrollment);
+        //       this.studentsData[enrollment.id].section = this.getStudentSection(userId, enrollmentId);
+        //     }
+        //   }
+        // },
+        // async processStudentsAssignmentData() {
+        //   for (let s = 0; s < this.studentData.length; s++) {
+        //     let studentData = this.studentData[s];
+        //     let userId = studentData.id;
+        //     let enrollment = null;
+
+        //     for (let e = 0; e < studentData.enrollments.length; e++) {
+        //       if (studentData.enrollments[e].type === "StudentEnrollment") {
+        //         enrollment = studentData.enrollments[e];
+        //       }
+        //     }
+        //     if (enrollment !== null) {
+        //       await this.getAssignmentData(this.studentsData[enrollment.id], enrollment);
+        //     }
+        //   }
+        // },
         sortColumn(header) {
-          console.log(header);
           let name;
           if (header === "Progress Estimate") name = this.columnNameToCode(this.progress_method);
           else name = this.columnNameToCode(header);
@@ -169,173 +206,174 @@
             return comp
           })
         },
-        newStudent(id, name, course_id, course_name) {
-          let student = {};
-          student.user_id = id;
-          student.name = name;
-          student.course = course_name;
-          student.course_id = course_id;
-          student.in_course = 0;
-          student.last_submit = undefined;
-          student.section = "";
-          student.to_date = "N/A";
-          student.points_weighted = 0;
-          student.points_raw = 0;
-          student.final = "N/A";
-          student.ungraded = 0;
-          student.submissions = 0;
-          student.days_remaining = 0;
-          //this will probably be deleted, but keeping for reference on how to format in vue
-          student.nameHTML = "<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/users/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/grades/" + id + "'>grades</a>)";
-          return student;
-        },
-        async createGradesReport(courseId) {
-          let app = this;
-          await app.getSectionData(courseId);
-          let url = "/api/v1/courses/" + courseId + "/users?enrollment_state%5B%5D=active";
-          url += "&enrollment_state%5B%5D=invited"
-          url += "&enrollment_type%5B%5D=student"
-          url += "&enrollment_type%5B%5D=student_view";
-          url += "&include%5B%5D=avatar_url";
-          url += "&include%5B%5D=group_ids";
-          url += "&include%5B%5D=enrollments";
-          url += "&per_page=100";
+        // newStudent(id, name, course_id, course_name) {
+        //   let student = {};
+        //   student.user_id = id;
+        //   student.enrollment_id = enrollmentId;
+        //   student.name = name;
+        //   student.course = course_name;
+        //   student.course_id = course_id;
+        //   student.in_course = 0;
+        //   student.last_submit = undefined;
+        //   student.section = "";
+        //   student.to_date = "N/A";
+        //   student.points_weighted = 0;
+        //   student.points_raw = 0;
+        //   student.final = "N/A";
+        //   student.ungraded = 0;
+        //   student.submissions = 0;
+        //   student.days_remaining = 0;
+        //   //this will probably be deleted, but keeping for reference on how to format in vue
+        //   student.nameHTML = "<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/users/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/grades/" + id + "'>grades</a>)";
+        //   return student;
+        // },
+        // async createGradesReport(courseId) {
+        //   let app = this;
+        //   await app.getSectionData(courseId);
+        //   let url = "/api/v1/courses/" + courseId + "/users?enrollment_state%5B%5D=active";
+        //   url += "&enrollment_state%5B%5D=invited"
+        //   url += "&enrollment_type%5B%5D=student"
+        //   url += "&enrollment_type%5B%5D=student_view";
+        //   url += "&include%5B%5D=avatar_url";
+        //   url += "&include%5B%5D=group_ids";
+        //   url += "&include%5B%5D=enrollments";
+        //   url += "&per_page=100";
 
-          await $.get(url, function (data) {
-            app.courseEnrollments[courseId] = data;
-          });
-        },
-        async getSectionData(courseId) {
-          let app = this;
-          let url = "/api/v1/courses/" + courseId + "/sections?per_page=100&include[]=students";
-          await $.get(url, function (data) {
-            app.sections = data;
-          });
-        },
-        getStudentSection(studentId) {
-          let app = this;
-          if (app.sections.length > 0) {
-            for (let i = 0; i < app.sections.length; i++) {
-              let section = app.sections[i];
-              let studentsData = section.students;
-              if(app.section_names.includes(section.name) == false) {
-                app.section_names.push(section.name);
-              }
-              if (studentsData !== null) {
-                if (studentsData.length > 0) {
-                  for (let j = 0; j < studentsData.length; j++) {
-                    let studentData = studentsData[j];
-                    if (parseInt(studentId) === studentData.id) {
-                      return section.name;
-                    }
-                  }
-                }
-              }
-            }
-          }
-          return '';
-        },
+        //   await $.get(url, function (data) {
+        //     app.courseEnrollments[courseId] = data;
+        //   });
+        // },
+        // async getSectionData(courseId) {
+        //   let app = this;
+        //   let url = "/api/v1/courses/" + courseId + "/sections?per_page=100&include[]=students";
+        //   await $.get(url, function (data) {
+        //     app.sections = data;
+        //   });
+        // },
+        // getStudentSection(studentId) {
+        //   let app = this;
+        //   if (app.sections.length > 0) {
+        //     for (let i = 0; i < app.sections.length; i++) {
+        //       let section = app.sections[i];
+        //       let studentsData = section.students;
+        //       if(app.section_names.includes(section.name) == false) {
+        //         app.section_names.push(section.name);
+        //       }
+        //       if (studentsData !== null) {
+        //         if (studentsData.length > 0) {
+        //           for (let j = 0; j < studentsData.length; j++) {
+        //             let studentData = studentsData[j];
+        //             if (parseInt(studentId) === studentData.id) {
+        //               return section.name;
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }
+        //   return '';
+        // },
 
-        checkStudentInSection(studentData, section) {
-          let app = this;
-          for (let s = 0; s < app.students.length; s++) {
-            let student = app.students[s];
-            let user_id = parseInt(student.user_id);
-            if (studentData.id === user_id) {
-              student.section = section.name;
-              return;
-            }
-          }
-        },
+        // checkStudentInSection(studentData, section) {
+        //   let app = this;
+        //   for (let s = 0; s < app.students.length; s++) {
+        //     let student = app.students[s];
+        //     let user_id = parseInt(student.user_id);
+        //     if (studentData.id === user_id) {
+        //       student.section = section.name;
+        //       return;
+        //     }
+        //   }
+        // },
         columnNameToCode(name) {
           return name.toLowerCase().replace(/ /g, "_");
         },
 
-        processEnrollment(student, enrollment) {
-          let start_date = Date.parse(enrollment.created_at);
-          let end_date = Date.parse(enrollment.end_at);
-          let now_date = Date.now();
-          let diff_time = Math.abs(now_date - start_date);
-          let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
-          let diff_time_end = Math.abs(end_date - start_date);
-          let diff_days_end = Math.ceil(diff_time_end / (1000 * 60 * 60 * 24));
-          let grades = enrollment.grades;
-          let current_score = grades.current_score;
-          if (current_score === null) current_score = 0;
-          let final_score = grades.final_score;
-          if (final_score === null) final_score = 0;
+  //       processEnrollment(student, enrollment) {
+  //         let start_date = Date.parse(enrollment.created_at);
+  //         let end_date = Date.parse(enrollment.end_at);
+  //         let now_date = Date.now();
+  //         let diff_time = Math.abs(now_date - start_date);
+  //         let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+  //         let diff_time_end = Math.abs(end_date - start_date);
+  //         let diff_days_end = Math.ceil(diff_time_end / (1000 * 60 * 60 * 24));
+  //         let grades = enrollment.grades;
+  //         let current_score = grades.current_score;
+  //         if (current_score === null) current_score = 0;
+  //         let final_score = grades.final_score;
+  //         if (final_score === null) final_score = 0;
 
-          //update values
-          student.in_course = diff_days;
-          student.to_date = current_score;
-          student.final = final_score;
-          student.days_remaining = enrollment.end_at ? diff_days_end : null;
-          console.log(student);
+  //         //update values
+  //         student.in_course = diff_days;
+  //         student.to_date = current_score;
+  //         student.final = final_score;
+  //         student.days_remaining = enrollment.end_at ? diff_days_end : null;
+  //         console.log(student);
 
-          //there might need to be a check to see if this is a numbe
-          if (student.to_date > 0 && student.to_date != null) {
-            student.points_weighted = Math.round(student.final / student.to_date * 100);
-          }
-        },
+  //         //there might need to be a check to see if this is a numbe
+  //         if (student.to_date > 0 && student.to_date != null) {
+  //           student.points_weighted = Math.round(student.final / student.to_date * 100);
+  //         }
+  //       },
 
-        async getAssignmentData(student, enrollment) {
-          let user_id = student.user_id;
-          let course_id = student.course_id;
-          let url = "/api/v1/courses/" + course_id + "/analytics/users/" + user_id + "/assignments?per_page=100";
-          try {
-            await $.get(url, function (data) {
-              let assignments = data;
-              let submitted = 0;
-              let max_submissions = 0;
-              let max_points_raw = 0;
-              let points_raw = 0;
-              let start_date = Date.parse(enrollment.created_at);
-              let now_date = Date.now();
-              let diff_time = Math.abs(now_date - start_date);
-              let most_recent_time = diff_time;
-              let ungraded = 0;
+  //       async getAssignmentData(student, enrollment) {
+  //         let user_id = student.user_id;
+  //         let course_id = student.course_id;
+  //         let url = "/api/v1/courses/" + course_id + "/analytics/users/" + user_id + "/assignments?per_page=100";
+  //         try {
+  //           await $.get(url, function (data) {
+  //             let assignments = data;
+  //             let submitted = 0;
+  //             let max_submissions = 0;
+  //             let max_points_raw = 0;
+  //             let points_raw = 0;
+  //             let start_date = Date.parse(enrollment.created_at);
+  //             let now_date = Date.now();
+  //             let diff_time = Math.abs(now_date - start_date);
+  //             let most_recent_time = diff_time;
+  //             let ungraded = 0;
 
-              for (let a = 0; a < assignments.length; a++) {
-                let assignment = assignments[a];
-                if (assignment.submission !== undefined) {
-                  let submitted_at = Date.parse(assignment.submission.submitted_at);
-                  if (assignment.points_possible > 0) {
+  //             for (let a = 0; a < assignments.length; a++) {
+  //               let assignment = assignments[a];
+  //               if (assignment.submission !== undefined) {
+  //                 let submitted_at = Date.parse(assignment.submission.submitted_at);
+  //                 if (assignment.points_possible > 0) {
 
-                    max_submissions += 1;
-                    max_points_raw += assignment.points_possible;
-                    if (assignment.submission.score !== null) {
-                      submitted += 1;
-                      points_raw += assignment.points_possible;
-                    }
-                  }
-                  if (assignment.submission.score === null && assignment.submission.submitted_at !== null) {
-                    ungraded += 1;
-                  }
-                  if (Math.abs(now_date - submitted_at) < most_recent_time) {
-                    most_recent_time = Math.abs(now_date - submitted_at);
-                    most_recent = assignment;
-                  }
-                }
-              }
+  //                   max_submissions += 1;
+  //                   max_points_raw += assignment.points_possible;
+  //                   if (assignment.submission.score !== null) {
+  //                     submitted += 1;
+  //                     points_raw += assignment.points_possible;
+  //                   }
+  //                 }
+  //                 if (assignment.submission.score === null && assignment.submission.submitted_at !== null) {
+  //                   ungraded += 1;
+  //                 }
+  //                 if (Math.abs(now_date - submitted_at) < most_recent_time) {
+  //                   most_recent_time = Math.abs(now_date - submitted_at);
+  //                   most_recent = assignment;
+  //                 }
+  //               }
+  //             }
 
-              let most_recent_days = Math.ceil(most_recent_time / (1000 * 60 * 60 * 24));
+  //             let most_recent_days = Math.ceil(most_recent_time / (1000 * 60 * 60 * 24));
 
-              student.last_submit = most_recent_days;
+  //             student.last_submit = most_recent_days;
 
-              student.ungraded = ungraded;
-              let perc_submitted = Math.round((submitted / max_submissions) * 100);
-              if (isNaN(perc_submitted)) perc_submitted = 0;
-              student.submissions = perc_submitted;
+  //             student.ungraded = ungraded;
+  //             let perc_submitted = Math.round((submitted / max_submissions) * 100);
+  //             if (isNaN(perc_submitted)) perc_submitted = 0;
+  //             student.submissions = perc_submitted;
 
 
-              let perc_points_raw = Math.round((points_raw / max_points_raw) * 100);
-              if (isNaN(perc_points_raw)) perc_points_raw = 0;
-              student.points_raw = perc_points_raw;
-            });
-          } catch (e) {
-            console.log(e);
-          }
-        },
+  //             let perc_points_raw = Math.round((points_raw / max_points_raw) * 100);
+  //             if (isNaN(perc_points_raw)) perc_points_raw = 0;
+  //             student.points_raw = perc_points_raw;
+  //           });
+  //         } catch (e) {
+  //           console.log(e);
+  //         }
+  //       },
         close() {
           $(this.$el).hide();
         }
