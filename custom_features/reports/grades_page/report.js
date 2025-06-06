@@ -38,6 +38,7 @@
       mounted: async function () {
         // let courseId = ENV.context_asset_string.replace("course_", "");
         let courseId = ENV.current_context.id;
+        console.log(courseId);
         let course = await canvasGet(`/api/v1/courses/${courseId}`);
         await this.createGradesReport(course.id);
         await this.processStudentsData(course);
