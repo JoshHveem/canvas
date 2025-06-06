@@ -37,11 +37,10 @@
           >
             <div 
               v-for='column in visibleColumns' 
-              style="display: inline-block;"
+              style="display: inline-block; grid-template-columns: auto 1rem;"
               :key='column.name' 
               :title='column.description'
               @click="sortColumn(column.name)"
-              grid-template-columns: auto 1rem;
             >
               <span><b>{{column.name}}</b></span>
               <span>
