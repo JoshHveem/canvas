@@ -153,7 +153,7 @@
         },
         processEnrollment(enrollment) {
           if (enrollment.current_score > 0) {
-            enrollment.progress = enrollment.final_score / enrollment.current_score;
+            enrollment.progress = Math.round(enrollment.final_score / enrollment.current_score * 100);
           }
           // let end_date = Date.parse(enrollment.end_at);
           let now = Date.now();
