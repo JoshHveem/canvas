@@ -87,8 +87,8 @@
       methods: {
         // does not currently handle pagination
         async loadEnrollments(courseId) {
-          let queryString = `
-          {
+          let queryString = 
+          `{
             course(id: "${courseId}"){
               enrollmentsConnection(filter: {states: active, types: StudentEnrollment}, first: 100) {
                 nodes {
@@ -119,10 +119,9 @@
               }
               _id
             }
-          }
-          `
+          }`
           console.log(queryString);
-          const res = await $.post("/api/graphql", { queryString });
+          const res = await $.post("/api/graphql", { query: queryString });
         },
         // updateStudents() {
         //   let students = [];
