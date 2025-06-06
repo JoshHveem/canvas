@@ -70,7 +70,7 @@
             </div>
           </div>
           <div
-            v-for='student, i in students' 
+            v-for='student, i in enrollments' 
             :key='student.user_id'
           >
             <div 

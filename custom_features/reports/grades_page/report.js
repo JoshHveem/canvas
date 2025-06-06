@@ -110,19 +110,58 @@
               }
               courseCode
               name
-              submissionsConnection(filter: {states: submitted}) {
-                edges {
-                  node {
-                    id
+               submissionsConnection(filter: {states: submitted}) {
+                nodes {
+                  enrollmentsConnection {
+                    nodes {
+                      _id
+                    }
                   }
+                  submittedAt
                 }
               }
               _id
             }
           }`
           console.log(queryString);
-          const res = await $.post("/api/graphql", { query: queryString });
-          console.log(res);
+          let res = await $.post("/api/graphql", { query: queryString });
+          let courseData = res.data.course;
+          let enrollments = courseData.enrollmentsConnnection.nodes;
+          let submissions = courseData.submissionsConnnection.nodes;
+          for (let e = 0; e < enrollments.length; e++) {
+            let enrollmentData = enrollments[e];
+            let enrollment = {
+              course_name: courseData.name,
+              course_id: courseData._id,
+              course_code: courseData.courseCode,
+              enrollment_id: enrollmentData._id,
+              created_at: Date.parse(enrollmentData.createdAt),
+              end_at: Date.now(),
+              current_score: enrollmentData.grades.currentScore,
+              final_score: enrollmentData.grades.finalScore,
+              progress: 0,
+              section_name: enrollmentData.section.name,
+              days_in_course: 0,
+              user_name: enrollmentData.user.name,
+              user_id: enrollmentData.user._id,
+              ungraded_submissions: 0
+            };
+            enrollment = this.processEnrollment(enrollment);
+            this.enrollments.push(enrollment);
+          }
+        },
+        processEnrollment(enrollment) {
+          if (enrollment.current_score > 0) {
+            enrollment.progress = enrollment.final_score / enrollment.current_score;
+          }
+          // let end_date = Date.parse(enrollment.end_at);
+          let now = Date.now();
+          let diffTime =  now - enrollment.created_at;
+          if (diffTime > 0) {
+            let diffDays = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+            enrollment.days_in_course = diffDays;
+          }
+          return enrollment;
         },
         // updateStudents() {
         //   let students = [];
