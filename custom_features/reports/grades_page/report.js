@@ -126,10 +126,12 @@
           }
         },
         sortColumn(header) {
+          console.log(header);
           let app = this;
           let name;
           if (header === "Progress Estimate") name = this.columnNameToCode(this.progress_method);
           else name = this.columnNameToCode(header);
+          console.log(name);
           let sortState = 1;
           let sortType = '';
           for (let c = 0; c < app.columns.length; c++) {
@@ -179,7 +181,7 @@
           student.final = "N/A";
           student.ungraded = 0;
           student.submissions = 0;
-          student.days_to_end = 0;
+          student.days_remaining = 0;
           //this will probably be deleted, but keeping for reference on how to format in vue
           student.nameHTML = "<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/users/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/grades/" + id + "'>grades</a>)";
           return student;
@@ -266,7 +268,7 @@
           student.in_course = diff_days;
           student.to_date = current_score;
           student.final = final_score;
-          student.days_to_end = enrollment.end_at ? diff_days_end : null;
+          student.days_remaining = enrollment.end_at ? diff_days_end : null;
           console.log(student);
 
           //there might need to be a check to see if this is a numbe
