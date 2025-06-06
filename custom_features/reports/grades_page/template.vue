@@ -73,6 +73,7 @@
             v-for='student, i in enrollments' 
             :key='student.user_id'
           >
+            {{ student }}
             <div 
               v-if="section_filter == 'All' || section_filter == student.section"
               style="
