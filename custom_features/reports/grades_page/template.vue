@@ -153,12 +153,12 @@
               >
                 <span 
                   class="btech-pill-text" 
-                  v-if="student.days_to_end"
+                  v-if="student.days_remaining"
                   :style="{
-                    'background-color': (student.days_to_end < 3) ? colors.red : (student.days_to_end < 7 ? colors.yellow : colors.green),
+                    'background-color': (student.days_remaining < 3) ? colors.red : (student.days_remaining < 7 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }"
-                >{{student.days_to_end}} days</span>
+                >{{student.days_remaining}} days</span>
                 <span 
                   v-else
                 >n/a</span>
