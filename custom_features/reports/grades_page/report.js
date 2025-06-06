@@ -145,8 +145,8 @@
             }
           }
           app.students.sort(function (a, b) {
-            let aVal = a[name];
-            let bVal = b[name];
+            let aVal = a[name] ?? -1;
+            let bVal = b[name] ?? -1;
             //convert strings to upper case to ignore case when sorting
             if (typeof (aVal) === 'string') aVal = aVal.toUpperCase();
             if (typeof (bVal) === 'string') bVal = bVal.toUpperCase();
