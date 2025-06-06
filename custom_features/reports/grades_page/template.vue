@@ -44,7 +44,7 @@
             >
               <span><b>{{column.name}}</b></span>
               <svg 
-                style="width: .75rem; height: .75rem;" 
+                style="width: .75rem; height: .75rem; float: right;" 
                 x="0px" 
                 y="0px"
                 viewBox="0 0 490 490" 
