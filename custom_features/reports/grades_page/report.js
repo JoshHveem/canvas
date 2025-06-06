@@ -121,6 +121,7 @@
             }
           }
           `
+          console.log(queryString);
           const res = await $.post("/api/graphql", { queryString });
         },
         // updateStudents() {
