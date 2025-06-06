@@ -168,6 +168,7 @@
             </div>
           </div>
         </div>
+        {{ enrollments }}
       </div>
     </div>
   </div>
