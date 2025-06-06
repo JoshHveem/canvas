@@ -36,11 +36,10 @@
     new Vue({
       el: '#canvas-grades-report-vue',
       mounted: async function () {
-        let app = this;
         let courseId = ENV.context_asset_string.replace("course_", "");
         let course = await canvasGet(`/api/v1/courses/${courseId}`);
-        await this.createGradesReport();
-        await this.processStudentsData();
+        await this.createGradesReport(course.id);
+        await this.processStudentsData(course);
         this.updateStudents();
         await this.processStudentsAssignmentData();
         this.updateStudents();
@@ -91,9 +90,9 @@
           this.students = students;
         },
         async processStudentsData(course) {
-          let app = this;
-          for (let s = 0; s < app.courseEnrollments[course.id].length; s++) {
-            let enrollmentData = app.courseEnrollments[course.id][s];
+          let enrollments = this.courseEnrollments[course.id];
+          for (let s = 0; s < enrollments.length; s++) {
+            let enrollmentData = enrollments[s];
             let userId = studentData.id;
             let enrollment = null;
 
@@ -103,16 +102,15 @@
               }
             }
             if (enrollment !== null) {
-              app.studentsData[enrollment.id] = app.newStudent(userId, studentData.sortable_name, course.id, app);
-              app.processEnrollment(app.studentsData[userId], enrollment);
-              app.studentsData[enrollment.id].section = app.getStudentSection(userId);
+              this.studentsData[enrollment.id] = this.newStudent(userId, studentData.sortable_name, course.id, this);
+              this.processEnrollment(this.studentsData[enrollment.id], enrollment);
+              this.studentsData[enrollment.id].section = this.getStudentSection(userId);
             }
           }
         },
         async processStudentsAssignmentData() {
-          let app = this;
-          for (let s = 0; s < app.studentData.length; s++) {
-            let studentData = app.studentData[s];
+          for (let s = 0; s < this.studentData.length; s++) {
+            let studentData = this.studentData[s];
             let userId = studentData.id;
             let enrollment = null;
 
@@ -122,32 +120,31 @@
               }
             }
             if (enrollment !== null) {
-              await app.getAssignmentData(app.studentsData[userId], enrollment);
+              await this.getAssignmentData(this.studentsData[userId], enrollment);
             }
           }
         },
         sortColumn(header) {
           console.log(header);
-          let app = this;
           let name;
           if (header === "Progress Estimate") name = this.columnNameToCode(this.progress_method);
           else name = this.columnNameToCode(header);
           console.log(name);
           let sortState = 1;
           let sortType = '';
-          for (let c = 0; c < app.columns.length; c++) {
-            if (app.columns[c].name !== header) {
+          for (let c = 0; c < this.columns.length; c++) {
+            if (this.columns[c].name !== header) {
               //reset everything else
-              app.columns[c].sort_state = 0;
+              this.columns[c].sort_state = 0;
             } else {
               //if it's the one being sorted, set it to 1 if not 1, or set it to -1 if is already 1
-              if (app.columns[c].sort_state !== 1) app.columns[c].sort_state = 1;
-              else app.columns[c].sort_state = -1;
-              sortState = app.columns[c].sort_state;
-              sortType = app.columns[c].sort_type;
+              if (this.columns[c].sort_state !== 1) this.columns[c].sort_state = 1;
+              else this.columns[c].sort_state = -1;
+              sortState = this.columns[c].sort_state;
+              sortType = this.columns[c].sort_type;
             }
           }
-          app.students.sort(function (a, b) {
+          this.students.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
             //convert strings to upper case to ignore case when sorting
