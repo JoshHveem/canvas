@@ -75,7 +75,7 @@
           >
             {{ student }}
             <div 
-              v-if="section_filter == 'All' || section_filter == student.section"
+              v-if="section_filter == 'All' || section_filter == student.section_name"
               style="
                 padding: .25rem .5rem;
                 display: grid;
@@ -169,7 +169,6 @@
           </div>
         </div>
       </div>
-        {{ enrollments }}
     </div>
   </div>
 </template>
