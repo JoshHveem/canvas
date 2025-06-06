@@ -41,6 +41,7 @@
         // let course = (await canvasGet(`/api/v1/courses/${courseId}`))[0];
         // console.log(course);
         await this.loadEnrollments(courseId);
+        console.log(this.enrollments);
         // await this.createGradesReport(course.id);
         // await this.processStudentsData(course);
         // this.updateStudents();
