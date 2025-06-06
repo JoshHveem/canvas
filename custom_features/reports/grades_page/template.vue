@@ -90,13 +90,13 @@
               <div 
                 style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
               >
-                <a :href="`/courses/${student.course_id}/users/${student.user_id}`" target="_blank">{{student.name}} </a>
+                <a :href="`/courses/${student.course_id}/users/${student.user_id}`" target="_blank">{{student.user_name}} </a>
                 (<a :href="`/courses/${student.course_id}/grades/${student.user_id}`" target="_blank">grades</a>)
               </div>
               <div 
                 style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
               >
-                {{student.section}}
+                {{student.section_name}}
               </div>
               <div 
                 style="display: inline-block;"
@@ -107,7 +107,7 @@
                     'background-color': (student.to_date < 60) ? colors.red : (student.to_date < 80 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }">
-                  {{student.to_date}}%
+                  {{student.current_score}}%
                 </span>
               </div>
               <div 
@@ -119,7 +119,7 @@
                     'background-color': (student.final < 60) ? colors.red : (student.final < 80 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }">
-                  {{student.final}}%
+                  {{student.final_score}}%
                 </span>
               </div>
               <div 
@@ -147,7 +147,7 @@
               <div 
                 style="display: inline-block;"
               >
-                {{student.in_course}}
+                {{student.days_in_course}}
               </div>
               <div 
                 style="display: inline-block;"
