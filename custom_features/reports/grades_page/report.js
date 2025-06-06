@@ -156,7 +156,7 @@
           let now = Date.now();
           let diffTime =  now - enrollment.created_at;
           if (diffTime > 0) {
-            let diffDays = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             enrollment.days_in_course = diffDays;
           }
           return enrollment;
