@@ -109,7 +109,7 @@
               }
               courseCode
               name
-               submissionsConnection(filter: {states: [submitted, ungraded]}) {
+               submissionsConnection(filter: {states: [submitted, ungraded, pending_review]}) {
                 nodes {
                   enrollmentsConnection {
                     nodes {
