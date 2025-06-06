@@ -37,12 +37,13 @@
       el: '#canvas-grades-report-vue',
       mounted: async function () {
         let app = this;
-        this.courseId = ENV.context_asset_string.replace("course_", "");
+        let courseId = ENV.context_asset_string.replace("course_", "");
+        let course = await canvasGet(`/api/v1/courses/${courseId}`);
         await this.createGradesReport();
-        await app.processStudentsData();
-        app.updateStudents();
-        await app.processStudentsAssignmentData();
-        app.updateStudents();
+        await this.processStudentsData();
+        this.updateStudents();
+        await this.processStudentsAssignmentData();
+        this.updateStudents();
         this.loading = false;
       },
 
@@ -53,17 +54,18 @@
           students: [],
           columns: [
             new Column('Name', 'The student\'s name as it appears in Canvas.', 10, false, 'string'),
+            new Column('Course', 'The course in which the student is enrolled.', 10, false, 'string'),
             new Column('Section', 'The section in which the student is enrolled in this course.', 10, false, 'string'),
             new Column('To Date', 'The student\'s grade based on assignments submitted to date.', 3, true, 'number'),
             new Column('Final', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', 3, true, 'number'),
             new Column('Progress Estimate', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', 12, true, 'number'),
             new Column('Last Submit', 'The number of days since the student\'s last submission.', 3, true, 'number'),
-            new Column('In Course', 'The number of days since the student began the course.', true, 3, 'number'),
-            new Column('Days Remaining', 'The number of days until the student will be removed from the course.', true, 3, 'number')
+            new Column('Days In Course', 'The number of days since the student began the course.', true, 3, 'number'),
+            new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
             // new Column('Ungraded', '', true, 3, 'number')
           ],
           sections: [],
-          studentData: [],
+          courseEnrollments: {},
           studentsData: {},
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
@@ -81,30 +83,29 @@
       },
       methods: {
         updateStudents() {
-          let app = this;
           let students = [];
-          for (s in app.studentsData) {
-            let student = app.studentsData[s];
+          for (s in this.studentsData) {
+            let student = this.studentsData[s];
             students.push(student);
           }
           this.students = students;
         },
-        async processStudentsData() {
+        async processStudentsData(course) {
           let app = this;
-          for (let s = 0; s < app.studentData.length; s++) {
-            let studentData = app.studentData[s];
+          for (let s = 0; s < app.courseEnrollments[course.id].length; s++) {
+            let enrollmentData = app.courseEnrollments[course.id][s];
             let userId = studentData.id;
             let enrollment = null;
 
-            for (let e = 0; e < studentData.enrollments.length; e++) {
+            for (let e = 0; e < enrollmentData.enrollments.length; e++) {
               if (studentData.enrollments[e].type === "StudentEnrollment") {
                 enrollment = studentData.enrollments[e];
               }
             }
             if (enrollment !== null) {
-              app.studentsData[userId] = app.newStudent(userId, studentData.sortable_name, app.courseId, app);
+              app.studentsData[enrollment.id] = app.newStudent(userId, studentData.sortable_name, course.id, app);
               app.processEnrollment(app.studentsData[userId], enrollment);
-              app.studentsData[userId].section = app.getStudentSection(userId);
+              app.studentsData[enrollment.id].section = app.getStudentSection(userId);
             }
           }
         },
@@ -167,10 +168,11 @@
             return comp
           })
         },
-        newStudent(id, name, course_id) {
+        newStudent(id, name, course_id, course_name) {
           let student = {};
           student.user_id = id;
           student.name = name;
+          student.course = course_name;
           student.course_id = course_id;
           student.in_course = 0;
           student.last_submit = undefined;
@@ -186,10 +188,10 @@
           student.nameHTML = "<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/users/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + course_id + "/grades/" + id + "'>grades</a>)";
           return student;
         },
-        async createGradesReport() {
+        async createGradesReport(courseId) {
           let app = this;
           await app.getSectionData();
-          let url = "/api/v1/courses/" + this.courseId + "/users?enrollment_state%5B%5D=active";
+          let url = "/api/v1/courses/" + courseId + "/users?enrollment_state%5B%5D=active";
           url += "&enrollment_state%5B%5D=invited"
           url += "&enrollment_type%5B%5D=student"
           url += "&enrollment_type%5B%5D=student_view";
@@ -199,8 +201,7 @@
           url += "&per_page=100";
 
           await $.get(url, function (data) {
-            app.studentData = data;
-            console.log(data);
+            app.courseEnrollments[courseId] = data;
           });
         },
         async getSectionData() {
@@ -252,7 +253,6 @@
         processEnrollment(student, enrollment) {
           let start_date = Date.parse(enrollment.created_at);
           let end_date = Date.parse(enrollment.end_at);
-          console.log(end_date);
           let now_date = Date.now();
           let diff_time = Math.abs(now_date - start_date);
           let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
