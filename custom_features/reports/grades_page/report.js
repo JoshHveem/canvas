@@ -122,6 +122,7 @@
           }`
           console.log(queryString);
           const res = await $.post("/api/graphql", { query: queryString });
+          console.log(res);
         },
         // updateStudents() {
         //   let students = [];
