@@ -90,7 +90,7 @@
           let queryString = `
           {
             course(id: "${courseId}"){
-              enrollmentsConnection(filter: {states: active, types: StudentEnrollment, firts: 100}) {
+              enrollmentsConnection(filter: {states: active, types: StudentEnrollment}, first: 100) {
                 nodes {
                   _id
                   createdAt
