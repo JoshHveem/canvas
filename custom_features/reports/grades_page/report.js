@@ -191,7 +191,7 @@
         },
         async createGradesReport(courseId) {
           let app = this;
-          await app.getSectionData();
+          await app.getSectionData(courseId);
           let url = "/api/v1/courses/" + courseId + "/users?enrollment_state%5B%5D=active";
           url += "&enrollment_state%5B%5D=invited"
           url += "&enrollment_type%5B%5D=student"
@@ -205,9 +205,9 @@
             app.courseEnrollments[courseId] = data;
           });
         },
-        async getSectionData() {
+        async getSectionData(courseId) {
           let app = this;
-          let url = "/api/v1/courses/" + app.courseId + "/sections?per_page=100&include[]=students";
+          let url = "/api/v1/courses/" + courseId + "/sections?per_page=100&include[]=students";
           await $.get(url, function (data) {
             app.sections = data;
           });
