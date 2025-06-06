@@ -120,7 +120,7 @@
               }
             }
             if (enrollment !== null) {
-              await this.getAssignmentData(this.studentsData[userId], enrollment);
+              await this.getAssignmentData(this.studentsData[enrollment.id], enrollment);
             }
           }
         },
