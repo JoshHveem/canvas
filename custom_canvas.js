@@ -2,6 +2,7 @@
   FOR TESTING: url param for disabling custom js and css
   ?global_includes=0
 */
+// https://btech.instructure.com/accounts/3/theme_editor
 
 var ISDIDS= [
   1893418, // Josh 
@@ -85,18 +86,12 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (/^\/courses\/[0-9]+(\/modules){0,1}$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
       let DEPT_CODE = COURSE_CODE.substring(0, 4); // "ATTE"
-      console.log(DEPT_CODE);
-    
       // Construct the image URL using the department code
       var imageUrl = `https://bridgetools.dev/canvas/media/course-sanners/${DEPT_CODE}.png`;
-      
       // Create an Image object to check if the image exists
       var img = new Image();
-      
       // Image loaded successfully, so it exists
       img.onload = function() {
-        if (ENV.ACCOUNT_ID == 3833) return;
-        console.log("Image exists:", imageUrl);
         let moduleModal = $(".header-bar");
         let moduleHeader = $("<div></div>");
         moduleModal.after(moduleHeader);
@@ -134,7 +129,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     let currentUser = parseInt(ENV.current_user.id);
     IS_ME = (currentUser === 1893418);
     IS_ISD = (ISDIDS.includes(currentUser));
-    // https://btech.instructure.com/accounts/3/theme_editor
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
