@@ -52,7 +52,6 @@ var IS_TEACHER = null;
 var IS_ME = false;
 var IS_ISD = false;
 var COURSE_HOURS;
-var LOAD_COURSE_SETTINGS = true;
 
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
@@ -89,7 +88,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       console.log(DEPT_CODE);
     
       // Construct the image URL using the department code
-      var imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png`;
+      var imageUrl = `https://bridgetools.dev/canvas/media/course-sanners/${DEPT_CODE}.png`;
       
       // Create an Image object to check if the image exists
       var img = new Image();
@@ -97,7 +96,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       // Image loaded successfully, so it exists
       img.onload = function() {
         if (ENV.ACCOUNT_ID == 3833) return;
-        LOAD_COURSE_SETTINGS = false;
         console.log("Image exists:", imageUrl);
         let moduleModal = $(".header-bar");
         let moduleHeader = $("<div></div>");
@@ -153,9 +151,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     //FEATURES THAT DON'T NEED ALL THE EXTRA STUFF LIKE HOURS AND DEPT DATA AND VUE
     featureISD('copy_to_next_year', {}, /^\/accounts\/[0-9]+$/);
     if (rCheckInCourse.test(window.location.pathname)) {
-      if (LOAD_COURSE_SETTINGS) {
-        feature('modules/course_features', {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
-      }
       //I'm putting concluding students in here as well vvv
       feature('modules/enrollment_dates_teacher', {}, /^\/courses\/[0-9]+\/users\/[0-9]+$/);
       // feature("external_assignments_fullscreen", {}, /^\/courses\/[0-9]+\/(assignments)/);

@@ -84,8 +84,7 @@
       },
       methods: {
         // does not currently handle pagination
-        async loadEnrollments(courseId) {
-          let enrollments = [];
+        async graphqlEnrollments(courseId) {
           let queryString = 
           `{
             course(id: "${courseId}"){
@@ -122,10 +121,15 @@
               _id
             }
           }`
-          console.log(queryString);
           let res = await $.post("/api/graphql", { query: queryString });
-          let courseData = res.data.course;
-          console.log(courseData);
+          return res.data.course;
+        },
+        async loadEnrollments(courseId) {
+          let enrollments = [];
+          
+          let courseData = await this.graphqlEnrollments(courseId);
+          let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
+          let recentSubmissionsData = await this.graphqlRecentSubmissions(courseId);
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
           let submissionsData = courseData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
