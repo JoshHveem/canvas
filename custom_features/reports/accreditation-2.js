@@ -311,92 +311,123 @@
           },
 
           async getAssignments(groupId) {
-            const query = `
-              query {
-                assignmentGroup(id: "${groupId}") {
-                  id
-                  assignmentsConnection {
-                    nodes {
-                      _id
-                      name
-                      published
-                      pointsPossible
+            let allAssignments = [];
+            let hasNextPage = true;
+            let after = null;
+
+            while (hasNextPage) {
+              const query = `
+                query {
+                  assignmentGroup(id: "${groupId}") {
+                    id
+                    assignmentsConnection(first: 50${after ? `, after: \"${after}\"` : ''}) {
+                      pageInfo {
+                        hasNextPage
+                        endCursor
+                      }
+                      nodes {
+                        _id
+                        name
+                        published
+                        pointsPossible
+                      }
                     }
                   }
                 }
-              }
-            `;
+              `;
 
-            const res = await $.post(`/api/graphql`, { query });
-            return res.data.assignmentGroup.assignmentsConnection.nodes;
+              const res = await $.post(`/api/graphql`, { query });
+              const connection = res.data.assignmentGroup.assignmentsConnection;
+              allAssignments = allAssignments.concat(connection.nodes);
+              hasNextPage = connection.pageInfo.hasNextPage;
+              after = connection.pageInfo.endCursor;
+            }
+
+            return allAssignments;
           },
 
           async getSubmissions(assignmentId) {
-            const query = `
-              query {
-                assignment(id: "${assignmentId}") {
-                  _id
-                  submissionsConnection(
-                    filter: { includeConcluded: true, includeDeactivated: true, includeUnsubmitted: false },
-                    orderBy: { field: username }
-                  ) {
-                    nodes {
-                      user {
-                        id
-                        name
-                        _id
+            let allSubmissions = [];
+            let hasNextPage = true;
+            let after = null;
+
+            while (hasNextPage) {
+              const query = `
+                query {
+                  assignment(id: "${assignmentId}") {
+                    _id
+                    submissionsConnection(
+                      first: 50${after ? `, after: \"${after}\"` : ''},
+                      filter: { includeConcluded: true, includeDeactivated: true, includeUnsubmitted: false },
+                      orderBy: { field: username }
+                    ) {
+                      pageInfo {
+                        hasNextPage
+                        endCursor
                       }
-                      submissionType
-                      submissionStatus
-                      submittedAt
-                      gradedAt
-                      postedAt
-                      updatedAt
-                      url
-                      score
-                      attempt
-                      body
-                      createdAt
-                      deductedPoints
-                      enteredGrade
-                      excused
-                      extraAttempts
-                      grade
-                      late
-                      previewUrl
-                      submissionCommentDownloadUrl
-                      attachments {
-                        url
-                        updatedAt
-                        createdAt
-                        displayName
-                        contentType
-                      }
-                      commentsConnection {
-                        nodes {
-                          comment
+                      nodes {
+                        user {
+                          id
+                          name
                           _id
-                          htmlComment
+                        }
+                        submissionType
+                        submissionStatus
+                        submittedAt
+                        gradedAt
+                        postedAt
+                        updatedAt
+                        url
+                        score
+                        attempt
+                        body
+                        createdAt
+                        deductedPoints
+                        enteredGrade
+                        excused
+                        extraAttempts
+                        grade
+                        late
+                        previewUrl
+                        submissionCommentDownloadUrl
+                        attachments {
+                          url
+                          updatedAt
                           createdAt
-                          author {
-                            name
+                          displayName
+                          contentType
+                        }
+                        commentsConnection {
+                          nodes {
+                            comment
+                            _id
+                            htmlComment
+                            createdAt
+                            author {
+                              name
+                            }
                           }
                         }
-                      }
-                      rubricAssessmentsConnection {
-                        nodes {
-                          score
-                          assessmentType
+                        rubricAssessmentsConnection {
+                          nodes {
+                            score
+                            assessmentType
+                          }
                         }
                       }
                     }
                   }
                 }
-              }
-            `;
+              `;
 
-            const res = await $.post(`/api/graphql`, { query });
-            return res.data.assignment.submissionsConnection.nodes;
+              const res = await $.post(`/api/graphql`, { query });
+              const connection = res.data.assignment.submissionsConnection;
+              allSubmissions = allSubmissions.concat(connection.nodes);
+              hasNextPage = connection.pageInfo.hasNextPage;
+              after = connection.pageInfo.endCursor;
+            }
+
+            return allSubmissions;
           },
 
           async getGraphQLData(courseId) {
