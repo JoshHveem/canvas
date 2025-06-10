@@ -98,7 +98,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         moduleHeader.html(`
           <div style="max-width: 1000px; height:150px; width:100%; margin: auto; display:flex; align-items:center; position:relative; overflow:hidden;">
             <div style="flex-shrink:0; min-width: 40%; background:#f5f5f5; height:100%; display:flex; align-items:center; z-index:2;">
-              <div style="margin-left: calc((150px - 2rem) / 2); margin:0; font-size:2rem; line-height:2rem; max-width: 300px; color: #B20B0F; font-family:sans-serif;"><strong>${ENV.current_context.name}</strong></div>
+              <div style="margin-left: calc((150px - 2rem) / 2); font-size:2rem; line-height:2rem; max-width: 300px; color: #B20B0F; font-family:sans-serif;"><strong>${ENV.current_context.name}</strong></div>
             </div>
             <div style="flex-grow:1; position:relative; height:100%;">
               <div style="
