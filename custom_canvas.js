@@ -87,7 +87,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       let COURSE_CODE = getCourseCodeFromEnv();
       let DEPT_CODE = COURSE_CODE.substring(0, 4); // "ATTE"
       // Construct the image URL using the department code
-      var imageUrl = `https://bridgetools.dev/canvas/media/course-sanners/${DEPT_CODE}.png`;
+      var imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png`;
       // Create an Image object to check if the image exists
       var img = new Image();
       // Image loaded successfully, so it exists
