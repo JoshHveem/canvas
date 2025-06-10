@@ -329,9 +329,9 @@
 
             const res = await $.post(`/api/graphql`, { query });
             return res.data.assignmentGroup.assignmentsConnection.nodes;
-          }
+          },
 
-          async function getSubmissions(assignmentId) {
+          async getSubmissions(assignmentId) {
             const query = `
               query {
                 assignment(id: "${assignmentId}") {
@@ -397,18 +397,18 @@
 
             const res = await $.post(`/api/graphql`, { query });
             return res.data.assignment.submissionsConnection.nodes;
-          }
+          },
 
-          async function getGraphQLData(courseId) {
+          async getGraphQLData(courseId) {
             try {
-              const meta = await getCourseMeta(courseId);
+              const meta = await this.getCourseMeta(courseId);
               const assignmentGroups = meta.assignmentGroupsConnection.nodes.filter(g => g.state === 'available');
 
               for (let group of assignmentGroups) {
-                group.assignments = await getAssignments(group.id);
+                group.assignments = await this.getAssignments(group.id);
 
                 for (let assignment of group.assignments) {
-                  const submissions = await getSubmissions(assignment._id);
+                  const submissions = await this.getSubmissions(assignment._id);
 
                   assignment.submissions = submissions.map(sub => ({
                     ...sub,
