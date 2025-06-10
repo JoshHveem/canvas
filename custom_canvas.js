@@ -96,7 +96,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         let moduleHeader = $("<div></div>");
         moduleModal.after(moduleHeader);
         moduleHeader.html(`
-          <div style="height:100px; width:100%; display:flex; align-items:center; position:relative; overflow:hidden;">
+          <div style="height:150px; width:100%; display:flex; align-items:center; position:relative; overflow:hidden;">
             <div style="flex-shrink:0; min-width: 40%; padding:0 30px; background:white; height:100%; display:flex; align-items:center; z-index:2;">
               <div style="margin:0; font-size:32px; color: #B20B0F; font-family:sans-serif;"><strong>${ENV.current_context.name}</strong></div>
             </div>
