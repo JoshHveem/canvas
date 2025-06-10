@@ -319,7 +319,7 @@
               const query = `
                 query {
                   assignmentGroup(id: "${groupId}") {
-                    id
+                    _id
                     assignmentsConnection(first: 50${after ? `, after: \"${after}\"` : ''}) {
                       pageInfo {
                         hasNextPage
@@ -342,6 +342,11 @@
               hasNextPage = connection.pageInfo.hasNextPage;
               after = connection.pageInfo.endCursor;
             }
+            console.log(allAssignments);
+            allAssignments.map(assn => {
+              assn.id = assn._id;
+            });
+
 
             return allAssignments;
           },
