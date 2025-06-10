@@ -83,49 +83,120 @@ var IMPORTED_FEATURE = {};
 var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 (async function() {
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
-    if (/^\/courses\/[0-9]+(\/modules){0,1}$/.test(window.location.pathname)) {
+    if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
-      let DEPT_CODE = COURSE_CODE.substring(0, 4); // "ATTE"
-      // Construct the image URL using the department code
-      var imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png`;
-      // Create an Image object to check if the image exists
-      var img = new Image();
-      // Image loaded successfully, so it exists
-      img.onload = function() {
-        let moduleModal = $(".header-bar");
-        let moduleHeader = $("<div></div>");
-        moduleModal.after(moduleHeader);
-        moduleHeader.html(`
-          <div style="max-width: 1000px; height:150px; width:100%; margin: auto; display:flex; align-items:center; position:relative; overflow:hidden;">
-            <div style="flex-shrink:0; min-width: 40%; background:#f5f5f5; height:100%; display:flex; align-items:center; z-index:2;">
-              <div style="margin-left: calc((150px - 2rem) / 2); font-size:2rem; line-height:2rem; max-width: 350px; color: #B20B0F; font-family:sans-serif;"><strong>${ENV.current_context.name}</strong></div>
-            </div>
-            <div style="flex-grow:1; position:relative; height:100%;">
-              <div style="
-                position:absolute;
-                left:-50px;
-                top:0;
-                width: 100px;
-                height:100%;
-                background:#f5f5f5;
-                transform:skewX(-20deg);
-                z-index:1;
-              "></div>
-              <img src="https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png" style="
-                position:absolute;
-                top:0;
-                left: 0;
-                width: 100%;
-                height:100%;
-                object-fit:cover;
-                z-index:0;
-              ">
-            </div>
+      let DEPT_CODE = COURSE_CODE.substring(0, 4);
+      let imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png`;
+
+      let moduleModal = $(".header-bar");
+      let moduleHeader = $("<div></div>").addClass("custom-course-header");
+      moduleModal.after(moduleHeader);
+
+      moduleHeader.html(`
+        <div class="course-banner-container">
+          <div class="course-banner-text">
+            <div class="course-banner-title"><strong>${ENV.current_context.name}</strong></div>
           </div>
-        `)
-      }
-      img.src = imageUrl;
+          <div class="course-banner-image">
+            <div class="course-banner-skew"></div>
+            <img src="${imageUrl}" onerror="this.style.display='none'" alt="" />
+          </div>
+        </div>
+      `);
+
+      // Inject styling
+      const style = document.createElement("style");
+      style.innerHTML = `
+        .course-banner-container {
+          max-width: 1000px;
+          height: 150px;
+          width: 100%;
+          margin: auto;
+          display: flex;
+          align-items: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .course-banner-text {
+          flex-shrink: 0;
+          min-width: 40%;
+          background: #f5f5f5;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          z-index: 2;
+        }
+
+        .course-banner-title {
+          margin-left: calc((150px - 2rem) / 2);
+          font-size: 2rem;
+          line-height: 2rem;
+          max-width: 350px;
+          color: #B20B0F;
+          font-family: sans-serif;
+        }
+
+        .course-banner-image {
+          flex-grow: 1;
+          position: relative;
+          height: 100%;
+        }
+
+        .course-banner-skew {
+          position: absolute;
+          left: -50px;
+          top: 0;
+          width: 100px;
+          height: 100%;
+          background: #f5f5f5;
+          transform: skewX(-20deg);
+          z-index: 1;
+        }
+
+        .course-banner-image img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 0;
+        }
+
+        /* Mobile styling */
+        @media (max-width: 500px) {
+          .course-banner-container {
+            flex-direction: column;
+            height: auto;
+          }
+
+          .course-banner-text {
+            min-width: 100%;
+            height: auto;
+            justify-content: center;
+            padding: 1rem 0;
+          }
+
+          .course-banner-image {
+            width: 100%;
+            height: 150px;
+          }
+
+          .course-banner-title {
+            margin-left: 0;
+            font-size: 1.5rem;
+            text-align: center;
+          }
+
+          .course-banner-skew {
+            display: none;
+          }
+        }
+      `;
+      document.head.appendChild(style);
     }
+ 
     let currentUser = parseInt(ENV.current_user.id);
     IS_ME = (currentUser === 1893418);
     IS_ISD = (ISDIDS.includes(currentUser));
