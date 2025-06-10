@@ -287,118 +287,156 @@
             return output;
           },
 
-          async getGraphQLData(courseId) {
-            let query = `{
-              course(id: "${courseId}") {
-id
-    name
-    courseCode
-    assignmentGroupsConnection {
-      nodes {
-        name
-        groupWeight
-        state
-        assignmentsConnection {
-          nodes {
-            _id
-            name
-            published
-            pointsPossible
-            submissionsConnection(
-              filter: {includeConcluded: true, includeDeactivated: true, includeUnsubmitted: false}
-              orderBy: {field: username}
-            ) {
-              nodes {
-                commentsConnection {
-                  nodes {
-                    comment
-                    _id
-                    htmlComment
-                    createdAt
-                    author {
+          async getCourseMeta(courseId) {
+            const query = `
+              query {
+                course(id: "${courseId}") {
+                  id
+                  name
+                  courseCode
+                  assignmentGroupsConnection {
+                    nodes {
+                      id
                       name
+                      groupWeight
+                      state
                     }
                   }
                 }
-                user {
+              }
+            `;
+
+            const res = await $.post(`/api/graphql`, { query });
+            return res.data.course;
+          },
+
+          async getAssignments(groupId) {
+            const query = `
+              query {
+                assignmentGroup(id: "${groupId}") {
                   id
-                  name
-                  _id
-                }
-                submissionType
-                submissionStatus
-                submittedAt
-                gradedAt
-                postedAt
-                updatedAt
-                url
-                attachments {
-                  url
-                  updatedAt
-                  createdAt
-                  displayName
-                  contentType
-                }
-                score
-                submissionCommentDownloadUrl
-                attempt
-                body
-                createdAt
-                deductedPoints
-                enteredGrade
-                excused
-                extraAttempts
-                grade
-                late
-                previewUrl
-                rubricAssessmentsConnection {
-                  nodes {
-                    score
-                    assessmentType
+                  assignmentsConnection {
+                    nodes {
+                      _id
+                      name
+                      published
+                      pointsPossible
+                    }
                   }
                 }
               }
-            }
+            `;
+
+            const res = await $.post(`/api/graphql`, { query });
+            return res.data.assignmentGroup.assignmentsConnection.nodes;
           }
-        }
-      }
-    }
-  } 
-            }`;
+
+          async function getSubmissions(assignmentId) {
+            const query = `
+              query {
+                assignment(id: "${assignmentId}") {
+                  _id
+                  submissionsConnection(
+                    filter: { includeConcluded: true, includeDeactivated: true, includeUnsubmitted: false },
+                    orderBy: { field: username }
+                  ) {
+                    nodes {
+                      user {
+                        id
+                        name
+                        _id
+                      }
+                      submissionType
+                      submissionStatus
+                      submittedAt
+                      gradedAt
+                      postedAt
+                      updatedAt
+                      url
+                      score
+                      attempt
+                      body
+                      createdAt
+                      deductedPoints
+                      enteredGrade
+                      excused
+                      extraAttempts
+                      grade
+                      late
+                      previewUrl
+                      submissionCommentDownloadUrl
+                      attachments {
+                        url
+                        updatedAt
+                        createdAt
+                        displayName
+                        contentType
+                      }
+                      commentsConnection {
+                        nodes {
+                          comment
+                          _id
+                          htmlComment
+                          createdAt
+                          author {
+                            name
+                          }
+                        }
+                      }
+                      rubricAssessmentsConnection {
+                        nodes {
+                          score
+                          assessmentType
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            const res = await $.post(`/api/graphql`, { query });
+            return res.data.assignment.submissionsConnection.nodes;
+          }
+
+          async function getGraphQLData(courseId) {
             try {
-              let res = await $.post(`/api/graphql`, {
-                  query: query
-              });
-              let data = res.data.course;
+              const meta = await getCourseMeta(courseId);
+              const assignmentGroups = meta.assignmentGroupsConnection.nodes.filter(g => g.state === 'available');
+
+              for (let group of assignmentGroups) {
+                group.assignments = await getAssignments(group.id);
+
+                for (let assignment of group.assignments) {
+                  const submissions = await getSubmissions(assignment._id);
+
+                  assignment.submissions = submissions.map(sub => ({
+                    ...sub,
+                    user: {
+                      id: sub.user._id,
+                      name: sub.user.name
+                    },
+                    comments: sub.commentsConnection?.nodes || [],
+                    rubric_assessments: sub.rubricAssessmentsConnection?.nodes || []
+                  }));
+                }
+              }
+
               return {
                 id: courseId,
-                name: data.name,
-                course_code: data.courseCode,
-                assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
-                  group.id = group._id;
-                  group.assignments = group.assignmentsConnection.nodes.map( assignment => {
-                    assignment.id = assignment._id;
-                    assignment.submissions = assignment.submissionsConnection.nodes.map( submission => {
-                      submission.comments = submission.commentsConnection.nodes;
-                      submission.rubric_assessments = submission?.rubricAssessmentsConnection?.nodes ?? [];
-                      submission.user.id = submission.user._id;
-                      submission
-                      return submission;
-                    });
-                    return assignment;
-                  });
-                  return group;
-                })
-              }
+                name: meta.name,
+                course_code: meta.courseCode,
+                assignment_groups: assignmentGroups
+              };
             } catch (err) {
               console.error(err);
-              console.log(res);
               return {
-                  name: '',
-                  assignment_groups: [],
-              }
+                name: '',
+                assignment_groups: [],
+              };
             }
           },
+
           plainCommentToHTML(comment) {
             // Split the comment by newlines
             const paragraphs = comment.split('\n');

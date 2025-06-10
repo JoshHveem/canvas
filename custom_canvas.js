@@ -165,7 +165,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         }
 
         /* Mobile styling */
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
           .course-banner-container {
             flex-direction: column;
             height: auto;
