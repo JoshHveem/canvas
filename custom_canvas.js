@@ -322,14 +322,12 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
               feature("speed_grader/split_screen", {}, /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
             }
             feature("grades_page/highlighted_grades_page_items", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
+            feature("grades_page/attempts", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
 
             if (CURRENT_DEPARTMENT_ID == 4218) { // DATA ANALYTICS
               externalFeature("https://cdn.datacamp.com/datacamp-light-latest.min.js", /^\/courses\/([0-9]+)\/(pages|assignments|quizzes|discussion_topics)\/[0-9]+(\?|$)/); //really just available to data analytics
               feature("people_page/sync_start_dates_with_section", {}, /^\/courses\/[0-9]+\/course_pacing/);
               feature("department_specific/data_analytics_feedback_report", {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
-            }
-            if ([3839, 3840, 3824].includes(CURRENT_DEPARTMENT_ID)) { // DENTAL AND DRAFTING
-              feature("grades_page/attempts", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
             }
             if (CURRENT_DEPARTMENT_ID === 3824) { // DENTAL
               // feature("grades_page/highlighted_grades_page_items_dental", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
