@@ -22,19 +22,20 @@
             scoreCell.after('<td class="possible attempts">' + attempts + '</td>');
         }
     } 
-    createHeader("Submitted");
-    for (let s in submissions) {
-        let sub = submissions[s];
-        let row = $("tr#submission_"  + sub.assignment_id);
-        let scoreCell = row.find('td.assignment_score');
-        let cellEl = row.find('td.submission_date');
-        // Check if cell already created
-        if (cellEl.length === 0) {
-          scoreCell.after(`<td class="submission_date">${bridgetools.dateToString(sub.submitted_at)}</td>`);
-        }
-        else {
-          //Possibly add something like over text to show what all the submission dates are, not just the most recent
-        }
-    }
+    // Looks like Canvas added their own of this
+    // createHeader("Submitted");
+    // for (let s in submissions) {
+    //     let sub = submissions[s];
+    //     let row = $("tr#submission_"  + sub.assignment_id);
+    //     let scoreCell = row.find('td.assignment_score');
+    //     let cellEl = row.find('td.submission_date');
+    //     // Check if cell already created
+    //     if (cellEl.length === 0) {
+    //       scoreCell.after(`<td class="submission_date">${bridgetools.dateToString(sub.submitted_at)}</td>`);
+    //     }
+    //     else {
+    //       //Possibly add something like over text to show what all the submission dates are, not just the most recent
+    //     }
+    // }
   }
 })();
