@@ -342,7 +342,6 @@
               hasNextPage = connection.pageInfo.hasNextPage;
               after = connection.pageInfo.endCursor;
             }
-            console.log(allAssignments);
             allAssignments.map(assn => {
               assn.id = assn._id;
             });

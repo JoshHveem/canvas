@@ -322,6 +322,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
             if (IS_TEACHER) {
               feature("speed_grader/split_screen", {}, /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
             }
+            feature("grades_page/highlighted_grades_page_items", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
 
             if (CURRENT_DEPARTMENT_ID == 4218) { // DATA ANALYTICS
               externalFeature("https://cdn.datacamp.com/datacamp-light-latest.min.js", /^\/courses\/([0-9]+)\/(pages|assignments|quizzes|discussion_topics)\/[0-9]+(\?|$)/); //really just available to data analytics
@@ -332,7 +333,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
               feature("grades_page/attempts", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
             }
             if (CURRENT_DEPARTMENT_ID === 3824) { // DENTAL
-              feature("grades_page/highlighted_grades_page_items_dental", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
+              // feature("grades_page/highlighted_grades_page_items_dental", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
               feature("rubrics/attempts_data", {}, [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
               feature("rubrics/gen_comment", {}, [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
               //This is currently disabled because it was decided it might be more confusing for students to see a grade that was only part of their final grade.
@@ -341,26 +342,13 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
               feature("department_specific/business_hs");
               feature("previous-enrollment-data/previous_enrollment_period_grades");
             }
-            if (CURRENT_DEPARTMENT_ID === 3819 || CURRENT_DEPARTMENT_ID === 3832) { // AMAR && ELEC
-              feature("modules/points_to_hours_header");
-              // if (IS_ME) feature("speed_grader/resize_submitted_video", {}, /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
-              // feature("department_specific/amar_elec_add_module_items"); //don't think this is used anymore
-            }
-            if (CURRENT_DEPARTMENT_ID === 3847) { //meats
-              feature("grades_page/highlighted_grades_page_items", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
-            }
-            if (CURRENT_DEPARTMENT_ID === 3837) { //auto collision
-            }
-            if (CURRENT_DEPARTMENT_ID === 3840 || CURRENT_DEPARTMENT_ID === 3839) { //media design & drafting
-            }
-            if (CURRENT_DEPARTMENT_ID === 3841 || CURRENT_DEPARTMENT_ID === 3947) { //cosmetology && master esthetics
-              // feature("department_specific/esthetics_cosmetology_services");
-            }
+            // if (CURRENT_DEPARTMENT_ID === 3819 || CURRENT_DEPARTMENT_ID === 3832) { // AMAR && ELEC
+            //   feature("modules/points_to_hours_header");
+            //   // if (IS_ME) feature("speed_grader/resize_submitted_video", {}, /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
+            //   // feature("department_specific/amar_elec_add_module_items"); //don't think this is used anymore
+            // }
             if (CURRENT_DEPARTMENT_ID === 3820) { //Web & Mobile
               externalFeature("https://static.codepen.io/assets/embed/ei.js", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
-            }
-            if (CURRENT_DEPARTMENT_ID === 3883) { //Diesel
-              feature("department_specific/diesel-page-turner", {}, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
             }
           });
         }
