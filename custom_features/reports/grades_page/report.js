@@ -87,6 +87,7 @@
           progress_method: "points_weighted",
           section_names: ['All'],
           section_filter: 'All',
+          end_date_filter: true
         }
       },
       computed: {

@@ -23,6 +23,12 @@
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
           </select>
         </div>
+        <div
+          style="display: inline-block;"
+        >
+          <label>Students w/ End Date</label>
+          <input v-model="end_date_filter">
+        </div>
         <div>
           <div
             style="
@@ -73,7 +79,7 @@
             v-for='(student, i) in enrollments' 
           >
             <div 
-              v-if="section_filter == 'All' || section_filter == student.section_name"
+              v-if="(section_filter == 'All' || section_filter == student.section_name) && (!end_date_filter || student.end_at)"
               style="
                 padding: .25rem .5rem;
                 display: grid;
