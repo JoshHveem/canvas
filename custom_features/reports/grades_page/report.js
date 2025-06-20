@@ -42,6 +42,11 @@
           this.enrollments.push(...enrollments);
         } else {
           let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available')
+          for (let c in courses) {
+            let course = courses[c];
+            let enrollments = await this.loadEnrollments(course.id);
+            this.enrollments.push(...enrollments);
+          }
         }
         console.log(this.enrollments);
         // await this.createGradesReport(course.id);
