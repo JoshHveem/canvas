@@ -84,28 +84,10 @@
       },
       methods: {
         // does not currently handle pagination
-        async graphqlEnrollments(courseId) {
+        async graphqlUngradedSubmissions(courseId) {
           let queryString = 
           `{
             course(id: "${courseId}"){
-              enrollmentsConnection(filter: {states: active, types: StudentEnrollment}, first: 100) {
-                nodes {
-                  _id
-                  createdAt
-                  grades {
-                    currentScore
-                    finalScore
-                  }
-                  user {
-                    name
-                    _id
-                  }
-
-                  section {
-                    name
-                  }
-                }
-              }
               courseCode
               name
                submissionsConnection(filter: {states: [submitted, ungraded, pending_review]}) {
@@ -124,6 +106,38 @@
           let res = await $.post("/api/graphql", { query: queryString });
           return res.data.course;
         },
+        async graphqlEnrollments(courseId) {
+          let queryString = 
+          `{
+            course(id: "${courseId}"){
+              enrollmentsConnection(filter: {states: active, types: StudentEnrollment}, first: 100) {
+                nodes {
+                  _id
+                  createdAt
+                  startAt
+                  endAt
+                  grades {
+                    currentScore
+                    finalScore
+                  }
+                  user {
+                    name
+                    _id
+                  }
+
+                  section {
+                    name
+                  }
+                }
+              }
+              courseCode
+              name
+              _id
+            }
+          }`
+          let res = await $.post("/api/graphql", { query: queryString });
+          return res.data.course;
+        },
         async loadEnrollments(courseId) {
           let enrollments = [];
           
@@ -134,13 +148,15 @@
           let submissionsData = courseData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
+            let endAt = enrollmentData.end_at ? Date.parse(enrollmentData.end_at) : undefined;
+            let startAt = enrollmentData.start_at ? Date.parse(enrollmentData.start_at) : undefined;
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
               course_code: courseData.courseCode,
               enrollment_id: enrollmentData._id,
-              created_at: Date.parse(enrollmentData.createdAt),
-              end_at: Date.now(),
+              created_at: startAt,
+              end_at: endAt,
               current_score: enrollmentData.grades.currentScore,
               final_score: enrollmentData.grades.finalScore,
               progress: 0,
