@@ -143,13 +143,15 @@
           
           let courseData = await this.graphqlEnrollments(courseId);
           let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
-          console.log(ungradedSubmissionsData);
           // let recentSubmissionsData = await this.graphqlRecentSubmissions(courseId);
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
+          let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
             let endAt = enrollmentData.end_at ? Date.parse(enrollmentData.end_at) : undefined;
             let startAt = enrollmentData.start_at ? Date.parse(enrollmentData.start_at) : undefined;
+            console.log(enrollmentData);
+            console.log(endAt);
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
@@ -169,14 +171,14 @@
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
           }
-          // for (let s = 0; s < ungradedSubmissionsData.length; s++) {
-          //   let submissionData = ungradedSubmissionsData[s];
-          //   for (let e = 0; e < enrollments.length; e++) {
-          //     if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
-          //       enrollments[e].ungraded_submissions += 1;
-          //     }
-          //   }
-          // }
+          for (let s = 0; s < ungradedSubmissions.length; s++) {
+            let submissionData = ungradedSubmissions[s];
+            for (let e = 0; e < enrollments.length; e++) {
+              if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
+                enrollments[e].ungraded_submissions += 1;
+              }
+            }
+          }
           return enrollments;
         },
         processEnrollment(enrollment) {
