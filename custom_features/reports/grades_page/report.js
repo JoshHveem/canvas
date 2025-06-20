@@ -95,7 +95,7 @@
       methods: {
         dateToString(date) {
           date = new Date(Date.parse(date));
-          return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();,
+          return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         },
         // does not currently handle pagination
         async graphqlUngradedSubmissions(courseId) {
