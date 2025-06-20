@@ -28,7 +28,7 @@
             style="
               padding: .25rem .5rem;
               display: grid;
-              grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 4rem;
+              grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem;
               align-items: center;
               font-size: 0.75rem;
               cursor: help;
@@ -77,7 +77,7 @@
               style="
                 padding: .25rem .5rem;
                 display: grid;
-                grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 4rem;
+                grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem;
                 align-items: center;
                 font-size: 0.75rem;
               "
