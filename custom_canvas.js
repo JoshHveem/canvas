@@ -204,6 +204,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
+    if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
     feature("welcome_banner", {}, /^\/$/);
 
     feature('modules/enrollment_dates_student_external', {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
@@ -273,7 +274,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         }
         if (IS_TEACHER) {
           feature("reports/grades_page/report", {}, /^\/courses\/[0-9]+\/gradebook$/);
-          feature("reports/grades_page/report", {}, /^\/$/);
           feature("hs/enroll", {}, /^\/accounts\/[0-9]+\/enrollhs$/);
           feature("reports/individual_page/report", {}, [
             /^\/courses\/[0-9]+\/users\/[0-9]+$/,
