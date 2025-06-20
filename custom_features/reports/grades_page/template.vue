@@ -183,7 +183,7 @@
                 >{{ student.ungraded }}</span>
                 <span 
                   v-else
-                >n/a</span>
+                >0</span>
               </div>
             </div>
           </div>
