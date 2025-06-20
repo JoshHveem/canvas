@@ -26,7 +26,7 @@
         <div
           style="display: inline-block;"
         >
-          <label>Students w/ End Date</label>
+          <label>Upcoming End Date</label>
           <input type="checkbox" v-model="end_date_filter">
         </div>
         <div>
@@ -79,7 +79,7 @@
             v-for='(student, i) in enrollments' 
           >
             <div 
-              v-if="(section_filter == 'All' || section_filter == student.section_name) && (!end_date_filter || student.end_at)"
+              v-if="(section_filter == 'All' || section_filter == student.section_name) && (!end_date_filter || student.end_at >= new Date())"
               style="
                 padding: .25rem .5rem;
                 display: grid;
