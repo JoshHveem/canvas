@@ -42,7 +42,7 @@
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
         } else {
-          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available&include[]=term')
+          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term')
           for (let c in courses) {
             let course = courses[c];
             console.log(course);
