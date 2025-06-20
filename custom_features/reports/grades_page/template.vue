@@ -157,7 +157,6 @@
               <div 
                 style="display: inline-block;"
               >
-                {{ student.days_left }}
                 <span 
                   class="btech-pill-text" 
                   v-if="student.days_left"

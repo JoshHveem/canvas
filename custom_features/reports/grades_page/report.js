@@ -163,7 +163,7 @@
             console.log(startAt);
             console.log(endAt);
             console.log(endAt - startAt)
-            let daysLeft = this.calcDaysBetweenDates(startAt, endAt);
+            let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
             console.log(daysLeft);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
             let enrollment = {
