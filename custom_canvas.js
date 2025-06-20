@@ -215,7 +215,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     //FEATURES THAT DON'T NEED ALL THE EXTRA STUFF LIKE HOURS AND DEPT DATA AND VUE
     featureISD('copy_to_next_year', {}, /^\/accounts\/[0-9]+$/);
     // dashboard level reports that need vue
-    await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
+    await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     console.log('Vue Loaded')
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
