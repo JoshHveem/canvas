@@ -42,16 +42,16 @@
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
         } else {
-          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available')
+          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available&include[]=term')
           for (let c in courses) {
             let course = courses[c];
             console.log(course);
+            console.log(course.term);
             console.log(this.enrollments);
             let enrollments = await this.loadEnrollments(course.id);
             this.enrollments.push(...enrollments);
           }
         }
-        console.log(this.enrollments);
         // await this.createGradesReport(course.id);
         // await this.processStudentsData(course);
         // this.updateStudents();
@@ -235,7 +235,6 @@
               sortType = this.columns[c].sort_type;
             }
           }
-          console.log(this.columns);
           this.enrollments.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
@@ -256,7 +255,6 @@
             comp *= sortState;
             return comp
           });
-          console.log(this.enrollments);
         },
    
         columnNameToCode(name) {
