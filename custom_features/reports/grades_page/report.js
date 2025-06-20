@@ -218,7 +218,6 @@
           let name;
           if (header === "Progress Estimate") name = this.columnNameToCode(this.progress_method);
           else name = this.columnNameToCode(header);
-          console.log(name);
           let sortState = 1;
           let sortType = '';
           for (let c = 0; c < this.columns.length; c++) {
@@ -233,6 +232,7 @@
               sortType = this.columns[c].sort_type;
             }
           }
+          console.log(this.columns);
           this.enrollments.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
@@ -252,7 +252,8 @@
             //flip it if reverse sorting;
             comp *= sortState;
             return comp
-          })
+          });
+          console.log(this.enrollments);
         },
    
         columnNameToCode(name) {
