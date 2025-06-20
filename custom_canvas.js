@@ -214,6 +214,11 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     //FEATURES THAT DON'T NEED ALL THE EXTRA STUFF LIKE HOURS AND DEPT DATA AND VUE
     featureISD('copy_to_next_year', {}, /^\/accounts\/[0-9]+$/);
+    // dashboard level reports that need vue
+    $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12").done(function () {
+      if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
+      if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
+    });
     if (rCheckInCourse.test(window.location.pathname)) {
       //I'm putting concluding students in here as well vvv
       feature('modules/enrollment_dates_teacher', {}, /^\/courses\/[0-9]+\/users\/[0-9]+$/);
@@ -271,8 +276,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
           ]);
         }
         if (IS_TEACHER) {
-          feature("dashboard/studentsNearCompletion", {}, /^\/$/);
-          feature("reports/grades_page/report", {}, /^\/$/);
           feature("reports/grades_page/report", {}, /^\/courses\/[0-9]+\/gradebook$/);
           feature("hs/enroll", {}, /^\/accounts\/[0-9]+\/enrollhs$/);
           feature("reports/individual_page/report", {}, [
