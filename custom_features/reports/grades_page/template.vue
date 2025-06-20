@@ -179,11 +179,11 @@
               >
                 <span 
                   class="btech-pill-text" 
-                  v-if="student.ungraded"
+                  :style="{
+                    'background-color': (student.ungraded > 1) ? colors.red : (student.ungraded > 0 ? colors.yellow : colors.green),
+                    'color': colors.white,
+                  }"
                 >{{ student.ungraded }}</span>
-                <span 
-                  v-else
-                >0</span>
               </div>
             </div>
           </div>
