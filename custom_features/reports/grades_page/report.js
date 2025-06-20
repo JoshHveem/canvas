@@ -45,6 +45,7 @@
           let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available')
           for (let c in courses) {
             let course = courses[c];
+            console.log(course);
             let enrollments = await this.loadEnrollments(course.id);
             this.enrollments.push(...enrollments);
           }
@@ -184,6 +185,7 @@
             };
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
+
           }
           for (let s = 0; s < ungradedSubmissions.length; s++) {
             let submissionData = ungradedSubmissions[s];
