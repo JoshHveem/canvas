@@ -47,6 +47,10 @@
             let course = courses[c];
             console.log(course);
             console.log(course.term);
+            if (course.term.end_at) {
+              let termEndAt = date.parse(course.term.end_at)
+              if (termEndAt < new Date()) continue;
+            }
             console.log(this.enrollments);
             let enrollments = await this.loadEnrollments(course.id);
             this.enrollments.push(...enrollments);
