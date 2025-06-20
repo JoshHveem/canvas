@@ -138,6 +138,14 @@
           let res = await $.post("/api/graphql", { query: queryString });
           return res.data.course;
         },
+        calcDaysBetweenDates(date1, date2=new Date()) {
+          let diffTime =  date2 - date1;
+          if (diffTime > 0) {
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+          }
+          return undefined;
+        },
         async loadEnrollments(courseId) {
           let enrollments = [];
           
@@ -150,9 +158,9 @@
             let enrollmentData = enrollmentsData[e];
             let endAt = enrollmentData.end_at ? Date.parse(enrollmentData.end_at) : undefined;
             let startAt = enrollmentData.start_at ?? enrollmentData.created_at;
+            let daysLeft = this.calcDaysBetweenDates(startAt, endAt);
+            let daysInCourse = this.calcDaysBetweenDates(startAt);
             startAt = startAt ? Date.parse(startAt) : undefined;
-            console.log(enrollmentData);
-            console.log(endAt);
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
@@ -164,7 +172,8 @@
               final_score: enrollmentData.grades.finalScore,
               progress: 0,
               section_name: enrollmentData.section.name,
-              days_in_course: 0,
+              days_in_course: daysInCourse,
+              days_left: daysLeft,
               user_name: enrollmentData.user.name,
               user_id: enrollmentData.user._id,
               ungraded_submissions: 0
