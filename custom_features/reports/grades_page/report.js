@@ -271,12 +271,11 @@
     style.media = "screen,print";
     head.insertBefore(style, head.firstChild);
   }
-  function _init() {
+  async function _init() {
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     loadCSS("https://reports.bridgetools.dev/style/main.css");
-    $.getScript("https://reports.bridgetools.dev/department_report/components/courseProgressBarInd.js").done(() => {
-      postLoad();
-    });
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/courseProgressBarInd.js");
+    postLoad();
   }
   _init();
 })();
