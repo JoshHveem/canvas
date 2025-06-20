@@ -53,7 +53,7 @@
                   xml:space="preserve">
                 <g>
                   <polygon 
-                    :style"{
+                    :style="{
                       'fill': column.sort_state < 0 ? '#000000' : '#E0E0E0'
                     }"
                     points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 
@@ -70,7 +70,7 @@
             </div>
           </div>
           <div
-            v-for='student, i in enrollments' 
+            v-for='(student, i) in enrollments' 
             :key='student.user_id'
           >
             <div 
