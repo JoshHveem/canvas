@@ -149,7 +149,8 @@
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
             let endAt = enrollmentData.end_at ? Date.parse(enrollmentData.end_at) : undefined;
-            let startAt = enrollmentData.start_at ? Date.parse(enrollmentData.start_at) : undefined;
+            let startAt = enrollmentData.start_at ?? enrollmentData.created_at;
+            startAt = startAt ? Date.parse(startAt) : undefined;
             console.log(enrollmentData);
             console.log(endAt);
             let enrollment = {
