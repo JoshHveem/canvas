@@ -273,6 +273,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         }
         if (IS_TEACHER) {
           feature("reports/grades_page/report", {}, /^\/courses\/[0-9]+\/gradebook$/);
+          feature("reports/grades_page/report", {}, /^\/$/);
           feature("hs/enroll", {}, /^\/accounts\/[0-9]+\/enrollhs$/);
           feature("reports/individual_page/report", {}, [
             /^\/courses\/[0-9]+\/users\/[0-9]+$/,
