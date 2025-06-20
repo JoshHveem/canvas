@@ -180,7 +180,7 @@
                 <span 
                   class="btech-pill-text" 
                   v-if="student.ungraded"
-                >student.ungraded</span>
+                >{{ student.ungraded }}</span>
                 <span 
                   v-else
                 >n/a</span>
