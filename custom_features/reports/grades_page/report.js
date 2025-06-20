@@ -49,7 +49,7 @@
             this.enrollments.push(...enrollments);
           }
         }
-          console.log(this.enrollments);
+        console.log(this.enrollments);
         // await this.createGradesReport(course.id);
         // await this.processStudentsData(course);
         // this.updateStudents();
