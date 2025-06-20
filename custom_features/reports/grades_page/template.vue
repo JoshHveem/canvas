@@ -179,7 +179,7 @@
               >
                 <span 
                   class="btech-pill-text" 
-                  v-if="student.student.ungraded"
+                  v-if="student.ungraded"
                 >student.ungraded</span>
                 <span 
                   v-else
