@@ -160,9 +160,9 @@
           let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
-            let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : undefined;
+            let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : null;
             let startAt = enrollmentData.startAt ?? enrollmentData.createdAt;
-            startAt = startAt ? Date.parse(startAt) : undefined;
+            startAt = startAt ? Date.parse(startAt) : null;
             let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
             let enrollment = {

@@ -38,6 +38,7 @@
             <div 
               v-for='column in visibleColumns' 
               style="display: inline-block; grid-template-columns: auto 1rem;"
+              :key='column.name' 
               :title='column.description'
               @click="sortColumn(column.name)"
             >
@@ -70,6 +71,7 @@
           </div>
           <div
             v-for='student, i in enrollments' 
+            :key='student.user_id'
           >
             <div 
               v-if="section_filter == 'All' || section_filter == student.section_name"
