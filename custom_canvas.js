@@ -203,8 +203,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
-    if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
-    if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
     feature("welcome_banner", {}, /^\/$/);
 
     feature('modules/enrollment_dates_student_external', {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
@@ -262,6 +260,8 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       featureISD("course_reviewer/quiz_score", {}, /^\/courses\/[0-9]+\/quizzes\/[0-9]+/);
       featureISD("course_reviewer/discussion_score", {}, /^\/courses\/[0-9]+\/discussion_topics\/[0-9]+/);
       featureISD("course_reviewer/page_score", {}, /^\/courses\/[0-9]+\/pages\/.+/);
+      if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
+      if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
       $.getScript(SOURCE_URL + "/course_data/course_hours.js").done(() => {
         //GENERAL FEATURES
         //feature("reports/dashboard/banner-report", {}, /^\/$/);
