@@ -37,7 +37,7 @@
     new Vue({
       el: '#canvas-grades-report-vue',
       mounted: async function () {
-        let courseId = ENV?.current_context.id;
+        let courseId = ENV?.current_context?.id;
         if (courseId) {
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
