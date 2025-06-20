@@ -128,8 +128,8 @@
           let enrollments = [];
           
           let courseData = await this.graphqlEnrollments(courseId);
-          let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
-          let recentSubmissionsData = await this.graphqlRecentSubmissions(courseId);
+          // let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
+          // let recentSubmissionsData = await this.graphqlRecentSubmissions(courseId);
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
           let submissionsData = courseData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
