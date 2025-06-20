@@ -71,7 +71,6 @@
           </div>
           <div
             v-for='(student, i) in enrollments' 
-            :key='student.user_id'
           >
             <div 
               v-if="section_filter == 'All' || section_filter == student.section_name"
