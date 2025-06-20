@@ -49,7 +49,7 @@
             this.enrollments.push(...enrollments);
           }
         }
-        console.log(this.enrollments);
+          console.log(this.enrollments);
         // await this.createGradesReport(course.id);
         // await this.processStudentsData(course);
         // this.updateStudents();
@@ -160,15 +160,10 @@
           let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
-            console.log(enrollmentData);
             let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : undefined;
             let startAt = enrollmentData.startAt ?? enrollmentData.createdAt;
             startAt = startAt ? Date.parse(startAt) : undefined;
-            console.log(startAt);
-            console.log(endAt);
-            console.log(endAt - startAt)
             let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
-            console.log(daysLeft);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
             let enrollment = {
               course_name: courseData.name,
