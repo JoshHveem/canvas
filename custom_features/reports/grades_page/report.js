@@ -159,13 +159,13 @@
             console.log(enrollmentData);
             let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : undefined;
             let startAt = enrollmentData.startAt ?? enrollmentData.createdAt;
+            startAt = startAt ? Date.parse(startAt) : undefined;
             console.log(startAt);
             console.log(endAt);
             console.log(endAt - startAt)
             let daysLeft = this.calcDaysBetweenDates(startAt, endAt);
             console.log(daysLeft);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
-            startAt = startAt ? Date.parse(startAt) : undefined;
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
