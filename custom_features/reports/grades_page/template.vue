@@ -27,7 +27,7 @@
           style="display: inline-block;"
         >
           <label>Students w/ End Date</label>
-          <input v-model="end_date_filter">
+          <input type="checkbox" v-model="end_date_filter">
         </div>
         <div>
           <div
