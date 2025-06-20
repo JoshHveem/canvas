@@ -140,11 +140,8 @@
         },
         calcDaysBetweenDates(date1, date2=new Date()) {
           let diffTime =  date2 - date1;
-          if (diffTime > 0) {
-            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays;
-          }
-          return undefined;
+          let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
         },
         async loadEnrollments(courseId) {
           let enrollments = [];
