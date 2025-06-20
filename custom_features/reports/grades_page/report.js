@@ -81,7 +81,8 @@
           menu: '',
           progress_method: "points_weighted",
           section_names: ['All'],
-          section_filter: 'All'
+          section_filter: 'All',
+          dateToString: dateToString
         }
       },
       computed: {

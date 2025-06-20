@@ -163,7 +163,7 @@
                     'background-color': (student.days_left < 3) ? colors.red : (student.days_left < 7 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }"
-                >{{student.end_at}}</span>
+                >{{dateToString(student.end_at)}}</span>
                 <span 
                   v-else
                 >n/a</span>
