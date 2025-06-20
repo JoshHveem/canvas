@@ -83,7 +83,6 @@
           progress_method: "points_weighted",
           section_names: ['All'],
           section_filter: 'All',
-          dateToString: dateToString
         }
       },
       computed: {
@@ -94,6 +93,10 @@
         }
       },
       methods: {
+        dateToString(date) {
+          date = new Date(Date.parse(date));
+          return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();,
+        },
         // does not currently handle pagination
         async graphqlUngradedSubmissions(courseId) {
           let queryString = 
