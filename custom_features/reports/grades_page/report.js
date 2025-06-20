@@ -36,12 +36,13 @@
     new Vue({
       el: '#canvas-grades-report-vue',
       mounted: async function () {
-        // let courseId = ENV.context_asset_string.replace("course_", "");
-        let courseId = ENV.current_context.id;
-        // let course = (await canvasGet(`/api/v1/courses/${courseId}`))[0];
-        // console.log(course);
-        let enrollments = await this.loadEnrollments(courseId);
-        this.enrollments = enrollments;
+        let courseId = ENV?.current_context.id;
+        if (courseId) {
+          let enrollments = await this.loadEnrollments(courseId);
+          this.enrollments.push(...enrollments);
+        } else {
+          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&state[]=available')
+        }
         console.log(this.enrollments);
         // await this.createGradesReport(course.id);
         // await this.processStudentsData(course);
