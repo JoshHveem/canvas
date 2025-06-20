@@ -34,7 +34,7 @@
             style="
               padding: .25rem .5rem;
               display: grid;
-              grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem;
+              grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
               align-items: center;
               font-size: 0.75rem;
               cursor: help;
@@ -83,7 +83,7 @@
               style="
                 padding: .25rem .5rem;
                 display: grid;
-                grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem;
+                grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
                 align-items: center;
                 font-size: 0.75rem;
               "
@@ -170,6 +170,17 @@
                     'color': colors.white,
                   }"
                 >{{dateToString(student.end_at)}}</span>
+                <span 
+                  v-else
+                >n/a</span>
+              </div>
+              <div 
+                style="display: inline-block;"
+              >
+                <span 
+                  class="btech-pill-text" 
+                  v-if="student.student.ungraded"
+                >student.ungraded</span>
                 <span 
                   v-else
                 >n/a</span>

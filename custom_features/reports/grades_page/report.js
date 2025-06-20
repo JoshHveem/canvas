@@ -79,7 +79,7 @@
             new Column('Days In Course', 'The number of days since the student began the course.', true, 3, 'number'),
             new Column('End At', 'The course end date.', true, 3, 'number'),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            // new Column('Ungraded', '', true, 3, 'number')
+            new Column('Ungraded', '', true, 3, 'number')
           ],
           enrollments: [],
           loading: false, //CHANGE: return this to true if this doesn't work
@@ -192,7 +192,7 @@
               days_left: daysLeft,
               user_name: enrollmentData.user.name,
               user_id: enrollmentData.user._id,
-              ungraded_submissions: 0
+              ungraded: 0
             };
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
@@ -202,7 +202,7 @@
             let submissionData = ungradedSubmissions[s];
             for (let e = 0; e < enrollments.length; e++) {
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
-                enrollments[e].ungraded_submissions += 1;
+                enrollments[e].ungraded += 1;
               }
             }
           }
