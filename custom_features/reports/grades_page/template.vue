@@ -183,7 +183,7 @@
                     'background-color': (student.ungraded > 1) ? colors.red : (student.ungraded > 0 ? colors.yellow : colors.green),
                     'color': colors.white,
                   }"
-                >{{ student.ungraded }}</span>
+                >{{ student.ungraded ?? 0 }}</span>
               </div>
             </div>
           </div>
