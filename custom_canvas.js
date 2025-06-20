@@ -216,6 +216,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     featureISD('copy_to_next_year', {}, /^\/accounts\/[0-9]+$/);
     // dashboard level reports that need vue
     await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
+    console.log('Vue Loaded')
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
     if (rCheckInCourse.test(window.location.pathname)) {
