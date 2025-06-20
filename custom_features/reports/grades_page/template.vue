@@ -166,7 +166,7 @@
                   class="btech-pill-text" 
                   v-if="student.end_at"
                   :style="{
-                    'background-color': (student.days_left < 3) ? colors.red : (student.days_left < 7 ? colors.yellow : colors.green),
+                    'background-color': (student.days_left < 0) ? colors.darkRed : ( (student.days_left < 3) ? colors.red : (student.days_left < 7 ? colors.yellow : colors.green) ),
                     'color': colors.white,
                   }"
                 >{{dateToString(student.end_at)}}</span>
