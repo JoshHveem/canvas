@@ -94,7 +94,7 @@
                 }
               }
             ),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '5rem', true, 'number', 
+            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '5.5rem', true, 'number', 
               student => student.final_score ? student.final_score + '%' : 'n/a',
               student => {
                 return {
