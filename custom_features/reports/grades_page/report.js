@@ -89,7 +89,7 @@
               student => student.current_score ? student.current_score + '%' : 'n/a',
               student => {
                 return {
-                  'background-color': (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
+                  'background-color': student.current_score ? this.colors.black : (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
@@ -98,7 +98,7 @@
               student => student.final_score ? student.final_score + '%' : 'n/a',
               student => {
                 return {
-                  'background-color': (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
+                  'background-color': student.final_score ? this.colors.black : (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
