@@ -85,7 +85,7 @@
             ),
             new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', student => student.course_name),
             new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', student => student.section_name),
-            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number', 
+            new Column('Score', 'The student\'s grade based on assignments submitted to date.', '5rem', true, 'number', 
               student => student.current_score ? student.current_score + '%' : 'n/a',
               student => {
                 return {
@@ -94,7 +94,7 @@
                 }
               }
             ),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number', 
+            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '5rem', true, 'number', 
               student => student.final_score ? student.final_score + '%' : 'n/a',
               student => {
                 return {
@@ -113,7 +113,7 @@
               }
             ),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            new Column('Ungraded', '', '4rem', true, 'number',
+            new Column('Ungraded', '', '4.5rem', true, 'number',
               student => student.ungraded,
               student => {
                 return {
