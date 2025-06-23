@@ -12,11 +12,6 @@
       this.style_formula = style_formula;
     }
 
-    dateToString(date) {
-      date = new Date(Date.parse(date));
-      return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-    }
-    
     get_style(student) {
       if (this.style_formula != null) {
         return this.style_formula(student);
