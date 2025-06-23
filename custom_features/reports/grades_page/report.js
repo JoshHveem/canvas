@@ -11,6 +11,11 @@
       this.getContent = getContent
       this.style_formula = style_formula;
     }
+
+    dateToString(date) {
+      date = new Date(Date.parse(date));
+      return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+    }
     
     get_style(student) {
       if (this.style_formula != null) {
@@ -104,7 +109,7 @@
               }
             ),
             new Column('End At', 'The course end date.', '5rem', true, 'number',
-              student => dateToString(student.end_at),
+              student => this.dateToString(student.end_at),
               student => {
                 return {
                   'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
