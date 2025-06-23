@@ -34,12 +34,14 @@
             style="
               padding: .25rem .5rem;
               display: grid;
-              grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
               align-items: center;
               font-size: 0.75rem;
               cursor: help;
               user-select: none;
             "
+            :style="{
+              'grid-template-columns': calcColumnWidthsString()
+            }"
           >
             <div 
               v-for='column in visibleColumns' 
@@ -83,11 +85,11 @@
               style="
                 padding: .25rem .5rem;
                 display: grid;
-                grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
                 align-items: center;
                 font-size: 0.75rem;
               "
               :style="{
+              'grid-template-columns': calcColumnWidthsString(),
                 'background-color': (i % 2) ? 'white' : '#F8F8F8'
               }"
             >

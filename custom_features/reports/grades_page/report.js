@@ -66,17 +66,17 @@
           courseId: null,
           colors: bridgetools.colors,
           columns: [
-            new Column('User Name', 'The student\'s name as it appears in Canvas.', 10, false, 'string'),
-            new Column('Course Name', 'The course in which the student is enrolled.', 10, false, 'string'),
-            new Column('Section Name', 'The section in which the student is enrolled in this course.', 10, false, 'string'),
-            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', 3, true, 'number'),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', 3, true, 'number'),
-            new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', 12, true, 'number'),
-            new Column('Last Submit', 'The number of days since the student\'s last submission.', 3, true, 'number'),
-            new Column('Days In Course', 'The number of days since the student began the course.', true, 3, 'number'),
-            new Column('End At', 'The course end date.', true, 3, 'number'),
+            new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string'),
+            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string'),
+            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string'),
+            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number'),
+            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number'),
+            new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
+            new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
+            new Column('Days In Course', 'The number of days since the student began the course.', true, '4rem', 'number'),
+            new Column('End At', 'The course end date.', true, '5rem', 'number'),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            new Column('Ungraded', '', true, 3, 'number')
+            new Column('Ungraded', '', true, '4rem', 'number')
           ],
           enrollments: [],
           loading: false, //CHANGE: return this to true if this doesn't work
@@ -95,6 +95,14 @@
         }
       },
       methods: {
+        calcColumnsWidthsString() {
+          let str = '';
+          for (let c in this.columns) {
+            let col = this.columns[c];
+                str += col.width;
+                // grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
+          }
+        },
         dateToString(date) {
           date = new Date(Date.parse(date));
           return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
