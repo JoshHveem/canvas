@@ -109,7 +109,7 @@
                 (<a :href="`/courses/${student.course_id}/grades/${student.user_id}`" target="_blank">grades</a>)</span>
                 <span
                   v-else
-                  class="btech-pill-text" 
+                  :class="column.style_formula ? 'btech-pill-text' : ''" 
                   :style="column.get_style(student)"
                 >
                   {{ column.getContent(student) }}
