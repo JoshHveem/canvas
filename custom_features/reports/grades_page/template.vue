@@ -40,7 +40,7 @@
               user-select: none;
             "
             :style="{
-              'grid-template-columns': calcColumnWidthsString()
+              'grid-template-columns': getColumnsWidthsString()
             }"
           >
             <div 
@@ -89,7 +89,7 @@
                 font-size: 0.75rem;
               "
               :style="{
-              'grid-template-columns': calcColumnWidthsString(),
+              'grid-template-columns': getColumnsWidthsString(),
                 'background-color': (i % 2) ? 'white' : '#F8F8F8'
               }"
             >

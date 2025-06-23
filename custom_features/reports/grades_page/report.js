@@ -95,7 +95,7 @@
         }
       },
       methods: {
-        calcColumnsWidthsString() {
+        getColumnsWidthsString() {
           let str = '';
           for (let c in this.columns) {
             let col = this.columns[c];
