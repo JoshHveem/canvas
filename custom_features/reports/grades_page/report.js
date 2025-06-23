@@ -1,6 +1,6 @@
 (async function () {
   class Column {
-    constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '') {
+    constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '', style_formula= null) {
       this.name = name;
       this.description = description;
       this.width = width;
@@ -9,6 +9,13 @@
       this.sort_state = 0; //becomes 1 or -1 depending on asc or desc
       this.visible = true;
       this.getContent = getContent
+      this.style_formula = style_formula;
+    }
+    
+    get_style(student) {
+      if (this.style_formula != null) {
+        return this.style_formula(student);
+      }
     }
   }
   async function postLoad() {
@@ -77,11 +84,43 @@
             ),
             new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', student => student.course_name),
             new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', student => student.section_name),
-            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number', student => student.current_score + '%'),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number', student => student.final_score + '%'),
-            new Column('End At', 'The course end date.', '5rem', true, 'number'),
+            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number', 
+              student => student.current_score + '%',
+              student => {
+                return {
+                  'background-color': (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
+            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number', 
+              student => student.final_score + '%',
+              student => {
+                return {
+                  'background-color': (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
+            new Column('End At', 'The course end date.', '5rem', true, 'number',
+              student => dateToString(student.end_at),
+              student => {
+                return {
+                  'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
+                  'color': this.colors.white,
+                }
+              }
+            ),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            new Column('Ungraded', '', '4rem', true, 'number'),
+            new Column('Ungraded', '', '4rem', true, 'number',
+              student => student.ungraded,
+              student => {
+                return {
+                  'background-color': (student.ungraded > 1) ? this.colors.red : (student.ungraded > 0 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
             // new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
