@@ -1,6 +1,6 @@
 (async function () {
   class Column {
-    constructor(name, description, width, average, sort_type) {
+    constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '') {
       this.name = name;
       this.description = description;
       this.width = width;
@@ -8,6 +8,7 @@
       this.sort_type = sort_type; //needs to be a result of typeof, probably mostly going to be string or number
       this.sort_state = 0; //becomes 1 or -1 depending on asc or desc
       this.visible = true;
+      this.getContent = getContent
     }
   }
   async function postLoad() {
@@ -66,15 +67,22 @@
           courseId: null,
           colors: bridgetools.colors,
           columns: [
-            new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string'),
-            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string'),
-            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string'),
-            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number'),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number'),
+            new Column(
+              'User Name', 
+              'The student\'s name as it appears in Canvas.', 
+              'auto', 
+              false, 
+              'string',
+              (student) => student.user_name ?? ''
+            ),
+            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', student => student.course_name),
+            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', student => student.section_name),
+            new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number', student => student.current_score + '%'),
+            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number', student => student.final_score + '%'),
             new Column('End At', 'The course end date.', '5rem', true, 'number'),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
             new Column('Ungraded', '', '4rem', true, 'number'),
-            new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
+            // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
             // new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
           ],

@@ -94,6 +94,23 @@
               }"
             >
               <!--Name-->
+              <div
+                v-for='column in visibleColumns' 
+                :key='column.name' 
+                style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+              >
+                <course-progress-bar-ind
+                  v-if="column.name == 'Progress'"
+                  :progress="student.progress"
+                  :barwidth="9"
+                  :colors="colors"
+                ></course-progress-bar-ind>
+                <span
+                  v-else
+                >
+                  {{ column.getContent(student) }}
+                </span>
+              </div>
               <div 
                 style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
               >
@@ -133,15 +150,6 @@
                   }">
                   {{student.final_score}}%
                 </span>
-              </div>
-              <div 
-                style="display: inline-block"
-              >
-                <course-progress-bar-ind
-                  :progress="student.progress"
-                  :barwidth="9"
-                  :colors="colors"
-                ></course-progress-bar-ind>
               </div>
               <div 
                 style="display: inline-block;"
