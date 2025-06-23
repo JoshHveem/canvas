@@ -36,7 +36,6 @@
               display: grid;
               align-items: center;
               font-size: 0.75rem;
-              line-height: 1.5rem;
               cursor: help;
               user-select: none;
             "
@@ -88,6 +87,7 @@
                 display: grid;
                 align-items: center;
                 font-size: 0.75rem;
+                line-height: 1.5rem;
               "
               :style="{
               'grid-template-columns': getColumnsWidthsString(),
