@@ -102,6 +102,7 @@
                 str += col.width;
                 // grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
           }
+          return str;
         },
         dateToString(date) {
           date = new Date(Date.parse(date));
