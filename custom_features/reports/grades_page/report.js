@@ -86,7 +86,7 @@
             new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', student => student.course_name),
             new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', student => student.section_name),
             new Column('Current Score', 'The student\'s grade based on assignments submitted to date.', '4.5rem', true, 'number', 
-              student => student.current_score + '%',
+              student => student.current_score ? student.current_score + '%' : 'n/a',
               student => {
                 return {
                   'background-color': (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
@@ -95,7 +95,7 @@
               }
             ),
             new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number', 
-              student => student.final_score + '%',
+              student => student.final_score ? student.final_score + '%' : 'n/a',
               student => {
                 return {
                   'background-color': (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
