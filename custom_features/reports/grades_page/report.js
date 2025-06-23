@@ -16,6 +16,7 @@
       if (this.style_formula != null) {
         return this.style_formula(student);
       }
+      return '';
     }
   }
   async function postLoad() {
