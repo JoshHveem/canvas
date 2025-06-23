@@ -105,27 +105,13 @@
                   :barwidth="9"
                   :colors="colors"
                 ></course-progress-bar-ind>
+                <span v-else-if="column.name == 'User Name'"><a :href="`/courses/${student.course_id}/users/${student.user_id}`" target="_blank">{{student.user_name}} </a>
+                (<a :href="`/courses/${student.course_id}/grades/${student.user_id}`" target="_blank">grades</a>)</span>
                 <span
                   v-else
                 >
                   {{ column.getContent(student) }}
                 </span>
-              </div>
-              <div 
-                style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-              >
-                <a :href="`/courses/${student.course_id}/users/${student.user_id}`" target="_blank">{{student.user_name}} </a>
-                (<a :href="`/courses/${student.course_id}/grades/${student.user_id}`" target="_blank">grades</a>)
-              </div>
-              <div 
-                style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-              >
-                {{student.course_name}}
-              </div>
-              <div 
-                style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-              >
-                {{student.section_name}}
               </div>
               <div 
                 style="display: inline-block;"
