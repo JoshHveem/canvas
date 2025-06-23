@@ -73,10 +73,10 @@
             new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '4.5rem', true, 'number'),
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
             new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
-            new Column('Days In Course', 'The number of days since the student began the course.', true, '4rem', 'number'),
-            new Column('End At', 'The course end date.', true, '5rem', 'number'),
+            new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
+            new Column('End At', 'The course end date.', '5rem', true, 'number'),
             // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            new Column('Ungraded', '', true, '4rem', 'number')
+            new Column('Ungraded', '', '4rem', true, 'number')
           ],
           enrollments: [],
           loading: false, //CHANGE: return this to true if this doesn't work
