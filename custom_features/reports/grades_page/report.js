@@ -428,6 +428,7 @@
         },
         async loadCourseEnrollments() {
           this.loading = true;
+          let now = new Date();
           let loadingAccount = this.settings.account;
           let courses = [];
           this.enrollments = [];
@@ -441,12 +442,12 @@
             let course = courses[c];
             if (course.term.end_at) {
               let termEndAt = Date.parse(course.term.end_at)
-              if (termEndAt < new Date()) continue;
+              if (termEndAt < now) continue;
             }
             let enrollments = await this.loadEnrollments(course.id);
             for (let e = 0; e < enrollments.length; e++) {
               let enrollment = enrollments[e];
-              if (enrollment.days_left < 3 && enrollment.days_left >= 0 && enrollment.end_at) {
+              if (enrollment.days_left < 3 && enrollment.end_at >= now) {
                 flaggedEnrollments += 1;
                 $('#progress-report-alert-circle').show();
                 $('#progress-report-alert-circle').html(flaggedEnrollments);
