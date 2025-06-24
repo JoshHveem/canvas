@@ -140,6 +140,7 @@
             ),
             new Column('End At', 'The course end date.', '5rem', true, 'number',
               student => {
+                console.log(student.end_at);
                 return this.dateToString(student.end_at);
               },
               student => {
