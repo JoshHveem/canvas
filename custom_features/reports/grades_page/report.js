@@ -84,9 +84,8 @@
       },
       mounted: async function () {
         console.log('mounted');
-        this.settings = this.defaultSettings;
         let courseId = ENV?.current_context?.id;
-        let settings = await this.loadSettings();
+        let settings = await this.loadSettings(this.settings);
         this.settings = settings;
         if (courseId) {
           let enrollments = await this.loadEnrollments(courseId);
@@ -110,7 +109,7 @@
         return {
           courseId: null,
           colors: bridgetools.colors,
-          defaultSettings: {
+          settings: {
             progress_method: "points_weighted",
             filters: {
               section: 'All',
@@ -118,7 +117,6 @@
               hide_past_end_date: false
             }
           },
-          settings: JSON.parse(JSON.stringify(this.defaultSettings)),
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
@@ -211,20 +209,32 @@
         }
       },
       methods: {
-        async loadSettings() {
-          let settings = this.defaultSettings;
+        async loadSettings(settings) {
+          const fallback = JSON.parse(JSON.stringify(settings));
+          let saved = {};
           try {
-            await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
-              settings = resp.data.settings;
-            });
-            console.log(settings);
+            const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
+            if (resp.data && resp.data.settings) {
+              saved = resp.data.settings;
+            } else {
+              console.warn('No saved settings found; using defaults.');
+            }
           } catch (err) {
-            this.saveSettings(settings);
-            console.log(err);
+            console.warn('Failed to load saved settings; using defaults.', err);
           }
-          if (settings?.progress_method == undefined) settings.progress_method = 'points_weighted';
-          if (settings?.filters?.section == undefined) settings.filters.section = 'All';
-          return settings;
+
+          // Deep merge:
+          const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
+          merged.progress_method = saved.progress_method || fallback.progress_method;
+
+          // If user has a filters object, merge its keys
+          if (saved.filters) {
+            merged.filters = Object.assign({}, fallback.filters, saved.filters);
+          } else {
+            merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+          }
+
+          return merged;
         },
         async saveSettings(settings) {
           await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
