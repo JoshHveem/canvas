@@ -182,7 +182,9 @@
           progress_method: "points_weighted",
           section_names: ['All'],
           section_filter: 'All',
-          end_date_filter: true
+          end_date_filter: true,
+          hide_missing_end_date: true,
+          hide_past_end_date: false 
         }
       },
       computed: {
@@ -193,7 +195,9 @@
         },
         visibleRows: function () {
           return this.enrollments.filter((student) => {
-            return (this.section_filter == 'All' || this.section_filter == student.section_name) && (!this.end_date_filter || student.end_at >= new Date())
+            if (this.hide_missing_end_date && student.end_at == null) return false;
+            if (this.hide_past_end_date && student.end_at >= new Date()) return false;
+            if (this.section_filter != 'All' && student.section_name != this.section_filter) return false;
           })
         }
       },

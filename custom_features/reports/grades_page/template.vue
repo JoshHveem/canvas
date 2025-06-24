@@ -26,8 +26,10 @@
         <div
           style="display: inline-block;"
         >
-          <label>Upcoming End Date</label>
-          <input type="checkbox" v-model="end_date_filter">
+          <label>Hide Missing End Date</label>
+          <input type="checkbox" v-model="hide_missing_end_date">
+          <label>Hide Past End Date</label>
+          <input type="checkbox" v-model="hide_past_end_date">
         </div>
         <div>
           <div
