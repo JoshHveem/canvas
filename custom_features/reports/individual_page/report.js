@@ -52,7 +52,7 @@
                   Final Grades! 
                 </h4>
                 <p class="notification_message">The default grade shown by Canvas only takes into account graded items, and may <strong>NOT</strong> reflect the final grade. You may uncheck the box labeled "Calculate based only on graded assignments" to show the actual grade including ungraded assignments. Assignments which show a - by them have not been submitted.</p>
-                <p>Contact an instructor if you have any questions about your grade.</p>
+                <p>Contact an instructor if you have any questions about grades.</p>
               </div>
             </div>
           </div>
