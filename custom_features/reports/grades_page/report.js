@@ -209,33 +209,41 @@
         }
       },
       methods: {
-        async loadSettings(settings) {
-          const fallback = JSON.parse(JSON.stringify(settings));
-          let saved = {};
-          try {
-            const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
-            if (resp.data && resp.data.settings) {
-              saved = resp.data.settings;
-            } else {
-              console.warn('No saved settings found; using defaults.');
-            }
-          } catch (err) {
-            console.warn('Failed to load saved settings; using defaults.', err);
-          }
-
-          // Deep merge:
-          const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
-          merged.progress_method = saved.progress_method || fallback.progress_method;
-
-          // If user has a filters object, merge its keys
-          if (saved.filters) {
-            merged.filters = Object.assign({}, fallback.filters, saved.filters);
+       async loadSettings(settings) {
+        const fallback = JSON.parse(JSON.stringify(settings));
+        let saved = {};
+        try {
+          const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
+          if (resp.data && resp.data.settings) {
+            saved = resp.data.settings;
           } else {
-            merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+            console.warn('No saved settings found; using defaults.');
           }
+        } catch (err) {
+          console.warn('Failed to load saved settings; using defaults.', err);
+        }
 
-          return merged;
-        },
+        // Deep merge:
+        const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
+        merged.progress_method = saved.progress_method || fallback.progress_method;
+
+        // Merge filters:
+        if (saved.filters) {
+          merged.filters = Object.assign({}, fallback.filters, saved.filters);
+        } else {
+          merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+        }
+
+        // 🔑 Normalize: convert string "true"/"false" to real booleans
+        for (const key in merged.filters) {
+          const val = merged.filters[key];
+          if (val === "true") merged.filters[key] = true;
+          else if (val === "false") merged.filters[key] = false;
+        }
+
+        return merged;
+      },
+      
         async saveSettings(settings) {
           console.log(settings);
           await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
