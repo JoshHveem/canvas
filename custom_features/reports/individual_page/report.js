@@ -8,51 +8,36 @@
   //Confirm with Instructional Team before going live
   console.log(CURRENT_DEPARTMENT_ID);
   if (true) {
-    try {
       if (/[0-9]+\/grades/.test(window.location.pathname)) {
-        let user = await bridgetoolsReq(`https://reports.bridgetools.dev/api/students/${ENV.current_user_id}`);
-        if (user?.enrollment_type == 'HS' && CURRENT_DEPARTMENT_ID === 3824) { //Dental testing this
-          $("#content").prepend(`
-            <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
-              <div class="ic-notification__icon" role="presentation">
-                <i class="icon-info"></i>
-                <span class="screenreader-only">
-                  information
-                </span>
-              </div>
-              <div class="ic-notification__content">
-                <div class="ic-notification__message">
-                  <h4 class="ic-notification__title">
-                    High School Students!
-                  </h4>
-                  <p class="notification_message">The grade here is your course grade, but may <strong>NOT</strong> be your final grade submitted to your high school at the end of the term. Your term grade will be based on only the assignments submitted during the term and may be based on the ammount of work you completed across multiple courses.</p>
-                  <p>Contact your instructor if you have any questions about your grade.</p>
+        let loadedWarning = false;
+        try {
+          let user = await bridgetoolsReq(`https://reports.bridgetools.dev/api/students/${ENV.current_user_id}`);
+          if (user?.enrollment_type == 'HS' && CURRENT_DEPARTMENT_ID === 3824) { //Dental testing this
+            loadedWarning = true;
+            $("#content").prepend(`
+              <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
+                <div class="ic-notification__icon" role="presentation">
+                  <i class="icon-info"></i>
+                  <span class="screenreader-only">
+                    information
+                  </span>
+                </div>
+                <div class="ic-notification__content">
+                  <div class="ic-notification__message">
+                    <h4 class="ic-notification__title">
+                      High School Students!
+                    </h4>
+                    <p class="notification_message">The grade here is your course grade, but may <strong>NOT</strong> be your final grade submitted to your high school at the end of the term. Your term grade will be based on only the assignments submitted during the term and may be based on the ammount of work you completed across multiple courses.</p>
+                    <p>Contact your instructor if you have any questions about your grade.</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          `);
-        } else {
-          $("#content").prepend(`
-            <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
-              <div class="ic-notification__icon" role="presentation">
-                <i class="icon-info"></i>
-                <span class="screenreader-only">
-                  information
-                </span>
-              </div>
-              <div class="ic-notification__content">
-                <div class="ic-notification__message">
-                  <h4 class="ic-notification__title">
-                    Your Grade! 
-                  </h4>
-                  <p class="notification_message">The default grade shown by Canvas only takes into account graded items, and may <strong>NOT</strong> reflect your final grade. You may uncheck the box below to show your actual grade including ungraded assignments. Assignments which show a - by them have not been submitted.</p>
-                  <p>Contact your instructor if you have any questions about your grade.</p>
-                </div>
-              </div>
-            </div>
-          `);
+            `);
+          }
+        } catch(err) {
+
         }
-      } else {
+        if (!loadedWarning) {
         $("#content").prepend(`
           <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
             <div class="ic-notification__icon" role="presentation">
@@ -67,15 +52,16 @@
                   Your Grade! 
                 </h4>
                 <p class="notification_message">The default grade shown by Canvas only takes into account graded items, and may <strong>NOT</strong> reflect the final grade. You may uncheck the box below to show the actual grade including ungraded assignments. Assignments which show a - by them have not been submitted.</p>
+                <p>Contact your instructor if you have any questions about your grade.</p>
               </div>
             </div>
           </div>
         `);
 
-      }
-    } catch(err) {
+        }
+      } else {
 
-    }
+      }
   }
 
   async function postLoad() {
