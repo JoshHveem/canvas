@@ -72,7 +72,7 @@
       }
     });
 
-    observer.observe(container[0], {
+    observer.observe(container, {
       childList: true,
       subtree: false
     });
