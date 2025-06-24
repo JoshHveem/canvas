@@ -102,11 +102,11 @@
         this.loading = false;
       },
 
-      data: function () {
+      data: async function () {
         return {
           courseId: null,
           colors: bridgetools.colors,
-          settings: {},
+          settings: await this.loadSettings(),
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
@@ -192,9 +192,9 @@
         },
         visibleRows: function () {
           return this.enrollments.filter((student) => {
-            if (this.hide_missing_end_date && student.end_at == null) return false;
-            if (this.hide_past_end_date && student.end_at < new Date()) return false;
-            if (this.section_filter != 'All' && student.section_name != this.section_filter) return false;
+            if (this.settings?.filters?.hide_missing_end_date && student.end_at == null) return false;
+            if (this.settings?.filters?.hide_past_end_date && student.end_at < new Date()) return false;
+            if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
             return true;
           })
         }
