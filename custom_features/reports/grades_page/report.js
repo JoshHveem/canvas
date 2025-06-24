@@ -123,6 +123,10 @@
             new Column('Score', 'The student\'s grade based on assignments submitted to date.', '5rem', true, 'number', 
               student => student.current_score ? student.current_score + '%' : 'n/a',
               student => {
+                if (!student.current_score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
                 return {
                   'background-color': !student.current_score ? this.colors.black : (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
@@ -132,8 +136,12 @@
             new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '5.5rem', true, 'number', 
               student => student.final_score ? student.final_score + '%' : 'n/a',
               student => {
+                if (!student.final_score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
                 return {
-                  'background-color': !student.final_score ? this.colors.black : (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
+                  'background-color': (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
@@ -145,8 +153,8 @@
               },
               student => {
                 if (!student.end_at) return {
-                  'background-color': 'black',
-                  'color': 'white'
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
                 }
                 return {
                   'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
