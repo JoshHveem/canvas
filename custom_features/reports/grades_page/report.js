@@ -106,7 +106,14 @@
         return {
           courseId: null,
           colors: bridgetools.colors,
-          settings: await this.loadSettings(),
+          defaultSettings: {
+            filters: {
+              section: 'All',
+              hide_missing_end_date: true,
+              hide_past_end_date: false
+            }
+          },
+          settings: this.defaultSettings,
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
@@ -201,13 +208,7 @@
       },
       methods: {
         async loadSettings() {
-          let settings = {
-            filters: {
-              section: 'All',
-              hide_missing_end_date: true,
-              hide_past_end_date: false
-            }
-          };
+          let settings = this.defaultSettings;
           try {
             await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
               settings = resp.data.settings;
