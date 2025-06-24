@@ -35,7 +35,7 @@
       color: 'white',
       backgroundColor: '#b20b0f',
       'font-size': '0.75rem',
-      'padding': '0.25rem',
+      'padding': '0 0.25rem',
       borderRadius: '50%'
     });
     circle.hide();
