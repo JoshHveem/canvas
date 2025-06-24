@@ -31,7 +31,7 @@
     circle.css({
       position: 'absolute',
       top: '-5px',
-      right: '-1rem',
+      right: '-0.75rem',
       color: 'white',
       backgroundColor: '#b20b0f',
       'font-size': '0.75rem',
