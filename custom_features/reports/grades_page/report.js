@@ -32,8 +32,7 @@
       position: 'absolute',
       top: '-5px',
       right: '-5px',
-      width: '15px',
-      height: '15px',
+      color: 'white',
       backgroundColor: '#b20b0f',
       borderRadius: '50%'
     });
