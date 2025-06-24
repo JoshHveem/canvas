@@ -193,11 +193,7 @@
         },
         visibleRows: function () {
           return this.enrollments.filter((student) => {
-            console.log(student);
-            console.log(this.end_date_filter);
-            return this.end_date_filter == false || student.end_at >= new Date();
-            // return (this.section_filter == 'All' || this.section_filter == student.section_name) && (!this.end_date_filter || student.end_at >= new Date())
-            return true;
+            return (this.section_filter == 'All' || this.section_filter == student.section_name) && (!this.end_date_filter || student.end_at >= new Date())
           })
         }
       },
