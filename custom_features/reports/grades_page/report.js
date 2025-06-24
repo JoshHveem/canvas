@@ -1,4 +1,30 @@
 (async function () {
+  async function loadSettings() {
+    let settings = {
+      filters: {
+        section: 'All',
+        hide_missing_end_date: true,
+        hide_past_end_date: false
+      }
+    };
+    try {
+      await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (data) => {
+        settings = data.settings;
+      });
+      console.log(settings);
+    } catch (err) {
+      saveSettings(settings);
+      console.log(err);
+    }
+    return settings;
+  }
+  async function saveSettings(settings) {
+    await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
+      data: {
+        settings: settings
+      }
+    });
+  }
   class Column {
     constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '', style_formula= null) {
       this.name = name;
@@ -82,6 +108,8 @@
       el: '#canvas-grades-report-vue',
       mounted: async function () {
         let courseId = ENV?.current_context?.id;
+        let settings = await loadSettings();
+        this.settings = settings;
         if (courseId) {
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
@@ -97,11 +125,6 @@
             this.enrollments.push(...enrollments);
           }
         }
-        // await this.createGradesReport(course.id);
-        // await this.processStudentsData(course);
-        // this.updateStudents();
-        // await this.processStudentsAssignmentData();
-        // this.updateStudents();
         this.loading = false;
       },
 
@@ -109,17 +132,17 @@
         return {
           courseId: null,
           colors: bridgetools.colors,
+          settings: {},
           columns: [
-            new Column(
-              'User Name', 
-              'The student\'s name as it appears in Canvas.', 
-              'auto', 
-              false, 
-              'string',
+            new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
             ),
-            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', student => student.course_name),
-            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', student => student.section_name),
+            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', 
+              student => student.course_name
+            ),
+            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', 
+              student => student.section_name
+            ),
             new Column('Score', 'The student\'s grade based on assignments submitted to date.', '5rem', true, 'number', 
               student => student.current_score ? student.current_score + '%' : 'n/a',
               student => {
@@ -148,7 +171,6 @@
             ),
             new Column('End At', 'The course end date.', '5rem', true, 'number',
               student => {
-                console.log(student.end_at);
                 return !student.end_at ? 'n/a' : this.dateToString(student.end_at);
               },
               student => {
@@ -173,6 +195,7 @@
               }
             ),
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
+            // progress ends up with its own special call out because it does the bar graph thing
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
             // new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
           ],
