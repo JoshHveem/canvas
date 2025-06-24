@@ -80,8 +80,10 @@
 
     new Vue({
       el: '#canvas-grades-report-vue',
-      mounted: async function () {
+      created: function() {
         this.settings = this.defaultSettings;
+      },
+      mounted: async function () {
         let courseId = ENV?.current_context?.id;
         let settings = await this.loadSettings();
         this.settings = settings;
