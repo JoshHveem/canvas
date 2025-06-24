@@ -8,6 +8,16 @@
         <!-- <div
           style="display: inline-block;"
         >
+          <label>Progress Estimation Method</label>
+          <select v-model="settings.progress_method">
+            <option value="points_weighted">Points - Weighted (Preferred)</option>
+            <option value="points_raw">Points - Raw</option>
+            <option value="submissions">Submissions</option>
+          </select>
+        </div> -->
+        <!-- <div
+          style="display: inline-block;"
+        >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
@@ -16,10 +26,14 @@
         <div
           style="display: inline-block;"
         >
-          <label>Hide Missing End Date</label>
-          <input type="checkbox" v-model="settings.filters.hide_missing_end_date" @change="saveSettings(settings)">
-          <label>Hide Past End Date</label>
-          <input type="checkbox" v-model="settings.filters.hide_past_end_date" @change="saveSettings(settings)">
+          <span>
+            <label>Hide Missing End Date</label>
+            <input type="checkbox" v-model="settings.filters.hide_missing_end_date" @change="saveSettings(settings)">
+          </span>
+          <span>
+            <label>Hide Past End Date</label>
+            <input type="checkbox" v-model="settings.filters.hide_past_end_date" @change="saveSettings(settings)">
+          </span>
         </div>
         <div>
           <div
