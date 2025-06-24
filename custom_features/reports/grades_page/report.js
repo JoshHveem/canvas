@@ -34,6 +34,8 @@
       right: '-5px',
       color: 'white',
       backgroundColor: '#b20b0f',
+      'font-size': '0.75rem',
+      'padding': '0.125rem',
       borderRadius: '50%'
     });
     circle.hide();
