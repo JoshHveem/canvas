@@ -5,14 +5,14 @@
       <div class='btech-modal-content-inner'>
         <span class='btech-close' v-on:click='close()'>&times;</span>
         <h3 style='text-align: center;'>Report</h3>
-        <div
+        <!-- <div
           style="display: inline-block;"
         >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
           </select>
-        </div>
+        </div> -->
         <div
           style="display: inline-block;"
         >
