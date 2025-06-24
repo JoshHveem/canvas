@@ -8,11 +8,10 @@
       }
     };
     try {
-      await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (data) => {
-        console.log(data);
-        settings = data.settings;
+      await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
+        console.log(resp);
+        settings = resp.data.settings;
       });
-      if (!settings) saveSettings(settings);
       console.log(settings);
     } catch (err) {
       saveSettings(settings);
@@ -22,7 +21,9 @@
   }
   async function saveSettings(settings) {
     await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
-      settings: settings
+      data: {
+        settings: settings
+      }
     });
   }
   class Column {
