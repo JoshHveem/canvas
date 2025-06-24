@@ -104,7 +104,6 @@
           }
           await this.loadCourseEnrollments();
         }
-        this.loading = false;
       },
 
       data: function () {
@@ -400,6 +399,7 @@
           return enrollment;
         },
         async loadCourseEnrollments() {
+          this.loading = true;
           let courses = [];
           this.enrollments = [];
           if (this.settings.account == 0) {
@@ -416,6 +416,7 @@
             let enrollments = await this.loadEnrollments(course.id);
             this.enrollments.push(...enrollments);
           }
+          this.loading = false;
         },
  
         sortColumn(header) {
