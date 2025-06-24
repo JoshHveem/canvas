@@ -18,6 +18,14 @@
         <div
           style="display: inline-block;"
         >
+          <label>Course Source</label>
+          <select v-model="settings.account">
+            <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
+          </select>
+        </div>
+        <div
+          style="display: inline-block;"
+        >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>

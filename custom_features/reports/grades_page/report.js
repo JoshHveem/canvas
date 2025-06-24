@@ -92,16 +92,17 @@
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
         } else {
-          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term')
-          for (let c in courses) {
-            let course = courses[c];
-            if (course.term.end_at) {
-              let termEndAt = Date.parse(course.term.end_at)
-              if (termEndAt < new Date()) continue;
+          let accounts = await canvasGet('/api/v1/accounts');
+          for (let a = 0; a < accounts.length; a++) {
+            let account = accounts[a];
+            if (account.parent_account_id == 3) {
+              this.accounts.push({
+                name: account.name,
+                id: account.id
+              })
             }
-            let enrollments = await this.loadEnrollments(course.id);
-            this.enrollments.push(...enrollments);
           }
+          await this.loadCourseEnrollments();
         }
         this.loading = false;
       },
@@ -112,12 +113,19 @@
           colors: bridgetools.colors,
           settings: {
             progress_method: "points_weighted",
+            account: 0,
             filters: {
               section: 'All',
               hide_missing_end_date: true,
               hide_past_end_date: false
             }
           },
+          accounts: [
+            {
+              name: 'My Courses',
+              id: 0
+            }
+          ],
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
@@ -390,6 +398,23 @@
             enrollment.days_in_course = diffDays;
           }
           return enrollment;
+        },
+        async loadCourseEnrollments() {
+          let courses = [];
+          if (this.settings.account == 0) {
+            courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
+          } else {
+            courses = await canvasGet(`/api/v1/accounts/${this.settings.account}/courses?state[]=available&include[]=term`);
+          }
+          for (let c in courses) {
+            let course = courses[c];
+            if (course.term.end_at) {
+              let termEndAt = Date.parse(course.term.end_at)
+              if (termEndAt < new Date()) continue;
+            }
+            let enrollments = await this.loadEnrollments(course.id);
+            this.enrollments.push(...enrollments);
+          }
         },
  
         sortColumn(header) {

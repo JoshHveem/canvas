@@ -483,7 +483,6 @@
           {},                             // no args
           `nodes { _id name published pointsPossible assignmentGroupId }`
         );
-        console.log(assignments);
 
         // Group in JS:
         const byGroup = assignments.reduce((map, a) => {
@@ -589,11 +588,8 @@
           this.loadingProgress += (50 / courses.length) * 0.5;
 
           this.loadingMessage = "Loading Assignment Data for Course " + course.id;
-          console.log(course.id);
           let additionalData = await this.getGraphQLData(course);
-          console.log(additionalData);
           // let additionalDataOld = await this.getGraphQLDataOld(course);
-          // console.log(additionalDataOld);
           course.additionalData = additionalData;
           course.assignments = additionalData.submissions;
           // await this.getAssignmentData(course);
