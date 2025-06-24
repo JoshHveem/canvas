@@ -34,10 +34,10 @@
       right: '-5px',
       width: '10px',
       height: '10px',
-      backgroundColor: 'red',
-      borderRadius: '50%',
-      display: 'none' // hidden by default
+      backgroundColor: '#b20b0f',
+      borderRadius: '50%'
     });
+    circle.hide();
 
     // Wrap the button in a relatively positioned container so the circle can be positioned correctly
     const wrapper = $('<div style="position: relative; display: inline-block;"></div>');
