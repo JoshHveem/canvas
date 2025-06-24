@@ -210,8 +210,8 @@
       },
       methods: {
         calcProgress(student) {
-          if (this.settings.progress_method == 'points_weighted') return student.progress;
-          if (this.settigns.progress_method == 'points_raw') return student.final_score;
+          if (this.settings?.progress_method == 'points_weighted') return student.progress;
+          if (this.settigns?.progress_method == 'points_raw') return student.final_score;
           return student.progress;
         },
         async loadSettings(settings) {
