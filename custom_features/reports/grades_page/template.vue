@@ -78,10 +78,9 @@
             </div>
           </div>
           <div
-            v-for='(student, i) in enrollments' 
+            v-for='(student, i) in visibleRows' 
           >
             <div 
-              v-if="(section_filter == 'All' || section_filter == student.section_name) && (!end_date_filter || student.end_at >= new Date())"
               style="
                 padding: .25rem .5rem;
                 display: grid;

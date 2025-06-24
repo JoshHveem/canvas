@@ -190,6 +190,12 @@
           return this.columns.filter(function (c) {
             return c.visible;
           })
+        },
+        visibleRows: function () {
+          return this.enrollments.filter(function (student) {
+            return (this.section_filter == 'All' || this.section_filter == student.section_name) && (!this.end_date_filter || student.end_at >= new Date())
+            return true;
+          })
         }
       },
       methods: {
