@@ -44,6 +44,7 @@
 
     wrapper.append(btn);
     wrapper.append(circle);
+    circle.show();
 
     // Add the click handler
     btn.click(function () {
