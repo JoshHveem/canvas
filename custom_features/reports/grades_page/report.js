@@ -235,6 +235,7 @@
           } catch (err) {
             console.warn('Failed to load saved settings; using defaults.', err);
           }
+          console.log(saved);
 
           // Deep merge:
           const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
