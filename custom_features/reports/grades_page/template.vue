@@ -23,7 +23,6 @@
             v-model="settings.account" 
             @change="saveSettings(settings); 
             loadCourseEnrollments();"
-            :disabled="loading"
             >
             <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
           </select>

@@ -404,6 +404,7 @@
         },
         async loadCourseEnrollments() {
           this.loading = true;
+          let loadingAccount = this.settings.account;
           let courses = [];
           this.enrollments = [];
           if (this.settings.account == 0) {
@@ -418,7 +419,12 @@
               if (termEndAt < new Date()) continue;
             }
             let enrollments = await this.loadEnrollments(course.id);
-            this.enrollments.push(...enrollments);
+            // check to make sure should still be loading from this account
+            if (loadingAccount == this.settings.account) {
+              this.enrollments.push(...enrollments);
+            } else {
+              return;
+            }
           }
           this.loading = false;
         },
