@@ -141,9 +141,13 @@
             new Column('End At', 'The course end date.', '5rem', true, 'number',
               student => {
                 console.log(student.end_at);
-                return this.dateToString(student.end_at);
+                return student.end_at ? 'n/a' : this.dateToString(student.end_at);
               },
               student => {
+                if (!student.end_at) return {
+                  'background-color': 'black',
+                  'color': 'white'
+                }
                 return {
                   'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
                   'color': this.colors.white,
