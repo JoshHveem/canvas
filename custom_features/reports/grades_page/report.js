@@ -16,6 +16,7 @@
       saveSettings(settings);
       console.log(err);
     }
+    if (settings?.filters?.section == undefined) settings.filters.section = 'All';
     return settings;
   }
   async function saveSettings(settings) {
