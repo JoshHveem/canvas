@@ -446,7 +446,7 @@
             let enrollments = await this.loadEnrollments(course.id);
             for (let e = 0; e < enrollments.length; e++) {
               let enrollment = enrollments[e];
-              if (enrollment.days_left < 3 && enrollment.end_at) {
+              if (enrollment.days_left < 3 && enrollment.days_left >= 0 && enrollment.end_at) {
                 flaggedEnrollments += 1;
                 $('#progress-report-alert-circle').show();
                 $('#progress-report-alert-circle').html(flaggedEnrollments);
