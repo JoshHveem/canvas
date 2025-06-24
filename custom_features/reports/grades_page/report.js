@@ -237,6 +237,7 @@
           return merged;
         },
         async saveSettings(settings) {
+          console.log(settings);
           await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
             data: {
               settings: settings
