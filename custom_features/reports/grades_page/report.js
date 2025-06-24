@@ -196,7 +196,7 @@
         visibleRows: function () {
           return this.enrollments.filter((student) => {
             if (this.hide_missing_end_date && student.end_at == null) return false;
-            if (this.hide_past_end_date && student.end_at >= new Date()) return false;
+            if (this.hide_past_end_date && student.end_at < new Date()) return false;
             if (this.section_filter != 'All' && student.section_name != this.section_filter) return false;
             return true;
           })
