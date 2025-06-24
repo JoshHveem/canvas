@@ -8,16 +8,6 @@
         <div
           style="display: inline-block;"
         >
-          <label>Progress Estimation Method</label>
-          <select v-model="settings.progress_method">
-            <option value="points_weighted">Points - Weighted (Preferred)</option>
-            <option value="points_raw">Points - Raw</option>
-            <option value="submissions">Submissions</option>
-          </select>
-        </div>
-        <div
-          style="display: inline-block;"
-        >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
