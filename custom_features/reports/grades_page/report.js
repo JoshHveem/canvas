@@ -83,7 +83,6 @@
       created: function() {
       },
       mounted: async function () {
-        console.log('mounted');
         this.loading = true;
         let courseId = ENV?.current_context?.id;
         let settings = await this.loadSettings(this.settings);
@@ -102,7 +101,6 @@
               })
             }
           }
-          console.log(settings);
           await this.loadCourseEnrollments();
         }
       },
@@ -236,7 +234,6 @@
           } catch (err) {
             console.warn('Failed to load saved settings; using defaults.', err);
           }
-          console.log(saved);
 
           // Deep merge:
           const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
@@ -263,7 +260,6 @@
         },
       
         async saveSettings(settings) {
-          console.log(settings);
           await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
             data: {
               settings: settings
