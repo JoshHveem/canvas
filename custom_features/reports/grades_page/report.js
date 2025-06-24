@@ -98,7 +98,7 @@
             if (account.parent_account_id == 3) {
               this.accounts.push({
                 name: account.name,
-                id: account.id
+                id: '' + account.id
               })
             }
           }
@@ -122,7 +122,7 @@
           accounts: [
             {
               name: 'My Courses',
-              id: 0
+              id: '' + 0
             }
           ],
           columns: [
