@@ -118,7 +118,7 @@
               hide_past_end_date: false
             }
           },
-          settings: {},
+          settings: JSON.parse(JSON.stringify(this.defaultSettings)),
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
