@@ -345,6 +345,7 @@
             startAt = startAt ? Date.parse(startAt) : null;
             let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
+            if (!this.section_names.includes(enrollmentData.section.name)) this.section_names.push(enrollmentData.section.name);
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,

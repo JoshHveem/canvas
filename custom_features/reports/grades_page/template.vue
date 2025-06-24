@@ -15,14 +15,14 @@
             <option value="submissions">Submissions</option>
           </select>
         </div> -->
-        <!-- <div
+        <div
           style="display: inline-block;"
         >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
           </select>
-        </div> -->
+        </div>
         <div
           style="display: inline-block;"
         >
