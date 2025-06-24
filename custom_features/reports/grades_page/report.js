@@ -12,6 +12,7 @@
         console.log(data);
         settings = data.settings;
       });
+      if (!settings) saveSettings(settings);
       console.log(settings);
     } catch (err) {
       saveSettings(settings);
@@ -21,9 +22,7 @@
   }
   async function saveSettings(settings) {
     await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
-      data: {
-        settings: settings
-      }
+      settings: settings
     });
   }
   class Column {
