@@ -140,8 +140,7 @@
             ),
             new Column('End At', 'The course end date.', '5rem', true, 'number',
               student => {
-                console.log(student.end_at)
-                return this.dateToString(student.end_at)
+                return this.dateToString(student.end_at);
               },
               student => {
                 return {
@@ -188,7 +187,6 @@
                 str += col.width + ' ';
                 // grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
           }
-          console.log(str);
           return str;
         },
         dateToString(date) {
