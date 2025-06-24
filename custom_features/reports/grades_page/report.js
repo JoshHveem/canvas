@@ -192,7 +192,7 @@
           })
         },
         visibleRows: function () {
-          return this.enrollments.filter(function (student) {
+          return this.enrollments.filter((student) => {
             console.log(student);
             console.log(this.end_date_filter);
             return this.end_date_filter == false || student.end_at >= new Date();
