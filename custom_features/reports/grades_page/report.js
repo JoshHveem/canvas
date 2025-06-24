@@ -84,6 +84,7 @@
       },
       mounted: async function () {
         console.log('mounted');
+        this.loading = true;
         let courseId = ENV?.current_context?.id;
         let settings = await this.loadSettings(this.settings);
         this.settings = settings;
@@ -260,8 +261,7 @@
           let str = '';
           for (let c in this.columns) {
             let col = this.columns[c];
-                str += col.width + ' ';
-                // grid-template-columns: auto 10rem 10rem 4.5rem 4.5rem 10rem 4rem 4rem 5rem 4rem;
+            str += col.width + ' ';
           }
           return str;
         },
