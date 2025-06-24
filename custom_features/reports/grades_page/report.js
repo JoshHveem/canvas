@@ -81,6 +81,7 @@
     new Vue({
       el: '#canvas-grades-report-vue',
       mounted: async function () {
+        this.settings = this.defaultSettings;
         let courseId = ENV?.current_context?.id;
         let settings = await this.loadSettings();
         this.settings = settings;
@@ -114,7 +115,7 @@
               hide_past_end_date: false
             }
           },
-          settings: this.defaultSettings,
+          settings: {},
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
               (student) => student.user_name ?? ''
