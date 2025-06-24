@@ -1,31 +1,4 @@
 (async function () {
-  async function loadSettings() {
-    let settings = {
-      filters: {
-        section: 'All',
-        hide_missing_end_date: true,
-        hide_past_end_date: false
-      }
-    };
-    try {
-      await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
-        settings = resp.data.settings;
-      });
-      console.log(settings);
-    } catch (err) {
-      saveSettings(settings);
-      console.log(err);
-    }
-    if (settings?.filters?.section == undefined) settings.filters.section = 'All';
-    return settings;
-  }
-  async function saveSettings(settings) {
-    await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
-      data: {
-        settings: settings
-      }
-    });
-  }
   class Column {
     constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '', style_formula= null) {
       this.name = name;
@@ -109,7 +82,7 @@
       el: '#canvas-grades-report-vue',
       mounted: async function () {
         let courseId = ENV?.current_context?.id;
-        let settings = await loadSettings();
+        let settings = await this.loadSettings();
         this.settings = settings;
         if (courseId) {
           let enrollments = await this.loadEnrollments(courseId);
@@ -227,6 +200,33 @@
         }
       },
       methods: {
+        async loadSettings() {
+          let settings = {
+            filters: {
+              section: 'All',
+              hide_missing_end_date: true,
+              hide_past_end_date: false
+            }
+          };
+          try {
+            await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
+              settings = resp.data.settings;
+            });
+            console.log(settings);
+          } catch (err) {
+            this.saveSettings(settings);
+            console.log(err);
+          }
+          if (settings?.filters?.section == undefined) settings.filters.section = 'All';
+          return settings;
+        },
+        async saveSettings(settings) {
+          await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
+            data: {
+              settings: settings
+            }
+          });
+        },
         getColumnsWidthsString() {
           let str = '';
           for (let c in this.columns) {
