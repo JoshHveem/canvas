@@ -19,30 +19,65 @@
       return {};
     }
   }
-  async function postLoad() {
-    let vueString = '';
-    await $.get(SOURCE_URL + '/custom_features/reports/grades_page/template.vue', null, function (html) {
-      vueString = html.replace("<template>", "").replace("</template>", "");
-    }, 'text');
-    let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-grades-report-vue"></div>');
-    $("#canvas-grades-report-vue").append(vueString);
-    let genReportButton = $('<a class="Button" id="canvas-grades-report-vue-gen">Progress Report</a>');
-    let newGrades = $('div#gradebook-actions');
-    let oldGrades = $('div#gradebook-toolbar');
-    if (newGrades.length > 0) newGrades.prepend(genReportButton);
-    else if (oldGrades.length > 0) genReportButton.appendTo(oldGrades);
-    else $("#right-side").append(genReportButton);
-    let modal = $('#canvas-grades-report-vue');
-    modal.hide();
-    genReportButton.click(function () {
-      let modal = $('#canvas-grades-report-vue');
-      modal.show();
+  // Create the button element
+  function createButton() {
+    const btn = $('<a class="Button" id="canvas-grades-report-vue-gen">Progress Report</a>');
+    btn.click(function () {
+      $("#canvas-grades-report-vue").show();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-grades_page",
         "canvasId": ENV.current_user_id
       });
     });
+    return btn;
+  }
+  // Function to ensure button is present
+  function ensureButton() {
+    if ($('#canvas-grades-report-vue-gen').length === 0) {
+      container.append(createButton());
+    }
+  }
+
+
+  async function postLoad() {
+    let vueString = '';
+    await $.get(SOURCE_URL + '/custom_features/reports/grades_page/template.vue', null, function (html) {
+      vueString = html.replace("<template>", "").replace("</template>", "");
+    }, 'text');
+
+    // Add modal container and Vue content
+    let canvasbody = $("#application");
+    canvasbody.after('<div id="canvas-grades-report-vue"></div>');
+    $("#canvas-grades-report-vue").append(vueString);
+    $("#canvas-grades-report-vue").hide();
+
+    // Determine where to inject the button
+    let container = $('div#gradebook-actions');
+    if (container.length === 0) {
+      container = $('div#right-side');
+    }
+    if (container.length === 0) {
+      console.error("No suitable container found for the button.");
+      return;
+    }
+    // Initial insert
+    ensureButton();
+
+    // Set up MutationObserver
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          ensureButton();
+        }
+      }
+    });
+
+    observer.observe(container[0], {
+      childList: true,
+      subtree: false
+    });
+
+
     new Vue({
       el: '#canvas-grades-report-vue',
       mounted: async function () {
