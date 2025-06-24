@@ -52,6 +52,26 @@
             </div>
           `);
         }
+      } else {
+        $("#content").prepend(`
+          <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
+            <div class="ic-notification__icon" role="presentation">
+              <i class="icon-info"></i>
+              <span class="screenreader-only">
+                information
+              </span>
+            </div>
+            <div class="ic-notification__content">
+              <div class="ic-notification__message">
+                <h4 class="ic-notification__title">
+                  Your Grade! 
+                </h4>
+                <p class="notification_message">The default grade shown by Canvas only takes into account graded items, and may <strong>NOT</strong> reflect the final grade. You may uncheck the box below to show the actual grade including ungraded assignments. Assignments which show a - by them have not been submitted.</p>
+              </div>
+            </div>
+          </div>
+        `);
+
       }
     } catch(err) {
 
