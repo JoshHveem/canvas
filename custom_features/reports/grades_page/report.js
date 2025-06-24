@@ -21,7 +21,31 @@
   }
   // Create the button element
   function createButton() {
+    // Create the <a> button
     const btn = $('<a class="Button" id="canvas-grades-report-vue-gen">Progress Report</a>');
+
+    // Create the red notification circle (hidden by default)
+    const circle = $('<span id="progress-report-alert-circle"></span>');
+
+    // Style the circle: tiny red dot, absolute position
+    circle.css({
+      position: 'absolute',
+      top: '-5px',
+      right: '-5px',
+      width: '10px',
+      height: '10px',
+      backgroundColor: 'red',
+      borderRadius: '50%',
+      display: 'none' // hidden by default
+    });
+
+    // Wrap the button in a relatively positioned container so the circle can be positioned correctly
+    const wrapper = $('<div style="position: relative; display: inline-block;"></div>');
+
+    wrapper.append(btn);
+    wrapper.append(circle);
+
+    // Add the click handler
     btn.click(function () {
       $("#canvas-grades-report-vue").show();
       $.post("https://tracking.bridgetools.dev/api/hit", {
@@ -29,8 +53,11 @@
         "canvasId": ENV.current_user_id
       });
     });
-    return btn;
+
+    // Return the wrapper (button + circle)
+    return wrapper;
   }
+
   // Function to ensure button is present
   function ensureButton(container) {
     if ($('#canvas-grades-report-vue-gen').length === 0) {
