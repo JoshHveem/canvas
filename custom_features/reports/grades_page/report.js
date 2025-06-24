@@ -61,13 +61,13 @@
       return;
     }
     // Initial insert
-    ensureButton(container);
+    ensureButton(container[0]);
 
     // Set up MutationObserver
     const observer = new MutationObserver((mutationsList) => {
       for (const mutation of mutationsList) {
         if (mutation.type === 'childList') {
-          ensureButton();
+          ensureButton(container[0]);
         }
       }
     });
@@ -139,7 +139,10 @@
               }
             ),
             new Column('End At', 'The course end date.', '5rem', true, 'number',
-              student => this.dateToString(student.end_at),
+              student => {
+                console.log(student.end_at)
+                return this.dateToString(student.end_at)
+              },
               student => {
                 return {
                   'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
