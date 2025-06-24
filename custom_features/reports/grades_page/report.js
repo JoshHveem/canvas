@@ -106,7 +106,7 @@
         this.loading = false;
       },
 
-      data: async function () {
+      data: function () {
         return {
           courseId: null,
           colors: bridgetools.colors,
