@@ -61,13 +61,13 @@
       return;
     }
     // Initial insert
-    ensureButton(container[0]);
+    ensureButton(container);
 
     // Set up MutationObserver
     const observer = new MutationObserver((mutationsList) => {
       for (const mutation of mutationsList) {
         if (mutation.type === 'childList') {
-          ensureButton(container[0]);
+          ensureButton(container);
         }
       }
     });
