@@ -9,7 +9,7 @@
           style="display: inline-block;"
         >
           <label>Progress Estimation Method</label>
-          <select v-model="progress_method">
+          <select v-model="settings.progress_method">
             <option value="points_weighted">Points - Weighted (Preferred)</option>
             <option value="points_raw">Points - Raw</option>
             <option value="submissions">Submissions</option>

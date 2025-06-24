@@ -107,6 +107,7 @@
           courseId: null,
           colors: bridgetools.colors,
           defaultSettings: {
+            progress_method: "points_weighted",
             filters: {
               section: 'All',
               hide_missing_end_date: true,
@@ -183,7 +184,6 @@
           enrollments: [],
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
-          progress_method: "points_weighted",
           section_names: ['All'],
           section_filter: 'All',
           end_date_filter: true,
@@ -218,6 +218,7 @@
             this.saveSettings(settings);
             console.log(err);
           }
+          if (settings?.progress_method == undefined) settings.progress_method = 'points_weighted';
           if (settings?.filters?.section == undefined) settings.filters.section = 'All';
           return settings;
         },
