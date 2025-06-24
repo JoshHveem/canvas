@@ -44,7 +44,6 @@
 
     wrapper.append(btn);
     wrapper.append(circle);
-    circle.show();
 
     // Add the click handler
     btn.click(function () {
@@ -431,6 +430,7 @@
           let loadingAccount = this.settings.account;
           let courses = [];
           this.enrollments = [];
+          let flaggedEnrollments = 0;
           if (this.settings.account == 0) {
             courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
           } else {
@@ -443,6 +443,13 @@
               if (termEndAt < new Date()) continue;
             }
             let enrollments = await this.loadEnrollments(course.id);
+            for (let e = 0; e < enrollments.length; e++) {
+              if (enrollment.days_left < 3) {
+                flaggedEnrollments += 1;
+                $('#progress-report-alert-circle').show();
+                $('#progress-report-alert-circle').html(flaggedEnrollments);
+              }
+            }
             // check to make sure should still be loading from this account
             if (loadingAccount == this.settings.account) {
               this.enrollments.push(...enrollments);
