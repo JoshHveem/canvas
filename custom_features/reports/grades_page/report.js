@@ -83,6 +83,7 @@
       created: function() {
       },
       mounted: async function () {
+        console.log('mounted');
         this.settings = this.defaultSettings;
         let courseId = ENV?.current_context?.id;
         let settings = await this.loadSettings();
