@@ -83,7 +83,7 @@
               </span>
             </div>
           </div>
-          <div v-for="loading" style="text-align: center;">Loading Data...</div>
+          <div v-if="loading" style="text-align: center;">Loading Data...</div>
           <div
             v-for='(student, i) in visibleRows' 
           >
