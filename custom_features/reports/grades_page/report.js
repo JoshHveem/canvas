@@ -9,7 +9,6 @@
     };
     try {
       await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, (resp) => {
-        console.log(resp);
         settings = resp.data.settings;
       });
       console.log(settings);

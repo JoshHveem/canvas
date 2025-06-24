@@ -19,7 +19,7 @@
           style="display: inline-block;"
         >
           <label>Filter by Section</label>
-          <select v-model="section_filter">
+          <select v-model="settings.filter.section_filter" @change="saveSettings(settings)">
             <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
           </select>
         </div>
@@ -27,9 +27,9 @@
           style="display: inline-block;"
         >
           <label>Hide Missing End Date</label>
-          <input type="checkbox" v-model="hide_missing_end_date">
+          <input type="checkbox" v-model="settings.filter.hide_missing_end_date" @change="saveSettings(settings)">
           <label>Hide Past End Date</label>
-          <input type="checkbox" v-model="hide_past_end_date">
+          <input type="checkbox" v-model="settings.filter.hide_past_end_date" @change="saveSettings(settings)">
         </div>
         <div>
           <div
