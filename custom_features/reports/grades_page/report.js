@@ -241,6 +241,7 @@
           // Deep merge:
           const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
           merged.progress_method = saved.progress_method || fallback.progress_method;
+          merged.account = saved.account ?? fallback.account;
 
           // Merge filters:
           if (saved.filters) {
