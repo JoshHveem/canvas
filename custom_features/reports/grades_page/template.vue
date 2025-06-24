@@ -17,7 +17,7 @@
         </div> -->
         <div
           style="display: inline-block;"
-          v-if="courseId"
+          v-if="!courseId"
         >
           <label>Course Source</label>
           <select 
