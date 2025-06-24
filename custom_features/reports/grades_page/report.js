@@ -32,7 +32,7 @@
     return btn;
   }
   // Function to ensure button is present
-  function ensureButton() {
+  function ensureButton(container) {
     if ($('#canvas-grades-report-vue-gen').length === 0) {
       container.append(createButton());
     }
@@ -54,14 +54,14 @@
     // Determine where to inject the button
     let container = $('div#gradebook-actions');
     if (container.length === 0) {
-      container = $('div#right-side');
+      container = $('#right-side');
     }
     if (container.length === 0) {
       console.error("No suitable container found for the button.");
       return;
     }
     // Initial insert
-    ensureButton();
+    ensureButton(container);
 
     // Set up MutationObserver
     const observer = new MutationObserver((mutationsList) => {
