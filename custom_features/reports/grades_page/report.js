@@ -247,6 +247,8 @@
             else if (val === "false") merged.filters[key] = false;
           }
 
+          // hard override of whatever was saved. It was too confusing, especially if you select a section in one course that doesn't exist in another.
+          merged.filters.section = 'All';
           return merged;
         },
       
