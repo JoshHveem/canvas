@@ -102,6 +102,7 @@
               })
             }
           }
+          console.log(settings);
           await this.loadCourseEnrollments();
         }
       },
