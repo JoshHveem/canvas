@@ -209,40 +209,45 @@
         }
       },
       methods: {
-       async loadSettings(settings) {
-        const fallback = JSON.parse(JSON.stringify(settings));
-        let saved = {};
-        try {
-          const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
-          if (resp.data && resp.data.settings) {
-            saved = resp.data.settings;
-          } else {
-            console.warn('No saved settings found; using defaults.');
+        calcProgress(student) {
+          if (this.settings.progress_method == 'points_weighted') return student.progress;
+          if (this.settigns.progress_method == 'points_raw') return student.final_score;
+          return student.progress;
+        },
+        async loadSettings(settings) {
+          const fallback = JSON.parse(JSON.stringify(settings));
+          let saved = {};
+          try {
+            const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
+            if (resp.data && resp.data.settings) {
+              saved = resp.data.settings;
+            } else {
+              console.warn('No saved settings found; using defaults.');
+            }
+          } catch (err) {
+            console.warn('Failed to load saved settings; using defaults.', err);
           }
-        } catch (err) {
-          console.warn('Failed to load saved settings; using defaults.', err);
-        }
 
-        // Deep merge:
-        const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
-        merged.progress_method = saved.progress_method || fallback.progress_method;
+          // Deep merge:
+          const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
+          merged.progress_method = saved.progress_method || fallback.progress_method;
 
-        // Merge filters:
-        if (saved.filters) {
-          merged.filters = Object.assign({}, fallback.filters, saved.filters);
-        } else {
-          merged.filters = JSON.parse(JSON.stringify(fallback.filters));
-        }
+          // Merge filters:
+          if (saved.filters) {
+            merged.filters = Object.assign({}, fallback.filters, saved.filters);
+          } else {
+            merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+          }
 
-        // 🔑 Normalize: convert string "true"/"false" to real booleans
-        for (const key in merged.filters) {
-          const val = merged.filters[key];
-          if (val === "true") merged.filters[key] = true;
-          else if (val === "false") merged.filters[key] = false;
-        }
+          // 🔑 Normalize: convert string "true"/"false" to real booleans
+          for (const key in merged.filters) {
+            const val = merged.filters[key];
+            if (val === "true") merged.filters[key] = true;
+            else if (val === "false") merged.filters[key] = false;
+          }
 
-        return merged;
-      },
+          return merged;
+        },
       
         async saveSettings(settings) {
           console.log(settings);

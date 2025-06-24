@@ -103,7 +103,7 @@
               >
                 <course-progress-bar-ind
                   v-if="column.name == 'Progress'"
-                  :progress="student.progress"
+                  :progress="calcProgress(student)"
                   :barwidth="9"
                   :colors="colors"
                 ></course-progress-bar-ind>
