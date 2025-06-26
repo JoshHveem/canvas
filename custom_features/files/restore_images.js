@@ -26,13 +26,7 @@ $(function () {
             const courseId = $(this).data("course-id");
             const fileId = $(this).data("file-id");
 
-            $.post(`https://btech.instructure.com/courses/${courseId}/undelete/attachment_${fileId}`)
-              .done(() => {
-                alert(`File ${fileId} restored in course ${courseId}. Refresh the page to reload the image.`);
-              })
-              .fail(() => {
-                alert(`Failed to restore file ${fileId}`);
-              });
+            $.post(`https://btech.instructure.com/courses/${courseId}/undelete/attachment_${fileId}`);
           });
         });
     }
