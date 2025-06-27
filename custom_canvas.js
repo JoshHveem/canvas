@@ -86,7 +86,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
       let DEPT_CODE = COURSE_CODE.substring(0, 4);
-      let imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.png`;
+      let imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.jpg`;
 
       let moduleModal = $(".header-bar");
       let moduleHeader = $("<div></div>").addClass("custom-course-header");
