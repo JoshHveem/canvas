@@ -95,6 +95,7 @@ $(document).ready(async function () {
         }
     }
     let data = await getAssignmentsData(ENV.COURSE_ID);
+    console.log(data);
 
     if (data.course_credits > 0) {
         let totalCredits = 0;
