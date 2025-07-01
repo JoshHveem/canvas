@@ -3,50 +3,84 @@ $(document).ready(async function () {
         const yearMatch = termName.match(/\b(20\d{2})\b/);
         return yearMatch ? yearMatch[1] : null;
     }
+    async function getGraphiAssignments(courseId) {
+        const results = [];
+
+        const fetchPage = async (after = null) => {
+            const query = `{
+            course(id: "${courseId}") {
+                _id
+                name
+                courseCode
+                term {
+                name
+                }
+                assignmentGroupsConnection {
+                nodes {
+                    _id
+                    name
+                    groupWeight
+                    state
+                    assignmentsConnection(first: 100${after ? `, after: "${after}"` : ""}) {
+                    pageInfo {
+                        hasNextPage
+                        endCursor
+                    }
+                    nodes {
+                        _id
+                        name
+                        published
+                        pointsPossible
+                        modules {
+                        _id
+                        position
+                        }
+                        quiz {
+                        modules {
+                            _id
+                            position
+                        }
+                        }
+                    }
+                    }
+                }
+                }
+            }
+            }`;
+
+            try {
+            const res = await $.post(`/api/graphql`, { query });
+            const course = res.data.course;
+            const assignmentGroups = course.assignmentGroupsConnection.nodes;
+
+            // Push current assignmentGroups to results (deep merge may be needed depending on structure)
+            results.push(...assignmentGroups);
+
+            // Check for pagination in any group
+            const groupWithMorePages = assignmentGroups.find(group =>
+                group.assignmentsConnection.pageInfo.hasNextPage
+            );
+
+            if (groupWithMorePages) {
+                const endCursor = groupWithMorePages.assignmentsConnection.pageInfo.endCursor;
+                // Recursive call to fetch next page of that group
+                await fetchPage(endCursor);
+            }
+
+            } catch (error) {
+            console.error("Error fetching assignment groups:", error);
+            }
+        };
+
+        await fetchPage(); // start initial fetch
+        return results;
+    }
     async function getAssignmentsData(courseId) {
         let assignmentsDict = {};
         let modulesDict = {};
 
-        let query = `{
-        course(id: "${courseId}") {
-            _id
-            name
-            courseCode
-            term {
-            name
-            }
-            assignmentGroupsConnection {
-            nodes {
-                _id
-                name
-                groupWeight
-                state
-                assignmentsConnection {
-                nodes {
-                    _id
-                    name
-                    published
-                    pointsPossible
-                    modules {
-                    _id
-                    position
-                    }
-                    quiz {
-                    modules {
-                        _id
-                        position
-                    }
-                    }
-                }
-                }
-            }
-            }
-        }
-        }`;
-        try {
-        let res = await $.post(`/api/graphql`, {
-            query: query
-        });
+        let assignments = await getGraphiAssignments(courseId);
+        console.log(assignments);
         let data = res.data.course;
         let courseCode = data.courseCode;
             let year = extractYear(data.term.name);
