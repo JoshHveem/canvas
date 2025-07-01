@@ -119,16 +119,28 @@
           let enrollments = await this.loadEnrollments(courseId);
           this.enrollments.push(...enrollments);
         } else {
-          let accounts = await canvasGet('/api/v1/accounts');
-          for (let a = 0; a < accounts.length; a++) {
-            let account = accounts[a];
-            if (account.parent_account_id == 3) {
-              this.accounts.push({
-                name: account.name,
-                id: '' + account.id
-              })
-            }
+          let accountsData = await canvasGet('/api/v1/accounts');
+          let accounts = [];
+          console.log(subaccountsData);
+          // check to see if we're dealing with a college level admin. If so, pull all sub_accounts they have access to.
+          for (let a = 0; a < accountsData.length; a++) {
+              let account = accountsData[a];
+              if (account.account_id == 3) {
+                  accountsData = await canvasGet('/api/v1/accounts/3/sub_accounts');
+                  break;
+              }
           }
+          // either way, then go through the accounts pulled
+          for (let a = 0; a < accountsData.length; a++) {
+              let account = accountsData[a];
+              if (account.parent_account_id == 3) {
+                accounts.push({
+                  name: account.name,
+                  id: '' + account.id
+                })
+              }
+          }
+          this.accounts = accounts;
           await this.loadCourseEnrollments();
         }
       },
