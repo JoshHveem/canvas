@@ -380,9 +380,19 @@
               }
               return (a.year > b.year) ? -1 : ((a.year < b.year) ? 1 : 0)
             });
-            this.currentDepartment = user.depts[0];
-            console.log(user.depts);
-            tree = await this.loadTree(user.depts[0].dept, user.depts[0].year);
+            this.currentDepartment = user?.depts?.[0] ?? {dept: '', year: ''};
+            if (user?.depts?.[0]) {
+              tree = await this.loadTree(user.depts[0].dept, user.depts[0].year);
+            } else {
+              tree = {
+                hours: 0,
+                name: "",
+                courses: {
+                  core: {},
+                  elective: {}
+                }
+              }
+            }
           }
 
           user = this.updateUserCourseInfo(user, tree);
