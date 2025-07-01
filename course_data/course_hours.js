@@ -3607,7 +3607,7 @@ COURSE_HOURS = {
     },
     
     'DRFT 6411': {
-        name: 'Drafting',
+        name: 'Drafting and Design',
         hours: 136,
         credits: 4,
     },
@@ -5163,7 +5163,7 @@ COURSE_HOURS = {
     'HSGN 1001': {
         name: 'Drug Dosages & Calculations',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'HSGN 6000': {
@@ -11157,7 +11157,7 @@ COURSE_HOURS = {
     'IDES 0995': {
         name: 'Introduction to Interior Design',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'AMAR 0110': {
@@ -11235,7 +11235,7 @@ COURSE_HOURS = {
     'EMSP 1010': {
         name: 'Anatomy & Physiology for PS',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'EMSP 1100': {
@@ -11797,9 +11797,9 @@ COURSE_HOURS = {
     },
     
     'MDSN 0995': {
-        name: 'Intro to Media Design',
+        name: 'Intro to Digital Design',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'DRFT 0995': {
@@ -14769,7 +14769,7 @@ COURSE_HOURS = {
     'MACH 0995': {
         name: 'Machining Essentials',
         hours: 45,
-        credits: 1,
+        credits: 0,
     },
     
     'FIRE 6211': {
@@ -15223,19 +15223,19 @@ COURSE_HOURS = {
     },
     
     'CE52 0010': {
-        name: 'Excel 2019 Level 1',
-        hours: 30,
+        name: 'Introduction to Project Management',
+        hours: 6,
         credits: 1,
     },
     
     'CE52 0011': {
-        name: 'Excel 2019 Level 2',
-        hours: 30,
-        credits: 1,
+        name: 'Basic Computer',
+        hours: 16,
+        credits: 0,
     },
     
     'CE52 0012': {
-        name: 'Word 2019 Level 1',
+        name: 'Word 2021',
         hours: 30,
         credits: 1,
     },
@@ -15291,12 +15291,12 @@ COURSE_HOURS = {
     'CE52 0021': {
         name: 'Social Media Marketing',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'CE52 0022': {
         name: 'Financial Freedom',
-        hours: 2,
+        hours: 1,
         credits: 0,
     },
     
@@ -15308,7 +15308,7 @@ COURSE_HOURS = {
     
     'CE41 0011': {
         name: 'Food Service Re-certification',
-        hours: 8,
+        hours: 4,
         credits: 0,
     },
     
@@ -15411,7 +15411,7 @@ COURSE_HOURS = {
     'CE51 0010': {
         name: 'IPC-A-610-Certification',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'ITEC 2010': {
@@ -15429,36 +15429,36 @@ COURSE_HOURS = {
     'CE51 0012': {
         name: 'IPC-J-STD-001 Certification',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'CE07 0011': {
         name: 'Servos and Drives',
-        hours: 30,
+        hours: 0,
         credits: 0,
     },
     
     'CE07 0012': {
-        name: 'Basic PLC Programming',
+        name: 'Allen Bradley PLC Basic Programming',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'CE07 0013': {
         name: 'Advanced PLC Programming',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'CE07 0014': {
         name: 'FANUC Basic Programming',
-        hours: 0,
+        hours: 35,
         credits: 0,
     },
     
     'CE07 0015': {
         name: 'FANUC Advanced Programming',
-        hours: 0,
+        hours: 35,
         credits: 0,
     },
     
@@ -15501,19 +15501,19 @@ COURSE_HOURS = {
     'CE20 0010': {
         name: 'Beginning Sewing',
         hours: 90,
-        credits: 3,
+        credits: 0,
     },
     
     'CE20 0011': {
         name: 'Advanced Sewing',
-        hours: 90,
-        credits: 3,
+        hours: 30,
+        credits: 0,
     },
     
     'CE20 0012': {
-        name: 'Digital Illustration',
-        hours: 90,
-        credits: 3,
+        name: '3D Apparel Design',
+        hours: 30,
+        credits: 0,
     },
     
     'CE80 0010': {
@@ -15523,9 +15523,9 @@ COURSE_HOURS = {
     },
     
     'CE51 0013': {
-        name: 'Electronic Engineering Technology O',
-        hours: 120,
-        credits: 4,
+        name: 'Microcontroller Basics',
+        hours: 45,
+        credits: 0,
     },
     
     'CE13 0010': {
@@ -15535,13 +15535,13 @@ COURSE_HOURS = {
     },
     
     'CE79 0010': {
-        name: 'American Sign Language I',
-        hours: 40,
+        name: 'ASL 1 - Beginning',
+        hours: 15,
         credits: 1,
     },
     
     'CE79 0011': {
-        name: 'American Sign Lanugage 2 (Int.)',
+        name: 'ASL 2 - Intermediate ASL',
         hours: 40,
         credits: 1,
     },
@@ -15561,11 +15561,11 @@ COURSE_HOURS = {
     'CE20 0013': {
         name: 'Open Lab for CLO 3D Fashion Design',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'CE33 0010': {
-        name: 'Code Update',
+        name: 'Electrician Code Update',
         hours: 0,
         credits: 0,
     },
@@ -15573,7 +15573,7 @@ COURSE_HOURS = {
     'CE80 0011': {
         name: 'Welding - Beginning',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'CE80 0012': {
@@ -15585,7 +15585,7 @@ COURSE_HOURS = {
     'CE80 0013': {
         name: 'Blacksmithing',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'CE52 0023': {
@@ -15601,7 +15601,7 @@ COURSE_HOURS = {
     },
     
     'CE81 0010': {
-        name: 'Spanish Learner',
+        name: 'Fiesta Spanish - Just for Fun!',
         hours: 8,
         credits: 0,
     },
@@ -15609,7 +15609,7 @@ COURSE_HOURS = {
     'DATA 0995': {
         name: 'Introduction to Data Analytics',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'CE80 0014': {
@@ -15632,7 +15632,7 @@ COURSE_HOURS = {
     
     'CE78 0011': {
         name: 'Multi-Axis Machining Operations',
-        hours: 45,
+        hours: 30,
         credits: 0,
     },
     
@@ -15673,8 +15673,8 @@ COURSE_HOURS = {
     },
     
     'CE07 0019': {
-        name: 'FANUC iRVision Operation & Programm',
-        hours: 30,
+        name: 'FANUC iRVision',
+        hours: 15,
         credits: 0,
     },
     
@@ -15980,7 +15980,7 @@ COURSE_HOURS = {
     
     'CE07 0020': {
         name: 'FANUC Dual Check Safety (DCS)',
-        hours: 30,
+        hours: 15,
         credits: 0,
     },
     
@@ -16189,9 +16189,9 @@ COURSE_HOURS = {
     },
     
     'CE52 0025': {
-        name: 'Business Technology Open Lab',
+        name: 'Business Dept Open Lab',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'MEAS 6111': {
@@ -16255,15 +16255,15 @@ COURSE_HOURS = {
     },
     
     'CE33 0020': {
-        name: 'Journeyman Electrician Preparation',
-        hours: 90,
-        credits: 3,
+        name: 'Electrical Written Test Prep',
+        hours: 6,
+        credits: 0,
     },
     
     'CE33 0030': {
-        name: 'Journeyman Plumber Preparation',
-        hours: 90,
-        credits: 3,
+        name: 'Electrical Practical Test Prep',
+        hours: 6,
+        credits: 0,
     },
     
     'DATA 6111': {
@@ -16345,7 +16345,7 @@ COURSE_HOURS = {
     },
     
     'TEDT 1700': {
-        name: 'Hydaulics',
+        name: 'Hydraulics',
         hours: 60,
         credits: 2,
     },
@@ -16357,7 +16357,7 @@ COURSE_HOURS = {
     },
     
     'TEAS 1011': {
-        name: 'Introduction to Veterinary Tech',
+        name: 'Intro to Veterinary Assisting',
         hours: 60,
         credits: 2,
     },
@@ -16423,19 +16423,19 @@ COURSE_HOURS = {
     },
     
     'TECE 1100': {
-        name: 'Programmable Logic Controllers 2',
+        name: 'Programmable Logic Controllers ll',
         hours: 90,
         credits: 3,
     },
     
     'TECE 1150': {
-        name: 'Human Machine Interface (HMI) Prg',
+        name: 'Human Machine Interface (HMI) Progr',
         hours: 60,
         credits: 2,
     },
     
     'TECE 1200': {
-        name: 'Industrial Networking Lab',
+        name: 'Industrial Networking ll',
         hours: 60,
         credits: 2,
     },
@@ -16453,7 +16453,7 @@ COURSE_HOURS = {
     },
     
     'TECE 1300': {
-        name: 'Programmable Logic Controllers 3',
+        name: 'Programmable Logic Controllers lll',
         hours: 90,
         credits: 3,
     },
@@ -16495,7 +16495,7 @@ COURSE_HOURS = {
     },
     
     'TECE 1440': {
-        name: 'HMI Platforms',
+        name: 'Human Machine Interface Platforms',
         hours: 30,
         credits: 1,
     },
@@ -16543,7 +16543,7 @@ COURSE_HOURS = {
     },
     
     'TECR 1010': {
-        name: 'Intro to Collision Repair & Safety',
+        name: 'Intro Collision Repair and Safety',
         hours: 30,
         credits: 1,
     },
@@ -16573,7 +16573,7 @@ COURSE_HOURS = {
     },
     
     'TECR 1060': {
-        name: 'Shop Operations & Career Success',
+        name: 'Shop Operations and Career Success',
         hours: 30,
         credits: 1,
     },
@@ -16591,7 +16591,7 @@ COURSE_HOURS = {
     },
     
     'TECR 1090': {
-        name: 'Plastic Welding & Adhesives',
+        name: 'Plastic Welding and Adhesives',
         hours: 120,
         credits: 4,
     },
@@ -16669,7 +16669,7 @@ COURSE_HOURS = {
     },
     
     'TECS 1010': {
-        name: 'Cosmetology/Barb/Hair Design Basics',
+        name: 'Cosmetology/Barbering/Hair Design B',
         hours: 120,
         credits: 4,
     },
@@ -16681,7 +16681,7 @@ COURSE_HOURS = {
     },
     
     'TECS 1030': {
-        name: 'Hair Design Chemcial Services Basic',
+        name: 'Cosmetology/Hair Design Chemical S',
         hours: 90,
         credits: 3,
     },
@@ -16693,13 +16693,13 @@ COURSE_HOURS = {
     },
     
     'TECS 1050': {
-        name: 'Theory & Practice Intermediate',
+        name: 'Cosmetology/Barbering Intermediate',
         hours: 90,
         credits: 3,
     },
     
     'TECS 1060': {
-        name: 'Professional Development, State Law',
+        name: 'Professional Development and Indust',
         hours: 90,
         credits: 3,
     },
@@ -16711,13 +16711,13 @@ COURSE_HOURS = {
     },
     
     'TECS 2010': {
-        name: 'Hair Design/Barbering Adv Theory',
+        name: 'Cosmetology/Hair Design/Barbering A',
         hours: 90,
         credits: 3,
     },
     
     'TECS 2020': {
-        name: 'Esthetics/Nails/Chemical Adv Theory',
+        name: 'Esthetics/Nails/Chemical Advanced',
         hours: 90,
         credits: 3,
     },
@@ -16879,7 +16879,7 @@ COURSE_HOURS = {
     },
     
     'TECE 2901': {
-        name: 'Special Applications',
+        name: 'Special Applications for Controls',
         hours: 180,
         credits: 6,
     },
@@ -16993,7 +16993,7 @@ COURSE_HOURS = {
     },
     
     'TEMA 2998': {
-        name: 'Medical Asistant Externship I',
+        name: 'Medical Assistant Externship I',
         hours: 90,
         credits: 2,
     },
@@ -17029,7 +17029,7 @@ COURSE_HOURS = {
     },
     
     'TEID 1050': {
-        name: 'Textiles & Pattern Development',
+        name: 'Textiles and Pattern Development',
         hours: 30,
         credits: 1,
     },
@@ -17047,7 +17047,7 @@ COURSE_HOURS = {
     },
     
     'TEID 1080': {
-        name: 'SketchUpPro',
+        name: 'SketchUp Pro',
         hours: 60,
         credits: 2,
     },
@@ -17211,7 +17211,7 @@ COURSE_HOURS = {
     'CE75 0050': {
         name: 'Hazardous Materials',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'TEDT 2999': {
@@ -17575,7 +17575,7 @@ COURSE_HOURS = {
     },
     
     'TEDA 1035': {
-        name: 'Machine Learning',
+        name: 'Machine Learning (Python)',
         hours: 60,
         credits: 2,
     },
@@ -17593,7 +17593,7 @@ COURSE_HOURS = {
     },
     
     'TEDA 1080': {
-        name: 'Adv Spreadsheet Analytics',
+        name: 'Advanced Spreadsheets Analytics',
         hours: 60,
         credits: 2,
     },
@@ -17617,7 +17617,7 @@ COURSE_HOURS = {
     },
     
     'TETM 1010': {
-        name: 'Anatomy, Physiology, Kinesiology',
+        name: 'Anatomy, Physiology and Kinesiology',
         hours: 180,
         credits: 6,
     },
@@ -17641,8 +17641,8 @@ COURSE_HOURS = {
     },
     
     'CE81 0020': {
-        name: 'College Writing',
-        hours: 8,
+        name: 'Spanish 1',
+        hours: 13,
         credits: 0,
     },
     
@@ -17985,7 +17985,7 @@ COURSE_HOURS = {
     'CE20 0020': {
         name: 'Open Lab for Adv Sewing & Patter',
         hours: 60,
-        credits: 2,
+        credits: 0,
     },
     
     'WEBM 2550': {
@@ -18307,8 +18307,8 @@ COURSE_HOURS = {
     },
     
     'CE81 0030': {
-        name: 'GED Math Power',
-        hours: 4,
+        name: 'Spanish 2',
+        hours: 13,
         credits: 0,
     },
     
@@ -18465,7 +18465,7 @@ COURSE_HOURS = {
     'MEDA 1110': {
         name: 'Medical Terminology',
         hours: 30,
-        credits: 1,
+        credits: 0,
     },
     
     'MEAS 6411': {
@@ -18487,7 +18487,7 @@ COURSE_HOURS = {
     },
     
     'TETM 1310': {
-        name: 'Ethic and Business Practices',
+        name: 'Professional Standards, Ethics, and',
         hours: 60,
         credits: 2,
     },
@@ -18499,7 +18499,7 @@ COURSE_HOURS = {
     },
     
     'TETM 2999': {
-        name: 'Externship',
+        name: 'Clinical Applications Externship',
         hours: 135,
         credits: 3,
     },
@@ -18715,8 +18715,8 @@ COURSE_HOURS = {
     },
     
     'CE81 0040': {
-        name: 'Interpersonal Communication',
-        hours: 8,
+        name: 'Spanish 3',
+        hours: 4,
         credits: 0,
     },
     
@@ -18817,7 +18817,7 @@ COURSE_HOURS = {
     },
     
     'TERE 1100': {
-        name: 'Real Estate Pre-licensing',
+        name: 'Pre-licensing',
         hours: 120,
         credits: 4,
     },
@@ -18859,13 +18859,13 @@ COURSE_HOURS = {
     },
     
     'APPE 6111': {
-        name: 'Pre-Apprentice Electrician',
+        name: 'Electrical Apprenticeship (1A)',
         hours: 120,
         credits: 4,
     },
     
     'APPE 6211': {
-        name: 'Pre-Apprentice Electrician',
+        name: 'Electrical Apprenticeship (1A)',
         hours: 120,
         credits: 4,
     },
@@ -18901,13 +18901,13 @@ COURSE_HOURS = {
     },
     
     'CE53 0010': {
-        name: 'IT Open Lab',
+        name: 'Advanced Cyber Principles',
         hours: 120,
         credits: 0,
     },
     
     'CE53 0020': {
-        name: 'IT Open Lab - Study Prep',
+        name: 'IT Study Prep',
         hours: 30,
         credits: 0,
     },
@@ -18919,7 +18919,7 @@ COURSE_HOURS = {
     },
     
     'CE41 0020': {
-        name: 'Friday Night Flavors',
+        name: 'Culinary Series',
         hours: 3,
         credits: 0,
     },
@@ -18945,6 +18945,2262 @@ COURSE_HOURS = {
     'CE21 0020': {
         name: 'Training',
         hours: 8,
+        credits: 0,
+    },
+    
+    'CE78 0040': {
+        name: 'Machining Dept Open Lab',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'CE33 0040': {
+        name: 'Plumber Written Test Prep',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE33 0050': {
+        name: 'Plumber Practical Test Prep',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE40 0010': {
+        name: 'Brain Health',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE52 0040': {
+        name: 'Introduction to AI',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE21 0030': {
+        name: 'Peer Support for Public Safety',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE20 0050': {
+        name: 'Sewing Skills: Hemming Pants',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'CE20 0060': {
+        name: 'Portrait Lighting',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE20 0070': {
+        name: 'Creative Lighting Exploration',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE40 0020': {
+        name: 'Industry Tours',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE40 0050': {
+        name: 'Creative Corner Art Series',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE40 0080': {
+        name: 'Apple Notes',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE20 0080': {
+        name: 'Photo Editing (Beginning)',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'CE13 0020': {
+        name: 'Personal/Business Website Online',
+        hours: 20,
+        credits: 0,
+    },
+    
+    'CE21 0060': {
+        name: 'Leadership Skills',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE40 0110': {
+        name: 'Turning the Tide on Neuropathy',
+        hours: 3,
+        credits: 0,
+    },
+    
+    'CE40 0210': {
+        name: 'Biosolids Land Applier Certificatio',
+        hours: 12,
+        credits: 0,
+    },
+    
+    'CE40 0040': {
+        name: 'Learning Outdoor Skills & Technolog',
+        hours: 5,
+        credits: 0,
+    },
+    
+    'CE40 0070': {
+        name: 'Podcasting for the Rest of Us',
+        hours: 5,
+        credits: 0,
+    },
+    
+    'CE41 0030': {
+        name: 'Versatility of Pork Tenderloin',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'CE23 0020': {
+        name: 'Unlock Life Saving Skills',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'CE23 0030': {
+        name: 'Burns/Basic First Aid',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE23 0040': {
+        name: 'Falls/Stroke',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE23 0050': {
+        name: 'Stop the Bleed',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE40 0030': {
+        name: 'Gardening Series',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE40 0120': {
+        name: 'WHY You Matter: The Gift of Memory',
+        hours: 5,
+        credits: 0,
+    },
+    
+    'CE41 0060': {
+        name: 'Focaccia',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE41 0070': {
+        name: 'Baking with Lavender',
+        hours: 3,
+        credits: 0,
+    },
+    
+    'CE21 0070': {
+        name: 'De-Escalation Training',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE31 0010': {
+        name: 'Animal Care for Summer Citizens',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'CE23 0060': {
+        name: 'Basic CPR',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE76 0030': {
+        name: 'TMJ Exploration & Internal Mouth Wo',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE80 0020': {
+        name: 'Welding - Metal Art',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'CE71 0040': {
+        name: 'Revit - Beginning',
+        hours: 20,
+        credits: 0,
+    },
+    
+    'CE81 0050': {
+        name: 'College Writing',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'TEBP 1840': {
+        name: 'Business Productivity',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEET 1040': {
+        name: 'Electronics Assembly and Soldering',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEET 1060': {
+        name: 'DC Electronics',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEET 1070': {
+        name: 'AC Electronics',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEET 1100': {
+        name: 'Microcontrollers l',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEET 1105': {
+        name: 'Microcontrollers ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1010': {
+        name: 'Essential Skills and Safety',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 1020': {
+        name: 'Pneumatics',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1030': {
+        name: 'Hydraulics',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1040': {
+        name: 'Industrial Mechanics',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 1050': {
+        name: 'Electrical Systems',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1060': {
+        name: 'Motor Controls',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 1070': {
+        name: 'Programmable Logic Controllers',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEAM 1080': {
+        name: 'Applied System Diagnostics',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1100': {
+        name: 'Electric Motors and Drives',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEAM 1110': {
+        name: 'Introduction to Industrial Robotics',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1120': {
+        name: '3D Modeling',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1125': {
+        name: 'Solidworks CSWA Certification',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEAM 1700': {
+        name: 'Introduction to Studio 5000',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEAM 1200': {
+        name: 'HVAC Refrigeration',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 1300': {
+        name: 'Building Control Panels',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 1005': {
+        name: 'Computer Tools for Technology',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEAM 1400': {
+        name: 'GD&T Blueprint Reading',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEAM 1500': {
+        name: 'Instrumentation Process Control',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEAM 2999': {
+        name: 'Automated Technology Externship',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'TECO 1010': {
+        name: 'Introduction to Carpentry',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECO 1020': {
+        name: 'Carpentry Concepts',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TECO 1030': {
+        name: 'Construction Print Reading',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECO 1040': {
+        name: 'Advanced Carpentry Concepts',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TECO 1050': {
+        name: 'Interior Finishes',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TECO 1060': {
+        name: 'Exterior Finishes',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TECO 1070': {
+        name: 'General Safety & Computer Essential',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECO 1100': {
+        name: 'Construction Estimating',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECO 1200': {
+        name: 'Cabinet Technology',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TECE 2999': {
+        name: 'Controls Engineering Externship',
+        hours: 180,
+        credits: 6,
+    },
+    
+    'TEIT 1200': {
+        name: 'A+ Core I',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEIT 1210': {
+        name: 'A+ Core II',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEIT 2100': {
+        name: 'Computer Networks',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEIT 1300': {
+        name: 'Linux Foundations',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEIT 1100': {
+        name: 'Introduction to Networking',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1050': {
+        name: 'Career & Workplace Relations',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1800': {
+        name: 'Certification Test Prep I',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1810': {
+        name: 'Certification Test Prep II',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1820': {
+        name: 'Certification Test Prep III',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1830': {
+        name: 'Certification Test Prep IV',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1840': {
+        name: 'Certification Test Prep V',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 1850': {
+        name: 'Certification Test Prep VI',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 2140': {
+        name: 'Network Traffic Analysis',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 2998': {
+        name: 'Service Desk Internship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEIT 1040': {
+        name: 'Introduction to Virtualization',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEIT 2999': {
+        name: 'IT Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEIT 2200': {
+        name: 'Security+',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEIT 1290': {
+        name: 'Linux Computing with Raspberry Pi',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEIT 1400': {
+        name: 'Introduction to Cloud',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEET 1030': {
+        name: 'IPC-A-610 Certification: Acceptabil',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEET 1080': {
+        name: 'Analog Electronics',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEET 1090': {
+        name: 'Digital Fundamentals',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEET 1110': {
+        name: 'Instrumentation',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEET 1120': {
+        name: 'Communication Circuits',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEET 1130': {
+        name: 'IPC-J-STD-001 Certification: Requir',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEET 1140': {
+        name: 'IPC-WHMA-A-620 Certification: Cable',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEET 1150': {
+        name: 'PCB Design and Fabrication',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEET 1160': {
+        name: 'Electronics Final Project',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEET 1180': {
+        name: 'Industry Related Certifications/Sem',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEET 2901': {
+        name: 'Special Applications',
+        hours: 180,
+        credits: 6,
+    },
+    
+    'TEET 2999': {
+        name: 'Electronics Externship',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TELE 1020': {
+        name: 'Basic Corrections Officer',
+        hours: 150,
+        credits: 5,
+    },
+    
+    'NRSG 2083': {
+        name: 'Clinical Applications ll',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'NRSG 2041': {
+        name: 'Pharmacology ll',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TELE 1010': {
+        name: 'Special Function Officer',
+        hours: 270,
+        credits: 9,
+    },
+    
+    'CE40 0060': {
+        name: 'Astronomy Series',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'EMSP 1011': {
+        name: 'A & P for Public Service - Extensio',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'CE41 0080': {
+        name: 'Armenian Pizza (Lahmajoon)',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'CE53 0030': {
+        name: 'Cyber Scam Awareness',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'TESD 1400': {
+        name: 'Computer Programming',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TESD 1800': {
+        name: 'Software Development',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TESD 1100': {
+        name: 'Client-side Web Development',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TESD 1500': {
+        name: 'Database Development',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TESD 1700': {
+        name: 'Server-side Web Development',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TESD 1050': {
+        name: 'Job Seeking Skills',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TESD 1000': {
+        name: 'Frontend Framework',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TESD 1010': {
+        name: 'Backend Framework',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TESD 1900': {
+        name: 'Fullstack Integration',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TESD 1110': {
+        name: 'Prototyping and Design',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TESD 1510': {
+        name: 'Content Management Systems Fundamen',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TESD 2835': {
+        name: 'Software Development Capstone',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'ITEC 6412': {
+        name: 'IT STEM Camp',
+        hours: 70,
+        credits: 0,
+    },
+    
+    'CE40 0090': {
+        name: 'Planning Your Digital Estate',
+        hours: 1,
+        credits: 0,
+    },
+    
+    'TEEM 1011': {
+        name: 'Emergency Medical Technician',
+        hours: 180,
+        credits: 6,
+    },
+    
+    'TEEM 1201': {
+        name: 'Adv Emergency Medical Technician',
+        hours: 210,
+        credits: 7,
+    },
+    
+    'CE58 0010': {
+        name: 'Safety Inspection',
+        hours: 16,
+        credits: 0,
+    },
+    
+    'CE80 0120': {
+        name: 'Welding Educator Endorsement',
+        hours: 24,
+        credits: 0,
+    },
+    
+    'CE23 0019': {
+        name: 'Heartsaver First Aid w/CPR & AED',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'SFDV 0995': {
+        name: 'Intro to Software Development',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'CE51 0015': {
+        name: 'IPC-A-610 Recertification',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE51 0016': {
+        name: 'IPC-J-STD-001 Recertification',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE52 0080': {
+        name: 'College English for Public Service',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'CE40 0130': {
+        name: 'Drinking Water Operator Certificati',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE40 0140': {
+        name: 'Wastewater Operator Training',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE33 0060': {
+        name: 'Plumbing Code Update',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'SDEV 6111': {
+        name: 'Software Development',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'SDEV 6211': {
+        name: 'Software Development',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'SDEV 6311': {
+        name: 'Software Development',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'SDEV 6811': {
+        name: 'Software Development',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'SDEV 6911': {
+        name: 'Software Development',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'DIDS 6111': {
+        name: 'Digital Design',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'DIDS 6211': {
+        name: 'Digital Design',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'DIDS 6311': {
+        name: 'Digital Design',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'DIDS 6811': {
+        name: 'Digital Design',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'DIDS 6911': {
+        name: 'Digital Design',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'CE71 0050': {
+        name: 'Revit - Intermediate',
+        hours: 15,
+        credits: 0,
+    },
+    
+    'CE54 0110': {
+        name: 'Commercial Driver Pre/Post Trip Ins',
+        hours: 2,
+        credits: 0,
+    },
+    
+    'CE07 0040': {
+        name: 'Machine Operator (Manufacturing)',
+        hours: 80,
+        credits: 0,
+    },
+    
+    'CE07 0050': {
+        name: 'Automation Electrical Troubleshooti',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE51 0017': {
+        name: 'IPC-WHMA-A-620 Recertification',
+        hours: 8,
+        credits: 0,
+    },
+    
+    'CE52 0050': {
+        name: 'Leadership & Emotional Intelligence',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE52 0060': {
+        name: 'Excel - Level 1',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'CE52 0070': {
+        name: 'Excel - Level 2',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'DIDS 6112': {
+        name: 'Digital Design',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'DIDS 6213': {
+        name: 'Digital Design',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'DIDS 6214': {
+        name: 'Digital Design',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'DIDS 6315': {
+        name: 'Digital Design',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'DIDS 6316': {
+        name: 'Digital Design',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'CE07 0070': {
+        name: 'IMM Systems',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'CE07 0060': {
+        name: 'ESP Systems',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'CE58 0020': {
+        name: 'Small Engine Repair & Maintenance',
+        hours: 12,
+        credits: 0,
+    },
+    
+    'CE40 0150': {
+        name: 'Collage Art & Gel Plate Printing',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE71 0060': {
+        name: 'AutoCAD Beginning',
+        hours: 18,
+        credits: 0,
+    },
+    
+    'CE72 0020': {
+        name: 'Photoshop CC Essentials (Beginning)',
+        hours: 24,
+        credits: 0,
+    },
+    
+    'CE72 0030': {
+        name: 'Basic Video Editing',
+        hours: 20,
+        credits: 0,
+    },
+    
+    'CE48 0030': {
+        name: 'SketchUp Pro',
+        hours: 60,
+        credits: 0,
+    },
+    
+    'CE62 0020': {
+        name: 'Tableau',
+        hours: 10,
+        credits: 0,
+    },
+    
+    'CE62 0040': {
+        name: 'PowerBI',
+        hours: 10,
+        credits: 0,
+    },
+    
+    'CE50 0020': {
+        name: 'Homebuyers 101',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CE50 0030': {
+        name: 'Investing in Real Estate',
+        hours: 18,
+        credits: 0,
+    },
+    
+    'DATA 6911': {
+        name: 'Data Analytics',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'CE51 0020': {
+        name: 'Soldering for Industry',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'TEEM 1202': {
+        name: 'Advanced Emergency Medical Technici',
+        hours: 180,
+        credits: 6,
+    },
+    
+    'USFO ES01': {
+        name: 'Professionalism',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES02': {
+        name: 'Uses Time Productively',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES01': {
+        name: 'Professionalism',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES02': {
+        name: 'Uses Time Productively',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES03': {
+        name: 'Ethical Behavior',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES03': {
+        name: 'Ethical Behavior',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES04': {
+        name: 'Works Cooperatively',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES04': {
+        name: 'Works Cooperatively',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES05': {
+        name: 'Demonstrates Confidence',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES05': {
+        name: 'Demonstrates Confidence',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES06': {
+        name: 'Quality of Work',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES06': {
+        name: 'Quality of Work',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES07': {
+        name: 'Dress, Hygiene, Appearance',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES07': {
+        name: 'Dress, Hygiene, Appearance',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES08': {
+        name: 'Critical Thinking & Problem-Solving',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES08': {
+        name: 'Critical Thinking & Problem-Solving',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES09': {
+        name: 'Communication w/Instructors & Peers',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES09': {
+        name: 'Communication w/Instructors & Peers',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'USFO ES10': {
+        name: 'Positive Attitude',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'UBCO ES10': {
+        name: 'Positive Attitude',
+        hours: 0,
+        credits: 0,
+    },
+    
+    'CE51 0030': {
+        name: 'DC Circuits',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'CE51 0040': {
+        name: 'AC Circuits',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'CE51 0050': {
+        name: 'Analog Circuits',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'CE51 0060': {
+        name: 'Digital Circuits',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'TEFF 1100': {
+        name: 'Introduction to Fire',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'CE78 0050': {
+        name: 'Basic Machining',
+        hours: 40,
+        credits: 0,
+    },
+    
+    'TEFF 1200': {
+        name: 'Firefighter',
+        hours: 330,
+        credits: 11,
+    },
+    
+    'CE78 0060': {
+        name: 'Electrical Systems',
+        hours: 40,
+        credits: 0,
+    },
+    
+    'TEAM 1900': {
+        name: 'Automated Technology Externship',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'TEWT 1005': {
+        name: 'Welding Overview',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEBP 2900': {
+        name: 'Business Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'CE53 0040': {
+        name: 'Intro to AWS Artificial Intelligenc',
+        hours: 15,
+        credits: 0,
+    },
+    
+    'TECS 2900': {
+        name: 'Cosmetology/Barbering Clinical l',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TECS 2910': {
+        name: 'Cosmetology/Barbering Clinical ll',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TECS 2920': {
+        name: 'Cosmetology/Barbering Clinical lll',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TECS 2930': {
+        name: 'Cosmetology/Barbering Clinical lV',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TECS 2940': {
+        name: 'Cosmetology/Barbering Clinical V',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TECS 2950': {
+        name: 'Cosmetology/Barbering Clinical Vl',
+        hours: 145,
+        credits: 3,
+    },
+    
+    'TECA 1000': {
+        name: 'Sanitation and Safety',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1010': {
+        name: 'Introduction to Culinary Arts',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1020': {
+        name: 'Culinary Math',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1100': {
+        name: 'Culinary l',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1110': {
+        name: 'Culinary Techniques',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1200': {
+        name: 'Soups, Stocks, and Sauces',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1400': {
+        name: 'Garde Manger - Cold Kitchen',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1500': {
+        name: 'Baking l',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1220': {
+        name: 'Flavor Essentials',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1230': {
+        name: 'Artisan Methods',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECA 1240': {
+        name: 'Pastas and Grains',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECA 1510': {
+        name: 'Pastries and Desserts',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECA 1600': {
+        name: 'Baking ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TECA 1700': {
+        name: 'Restaurant Practical',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TECA 1800': {
+        name: 'Job Seeking Skills',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1920': {
+        name: 'Culinary Arts Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TECA 2998': {
+        name: 'Line Cooking/Cafe Management',
+        hours: 45,
+        credits: 1,
+    },
+    
+    'TECA 2999': {
+        name: 'Catering',
+        hours: 45,
+        credits: 1,
+    },
+    
+    'TEDE 1011': {
+        name: 'Introduction to Dental Assisting',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDE 1021': {
+        name: 'Infection Control',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDE 1500': {
+        name: 'Job Seeking Skills',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDE 1201': {
+        name: 'Dental Instruments and Equipment',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDE 1221': {
+        name: 'Orthodontics, Pediactrics, Prosthod',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDE 1900': {
+        name: 'Dental Assisting Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEDE 1031': {
+        name: 'Patient Information',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDE 1041': {
+        name: 'Dental Materials',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDE 1211': {
+        name: 'Anesthesia and Pain Control',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDE 1231': {
+        name: 'Periodontics, Endodontics, Oral Max',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEIT 1170': {
+        name: 'Computer Networks I',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEIT 2170': {
+        name: 'Computer Networks II',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1000': {
+        name: 'Technical Drafting',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDR 1010': {
+        name: 'Advanced Technical Drafting',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEIT 2900': {
+        name: 'IT Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TELE 1030': {
+        name: 'Law Enforcement Officer',
+        hours: 360,
+        credits: 12,
+    },
+    
+    'TEDR 1100': {
+        name: 'Residential Drafting',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1110': {
+        name: 'Introduction to Building Informatio',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 2800': {
+        name: 'Capstone Project',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1200': {
+        name: 'Parametric Solid Modeling',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 2200': {
+        name: 'Advanced Solid Modeling',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1003': {
+        name: 'Career and Workplace Relations',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDR 1015': {
+        name: 'Applied Technical Math',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDR 1020': {
+        name: 'Computer Illustration',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDR 1130': {
+        name: 'Commerical Drafting',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1170': {
+        name: 'Structural Steel Detailing',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDR 1210': {
+        name: 'Mechanical Design',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDR 1220': {
+        name: 'Production Drafting',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDR 1240': {
+        name: 'Rapid Prototyping',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDR 2000': {
+        name: 'Portfolio Development',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDR 2050': {
+        name: 'Small Business',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDR 2110': {
+        name: 'Intermediate Architectural Drafting',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDR 2205': {
+        name: 'Solid Modeling Certification',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1010': {
+        name: 'Beginning Graphic Design',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1110': {
+        name: 'Intermediate Graphic Design',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1210': {
+        name: 'Advanced Graphic Design',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1230': {
+        name: 'Interactive Design',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1220': {
+        name: 'Motion Design',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1500': {
+        name: 'Professional Development',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1510': {
+        name: 'Portfolio Building',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDG 1300': {
+        name: 'Audio/Video Editing',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1310': {
+        name: 'Typography and Publishing',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1320': {
+        name: 'Image Editing',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1330': {
+        name: 'Photography and Photo Management',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDG 1340': {
+        name: '3D Sculpting and Printing',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1000': {
+        name: 'Manufacturing Fundamentals',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1200': {
+        name: 'Lathe Concepts',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1100': {
+        name: 'Mill Concepts',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1150': {
+        name: 'CNC Mill Concepts',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1250': {
+        name: 'CNC Lathe Concepts',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1300': {
+        name: 'CNC Mill Programming',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 1350': {
+        name: 'CNC Lathe Programming',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 2000': {
+        name: 'Process Control',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 2300': {
+        name: 'Multi-Axis',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 2100': {
+        name: 'Advanced CNC Mill',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMT 2200': {
+        name: 'Advanced CNC Lathe',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMA 1900': {
+        name: 'Medical Assistant Externship l',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEMA 1910': {
+        name: 'Medical Assistant Externship ll',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEPT 1900': {
+        name: 'Pharmacy Technician Externship',
+        hours: 210,
+        credits: 4,
+    },
+    
+    'CE51 0070': {
+        name: 'IPC-7711/7721 Elec Rework & Repair',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'TEVA 1011': {
+        name: 'Intro to Veterinary Assisting',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEVA 1301': {
+        name: 'Vet Assisting Applications',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEVA 1401': {
+        name: 'Emergency Critical Care/End of Life',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEVA 1501': {
+        name: 'Clinical Procedures l',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEVA 1502': {
+        name: 'Clinical Procedures ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEVA 1503': {
+        name: 'Clinical Procedures lll',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEVA 2999': {
+        name: 'Clinical Externship',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'TEVA 1111': {
+        name: 'Patient Management and Nutrition',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEVA 1201': {
+        name: 'Vet Assist Clinical Sciences',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1000': {
+        name: 'Introduction to Welding and Cutting',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1010': {
+        name: 'Measurement Systems',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1111': {
+        name: 'Shielded Metal Arc Welding (SMAW) l',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1112': {
+        name: 'Shielded Metal Arc Welding (SMAW)ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1211': {
+        name: 'Gas Tungsten Arc Welding (GTAW) l',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1212': {
+        name: 'Gas Tungsten Arc Welding (GTAW) ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1311': {
+        name: 'Gas Metal  Arc Welding (GMAW) l',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1411': {
+        name: 'Flux Cored Arc Welding (FCAW) l',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1020': {
+        name: 'Welding Symbols and Print Reading',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1312': {
+        name: 'Gas Metal Arc Welding (GMAW) ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1412': {
+        name: 'Flux Cored Arc Welding (FCAW) ll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1130': {
+        name: 'Shielded Metal Arc Welding(SMAW)lll',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1330': {
+        name: 'Gas Metal Arc Welding (GMAW) Alumin',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1030': {
+        name: 'Automated Cutting and Welding',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1040': {
+        name: 'Welding Inspection and Welding Meta',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1500': {
+        name: 'Introduction to Other Welding Proce',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEWT 1600': {
+        name: 'Welding Layout and Fabrication',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 2999': {
+        name: 'Welding Externship',
+        hours: 135,
+        credits: 3,
+    },
+    
+    'TEWT 2012': {
+        name: 'Welding Special Projects',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'CE40 0160': {
+        name: 'Business Start Up Essentials',
+        hours: 30,
+        credits: 0,
+    },
+    
+    'TEAM 2810': {
+        name: 'Project Based Learning Automation',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECE 2800': {
+        name: 'Project Based Learning in Controls',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1260': {
+        name: 'American Regional Cuisine',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TECA 1270': {
+        name: 'International Cuisine',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEMT 2400': {
+        name: 'Swiss Screw Machine Concepts',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEFF 1300': {
+        name: 'Intro to Fire Command',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEFF 1310': {
+        name: 'Advanced Vehicle Rescue',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEFF 1320': {
+        name: 'Advanced Rope Rescue',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEID 1011': {
+        name: 'Design Theory',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEID 1046': {
+        name: 'Materials and Sources',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEID 1071': {
+        name: 'AutoCAD Residential Space Planning',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEID 1072': {
+        name: 'AutoCAD Commercial Space Planning',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEID 1091': {
+        name: 'REVIT',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEID 1111': {
+        name: 'Capstone Programming',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEID 1112': {
+        name: 'Capstone Showcase',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEID 1161': {
+        name: 'Industry Connections',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEID 2900': {
+        name: 'Interior Design Externship',
+        hours: 45,
+        credits: 1,
+    },
+    
+    'TEDA 1021': {
+        name: 'SQL Fundamentals',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDA 1031': {
+        name: 'Python Fundamentals',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEDA 1051': {
+        name: 'Data Visualization Fundamentals',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDA 1036': {
+        name: 'Introduction to Machine Learning',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDA 2051': {
+        name: 'Data Analytics Capstone Project',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEMS 1011': {
+        name: 'Introduction to Meat Services',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEMS 1031': {
+        name: 'Equipment',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEMS 1061': {
+        name: 'Pork and Lamb Cutting',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEMS 1071': {
+        name: 'Value Added Products',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEMS 1080': {
+        name: 'Packaging and Presentation',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEMS 1090': {
+        name: 'Harvest Floor Lab',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEFM 1302': {
+        name: 'Strategies of Selling',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEFM 1630': {
+        name: 'Beginning 3D Apparel Design',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEFM 2400': {
+        name: 'Capstone Project',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEWT 1134': {
+        name: 'Shielded Metal Arc Weld (SMAW) lll',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'DIDS 6411': {
+        name: 'Digital Design',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'SDEV 6411': {
+        name: 'Software Development',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'TEWT 1232': {
+        name: 'Gas Tungsten Arc Weld (GTAW) lll',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'AUTO 2021': {
+        name: 'General Automotive Services ll',
+        hours: 120,
+        credits: 4,
+    },
+    
+    'TEDA 1041': {
+        name: 'Advanced Python for Data Analytics',
+        hours: 30,
+        credits: 1,
+    },
+    
+    'TEDA 2902': {
+        name: 'Special Applications',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'TEDA 1900': {
+        name: 'Externship',
+        hours: 90,
+        credits: 2,
+    },
+    
+    'TEDA 1025': {
+        name: 'Advanced SQL',
+        hours: 60,
+        credits: 2,
+    },
+    
+    'CE33 0070': {
+        name: 'Contractor CEUs',
+        hours: 4,
+        credits: 0,
+    },
+    
+    'APPE 6411': {
+        name: 'Pre-Apprentice Electrician',
+        hours: 136,
+        credits: 0,
+    },
+    
+    'TEPA 2121': {
+        name: 'Paramedic Capstone Experience',
+        hours: 90,
+        credits: 3,
+    },
+    
+    'TEPA 2993': {
+        name: 'Fundamental Externship',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'TEPA 2994': {
+        name: 'Advanced Care Externship',
+        hours: 180,
+        credits: 4,
+    },
+    
+    'CNAT 6431': {
+        name: 'Nursing Assistant',
+        hours: 124,
+        credits: 0,
+    },
+    
+    'CE51 0014': {
+        name: 'Microcontroller Advanced',
+        hours: 45,
+        credits: 0,
+    },
+    
+    'CE78 0070': {
+        name: 'Swiss Machining Concepts',
+        hours: 75,
+        credits: 0,
+    },
+    
+    'VETA 6111': {
+        name: 'Veterinary Assisting',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'VETA 6211': {
+        name: 'Veterinary Assisting',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'VETA 6311': {
+        name: 'Veterinary Assisting',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'VETA 6811': {
+        name: 'Veterinary Assisting',
+        hours: 180,
+        credits: 0,
+    },
+    
+    'VETA 6911': {
+        name: 'Veterinary Assisting',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'CE50 0040': {
+        name: 'State of Utah Real Estate Caravan',
+        hours: 3,
+        credits: 0,
+    },
+    
+    'CE20 0090': {
+        name: 'Lightroom 2.0',
+        hours: 6,
+        credits: 0,
+    },
+    
+    'CNAT 6121': {
+        name: 'Nursing Assistant',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'CNAT 6221': {
+        name: 'Nursing Assistant',
+        hours: 120,
+        credits: 0,
+    },
+    
+    'CNAT 6321': {
+        name: 'Nursing Assistant',
+        hours: 120,
         credits: 0,
     },
     
