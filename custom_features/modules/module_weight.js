@@ -97,7 +97,6 @@ $(document).ready(async function () {
             }
             if (hours === undefined) hours = 0;
             }
-            console.log(hours);
             let credits = hours / 30;
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 group.assignments = group.assignmentsConnection.nodes;
@@ -124,24 +123,20 @@ $(document).ready(async function () {
                     }
                 }
             }
-            console.log(assignmentGroups);
         return { assignments: assignmentsDict, modules: modulesDict, course_credits: credits};
         } catch (err) {
-        console.error(err);
+            console.error(err);
         return {};
 
         }
     }
     let data = await getAssignmentsData(ENV.COURSE_ID);
-    console.log(data);
 
     if (data.course_credits > 0) {
         let totalCredits = 0;
         let sortedModuleKeys = Object.keys(data.modules).sort((a, b) => 
             data.modules[a].position - data.modules[b].position
         );
-
-        console.log(sortedModuleKeys);
 
         for (let mid of sortedModuleKeys) {
             let module = data.modules[mid];
@@ -151,7 +146,6 @@ $(document).ready(async function () {
                 let assignment = data.assignments[aid];
                 credits += assignment.credits;
                 totalCredits += assignment.credits;
-                // console.log(assignment);
             }
             let coursePercentage = credits / data.course_credits;
             let totalcoursePercentage = totalCredits / data.course_credits;
