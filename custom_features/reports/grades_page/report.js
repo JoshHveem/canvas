@@ -140,7 +140,9 @@
                 })
               }
           }
+          accounts.sort((a, b) => a.name.localeCompare(b.name));
           this.accounts.push(...accounts);
+
           await this.loadCourseEnrollments();
         }
       },
