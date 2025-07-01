@@ -79,10 +79,11 @@ $(document).ready(async function () {
         let assignmentsDict = {};
         let modulesDict = {};
 
-        let assignments = await getGraphiAssignments(courseId);
-        console.log(assignments);
-        let data = res.data.course;
-        let courseCode = data.courseCode;
+        try {
+            let assignments = await getGraphiAssignments(courseId);
+            console.log(assignments);
+            let data = res.data.course;
+            let courseCode = data.courseCode;
             let year = extractYear(data.term.name);
             let hours = 0;
             if (year !== null) {
