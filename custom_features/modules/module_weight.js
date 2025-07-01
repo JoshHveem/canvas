@@ -3,54 +3,58 @@ $(document).ready(async function () {
         const yearMatch = termName.match(/\b(20\d{2})\b/);
         return yearMatch ? yearMatch[1] : null;
     }
-    async function getGraphiAssignments(courseId) {
+    async function getGraphiCourseAssignments(courseId) {
         const results = [];
+        const courseData = {};
 
         const fetchPage = async (after = null) => {
             const query = `{
-            course(id: "${courseId}") {
-                _id
-                name
-                courseCode
-                term {
-                name
-                }
-                assignmentGroupsConnection {
-                nodes {
+                course(id: "${courseId}") {
                     _id
                     name
-                    groupWeight
-                    state
-                    assignmentsConnection(first: 100${after ? `, after: "${after}"` : ""}) {
-                    pageInfo {
-                        hasNextPage
-                        endCursor
-                    }
-                    nodes {
-                        _id
+                    courseCode
+                    term {
                         name
-                        published
-                        pointsPossible
-                        modules {
-                        _id
-                        position
-                        }
-                        quiz {
-                        modules {
+                    }
+                    assignmentGroupsConnection {
+                        nodes {
                             _id
-                            position
-                        }
+                            name
+                            groupWeight
+                            state
+                            assignmentsConnection(first: 100${after ? `, after: "${after}"` : ""}) {
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
+                                nodes {
+                                    _id
+                                    name
+                                    published
+                                    pointsPossible
+                                    modules {
+                                        _id
+                                        position
+                                    }
+                                    quiz {
+                                        modules {
+                                            _id
+                                            position
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    }
                 }
-                }
-            }
             }`;
 
             try {
             const res = await $.post(`/api/graphql`, { query });
             const course = res.data.course;
+            courseData.name = course.name;
+            courseData.course_code = course.courseCode;
+            courseData.term_name = course.term.name
             const assignmentGroups = course.assignmentGroupsConnection.nodes;
 
             // Push current assignmentGroups to results (deep merge may be needed depending on structure)
@@ -68,23 +72,22 @@ $(document).ready(async function () {
             }
 
             } catch (error) {
-            console.error("Error fetching assignment groups:", error);
+                console.error("Error fetching assignment groups:", error);
             }
         };
 
         await fetchPage(); // start initial fetch
-        return results;
+        courseData.assignment_groups = results;
+        return courseData;
     }
     async function getAssignmentsData(courseId) {
         let assignmentsDict = {};
         let modulesDict = {};
 
         try {
-            let assignments = await getGraphiAssignments(courseId);
-            console.log(assignments);
-            let data = res.data.course;
-            let courseCode = data.courseCode;
-            let year = extractYear(data.term.name);
+            let data = await getGraphiCourseAssignments(courseId);
+            let courseCode = data.course_code;
+            let year = extractYear(data.term_name);
             let hours = 0;
             if (year !== null) {
             hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
@@ -96,7 +99,7 @@ $(document).ready(async function () {
             }
             console.log(hours);
             let credits = hours / 30;
-            let assignmentGroups = data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
+            let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 group.assignments = group.assignmentsConnection.nodes;
                 group.points_possible = 0;
                 group.credits = (group.groupWeight / 100) * credits;
