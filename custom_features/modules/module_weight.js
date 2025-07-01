@@ -102,6 +102,8 @@ $(document).ready(async function () {
             data.modules[a].position - data.modules[b].position
         );
 
+        console.log(sortedModuleKeys);
+
         for (let mid of sortedModuleKeys) {
             let module = data.modules[mid];
             $(`.ig-subheader#sub-${mid}`).remove();
