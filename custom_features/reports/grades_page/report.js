@@ -121,7 +121,6 @@
         } else {
           let accountsData = await canvasGet('/api/v1/accounts');
           let accounts = [];
-          console.log(subaccountsData);
           // check to see if we're dealing with a college level admin. If so, pull all sub_accounts they have access to.
           for (let a = 0; a < accountsData.length; a++) {
               let account = accountsData[a];
