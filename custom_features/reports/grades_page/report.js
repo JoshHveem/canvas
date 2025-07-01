@@ -139,7 +139,7 @@
                 })
               }
           }
-          this.accounts = accounts;
+          this.accounts.push(...accounts);
           await this.loadCourseEnrollments();
         }
       },
