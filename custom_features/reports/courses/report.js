@@ -189,15 +189,15 @@
               }
             ),
             new Column('Objectives', 'The average student survey rating on whether the course content matched the course objectives.', '5rem', true, 'number', 
-              course => course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]?.score ?? 'n/a',
+              course => calcLikert(course, 'Objectives') ? (calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]?.score;
+                let score = calcLikert('Objectives')
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
                 }
                 return {
-                  'background-color': !score ? this.colors.black : (score < 80) ? this.colors.red : (score < 90 ? this.colors.yellow : this.colors.green),
+                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
@@ -412,6 +412,11 @@
             comp *= sortState;
             return comp
           });
+        },
+
+        calcLikert(course, name) {
+          let score = course.surveys.likerts.filter(likert => likert.name == name)?.[0]?.score
+          return score ?? null
         },
    
         columnNameToCode(name) {
