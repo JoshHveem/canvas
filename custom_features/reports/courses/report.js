@@ -129,7 +129,6 @@
         accounts.sort((a, b) => a.name.localeCompare(b.name));
         this.accounts.push(...accounts);
         this.loadCourses();
-        this.loading = false;
       },
 
       data: function () {
