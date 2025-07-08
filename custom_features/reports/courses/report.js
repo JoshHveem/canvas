@@ -361,13 +361,23 @@
           } else {
             courses = await canvasGet(`/api/v1/accounts/${this.settings.account}/courses?state[]=available&include[]=term`);
           }
+
           let courseIds = courses.map(course => course.id);
-          let url = 'https://reports.bridgetools.dev/api/reviews/courses?'
-          for (let c = 0 ; c < courseIds.length; c++) {
-            url += c == 0 ? courseIds[c] : '&' + courseIds[c]
+          let courseData = [];
+
+          // Fetch 50 course IDs at a time
+          for (let i = 0; i < courseIds.length; i += 50) {
+            const chunk = courseIds.slice(i, i + 50);
+            let url = 'https://reports.bridgetools.dev/api/reviews/courses?limit=50';
+            for (let id of chunk) {
+              url += '&' + id;
+            }
+
+            console.log('Fetching chunk:', url);
+            const chunkData = await bridgetools.req(url);
+            courseData = courseData.concat(chunkData);  // Append each chunk
           }
-          console.log(url);
-          let courseData = await bridgetools.req(url);
+
           console.log(courseData);
         },
 
