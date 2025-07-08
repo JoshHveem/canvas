@@ -251,12 +251,13 @@
               course => {
                 let str = '';
                 console.log(course.surveys.tags);
+                if (course.surveys.num_surveys < 3) return str;
                 for (let t in course.surveys.tags) {
                   let tags = course.surveys.tags[t];
                   for (let tag in tags) {
                     let cnt = tags[tag];
                     let perc = cnt / course.surveys.num_surveys;
-                    str += `<span class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${perc > 0.25 ? this.colors.red : ( perc > 0.1 ? this.colors.orange : this.colors.yellow )}; color: white;">${tag}</span>`;
+                    if (cnt > 1) str += `<span class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${perc > 0.25 ? this.colors.red : ( perc > 0.1 ? this.colors.orange : this.colors.yellow )}; color: white;">${tag}</span>`;
                   }
                 }
                 return str;
