@@ -251,9 +251,11 @@
               course => {
                 let str = '';
                 for (let t in course.surveys.tags) {
-                  let tag = course.surveys.tags[t];
-                  console.log(tag);
-                  str += `<span>${tag}</span>`;
+                  let tags = course.surveys.tags[t];
+                  for (let tag in tags) {
+                    console.log(tag);
+                    str += `<span>${tag}</span>`;
+                  }
                 }
 
               }
