@@ -153,13 +153,13 @@
             new Column('Course Name', 'The name of the course.', '10rem', false, 'string', 
               course => course.name ?? ''
             ),
-            new Column('Course Code', 'The course code for the course.', '5rem', false, 'string', 
+            new Column('Course Code', 'The course code for the course.', '6rem', false, 'string', 
               course => course.course_code ?? ''
             ),
             new Column('Year', 'The academic year of the course.', '4rem', false, 'string', 
               course => course.year ?? ''
             ),
-            new Column('Credits', 'The credits value of the course.', '4rem', false, 'string', 
+            new Column('Credits', 'The credits value of the course.', '5rem', false, 'string', 
               course => Math.round(course.credits) ?? ''
             ),
             new Column('Credits Per Week', 'The average credits per week earned by students.', '5rem', true, 'number', 
