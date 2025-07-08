@@ -189,9 +189,9 @@
               }
             ),
             new Column('Objectives', 'The average student survey rating on whether the course content matched the course objectives.', '5rem', true, 'number', 
-              course => course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0] ?? 'n/a',
+              course => course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]?.score ?? 'n/a',
               course => {
-                let score = course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]
+                let score = course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]?.score;
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
