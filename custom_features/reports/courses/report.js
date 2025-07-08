@@ -202,7 +202,7 @@
                 }
               }
             ),
-            new Column('Career Relevance', 'The percentage of student surveys who agreed the course content seemed relevant to their career.', '5rem', true, 'number', 
+            new Column('Relevance', 'The percentage of student surveys who agreed the course content seemed relevant to their career.', '5rem', true, 'number', 
               course => this.calcLikert(course, 'Workplace Relevance') ? (this.calcLikert(course, 'Workplace Relevance') * 100).toFixed(1) + '%' : 'n/a',
               course => {
                 let score = this.calcLikert(course, 'Workplace Relevance');
@@ -230,7 +230,7 @@
                 }
               }
             ),
-            new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '5rem', true, 'number', 
+            new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '5.5rem', true, 'number', 
               course => this.calcLikert(course, 'Recommendable') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
               course => {
                 let score = this.calcLikert(course, 'Recommendable');
