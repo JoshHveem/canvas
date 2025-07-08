@@ -140,7 +140,8 @@
             sort_dir: 1,
             filters: {
               year: '2024',
-              hide_zero_credits: true
+              hide_zero_credits: true,
+              hide_zero_students: true
             }
           },
           accounts: [

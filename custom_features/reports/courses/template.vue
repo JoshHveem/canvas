@@ -17,8 +17,6 @@
                     >
                         <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
                     </select>
-                </div>
-                <div>
                     <label>Year</label>
                     <select 
                         v-model="settings.filters.year" 
@@ -35,6 +33,18 @@
                         {{ year }}
                         </option>
                     </select>
+                </div>
+                <div
+                style="display: inline-block;"
+                >
+                    <span>
+                        <label>Hide 0 Creidts</label>
+                        <input type="checkbox" v-model="settings.filters.hide_zero_credits" @change="saveSettings(settings)">
+                    </span>
+                    <span>
+                        <label>Hide 0 Students</label>
+                        <input type="checkbox" v-model="settings.filters.hide_zero_students" @change="saveSettings(settings)">
+                    </span>
                 </div>
                 <div>
                     <div
