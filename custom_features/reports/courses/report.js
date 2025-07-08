@@ -247,6 +247,17 @@
                 }
               }
             ),
+            new Column('Tags', 'All tags from student comments', 'auto', false, 'string',
+              course => {
+                let str = '';
+                for (let t in course.surveys.tags) {
+                  let tag = course.surveys.tags[t];
+                  console.log(tag);
+                  str += `<span>${tag}</span>`;
+                }
+
+              }
+            )
           ],
           courses: [],
           loading: false, //CHANGE: return this to true if this doesn't work
