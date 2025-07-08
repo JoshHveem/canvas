@@ -156,7 +156,7 @@
             new Column('Course Code', 'The course code for the course.', '6rem', false, 'string', 
               course => course.course_code ?? ''
             ),
-            new Column('Year', 'The academic year of the course.', '4rem', false, 'string', 
+            new Column('Year', 'The academic year of the course.', '4rem', false, 'number', 
               course => course.year ?? ''
             ),
             new Column('Credits', 'The credits value of the course.', '5rem', false, 'string', 
@@ -363,9 +363,7 @@
           return diffDays;
         },
         sortColumn(header) {
-          let name;
-          if (header === "Progress Estimate") name = this.columnNameToCode(this.progress_method);
-          else name = this.columnNameToCode(header);
+          let name = this.columnNameToCode(header);
           let sortState = 1;
           let sortType = '';
           for (let c = 0; c < this.columns.length; c++) {
@@ -380,7 +378,7 @@
               sortType = this.columns[c].sort_type;
             }
           }
-          this.enrollments.sort(function (a, b) {
+          this.courses.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
             //convert strings to upper case to ignore case when sorting
