@@ -398,6 +398,7 @@
             course.recommendable = this.calcLikert(course, 'Recommendable');
             course.recommendations = course.surveys.has_recommendations;
           }
+          return courses;
         },
 
         async getMyCourses() {
