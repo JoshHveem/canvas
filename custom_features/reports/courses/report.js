@@ -256,7 +256,7 @@
                     let cnt = tags[tag];
                     let perc = cnt / course.surveys.num_surveys;
                     console.log(tag); console.log(perc);
-                    str += `<span style="margin-right: 0.25rem; background-color: ${this.colors.black}; color: white;">${tag}</span>`;
+                    str += `<span class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${this.colors.black}; color: white;">${tag}</span>`;
                   }
                 }
                 return str;
