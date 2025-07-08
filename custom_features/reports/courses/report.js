@@ -250,9 +250,6 @@
             new Column('Tags', 'All tags from student comments', 'auto', false, 'string',
               course => {
                 let str = '';
-                course.surveys.tags.sort(function (a, b) {
-                  return a > b;
-                });
                 console.log(course.surveys.tags);
                 for (let t in course.surveys.tags) {
                   let tags = course.surveys.tags[t];
