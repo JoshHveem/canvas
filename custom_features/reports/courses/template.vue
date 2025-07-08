@@ -9,7 +9,7 @@
                 >
                     <label>Course Source</label>
                     <select 
-                        v-model="settings.filters.account" 
+                        v-model="settings.account" 
                         @change="saveSettings(settings); 
                         loadCourses();"
                         >
