@@ -9,7 +9,7 @@
                 >
                     <label>Course Source</label>
                     <select 
-                        v-model="settings.account" 
+                        v-model="settings.filters.account" 
                         @change="saveSettings(settings); 
                         loadCourses();"
                         >
@@ -19,7 +19,7 @@
                 <div>
                     <label>Year</label>
                     <select 
-                        v-model="settings.year" 
+                        v-model="settings.filters.year" 
                             @change="saveSettings(settings);"
                         >
                         <option
