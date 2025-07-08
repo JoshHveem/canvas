@@ -256,7 +256,7 @@
                   for (let tag in tags) {
                     let cnt = tags[tag];
                     let perc = cnt / course.surveys.num_surveys;
-                    str += `<span class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${perc > 0.25 ? this.colors.red : (perc > 0.1 ? this.colors.yellow : this.colors.green)}; color: white;">${tag}</span>`;
+                    str += `<span class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${perc > 0.25 ? this.colors.red : ( perc > 0.1 ? this.colors.orange : this.colors.yellow )}; color: white;">${tag}</span>`;
                   }
                 }
                 return str;
