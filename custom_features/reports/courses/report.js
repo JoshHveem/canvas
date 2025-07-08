@@ -137,6 +137,7 @@
           settings: {
             account: 0,
             filters: {
+              year: '2024',
               section: 'All',
               hide_missing_end_date: true,
               hide_past_end_date: false
@@ -154,6 +155,9 @@
             ),
             new Column('Course Code', 'The course code for the course.', '10rem', false, 'string', 
               course => course.course_code ?? ''
+            ),
+            new Column('Year', 'The academic year of the course.', '10rem', false, 'string', 
+              course => course.year ?? ''
             ),
             new Column('Credits', 'The credits value of the course.', '10rem', false, 'string', 
               course => course.credits ?? ''
@@ -217,6 +221,7 @@
         },
         visibleRows: function () {
           return this.courses.filter((course) => {
+            if (this.settings?.filters?.year != course.year) return false;
             // if (this.settings?.filters?.hide_missing_end_date && student.end_at == null) return false;
             // if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
             // if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
