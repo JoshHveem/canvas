@@ -157,8 +157,8 @@
             new Column('Year', 'The academic year of the course.', '4rem', false, 'number', 
               course => course.year ?? ''
             ),
-            new Column('Students', 'The number of students used in the credits per week calculation.', '4rem', false, 'number', 
-              course => course.num_students ?? 0
+            new Column('Students', 'The number of students used in the credits per week calculation.', '5rem', false, 'number', 
+              course => course.num_students_credits ?? 0
             ),
             new Column('Credits', `The credits value of the course.`, '5rem', false, 'string', 
               course => Math.round(course.credits) ?? ''
