@@ -362,7 +362,13 @@
             courses = await canvasGet(`/api/v1/accounts/${this.settings.account}/courses?state[]=available&include[]=term`);
           }
           let courseIds = courses.map(course => course.id);
-          console.log(courseIds);
+          let url = 'https://reports.bridgetools.dev/api/reviews/courses?'
+          for (let c = 0 ; c < courseIds.length; c++) {
+            url += c == 0 ? courseIds[c] : '&' + courseIds[c]
+          }
+          console.log(url);
+          let courseData = bridgetools.req(url);
+          console.log(courseData);
         },
 
         calcDaysBetweenDates(date1, date2=new Date()) {
