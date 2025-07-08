@@ -1,6 +1,6 @@
 (async function () {
   class Column {
-    constructor(name, description, width, average, sort_type, getContent = (student) => student.user_name ?? '', style_formula= null) {
+    constructor(name, description, width, average, sort_type, getContent = (course) => course.course_name ?? '', style_formula= null) {
       this.name = name;
       this.description = description;
       this.width = width;
@@ -12,9 +12,9 @@
       this.style_formula = style_formula;
     }
 
-    get_style(student) {
+    get_style(course) {
       if (this.style_formula != null) {
-        return this.style_formula(student);
+        return this.style_formula(course);
       }
       return {};
     }
@@ -135,7 +135,6 @@
         return {
           colors: bridgetools.colors,
           settings: {
-            progress_method: "points_weighted",
             account: 0,
             filters: {
               section: 'All',
@@ -150,52 +149,37 @@
             }
           ],
           columns: [
-            new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
-              (student) => student.user_name ?? ''
+            new Column('Course Name', 'The name of the course.', '10rem', false, 'string', 
+              course => course.name ?? ''
             ),
-            new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', 
-              student => student.course_name
+            new Column('Course Code', 'The course code for the course.', '10rem', false, 'string', 
+              course => course.course_code ?? ''
             ),
-            new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', 
-              student => student.section_name
+            new Column('Credits', 'The credits value of the course.', '10rem', false, 'string', 
+              course => course.credits ?? ''
             ),
-            new Column('Score', 'The student\'s grade based on assignments submitted to date.', '5rem', true, 'number', 
-              student => student.current_score ? student.current_score + '%' : 'n/a',
-              student => {
-                if (!student.current_score) return {
+            new Column('Credits Per Week', 'The average credits per week earned by students.', '5rem', true, 'number', 
+              course => course.credits_per_week ? course.credits_per_week : 'n/a',
+              course => {
+                if (!course.credits_per_week) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
                 }
                 return {
-                  'background-color': !student.current_score ? this.colors.black : (student.current_score < 60) ? this.colors.red : (student.current_score < 80 ? this.colors.yellow : this.colors.green),
+                  'background-color': !course.credits_per_week ? this.colors.black : (course.credits_per_week < 0.5) ? this.colors.red : (course.credits_per_week < 0.8 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
             ),
-            new Column('Final Score', 'The student\'s final grade. All unsubmitted assignments are graded as 0. This is their grade if they were to conclude the course right now.', '5.5rem', true, 'number', 
-              student => student.final_score ? student.final_score + '%' : 'n/a',
-              student => {
-                if (!student.final_score) return {
+            new Column('Score', 'The average student grade based on assignments submitted to date.', '5rem', true, 'number', 
+              course => course.average_score ? course.average_score + '%' : 'n/a',
+              course => {
+                if (!course.average_score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
                 }
                 return {
-                  'background-color': (student.final_score < 60) ? this.colors.red : (student.final_score < 80 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('End At', 'The course end date.', '5rem', true, 'number',
-              student => {
-                return !student.end_at ? 'n/a' : this.dateToString(student.end_at);
-              },
-              student => {
-                if (!student.end_at) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': (student.days_left < 0) ? this.colors.darkRed : ( (student.days_left < 3) ? this.colors.red : (student.days_left < 7 ? this.colors.yellow : this.colors.green) ),
+                  'background-color': !course.average_score ? this.colors.black : (course.average_score < 60) ? this.colors.red : (course.average_score < 80 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
@@ -215,7 +199,7 @@
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
             // new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
           ],
-          enrollments: [],
+          courses: [],
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
           section_names: ['All'],
@@ -232,10 +216,10 @@
           })
         },
         visibleRows: function () {
-          return this.enrollments.filter((student) => {
-            if (this.settings?.filters?.hide_missing_end_date && student.end_at == null) return false;
-            if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
-            if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
+          return this.courses.filter((course) => {
+            // if (this.settings?.filters?.hide_missing_end_date && student.end_at == null) return false;
+            // if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
+            // if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
             return true;
           })
         }
@@ -366,9 +350,10 @@
           let courseData = [];
 
           // Fetch 50 course IDs at a time
-          for (let i = 0; i < courseIds.length; i += 50) {
-            const chunk = courseIds.slice(i, i + 50);
-            let url = 'https://reports.bridgetools.dev/api/reviews/courses?limit=50';
+          let limit = 50;
+          for (let i = 0; i < courseIds.length; i += limit) {
+            const chunk = courseIds.slice(i, i + limit);
+            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}`;
             for (let id of chunk) {
               url += '&course_ids[]=' + id;
             }
@@ -378,6 +363,7 @@
             console.log(chunkData);
             courseData.push(...chunkData.courses) // Append each chunk
           }
+          this.courses = courseData;
 
           console.log(courseData);
         },
