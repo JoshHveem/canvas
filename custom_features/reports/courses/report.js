@@ -436,6 +436,7 @@
             this.settings.sort_column = name;
             this.settings.sort_dir = 1;
           }
+          this.saveSettings(this.settings);
         },
         sortColumn() {
           let header = this.settings.sort_column;
@@ -448,9 +449,7 @@
               this.columns[c].sort_state = 0;
             } else {
               //if it's the one being sorted, set it to 1 if not 1, or set it to -1 if is already 1
-              if (this.columns[c].sort_state !== 1) this.columns[c].sort_state = 1;
-              else this.columns[c].sort_state = -1;
-              sortState = this.columns[c].sort_state;
+              this.columns[c].sort_state = sortState;
               sortType = this.columns[c].sort_type;
             }
           }

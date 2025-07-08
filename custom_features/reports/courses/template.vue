@@ -55,7 +55,7 @@
                         style="display: inline-block; grid-template-columns: auto 1rem;"
                         :key='column.name' 
                         :title='column.description'
-                        @click=" setSortColumn(column.name); saveSettings(settings);"
+                        @click=" setSortColumn(column.name);;"
                         >
                         <span><b>{{column.name}}</b></span>
                         <span>
