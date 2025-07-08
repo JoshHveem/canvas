@@ -188,10 +188,52 @@
                 }
               }
             ),
-            new Column('Objectives', 'The average student survey rating on whether the course content matched the course objectives.', '5rem', true, 'number', 
+            new Column('Objectives', 'The percent of student surveys who agreed the course content matched the course objectives.', '5rem', true, 'number', 
               course => this.calcLikert(course, 'Objectives') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = this.calcLikert('Objectives')
+                let score = this.calcLikert(course, 'Objectives');
+                if (!score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
+                return {
+                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
+            new Column('Career Relevance', 'The percentage of student surveys who agreed the course content seemed relevant to their career.', '5rem', true, 'number', 
+              course => this.calcLikert(course, 'Workplace Relevance') ? (this.calcLikert(course, 'Workplace Relevance') * 100).toFixed(1) + '%' : 'n/a',
+              course => {
+                let score = this.calcLikert(course, 'Workplace Relevance');
+                if (!score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
+                return {
+                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
+            new Column('Examples', 'The percent of student surveys who agreed the course contained sufficient examples.', '5rem', true, 'number', 
+              course => this.calcLikert(course, 'Examples') ? (this.calcLikert(course, 'Examples') * 100).toFixed(1) + '%' : 'n/a',
+              course => {
+                let score = this.calcLikert(course, 'Examples');
+                if (!score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
+                return {
+                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
+            new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '5rem', true, 'number', 
+              course => this.calcLikert(course, 'Recommendable') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
+              course => {
+                let score = this.calcLikert(course, 'Recommendable');
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
