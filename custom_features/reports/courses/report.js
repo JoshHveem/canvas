@@ -137,6 +137,7 @@
           settings: {
             account: 0,
             sort_column: 'Course Code',
+            sort_dir: 1,
             filters: {
               year: '2024',
               hide_zero_credits: true
@@ -428,10 +429,18 @@
           let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           return diffDays;
         },
+        setSortColumn(name) {
+          if (settings.sort_column === name) {
+            settings.sort_dir *= -1;
+          } else {
+            settings.sort_column = column.name;
+            settings.sort_dir = 1;
+          }
+        },
         sortColumn() {
           let header = this.settings.sort_column;
           let name = this.columnNameToCode(header);
-          let sortState = 1;
+          let sortState = this.settings?.sort_dir ?? 1;
           let sortType = '';
           for (let c = 0; c < this.columns.length; c++) {
             if (this.columns[c].name !== header) {
