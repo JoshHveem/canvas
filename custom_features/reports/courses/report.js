@@ -162,7 +162,7 @@
             new Column('Credits', 'The credits value of the course.', '5rem', false, 'string', 
               course => Math.round(course.credits) ?? ''
             ),
-            new Column('Credits / Week', 'The average credits per week earned by students.', '7rem', true, 'number', 
+            new Column('Credits per Week', 'The average credits per week earned by students.', '7rem', true, 'number', 
               course => course.credits_per_week ? course.credits_per_week.toFixed(1) : 'n/a',
               course => {
                 if (!course.credits_per_week) return {
