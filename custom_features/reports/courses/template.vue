@@ -10,9 +10,11 @@
                     <label>Course Source</label>
                     <select 
                         v-model="settings.account" 
-                        @change="saveSettings(settings); 
-                        loadCourses();"
-                        >
+                        @change="
+                        saveSettings(settings); 
+                        loadCourses();
+                        "
+                    >
                         <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
                     </select>
                 </div>
@@ -20,8 +22,11 @@
                     <label>Year</label>
                     <select 
                         v-model="settings.filters.year" 
-                            @change="saveSettings(settings);"
-                        >
+                        @change="
+                        saveSettings(settings);
+                        loadCourses();
+                        "
+                    >
                         <option
                             v-for="year in Array.from({ length: 5}, (_, i) => new Date().getFullYear() - i)"
                             :key="year"
