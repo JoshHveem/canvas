@@ -367,7 +367,7 @@
             url += c == 0 ? courseIds[c] : '&' + courseIds[c]
           }
           console.log(url);
-          let courseData = bridgetools.req(url);
+          let courseData = await bridgetools.req(url);
           console.log(courseData);
         },
 
