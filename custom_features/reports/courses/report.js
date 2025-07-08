@@ -48,7 +48,7 @@
 
     // Add the click handler
     btn.click(function () {
-      $("#canvas-grades-report-vue").show();
+      $("#canvas-courses-report-vue").show();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-courses",
         "canvasId": ENV.current_user_id
