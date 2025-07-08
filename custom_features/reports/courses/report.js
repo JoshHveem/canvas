@@ -340,7 +340,7 @@
           }
 
           let courseIds = courses.map(course => course.id);
-          let courseData = [];
+          this.courses = [];
 
           // Fetch 50 course IDs at a time
           let limit = 50;
@@ -354,7 +354,6 @@
             let chunkData = await bridgetools.req(url);
             this.courses.push(...chunkData.courses) // Append each chunk
           }
-          this.courses = courseData;
 
           this.loading = false;
         },
