@@ -443,7 +443,7 @@
               this.columns[c].sort_state = 0;
             } else {
               //if it's the one being sorted, set it to 1 if not 1, or set it to -1 if is already 1
-              this.columns[c].sort_state = sortState;
+              this.columns[c].sort_state = this.settings.sort_state;
               sortType = this.columns[c].sort_type;
             }
           }
