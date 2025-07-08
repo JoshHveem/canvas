@@ -148,7 +148,7 @@
             }
           ],
           columns: [
-            new Column('Course Name', 'The name of the course.', 'minmax(auto, 20rem)', false, 'string', 
+            new Column('Name', 'The name of the course.', 'minmax(auto, 20rem)', false, 'string', 
               course => course.name ?? ''
             ),
             new Column('Course Code', 'The course code for the course.', '6rem', false, 'string', 

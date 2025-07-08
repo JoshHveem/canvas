@@ -102,7 +102,7 @@
                             :key='column.name' 
                             style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
                         >
-                            <span v-if="column.course_name == 'Course Name'"><a :href="`/courses/${course.course_id}`" target="_blank">{{course.course_name}} </a></span>
+                            <span v-if="column.course_name == 'Name'"><a :href="`/courses/${course.course_id}`" target="_blank">{{course.course_name}} </a></span>
                             <span
                                 v-else
                                 :class="column.style_formula ? 'btech-pill-text' : ''" 
