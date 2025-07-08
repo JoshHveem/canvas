@@ -160,10 +160,10 @@
               course => course.year ?? ''
             ),
             new Column('Credits', 'The credits value of the course.', '10rem', false, 'string', 
-              course => course.credits ?? ''
+              course => Math.round(course.credits) ?? ''
             ),
             new Column('Credits Per Week', 'The average credits per week earned by students.', '5rem', true, 'number', 
-              course => course.credits_per_week ? course.credits_per_week : 'n/a',
+              course => course.credits_per_week ? course.credits_per_week.toFixed(1) : 'n/a',
               course => {
                 if (!course.credits_per_week) return {
                   'background-color': this.colors.gray,
@@ -176,7 +176,7 @@
               }
             ),
             new Column('Score', 'The average student grade based on assignments submitted to date.', '5rem', true, 'number', 
-              course => course.average_score ? course.average_score + '%' : 'n/a',
+              course => course.average_score ? course.average_score.toFixed(1) + '%' : 'n/a',
               course => {
                 if (!course.average_score) return {
                   'background-color': this.colors.gray,
@@ -187,21 +187,7 @@
                   'color': this.colors.white,
                 }
               }
-            ),
-            // new Column('Days Left', 'The number of days until the student will be removed from the course.', true, 3, 'number')
-            new Column('Ungraded', '', '4.5rem', true, 'number',
-              student => student.ungraded,
-              student => {
-                return {
-                  'background-color': (student.ungraded > 1) ? this.colors.red : (student.ungraded > 0 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
-            // progress ends up with its own special call out because it does the bar graph thing
-            new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
-            // new Column('Days In Course', 'The number of days since the student began the course.', '4rem', true, 'number'),
+            )
           ],
           courses: [],
           loading: false, //CHANGE: return this to true if this doesn't work
