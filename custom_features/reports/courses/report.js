@@ -189,9 +189,9 @@
               }
             ),
             new Column('Objectives', 'The average student survey rating on whether the course content matched the course objectives.', '5rem', true, 'number', 
-              course => calcLikert(course, 'Objectives') ? (calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
+              course => this.calcLikert(course, 'Objectives') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = calcLikert('Objectives')
+                let score = this.calcLikert('Objectives')
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
