@@ -396,7 +396,7 @@
             course.relevance = this.calcLikert(course, 'Workplace Relevance');
             course.examples = this.calcLikert(course, 'Examples');
             course.recommendable = this.calcLikert(course, 'Recommendable');
-            course.recommendations = course.likert.has_recommendations;
+            course.recommendations = course.surveys.has_recommendations;
           }
         },
 
