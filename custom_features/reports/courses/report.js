@@ -192,9 +192,9 @@
               }
             ),
             new Column('Objectives', 'The percent of student surveys who agreed the course content matched the course objectives.', '5rem', true, 'number', 
-              course => this.calcLikert(course, 'Objectives') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
+              course => course.objectives ? course.objectives.toFixed(1) + '%' : 'n/a',
               course => {
-                let score = this.calcLikert(course, 'Objectives');
+                let score = course.objectives;
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
@@ -387,6 +387,18 @@
           let res = await $.post("/api/graphql", { query: queryString });
           return res.data.course;
         },
+        processCourses(courses) {
+          for (let c = 0 ; c < courses.length; c++) {
+            let course = courses[c];
+            course.students = course.num_students_credits;
+            course.grades = course.score;
+            course.objectives = this.calcLikert(course, 'Objectives');
+            course.relevance = this.calcLikert(course, 'Workplace Relevance');
+            course.examples = this.calcLikert(course, 'Examples');
+            course.recommendable = this.calcLikert(course, 'Recommendable');
+            course.recommendations = course.likert.has_recommendations;
+          }
+        },
 
         async getMyCourses() {
           // Fetch 50 course IDs at a time
@@ -401,7 +413,7 @@
             }
 
             let chunkData = await bridgetools.req(url);
-            this.courses.push(...chunkData.courses) // Append each chunk
+            this.courses.push(...this.processCourses(chunkData.courses)) // Append each chunk
           }
         },
 
@@ -416,7 +428,7 @@
             let resp = {};
             do {
               resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
-              this.courses.push(...resp.courses);
+              this.courses.push(...this.processCourses(resp.courses));
             } while (resp?.courses?.length == limit)
           }
 
