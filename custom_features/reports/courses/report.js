@@ -254,7 +254,8 @@
                   let tags = course.surveys.tags[t];
                   for (let tag in tags) {
                     let cnt = tags[tag];
-                    console.log(tag); console.log(cnt);
+                    let perc = cnt / course.surveys.num_surveys;
+                    console.log(tag); console.log(perc);
                     str += `<span>${tag}</span>`;
                   }
                 }
