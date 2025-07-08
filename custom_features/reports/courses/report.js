@@ -376,7 +376,7 @@
             console.log('Fetching chunk:', url);
             let chunkData = await bridgetools.req(url);
             console.log(chunkData);
-            courseData = courseData.push(...chunkData) // Append each chunk
+            courseData = courseData.push(...chunkData.courses) // Append each chunk
           }
 
           console.log(courseData);
