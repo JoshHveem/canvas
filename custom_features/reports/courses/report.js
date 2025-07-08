@@ -437,14 +437,8 @@
             this.settings.sort_dir = 1;
           }
           this.saveSettings(this.settings);
-        },
-        sortColumn() {
-          let header = this.settings.sort_column;
-          let name = this.columnNameToCode(header);
-          let sortState = this.settings?.sort_dir ?? 1;
-          let sortType = '';
           for (let c = 0; c < this.columns.length; c++) {
-            if (this.columns[c].name !== header) {
+            if (this.columns[c].name !== name) {
               //reset everything else
               this.columns[c].sort_state = 0;
             } else {
@@ -453,6 +447,12 @@
               sortType = this.columns[c].sort_type;
             }
           }
+        },
+        sortColumn() {
+          let header = this.settings.sort_column;
+          let name = this.columnNameToCode(header);
+          let sortState = this.settings?.sort_dir ?? 1;
+          let sortType = '';
           this.courses.sort(function (a, b) {
             let aVal = a[name] ?? -1;
             let bVal = b[name] ?? -1;
