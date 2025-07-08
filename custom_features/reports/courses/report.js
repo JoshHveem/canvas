@@ -402,13 +402,17 @@
         async loadCourses() {
           this.loading = true;
           this.courses = [];
+          let limit = 50;
           if (this.settings.account == 0) {
             await this.getMyCourses();
           } else {
-            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${50}&excludes[]=content_items&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
-            let courses = await bridgetools.req(url);
-            this.courses = courses.courses;
-            console.log(courses);
+            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}&excludes[]=content_items&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
+            let resp = {};
+            do {
+              resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
+              this.courses.push(...resp.courses);
+            } while (resp?.courses?.length == limit)
+            console.log(this.courses);
           }
 
 
