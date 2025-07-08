@@ -112,8 +112,8 @@
                                 v-else
                                 :class="column.style_formula ? 'btech-pill-text' : ''" 
                                 :style="column.get_style(course)"
+                                :html="column.getContent(course)"
                             >
-                            {{ column.getContent(course) }}
                             </span>
                         </div>
                         
