@@ -138,9 +138,7 @@
             account: 0,
             filters: {
               year: '2024',
-              section: 'All',
-              hide_missing_end_date: true,
-              hide_past_end_date: false
+              hide_zero_credits: true
             }
           },
           accounts: [
@@ -264,7 +262,7 @@
         visibleRows: function () {
           return this.courses.filter((course) => {
             if (this.settings?.filters?.year != course.year) return false;
-            // if (this.settings?.filters?.hide_missing_end_date && student.end_at == null) return false;
+            if (this.settings?.filters?.hide_zero_credits && !(course.credits > 0)) return false;
             // if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
             // if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
             return true;
