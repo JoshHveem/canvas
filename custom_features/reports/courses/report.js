@@ -388,6 +388,7 @@
           this.loading = true;
           this.courses = [];
           let courses = [];
+          console.log(this.settings);
           if (this.settings.account == 0) {
             courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
           } else {
