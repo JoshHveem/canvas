@@ -175,7 +175,7 @@
                 }
               }
             ),
-            new Column('Score', 'The average student grade based on assignments submitted to date.', '5rem', true, 'number', 
+            new Column('Grades', 'The average student grade based on assignments submitted to date.', '5rem', true, 'number', 
               course => course.average_score ? course.average_score.toFixed(1) + '%' : 'n/a',
               course => {
                 if (!course.average_score) return {
