@@ -391,7 +391,7 @@
           for (let c = 0 ; c < courses.length; c++) {
             let course = courses[c];
             course.students = course.num_students_credits;
-            course.grades = course.score;
+            course.grades = course.average_score;
             course.objectives = this.calcLikert(course, 'Objectives');
             course.relevance = this.calcLikert(course, 'Workplace Relevance');
             course.examples = this.calcLikert(course, 'Examples');
