@@ -405,7 +405,7 @@
           if (this.settings.account == 0) {
             await this.getMyCourses();
           } else {
-            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${50}&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
+            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${50}&excludes[]=content_items&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
             console.log(url);
             let courses = await bridgetools.req(url);
             console.log(courses);
