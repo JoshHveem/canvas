@@ -430,11 +430,11 @@
           return diffDays;
         },
         setSortColumn(name) {
-          if (settings.sort_column === name) {
-            settings.sort_dir *= -1;
+          if (this.settings.sort_column === name) {
+            this.settings.sort_dir *= -1;
           } else {
-            settings.sort_column = column.name;
-            settings.sort_dir = 1;
+            this.settings.sort_column = name;
+            this.settings.sort_dir = 1;
           }
         },
         sortColumn() {
