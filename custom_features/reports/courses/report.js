@@ -331,6 +331,7 @@
 
         async loadCourses() {
           this.loading = true;
+          this.courses = [];
           let courses = [];
           if (this.settings.account == 0) {
             courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
@@ -339,7 +340,6 @@
           }
 
           let courseIds = courses.map(course => course.id);
-          this.courses = [];
 
           // Fetch 50 course IDs at a time
           let limit = 50;
@@ -352,8 +352,8 @@
 
             let chunkData = await bridgetools.req(url);
             this.courses.push(...chunkData.courses) // Append each chunk
+            console.log(this.courses);
           }
-
           this.loading = false;
         },
 
