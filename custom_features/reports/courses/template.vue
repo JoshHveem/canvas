@@ -9,6 +9,18 @@
                 >
                     <label>Course Source</label>
                     <select 
+                        v-model="settings.year" 
+                            @change="saveSettings(settings);"
+                        >
+                        <option
+                            v-for="year in Array.from({ length: new Date().getFullYear() + 5 - 2024 + 1 }, (_, i) => 2024 + i)"
+                            :key="year"
+                            :value="year"
+                        >
+                        {{ year }}
+                        </option>
+                    </select>
+                    <select 
                         v-model="settings.account" 
                         @change="saveSettings(settings); 
                         loadCourses();"
