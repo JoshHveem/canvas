@@ -276,7 +276,7 @@
           const fallback = JSON.parse(JSON.stringify(settings));
           let saved = {};
           try {
-            const resp = await $.get(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`);
+            const resp = await $.get(`/api/v1/users/self/custom_data/courses?ns=edu.btech.canvas`);
             if (resp.data && resp.data.settings) {
               saved = resp.data.settings;
             } else {
@@ -288,7 +288,6 @@
 
           // Deep merge:
           const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
-          merged.progress_method = saved.progress_method || fallback.progress_method;
           merged.account = saved.account ?? fallback.account;
 
           // Merge filters:
@@ -311,7 +310,7 @@
         },
       
         async saveSettings(settings) {
-          await $.put(`/api/v1/users/self/custom_data/progress?ns=edu.btech.canvas`, {
+          await $.put(`/api/v1/users/self/custom_data/courses?ns=edu.btech.canvas`, {
             data: {
               settings: settings
             }
