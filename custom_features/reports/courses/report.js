@@ -407,7 +407,7 @@
           } else {
             let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${50}&excludes[]=content_items&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
             let courses = await bridgetools.req(url);
-            this.courses = courses;
+            this.courses = courses.courses;
             console.log(courses);
           }
 
