@@ -382,20 +382,10 @@
           return res.data.course;
         },
 
-        async loadCourses() {
-          this.loading = true;
-          this.courses = [];
-          let courses = [];
-          console.log(this.settings);
-          if (this.settings.account == 0) {
-            courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
-          } else {
-            courses = await canvasGet(`/api/v1/accounts/${this.settings.account}/courses?state[]=available&include[]=term`);
-          }
-
-          let courseIds = courses.map(course => course.id);
-
+        async getMyCourses() {
           // Fetch 50 course IDs at a time
+          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
+          let courseIds = courses.map(course => course.id);
           let limit = 50;
           for (let i = 0; i < courseIds.length; i += limit) {
             const chunk = courseIds.slice(i, i + limit);
@@ -406,8 +396,22 @@
 
             let chunkData = await bridgetools.req(url);
             this.courses.push(...chunkData.courses) // Append each chunk
-            console.log(this.courses);
           }
+        },
+
+        async loadCourses() {
+          this.loading = true;
+          this.courses = [];
+          if (this.settings.account == 0) {
+            await this.getMyCourses();
+          } else {
+            console.log()
+            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
+            let courses = await bridgetools.req(url);
+
+          }
+
+
           this.loading = false;
         },
 
