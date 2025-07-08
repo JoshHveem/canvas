@@ -229,7 +229,7 @@
               }
             ),
             new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '7rem', true, 'number', 
-              course => this.calcLikert(course, 'Recommendable') ? (this.calcLikert(course, 'Objectives') * 100).toFixed(1) + '%' : 'n/a',
+              course => this.calcLikert(course, 'Recommendable') ? (this.calcLikert(course, 'Recommendable') * 100).toFixed(1) + '%' : 'n/a',
               course => {
                 let score = this.calcLikert(course, 'Recommendable');
                 if (!score) return {
