@@ -150,7 +150,7 @@
             }
           ],
           columns: [
-            new Column('Course Name', 'The name of the course.', '10rem', false, 'string', 
+            new Column('Course Name', 'The name of the course.', 'auto', false, 'string', 
               course => course.name ?? ''
             ),
             new Column('Course Code', 'The course code for the course.', '6rem', false, 'string', 
