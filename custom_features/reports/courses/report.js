@@ -362,7 +362,7 @@
             courses = await canvasGet(`/api/v1/accounts/${this.settings.account}/courses?state[]=available&include[]=term`);
           }
           let courseIds = courses.map(course => course.id);
-          console.log(courseids);
+          console.log(courseIds);
         },
 
         calcDaysBetweenDates(date1, date2=new Date()) {
