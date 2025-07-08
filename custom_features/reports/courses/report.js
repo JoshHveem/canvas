@@ -370,7 +370,7 @@
             const chunk = courseIds.slice(i, i + 50);
             let url = 'https://reports.bridgetools.dev/api/reviews/courses?limit=50';
             for (let id of chunk) {
-              url += '&' + id;
+              url += '&course_ids[]' + id;
             }
 
             console.log('Fetching chunk:', url);
