@@ -23,7 +23,7 @@
                             @change="saveSettings(settings);"
                         >
                         <option
-                            v-for="year in Array.from({ length: new Date().getFullYear() - 5 - 2024 + 1 }, (_, i) => 2024 + i)"
+                            v-for="year in Array.from({ length: 5}, (_, i) => new Date().getFullYear() - i)"
                             :key="year"
                             :value="year"
                         >
