@@ -192,7 +192,7 @@
               }
             ),
             new Column('Objectives', 'The percent of student surveys who agreed the course content matched the course objectives.', '5rem', true, 'number', 
-              course => course.objectives ? course.objectives.toFixed(1) + '%' : 'n/a',
+              course => course.objectives ? (course.objectives * 100).toFixed(1) + '%' : 'n/a',
               course => {
                 let score = course.objectives;
                 if (!score) return {
@@ -206,9 +206,9 @@
               }
             ),
             new Column('Relevance', 'The percentage of student surveys who agreed the course content seemed relevant to their career.', '5rem', true, 'number', 
-              course => this.calcLikert(course, 'Workplace Relevance') ? (this.calcLikert(course, 'Workplace Relevance') * 100).toFixed(1) + '%' : 'n/a',
+              course => course.relevance ? (course.relevance * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = this.calcLikert(course, 'Workplace Relevance');
+                let score = course.relevance;
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
@@ -220,9 +220,9 @@
               }
             ),
             new Column('Examples', 'The percent of student surveys who agreed the course contained sufficient examples.', '5rem', true, 'number', 
-              course => this.calcLikert(course, 'Examples') ? (this.calcLikert(course, 'Examples') * 100).toFixed(1) + '%' : 'n/a',
+              course => course.examples ? (course.examples * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = this.calcLikert(course, 'Examples');
+                let score = course.examples;
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
@@ -234,9 +234,9 @@
               }
             ),
             new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '7rem', true, 'number', 
-              course => this.calcLikert(course, 'Recommendable') ? (this.calcLikert(course, 'Recommendable') * 100).toFixed(1) + '%' : 'n/a',
+              course => course.recommendable ? (course.recommendable * 100).toFixed(1) + '%' : 'n/a',
               course => {
-                let score = this.calcLikert(course, 'Recommendable');
+                let score = course.recommendable;
                 if (!score) return {
                   'background-color': this.colors.gray,
                   'color': this.colors.black
