@@ -187,7 +187,21 @@
                   'color': this.colors.white,
                 }
               }
-            )
+            ),
+            new Column('Objectives', 'The average student survey rating on whether the course content matched the course objectives.', '5rem', true, 'number', 
+              course => course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0] ?? 'n/a',
+              course => {
+                let score = course.surveys.likerts.filter(likert => likert.name == 'Objectives')?.[0]
+                if (!score) return {
+                  'background-color': this.colors.gray,
+                  'color': this.colors.black
+                }
+                return {
+                  'background-color': !score ? this.colors.black : (score < 80) ? this.colors.red : (score < 90 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
           ],
           courses: [],
           loading: false, //CHANGE: return this to true if this doesn't work
