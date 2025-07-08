@@ -129,6 +129,7 @@
         accounts.sort((a, b) => a.name.localeCompare(b.name));
         this.accounts.push(...accounts);
         this.loadCourses();
+        this.loading = false;
       },
 
       data: function () {
@@ -183,7 +184,7 @@
                   'color': this.colors.black
                 }
                 return {
-                  'background-color': !course.average_score ? this.colors.black : (course.average_score < 60) ? this.colors.red : (course.average_score < 80 ? this.colors.yellow : this.colors.green),
+                  'background-color': !course.average_score ? this.colors.black : (course.average_score < 80) ? this.colors.red : (course.average_score < 90 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 }
               }
@@ -330,6 +331,7 @@
         },
 
         async loadCourses() {
+          this.loading = true;
           let courses = [];
           if (this.settings.account == 0) {
             courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
@@ -349,14 +351,12 @@
               url += '&course_ids[]=' + id;
             }
 
-            console.log('Fetching chunk:', url);
             let chunkData = await bridgetools.req(url);
-            console.log(chunkData);
-            courseData.push(...chunkData.courses) // Append each chunk
+            this.courses.push(...chunkData.courses) // Append each chunk
           }
           this.courses = courseData;
 
-          console.log(courseData);
+          this.loading = false;
         },
 
         calcDaysBetweenDates(date1, date2=new Date()) {
