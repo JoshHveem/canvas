@@ -264,6 +264,7 @@
           })
         },
         visibleRows: function () {
+          this.sortColumn();
           return this.courses.filter((course) => {
             if (this.settings?.filters?.year != course.year) return false;
             if (this.settings?.filters?.hide_zero_credits && !(course.credits > 0)) return false;
