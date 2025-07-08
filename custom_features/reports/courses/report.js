@@ -303,6 +303,7 @@
           return this.courses.filter((course) => {
             if (this.settings?.filters?.year != course.year) return false;
             if (this.settings?.filters?.hide_zero_credits && !(course.credits > 0)) return false;
+            if (this.settings?.filters?.hide_zero_students && !(course.num_students_credits > 0)) return false;
             // if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
             // if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
             return true;
