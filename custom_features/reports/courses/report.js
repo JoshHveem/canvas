@@ -415,7 +415,7 @@
         },
 
         calcLikert(course, name) {
-          let score = course.surveys.likerts.filter(likert => likert.name == name)?.[0]?.score
+          let score = (course?.surveys?.likerts ?? []).filter(likert => likert.name == name)?.[0]?.score
           return score ?? null
         },
    
