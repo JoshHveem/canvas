@@ -253,11 +253,12 @@
                 for (let t in course.surveys.tags) {
                   let tags = course.surveys.tags[t];
                   for (let tag in tags) {
-                    console.log(tag);
+                    let cnt = tags[tag];
+                    console.log(tag); console.log(cnt);
                     str += `<span>${tag}</span>`;
                   }
                 }
-
+                return str;
               }
             )
           ],
