@@ -136,6 +136,7 @@
           colors: bridgetools.colors,
           settings: {
             account: 0,
+            sort_column: 'Course Code',
             filters: {
               year: '2024',
               hide_zero_credits: true
@@ -426,7 +427,8 @@
           let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           return diffDays;
         },
-        sortColumn(header) {
+        sortColumn() {
+          let header = this.settings.sort_column;
           let name = this.columnNameToCode(header);
           let sortState = 1;
           let sortType = '';
