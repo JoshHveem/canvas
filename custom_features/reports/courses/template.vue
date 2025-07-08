@@ -9,6 +9,16 @@
                 >
                     <label>Course Source</label>
                     <select 
+                        v-model="settings.account" 
+                        @change="saveSettings(settings); 
+                        loadCourses();"
+                        >
+                        <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Year</label>
+                    <select 
                         v-model="settings.year" 
                             @change="saveSettings(settings);"
                         >
@@ -19,13 +29,6 @@
                         >
                         {{ year }}
                         </option>
-                    </select>
-                    <select 
-                        v-model="settings.account" 
-                        @change="saveSettings(settings); 
-                        loadCourses();"
-                        >
-                        <option v-for="account in accounts" :value="account.id">{{ account.name }}</option>
                     </select>
                 </div>
                 <div>
