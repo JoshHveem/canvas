@@ -135,6 +135,7 @@
         return {
           colors: bridgetools.colors,
           settings: {
+            anonymous: false,
             account: 0,
             sort_column: 'Course Code',
             sort_dir: 1,

@@ -151,6 +151,7 @@
           courseId: null,
           colors: bridgetools.colors,
           settings: {
+            anonymous: false,
             progress_method: "points_weighted",
             account: 0,
             filters: {
