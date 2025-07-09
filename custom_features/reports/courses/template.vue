@@ -15,7 +15,7 @@
                         loadCourses();
                         "
                     >
-                        <option v-for="account in accounts" :value="account.id">{{ settings.anonymous ? ('ACCOUNT ' + account.id) : account.name }}</option>
+                        <option v-for="account in accounts" :value="account.id">{{ (settings.anonymous && account.id != 0) ? ('ACCOUNT ' + account.id) : account.name }}</option>
                     </select>
                     <label>Year</label>
                     <select 
