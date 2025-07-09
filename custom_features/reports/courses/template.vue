@@ -3,7 +3,7 @@
         <div class='btech-modal-content'>
             <div class='btech-modal-content-inner'>
                 <span class='btech-close' v-on:click='close()'>&times;</span>
-                <h3 style='text-align: center;'>Report</h3>
+                <h3 style='text-align: center;'>Courses Report</h3>
                 <div
                     style="display: inline-block;"
                 >
