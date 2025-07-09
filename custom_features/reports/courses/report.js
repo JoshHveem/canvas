@@ -266,7 +266,7 @@
 
                 tagList.sort((a, b) => b.cnt - a.cnt);
 
-                let html = `<div style="display: flex; flex-wrap: wrap;" class="btech-pill-container">`;
+                let html = `<div style="display: flex; flex-wrap: wrap; align-items: flex-start; line-height: normal;" class="btech-pill-container">`;
                 for (let { tag, cnt, perc } of tagList) {
                   html += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="
                     white-space: nowrap;
