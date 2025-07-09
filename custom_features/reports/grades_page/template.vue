@@ -47,6 +47,10 @@
             <label>Hide Past End Date</label>
             <input type="checkbox" v-model="settings.filters.hide_past_end_date" @change="saveSettings(settings)">
           </span>
+          <span>
+              <label>Anonymize</label>
+              <input type="checkbox" v-model="settings.anonymous" @change="saveSettings(settings)">
+          </span>
         </div>
         <div>
           <div

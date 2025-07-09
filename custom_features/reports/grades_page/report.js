@@ -168,13 +168,13 @@
           ],
           columns: [
             new Column('User Name', 'The student\'s name as it appears in Canvas.', 'auto', false, 'string',
-              (student) => student.user_name ?? ''
+              (student) => this.settings.anonymize ? 'STUDENT ' + student.user_id : (student.user_name ?? '')
             ),
             new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', 
-              student => student.course_name
+              (student) => this.settings.anonymize ? 'COURSE' + student.course_id: (student.course_name ?? '')
             ),
             new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', 
-              student => student.section_name
+              student => this.settings.anonymize ? '' : student.section_name
             ),
             new Column('Score', 'The student\'s grade based on assignments submitted to date.', '5rem', true, 'number', 
               student => student.current_score ? student.current_score + '%' : 'n/a',
