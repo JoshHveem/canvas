@@ -434,6 +434,7 @@
               ungraded: 0,
               oldest_sub: new Date()
             };
+            console.log(enrollment);
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
 
