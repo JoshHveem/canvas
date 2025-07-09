@@ -434,7 +434,6 @@
           }
           for (let s = 0; s < ungradedSubmissions.length; s++) {
             let submissionData = ungradedSubmissions[s];
-            console.log(submissionData);
             for (let e = 0; e < enrollments.length; e++) {
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
                 enrollments[e].ungraded += 1;
