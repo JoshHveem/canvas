@@ -447,7 +447,7 @@
                 enrollments[e].ungraded += 1;
                 let submittedAt = Date.parse(submissionData.submittedAt);
                 if (submittedAt < enrollments[e].oldest_sub) {
-                  enrollments[e] = submittedAt;
+                  enrollments[e].oldest_sub = submittedAt;
                 }
               }
             }
