@@ -442,6 +442,7 @@
           // Fetch 50 course IDs at a time
           let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
           let courseIds = courses.map(course => course.id);
+          console.log(courseIds);
           let limit = 50;
           for (let i = 0; i < courseIds.length; i += limit) {
             const chunk = courseIds.slice(i, i + limit);
