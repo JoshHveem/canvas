@@ -15,7 +15,7 @@
                         loadCourses();
                         "
                     >
-                        <option v-for="account in accounts" :value="account.id">{{ settings.anonymize ? ('ACCOUNT ' + account.id) : account.name }}</option>
+                        <option v-for="account in accounts" :value="account.id">{{ settings.anonymous ? ('ACCOUNT ' + account.id) : account.name }}</option>
                     </select>
                     <label>Year</label>
                     <select 
@@ -46,7 +46,7 @@
                         <input type="checkbox" v-model="settings.filters.hide_zero_students" @change="saveSettings(settings)">
                     </span>
                     <span>
-                        <label>Anonymize</label>
+                        <label>anonymous</label>
                         <input type="checkbox" v-model="settings.anonymous" @change="saveSettings(settings)">
                     </span>
                 </div>
