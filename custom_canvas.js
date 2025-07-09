@@ -217,7 +217,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // dashboard level reports that need vue
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     console.log('Vue Loaded')
-    if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
+    // if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/courses/report", {}, /^\/$/);
     if (rCheckInCourse.test(window.location.pathname)) {
