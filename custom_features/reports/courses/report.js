@@ -338,6 +338,9 @@
             merged.filters = JSON.parse(JSON.stringify(fallback.filters));
           }
 
+          if (merged.anonymous === "true") merged.anonymous = true;
+          else merged.anonymous = false;
+
           // 🔑 Normalize: convert string "true"/"false" to real booleans
           for (const key in merged.filters) {
             const val = merged.filters[key];
