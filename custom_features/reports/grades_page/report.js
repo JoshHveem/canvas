@@ -442,6 +442,7 @@
             let submissionData = ungradedSubmissions[s];
             for (let e = 0; e < enrollments.length; e++) {
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
+                console.log(submissionData);
                 enrollments[e].ungraded += 1;
                 let submittedAt = Date.parse(submissionData.submittedAt);
                 if (submittedAt < enrollments[e].oldest_sub) {
