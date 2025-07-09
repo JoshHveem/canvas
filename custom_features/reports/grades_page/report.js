@@ -171,7 +171,7 @@
               (student) => this.settings.anonymous ? 'STUDENT ' + student.user_id : (student.user_name ?? '')
             ),
             new Column('Course Name', 'The course in which the student is enrolled.', '10rem', false, 'string', 
-              (student) => this.settings.anonymous ? 'COURSE' + student.course_id: (student.course_name ?? '')
+              (student) => this.settings.anonymous ? 'COURSE ' + student.course_id: (student.course_name ?? '')
             ),
             new Column('Section Name', 'The section in which the student is enrolled in this course.', '10rem', false, 'string', 
               student => this.settings.anonymous ? '' : student.section_name
