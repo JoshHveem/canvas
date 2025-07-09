@@ -38,7 +38,7 @@
                 style="display: inline-block;"
                 >
                     <span>
-                        <label>Hide 0 Creidts</label>
+                        <label>Hide 0 Credits</label>
                         <input type="checkbox" v-model="settings.filters.hide_zero_credits" @change="saveSettings(settings)">
                     </span>
                     <span>
