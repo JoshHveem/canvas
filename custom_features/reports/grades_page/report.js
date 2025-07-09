@@ -227,9 +227,14 @@
               }
             ),
             new Column('Oldest Sub', '', '4.5rem', true, 'number',
-              student => Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) + ' Days',
+              student => {
+                let days = Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) - 1;
+                if (days < 0) days = 0;
+                return days + ' Days';
+              },
               student => {
                 let days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
+                console.log(days);
                 return {
                   'background-color': (days > 3) ? this.colors.red : (days > 1 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
