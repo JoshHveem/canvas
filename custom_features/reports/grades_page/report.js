@@ -230,7 +230,7 @@
               student => {
                 let days = 0;
                 if (student.oldest_sub) {
-                  days = Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) - 1;
+                  days = Math.floor(this.calcDaysBetweenDates(student.oldest_sub, new Date()));
                   if (days < 0) days = 0;
                 }
                 return days + ' Days';
@@ -238,7 +238,7 @@
               student => {
                 let days = 0;
                 if (student.oldest_sub) {
-                  days = Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) - 1;
+                  days = Math.floor(this.calcDaysBetweenDates(student.oldest_sub, new Date()));
                   if (days < 0) days = 0;
                 }
                 return {
@@ -432,7 +432,8 @@
               user_name: enrollmentData.user.name,
               user_id: enrollmentData.user._id,
               ungraded: 0,
-              oldest_sub: new Date()
+              oldest_sub: new Date(),
+              oldest_sub_name: ''
             };
             enrollment = this.processEnrollment(enrollment);
             console.log(enrollment);
@@ -448,6 +449,7 @@
                 let submittedAt = Date.parse(submissionData.submittedAt);
                 if (submittedAt < enrollments[e].oldest_sub) {
                   enrollments[e].oldest_sub = submittedAt;
+                  enrollments[e].oldest_sub_name = submissionData.
                 }
               }
             }
