@@ -228,8 +228,11 @@
             ),
             new Column('Oldest Sub', '', '5rem', true, 'number',
               student => {
-                let days = Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) - 1;
-                if (days < 0) days = 0;
+                days = 0;
+                if (student.oldest_sub) {
+                  let days = Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) - 1;
+                  if (days < 0) days = 0;
+                }
                 return days + ' Days';
               },
               student => {
