@@ -107,7 +107,7 @@
                             line-height: 1.5rem;
                         "
                         :style="{
-                        'grid-template-columns': getColumnsWidthsString(),
+                            'grid-template-columns': getColumnsWidthsString(),
                             'background-color': (i % 2) ? 'white' : '#F8F8F8'
                         }"
                         >

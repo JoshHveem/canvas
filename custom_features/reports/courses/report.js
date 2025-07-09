@@ -274,12 +274,19 @@
                 tagList.sort((a, b) => b.cnt - a.cnt);
 
                 for (let { tag, cnt, perc } of tagList) {
-                  str += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="margin-right: 0.25rem; background-color: ${
+                  str += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="white-space: nowrap; display: inline-block; margin-right: 0.25rem; background-color: ${
                     perc > 0.30 ? this.colors.red : (perc > 0.15 ? this.colors.orange : this.colors.yellow)
                   }; color: white;">${tag}</span>`;
                 }
 
                 return str;
+              },
+              course => {
+                return {
+                  'display': 'flex',
+                  'flex-wrap': 'wrap',
+                  'gap': '0.25rem'
+                }
               }
             )
           ],
