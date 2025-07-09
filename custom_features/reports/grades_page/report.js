@@ -226,6 +226,16 @@
                 }
               }
             ),
+            new Column('Oldest Sub', '', '4.5rem', true, 'number',
+              student => Math.round(this.calcDaysBetweenDates(student.oldest_sub, new Date())) + ' Days',
+              student => {
+                let days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
+                return {
+                  'background-color': (days > 3) ? this.colors.red : (days > 1 ? this.colors.yellow : this.colors.green),
+                  'color': this.colors.white,
+                }
+              }
+            ),
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
             // progress ends up with its own special call out because it does the bar graph thing
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
@@ -423,8 +433,9 @@
             for (let e = 0; e < enrollments.length; e++) {
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
                 enrollments[e].ungraded += 1;
-                if (submissionData.submittedAt) {
-
+                let submittedAt = Date.parse(submissionData.submittedAt);
+                if (submittedAt < enrollments[e].oldest_sub) {
+                  enrollments[e] = submittedAt;
                 }
               }
             }
