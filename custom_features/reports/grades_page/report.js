@@ -230,7 +230,7 @@
               student => {
                 let days = 0;
                 if (student.oldest_sub) {
-                  days = Math.floor(this.calcDaysBetweenDates(student.oldest_sub, new Date()));
+                  days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
                   if (days < 0) days = 0;
                 }
                 return days + ' Days';
@@ -238,7 +238,7 @@
               student => {
                 let days = 0;
                 if (student.oldest_sub) {
-                  days = Math.floor(this.calcDaysBetweenDates(student.oldest_sub, new Date()));
+                  days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
                   if (days < 0) days = 0;
                 }
                 return {
@@ -397,7 +397,7 @@
         },
         calcDaysBetweenDates(date1, date2=new Date()) {
           let diffTime =  date2 - date1;
-          let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
           return diffDays;
         },
         async loadEnrollments(courseId) {
