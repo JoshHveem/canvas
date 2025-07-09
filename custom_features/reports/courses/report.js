@@ -250,43 +250,37 @@
             ),
             new Column('Tags', 'All tags from student comments', 'auto', false, 'string',
               course => {
-                let str = '';
-                if (course.surveys.num_surveys < 3) return str;
+                if (course.surveys.num_surveys < 3) return '';
 
                 let tagList = [];
-
                 for (let t in course.surveys.tags) {
                   let tags = course.surveys.tags[t];
                   for (let tag in tags) {
                     let cnt = tags[tag];
                     let perc = cnt / course.surveys.num_surveys;
                     if (cnt > 1 && perc > 0.05) {
-                      tagList.push({
-                        tag,
-                        cnt,
-                        perc
-                      });
+                      tagList.push({ tag, cnt, perc });
                     }
                   }
                 }
 
-                // Sort tags by count descending
                 tagList.sort((a, b) => b.cnt - a.cnt);
 
+                let html = `<div class="btech-pill-container">`;
                 for (let { tag, cnt, perc } of tagList) {
-                  str += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="white-space: nowrap; font-size: 0.75rem; margin-right: 0.25rem; background-color: ${
-                    perc > 0.30 ? this.colors.red : (perc > 0.15 ? this.colors.orange : this.colors.yellow)
-                  }; color: white;">${tag}</span>`;
+                  html += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="
+                    white-space: nowrap;
+                    font-size: 0.75rem;
+                    margin-right: 0.25rem;
+                    background-color: ${
+                      perc > 0.30 ? this.colors.red : (perc > 0.15 ? this.colors.orange : this.colors.yellow)
+                    };
+                    color: white;
+                  ">${tag}</span>`;
                 }
-
-                return str;
+                html += `</div>`;
+                return html;
               },
-              course => {
-                return {
-                  'display': 'flex',
-                  'flex-wrap': 'wrap',
-                }
-              }
             )
           ],
           courses: [],
