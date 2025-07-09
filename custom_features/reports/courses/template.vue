@@ -45,6 +45,10 @@
                         <label>Hide 0 Students</label>
                         <input type="checkbox" v-model="settings.filters.hide_zero_students" @change="saveSettings(settings)">
                     </span>
+                    <span>
+                        <label>Anonymize</label>
+                        <input type="checkbox" v-model="settings.anonymous" @change="saveSettings(settings)">
+                    </span>
                 </div>
                 <div>
                     <div
