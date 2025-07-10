@@ -51,11 +51,12 @@ $(document).ready(async function () {
 
             try {
             const res = await $.post(`/api/graphql`, { query });
-            const course = res.data.course;
-            courseData.name = course.name;
-            courseData.course_code = course.courseCode;
-            courseData.term_name = course.term.name
-            const assignmentGroups = course.assignmentGroupsConnection.nodes;
+            const course = res?.data?.course;
+            if (course == undefined) return {};
+            courseData.name = course?.name;
+            courseData.course_code = course?.courseCode;
+            courseData.term_name = course?.term?.name
+            const assignmentGroups = course?.assignmentGroupsConnection?.nodes;
 
             // Push current assignmentGroups to results (deep merge may be needed depending on structure)
             results.push(...assignmentGroups);
@@ -130,9 +131,13 @@ $(document).ready(async function () {
 
         }
     }
-    let data = await getAssignmentsData(ENV.COURSE_ID);
+    let courseId = ENV.COURSE_ID ?? ENV.course_id;
+    let data;
+    if (courseId !== undefined) {
+        data = await getAssignmentsData(ENV.COURSE_ID);
+    }
 
-    if (data.course_credits > 0) {
+    if (data?.course_credits > 0) {
         let totalCredits = 0;
         let sortedModuleKeys = Object.keys(data.modules).sort((a, b) => 
             data.modules[a].position - data.modules[b].position
