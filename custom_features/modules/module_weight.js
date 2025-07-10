@@ -86,6 +86,7 @@ $(document).ready(async function () {
         let modulesDict = {};
 
         try {
+            console.log(courseId);
             let data = await getGraphiCourseAssignments(courseId);
             console.log(data);
             let courseCode = data.course_code;
