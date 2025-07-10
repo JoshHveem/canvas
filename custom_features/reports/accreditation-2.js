@@ -530,6 +530,7 @@
             //vanilla quizzes
             //need to append comments to this
             if (type == 'online_quiz') {
+              console.log(assignment);
               let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
               await app.createIframe(url, app.downloadQuiz, {
                 'submission': submission,

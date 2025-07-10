@@ -86,9 +86,7 @@ $(document).ready(async function () {
         let modulesDict = {};
 
         try {
-            console.log(courseId);
             let data = await getGraphiCourseAssignments(courseId);
-            console.log(data);
             let courseCode = data.course_code;
             let year = extractYear(data.term_name);
             let hours = 0;
@@ -133,7 +131,6 @@ $(document).ready(async function () {
         }
     }
     let courseId = ENV.COURSE_ID ?? ENV.course_id;
-    console.log(courseId);
     let data;
     if (courseId !== undefined) {
         data = await getAssignmentsData(courseId);
