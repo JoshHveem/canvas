@@ -136,7 +136,7 @@ $(document).ready(async function () {
     console.log(courseId);
     let data;
     if (courseId !== undefined) {
-        data = await getAssignmentsData(ENV.COURSE_ID);
+        data = await getAssignmentsData(courseId);
     }
 
     if (data?.course_credits > 0) {
