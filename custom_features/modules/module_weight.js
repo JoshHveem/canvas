@@ -124,14 +124,14 @@ $(document).ready(async function () {
                     }
                 }
             }
-        return { assignments: assignmentsDict, modules: modulesDict, course_credits: credits};
+            return { assignments: assignmentsDict, modules: modulesDict, course_credits: credits};
         } catch (err) {
             console.error(err);
-        return {};
-
+            return {};
         }
     }
     let courseId = ENV.COURSE_ID ?? ENV.course_id;
+    console.log(courseId);
     let data;
     if (courseId !== undefined) {
         data = await getAssignmentsData(ENV.COURSE_ID);
