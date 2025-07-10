@@ -87,6 +87,7 @@ $(document).ready(async function () {
 
         try {
             let data = await getGraphiCourseAssignments(courseId);
+            console.log(data);
             let courseCode = data.course_code;
             let year = extractYear(data.term_name);
             let hours = 0;
