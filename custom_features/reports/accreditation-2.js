@@ -320,6 +320,10 @@
                 query {
                   assignmentGroup(id: "${groupId}") {
                     _id
+
+                    quiz {
+                      _id
+                    }
                     assignmentsConnection(first: 50${after ? `, after: \"${after}\"` : ''}) {
                       pageInfo {
                         hasNextPage
@@ -344,6 +348,7 @@
             }
             allAssignments.map(assn => {
               assn.id = assn._id;
+              assn.quiz_id = assn?.quiz?._id;
             });
 
 
