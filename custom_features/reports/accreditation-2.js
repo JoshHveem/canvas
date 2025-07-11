@@ -808,6 +808,7 @@
             // Wait until iframe content is fully loaded
             if (doc.readyState === 'complete') {
               injectPrintLabels();
+              console.log(doc.readyState);
               win.focus();
               win.onafterprint = () => {
                 $('title').text(ogTitle);
