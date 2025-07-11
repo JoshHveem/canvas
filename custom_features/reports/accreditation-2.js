@@ -360,6 +360,9 @@
                 query {
                   assignment(id: "${assignmentId}") {
                     _id
+                    quiz {
+                      _id
+                    }
                     submissionsConnection(
                       first: 50${after ? `, after: \"${after}\"` : ''},
                       filter: { includeConcluded: true, includeDeactivated: true, includeUnsubmitted: false },
@@ -369,6 +372,7 @@
                         hasNextPage
                         endCursor
                       }
+
                       nodes {
                         user {
                           id
