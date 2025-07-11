@@ -531,6 +531,7 @@
             //need to append comments to this
             if (type == 'online_quiz') {
               console.log(assignment);
+
               let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
               await app.createIframe(url, app.downloadQuiz, {
                 'submission': submission,
@@ -761,24 +762,71 @@
             return;
           },
           async downloadQuiz(iframe, content, data) {
-            let app = this; let elId = iframe.attr('id');
+            let app = this;
+            let elId = iframe.attr('id');
             let id = elId.replace('btech-content-', '');
-            let title = this.getTitle(data) + " submission"
+            let title = this.getTitle(data) + " submission";
+
             this.addRequiredInformation(content, data.submission, data.assignment);
             let commentEl = app.getComments(data.submission);
             content.append(commentEl);
+
             let ogTitle = $('title').text();
             $('title').text(title);
-            let window = document.getElementById(elId).contentWindow;
-            window.onafterprint = (event) => {
-              $('title').text(ogTitle);
-              app.preparingDocument = false;
-              iframe.remove();
+
+            let win = document.getElementById(elId).contentWindow;
+            let doc = win.document;
+
+            // Inject "Correct"/"Incorrect" labels in printable format
+            const injectPrintLabels = () => {
+              const arrows = doc.querySelectorAll('.answer_arrow.correct, .answer_arrow.incorrect');
+              arrows.forEach(el => {
+                if (el.classList.contains('injected')) return;
+
+                const label = doc.createElement('div');
+                label.textContent = (el.classList.contains('correct') ? '✔ ' : '✘ ') + el.textContent.trim();
+                label.style.fontWeight = 'bold';
+                label.style.fontSize = '14px';
+                label.style.marginBottom = '4px';
+                label.style.color = el.classList.contains('correct') ? 'green' : 'red';
+                label.classList.add('printable-feedback');
+
+                let parentAnswer = el.closest('.answer') || el.closest('.answers_wrapper') || el.parentElement;
+                if (parentAnswer) {
+                  parentAnswer.insertBefore(label, parentAnswer.firstChild);
+                  el.classList.add('injected');
+                  el.style.display = 'none';
+                }
+              });
+            };
+
+            // Wait until iframe content is fully loaded
+            if (doc.readyState === 'complete') {
+              injectPrintLabels();
+              win.focus();
+              win.onafterprint = () => {
+                $('title').text(ogTitle);
+                app.preparingDocument = false;
+                iframe.remove();
+              };
+              win.print();
+            } else {
+              // If iframe content is still loading, wait for it
+              iframe.on('load', () => {
+                injectPrintLabels();
+                win.focus();
+                win.onafterprint = () => {
+                  $('title').text(ogTitle);
+                  app.preparingDocument = false;
+                  iframe.remove();
+                };
+                win.print();
+              });
             }
-            window.focus();
-            window.print();
+
             return;
           },
+
           async createIframe(url, func = null, data = {}) {
             let id = genId();
             let elId = 'btech-content-' + id
