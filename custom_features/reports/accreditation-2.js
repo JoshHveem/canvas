@@ -1,5 +1,4 @@
 (async function () {
-    console.log("ACCREDITATION 2.0")
   //FILTER BY SECTION
   //NEW QUIZZES???
   //With assignments make sure to also grab if they did a text submission or other possible submission types
@@ -540,7 +539,7 @@
             //vanilla quizzes
             //need to append comments to this
             if (type == 'online_quiz') {
-              let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
+              let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user_id + '?preview=1';
               url = `/courses/${app.courseId}/quizzes/${assignment.quiz_id}/history?user_id=${submission.user_id}`;
               console.log(url);
               await app.createIframe(url, app.downloadQuiz, {
@@ -572,7 +571,6 @@
               app.needsToWait = true;
             } else {
               let url = "/courses/" + app.courseId + "/assignments/" + assignment.id + "/submissions/" + submission.user.id;
-              console.log("DOWNLOAD COMMENTS");
               await app.createIframe(url, app.downloadComments, {
                 'submission': submission,
                 'assignment': assignment
@@ -663,7 +661,6 @@
             return;
           },
           addRequiredInformation(el, submission, assignment) {
-            console.log(submission);
             //Prepend in reverse order of the order you want it to appear at the top
             el.prepend("<p>Submitted: <span style='background-color: #FF0;'>" + this.getSubmissionDate(submission) + "</span></p>");
             el.prepend("<p>Student: <span style='background-color: #FF0;'>" + (this.anonymous ? ('Anonymous User ' + submission.user.id) : submission.user.name) + "</span></p>");
@@ -674,7 +671,6 @@
             el.prepend("<p>Course: <span style='background-color: #FF0;'>" + this.courseData.name + " (" + this.courseData.course_code + ")" + "</span></p>");
           },
           getTitle(data) {
-            console.log(data);
             let title = this.courseData.name + ' - ' + data.assignment.name + ' - ' + (this.anonymous ? ('Anonymous User ' + data.submission.user.id) : data.submission.user.name);
             return title;
           },
@@ -701,7 +697,6 @@
                   let comments = rubricHolder.find('[data-selenium="criterion_comments_text"]');
                   for (let c = 0; c < comments.length; c++) {
                       let comment = comments[c];
-                      console.log(comment);
                       $(comment).css({
                         'height': '10rem',
                         'width': '30rem'
