@@ -539,8 +539,8 @@
             //vanilla quizzes
             //need to append comments to this
             if (type == 'online_quiz') {
-              let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user_id + '?preview=1';
-              url = `/courses/${app.courseId}/quizzes/${assignment.quiz_id}/history?user_id=${submission.user_id}`;
+              let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
+              url = `/courses/${app.courseId}/quizzes/${assignment.quiz_id}/history?user_id=${submission.user.id}`;
               console.log(url);
               await app.createIframe(url, app.downloadQuiz, {
                 'submission': submission,
