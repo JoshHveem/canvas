@@ -12,7 +12,6 @@ var ISDIDS= [
   2116084, // Mikaela
   2118711, // Colton
   2147128, // Katie
-  2158921, // Erin
   1547292, // Leann (Student Servies)
   451607,  // Sean (Testing Center)
   451622,  // Karen (Testing Center)
@@ -209,8 +208,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     featureISD('copy_to_next_year', {}, /^\/accounts\/[0-9]+$/);
     // dashboard level reports that need vue
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
-    console.log('Vue Loaded')
-    // if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
+    if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/courses/report", {}, /^\/$/);
     if (rCheckInCourse.test(window.location.pathname)) {
@@ -323,8 +321,8 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
           feature("grades_page/attempts", {}, /^\/courses\/[0-9]+\/grades\/[0-9]+/);
 
           if (CURRENT_DEPARTMENT_ID == 4218) { // DATA ANALYTICS
-            externalFeature("https://cdn.datacamp.com/datacamp-light-latest.min.js", /^\/courses\/([0-9]+)\/(pages|assignments|quizzes|discussion_topics)\/[0-9]+(\?|$)/); //really just available to data analytics
-            feature("people_page/sync_start_dates_with_section", {}, /^\/courses\/[0-9]+\/course_pacing/);
+            // externalFeature("https://cdn.datacamp.com/datacamp-light-latest.min.js", /^\/courses\/([0-9]+)\/(pages|assignments|quizzes|discussion_topics)\/[0-9]+(\?|$)/); //really just available to data analytics
+            // feature("people_page/sync_start_dates_with_section", {}, /^\/courses\/[0-9]+\/course_pacing/);
             feature("department_specific/data_analytics_feedback_report", {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
           }
           if (CURRENT_DEPARTMENT_ID === 3824) { // DENTAL
@@ -342,7 +340,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
           //   // feature("department_specific/amar_elec_add_module_items"); //don't think this is used anymore
           // }
           if (CURRENT_DEPARTMENT_ID === 3820) { //Web & Mobile
-            externalFeature("https://static.codepen.io/assets/embed/ei.js", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
+            // externalFeature("https://static.codepen.io/assets/embed/ei.js", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
           }
         });
       }
