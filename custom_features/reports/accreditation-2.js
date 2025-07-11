@@ -322,9 +322,6 @@
                     _id
 
                     assignmentsConnection(first: 50${after ? `, after: \"${after}\"` : ''}) {
-                      quiz {
-                        _id
-                      }
                       pageInfo {
                         hasNextPage
                         endCursor
@@ -334,6 +331,9 @@
                         name
                         published
                         pointsPossible
+                        quiz {
+                          _id
+                        }
                       }
                     }
                   }
