@@ -665,7 +665,7 @@
             el.prepend("<p>Submitted: <span style='background-color: #FF0;'>" + this.getSubmissionDate(submission) + "</span></p>");
             el.prepend("<p>Student: <span style='background-color: #FF0;'>" + (this.anonymous ? ('Anonymous User ' + submission.user.id) : submission.user.name) + "</span></p>");
             if (this.campuses?.[submission.user.id] ?? '' != '') {
-              content.prepend("<p>Campus: <span style='background-color: #FF0;'>" + this.campuses[submission.user.id] + "</span></p>");
+              el.prepend("<p>Campus: <span style='background-color: #FF0;'>" + this.campuses[submission.user.id] + "</span></p>");
             }
             el.prepend("<p>Title: <span style='background-color: #FF0;'>" + assignment.name + "</span></p>");
             el.prepend("<p>Course: <span style='background-color: #FF0;'>" + this.courseData.name + " (" + this.courseData.course_code + ")" + "</span></p>");
