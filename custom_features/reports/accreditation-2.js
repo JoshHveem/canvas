@@ -451,6 +451,7 @@
 
                   assignment.submissions = submissions.map(sub => ({
                     ...sub,
+                    quiz_id: sub?.quiz?._id,
                     user: {
                       id: sub.user._id,
                       name: sub.user.name
