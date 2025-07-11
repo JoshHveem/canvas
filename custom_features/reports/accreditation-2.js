@@ -802,7 +802,7 @@
                 const parentAnswer = el.closest('.answer');
 
                 if (parentAnswer) {
-                  const matchRight = parentAnswer.querySelector('.answer_match_right');
+                  const matchRight = parentAnswer.querySelector('.answer_match');
                   const answerText = parentAnswer.querySelector('.answer_html');
                   const select = parentAnswer.querySelector('select');
                   const fallback = parentAnswer.querySelector('.answer_type');
