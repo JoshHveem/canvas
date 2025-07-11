@@ -804,7 +804,7 @@
                   label.style.color = 'red';
                 } else if (!selected && correct) {
                   label.textContent = '● Correct Answer';
-                  label.style.color = 'black';
+                  label.style.color = 'red';
                 } else {
                   label.textContent = '';
                 }
