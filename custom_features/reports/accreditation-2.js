@@ -787,42 +787,42 @@
               const arrows = doc.querySelectorAll('.answer_arrow.correct, .answer_arrow.incorrect');
 
               arrows.forEach(el => {
-                if (el.classList.contains('injected')) return;
+              if (el.classList.contains('injected')) return;
 
-                // Create inline label
-                const label = doc.createElement('span');
-                label.textContent = el.classList.contains('correct') ? '✔ Correct' : '✘ Incorrect';
-                label.style.fontWeight = 'bold';
-                label.style.fontSize = '13px';
-                label.style.marginLeft = '0.5em';
-                label.style.color = el.classList.contains('correct') ? 'green' : 'red';
-                label.classList.add('printable-inline-label');
+              const isCorrect = el.classList.contains('correct');
+              const label = doc.createElement('span');
+              label.textContent = isCorrect ? ' ✔ Correct' : ' ✘ Incorrect';
+              label.style.fontWeight = 'bold';
+              label.style.fontSize = '13px';
+              label.style.marginLeft = '0.5em';
+              label.style.color = isCorrect ? 'green' : 'red';
+              label.classList.add('printable-inline-label');
 
-                // Try to inject right after the answer text/dropdown
-                const parentAnswer = el.closest('.answer');
+              const parentAnswer = el.closest('.answer');
+              if (!parentAnswer) return;
 
-                if (parentAnswer) {
-                  const matchRight = parentAnswer.querySelector('.answer_match');
-                  const answerText = parentAnswer.querySelector('.answer_html');
-                  const select = parentAnswer.querySelector('select');
-                  const fallback = parentAnswer.querySelector('.answer_type');
+              // Try targets in order of specificity
+              const injectionTargets = [
+                parentAnswer.querySelector('.answer_match_right'),
+                parentAnswer.querySelector('.answer_html'),
+                parentAnswer.querySelector('select'),
+                parentAnswer.querySelector('.answer_text'),
+                parentAnswer.querySelector('.answer_type'),
+              ];
 
-                  if (matchRight) {
-                    matchRight.appendChild(label);
-                  } else if (answerText) {
-                    answerText.appendChild(label);
-                  } else if (select) {
-                    select.parentElement.appendChild(label);
-                  } else if (fallback) {
-                    fallback.appendChild(label);
-                  } else {
-                    parentAnswer.appendChild(label); // worst case
-                  }
+              const target = injectionTargets.find(el => el && el.offsetParent !== null); // only visible ones
 
-                  el.classList.add('injected');
-                  el.style.display = 'none';
-                }
+              if (target) {
+                target.appendChild(label);
+              } else {
+                console.warn('No target found for arrow label, injecting at end of .answer');
+                parentAnswer.appendChild(label);
+              }
+
+              el.style.display = 'none';
+              el.classList.add('injected');
               });
+
             };
 
             // Wait until iframe content is fully loaded
