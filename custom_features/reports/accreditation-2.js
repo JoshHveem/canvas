@@ -786,43 +786,34 @@
             const injectPrintLabels = () => {
               const arrows = doc.querySelectorAll('.answer_arrow.correct, .answer_arrow.incorrect');
 
-              arrows.forEach(el => {
-              if (el.classList.contains('injected')) return;
+                arrows.forEach(el => {
+                  if (el.classList.contains('injected')) return;
 
-              const isCorrect = el.classList.contains('correct');
-              const label = doc.createElement('span');
-              label.textContent = isCorrect ? ' ✔ Correct' : ' ✘ Incorrect';
-              label.style.fontWeight = 'bold';
-              label.style.fontSize = '13px';
-              label.style.marginLeft = '0.5em';
-              label.style.color = isCorrect ? 'green' : 'red';
-              label.classList.add('printable-inline-label');
+                  const isCorrect = el.classList.contains('correct');
+                  const label = doc.createElement('div');
+                  label.textContent = isCorrect ? '✔ Correct' : '✘ Incorrect';
+                  label.style.fontWeight = 'bold';
+                  label.style.fontSize = '14px';
+                  label.style.color = isCorrect ? 'green' : 'red';
+                  label.style.marginTop = '4px';
+                  label.classList.add('printable-feedback');
 
-              const parentAnswer = el.closest('.answer');
-              if (!parentAnswer) return;
+                  const parentAnswer = el.closest('.answer');
+                  if (!parentAnswer) return;
 
-              // Try targets in order of specificity
-              const injectionTargets = [
-                parentAnswer.querySelector('.answer_match_right'),
-                parentAnswer.querySelector('.answer_html'),
-                parentAnswer.querySelector('select'),
-                parentAnswer.querySelector('.answer_text'),
-                parentAnswer.querySelector('.answer_type'),
-              ];
+                  // Add label at bottom of answer block
+                  parentAnswer.appendChild(label);
 
-              const target = injectionTargets.find(el => el && el.offsetParent !== null); // only visible ones
+                  // Add a horizontal divider after the entire answer
+                  const hr = doc.createElement('hr');
+                  hr.style.border = '0';
+                  hr.style.borderTop = '1px solid #aaa';
+                  hr.style.margin = '10px 0';
+                  parentAnswer.appendChild(hr);
 
-              if (target) {
-                target.appendChild(label);
-              } else {
-                console.warn('No target found for arrow label, injecting at end of .answer');
-                parentAnswer.appendChild(label);
-              }
-
-              el.style.display = 'none';
-              el.classList.add('injected');
-              });
-
+                  el.classList.add('injected');
+                  el.style.display = 'none';
+                });
             };
 
             // Wait until iframe content is fully loaded
