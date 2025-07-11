@@ -797,13 +797,13 @@
                 label.style.marginLeft = '0.5em';
 
                 if (selected && correct) {
-                  label.textContent = '✔ Correct';
+                  label.textContent = '✔ Correct (Your Answer)';
                   label.style.color = 'green';
                 } else if (selected && !correct) {
-                  label.textContent = '✘ Incorrect';
+                  label.textContent = '✘ Incorrect (Your Answer)';
                   label.style.color = 'red';
                 } else if (!selected && correct) {
-                  label.textContent = '● Correct Answer';
+                  label.textContent = '✔ Correct Answer';
                   label.style.color = 'green';
                 } else {
                   label.textContent = '';
