@@ -784,33 +784,50 @@
 
             // Inject "Correct"/"Incorrect" labels in printable format
             const injectPrintLabels = () => {
-              const allAnswers = doc.querySelectorAll('.answer');
+                const allAnswers = doc.querySelectorAll('.answer');
 
               allAnswers.forEach(answer => {
-                const arrow = answer.querySelector('.answer_arrow.correct, .answer_arrow.incorrect');
+                const selected = answer.classList.contains('selected_answer');
+                const correct = answer.classList.contains('correct_answer');
 
-                if (arrow && !arrow.classList.contains('injected')) {
-                  const isCorrect = arrow.classList.contains('correct');
-                  const label = doc.createElement('div');
-                  label.textContent = isCorrect ? '✔ Correct' : '✘ Incorrect';
-                  label.style.fontWeight = 'bold';
-                  label.style.fontSize = '14px';
-                  label.style.color = isCorrect ? 'green' : 'red';
-                  label.style.marginTop = '4px';
-                  label.classList.add('printable-feedback');
+                // Label container (inline)
+                const label = doc.createElement('span');
+                label.style.fontWeight = 'bold';
+                label.style.fontSize = '14px';
+                label.style.marginLeft = '0.5em';
 
-                  answer.appendChild(label);
-                  arrow.style.display = 'none';
-                  arrow.classList.add('injected');
+                if (selected && correct) {
+                  label.textContent = '✔ Correct';
+                  label.style.color = 'green';
+                } else if (selected && !correct) {
+                  label.textContent = '✘ Incorrect';
+                  label.style.color = 'red';
+                } else if (!selected && correct) {
+                  label.textContent = '● Correct Answer';
+                  label.style.color = 'black';
+                } else {
+                  label.textContent = '';
                 }
 
-                // Always add separator after each answer
+                // Append label next to existing visible content
+                const target = answer.querySelector('.answer_html') ||
+                              answer.querySelector('.answer_match_right') ||
+                              answer.querySelector('.answer_text') ||
+                              answer.querySelector('select') ||
+                              answer.querySelector('.answer_type') ||
+                              answer;
+
+                if (label.textContent !== '') {
+                  target.appendChild(label);
+                }
+
+                // Always add a divider for clarity
                 const hr = doc.createElement('hr');
                 hr.style.border = '0';
                 hr.style.borderTop = '1px solid #aaa';
                 hr.style.margin = '10px 0';
                 answer.appendChild(hr);
-              });
+              }); 
             };
 
             // Wait until iframe content is fully loaded
