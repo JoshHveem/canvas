@@ -321,10 +321,10 @@
                   assignmentGroup(id: "${groupId}") {
                     _id
 
-                    quiz {
-                      _id
-                    }
                     assignmentsConnection(first: 50${after ? `, after: \"${after}\"` : ''}) {
+                      quiz {
+                        _id
+                      }
                       pageInfo {
                         hasNextPage
                         endCursor
