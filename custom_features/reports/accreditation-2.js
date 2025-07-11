@@ -785,20 +785,40 @@
             // Inject "Correct"/"Incorrect" labels in printable format
             const injectPrintLabels = () => {
               const arrows = doc.querySelectorAll('.answer_arrow.correct, .answer_arrow.incorrect');
+
               arrows.forEach(el => {
                 if (el.classList.contains('injected')) return;
 
-                const label = doc.createElement('div');
-                label.textContent = (el.classList.contains('correct') ? '✔ ' : '✘ ') + el.textContent.trim();
+                // Create inline label
+                const label = doc.createElement('span');
+                label.textContent = el.classList.contains('correct') ? '✔ Correct' : '✘ Incorrect';
                 label.style.fontWeight = 'bold';
-                label.style.fontSize = '14px';
-                label.style.marginBottom = '4px';
+                label.style.fontSize = '13px';
+                label.style.marginLeft = '0.5em';
                 label.style.color = el.classList.contains('correct') ? 'green' : 'red';
-                label.classList.add('printable-feedback');
+                label.classList.add('printable-inline-label');
 
-                let parentAnswer = el.closest('.answer') || el.closest('.answers_wrapper') || el.parentElement;
+                // Try to inject right after the answer text/dropdown
+                const parentAnswer = el.closest('.answer');
+
                 if (parentAnswer) {
-                  parentAnswer.insertBefore(label, parentAnswer.firstChild);
+                  const matchRight = parentAnswer.querySelector('.answer_match_right');
+                  const answerText = parentAnswer.querySelector('.answer_html');
+                  const select = parentAnswer.querySelector('select');
+                  const fallback = parentAnswer.querySelector('.answer_type');
+
+                  if (matchRight) {
+                    matchRight.appendChild(label);
+                  } else if (answerText) {
+                    answerText.appendChild(label);
+                  } else if (select) {
+                    select.parentElement.appendChild(label);
+                  } else if (fallback) {
+                    fallback.appendChild(label);
+                  } else {
+                    parentAnswer.appendChild(label); // worst case
+                  }
+
                   el.classList.add('injected');
                   el.style.display = 'none';
                 }
