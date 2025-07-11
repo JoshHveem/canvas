@@ -784,12 +784,13 @@
 
             // Inject "Correct"/"Incorrect" labels in printable format
             const injectPrintLabels = () => {
-              const arrows = doc.querySelectorAll('.answer_arrow.correct, .answer_arrow.incorrect');
+              const allAnswers = doc.querySelectorAll('.answer');
 
-                arrows.forEach(el => {
-                  if (el.classList.contains('injected')) return;
+              allAnswers.forEach(answer => {
+                const arrow = answer.querySelector('.answer_arrow.correct, .answer_arrow.incorrect');
 
-                  const isCorrect = el.classList.contains('correct');
+                if (arrow && !arrow.classList.contains('injected')) {
+                  const isCorrect = arrow.classList.contains('correct');
                   const label = doc.createElement('div');
                   label.textContent = isCorrect ? '✔ Correct' : '✘ Incorrect';
                   label.style.fontWeight = 'bold';
@@ -798,22 +799,18 @@
                   label.style.marginTop = '4px';
                   label.classList.add('printable-feedback');
 
-                  const parentAnswer = el.closest('.answer');
-                  if (!parentAnswer) return;
+                  answer.appendChild(label);
+                  arrow.style.display = 'none';
+                  arrow.classList.add('injected');
+                }
 
-                  // Add label at bottom of answer block
-                  parentAnswer.appendChild(label);
-
-                  // Add a horizontal divider after the entire answer
-                  const hr = doc.createElement('hr');
-                  hr.style.border = '0';
-                  hr.style.borderTop = '1px solid #aaa';
-                  hr.style.margin = '10px 0';
-                  parentAnswer.appendChild(hr);
-
-                  el.classList.add('injected');
-                  el.style.display = 'none';
-                });
+                // Always add separator after each answer
+                const hr = doc.createElement('hr');
+                hr.style.border = '0';
+                hr.style.borderTop = '1px solid #aaa';
+                hr.style.margin = '10px 0';
+                answer.appendChild(hr);
+              });
             };
 
             // Wait until iframe content is fully loaded
