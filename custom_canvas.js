@@ -7,23 +7,16 @@
 var ISDIDS= [
   1893418, // Josh 
   1638854, // Mason
-  1869288, // Alan
   2048150, // Tiffany
   2074560, // Ryan
   2116084, // Mikaela
   2118711, // Colton
   2147128, // Katie
-  2159901, // Celine
   2158921, // Erin
   1547292, // Leann (Student Servies)
   451607,  // Sean (Testing Center)
   451622,  // Karen (Testing Center)
   1842412, // Codi (Testing Center)
-  2162497, // Spencer
-  2162340, // Cooper
-  2188338, // Lindsey 
-  2200750, // Lara 
-  1575318, // Hannah
   2210696, // Logan
 ];
 
