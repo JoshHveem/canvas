@@ -158,7 +158,7 @@ var Countdown = {
     let el = $(`
       <div class="background">
         <div class="fill" style="width: 100%; background-color: #f1f1f1;">0</div>
-        <div class="fill" title="Recommended progress (${recommendedProgress}%) based on enrollment dates." style="width: ${recommendedProgress}%; background-color: #721222;">${recommendedProgress}%</div>
+        <div class="fill" title="Recommended progress (${recommendedProgress}%) based on enrollment dates." style="width: ${recommendedProgress}%; background-color: #05989D;">${recommendedProgress}%</div>
         <div class="fill" title="Percentage of course graded (${progress}%)" style="width: ${progress}%; background-color: #B30B0F;">${progress}%</div>
       </div> 
     `);
