@@ -167,11 +167,6 @@
       marginBottom: '1rem'
     });
 
-    $('#btech-student-end-date').css({
-      textAlign: 'center',
-      marginBottom: '1rem'
-    });
-
     $('#btech-student-progress-bar .background').css({
       color: '#000',
       maxWidth: '500px',
@@ -286,11 +281,6 @@
         </div> 
       `);
       $("#btech-student-progress-bar").append(el);
-
-      if (this.enrollment.end_at) {
-        console.log(this.enrollment.end_at);
-        $("#btech-student-end-date").append(`<div>Course End Date: ${bridgetools.dateToString(this.enrollment.end_at)}</div>`);
-      }
     },
 
     /*
