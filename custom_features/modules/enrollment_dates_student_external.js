@@ -336,8 +336,8 @@
         console.log('HIDE!')
         $("#countdown-block-hours").show();
         $("#countdown-block-minutes").show();
+        $("#countdown-block-seconds").show();
         $("#countdown-block-seconds").hide();
-        // $("#countdown-block-seconds").show();
       }
     },
 
