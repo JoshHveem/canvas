@@ -289,7 +289,7 @@
 
       if (this.enrollment.end_at) {
         console.log(this.enrollment.end_at);
-
+        $("#btech-student-end-date").append(`<div>${bridgetools.dateToString(this.enrollment.end_at)}</div>`);
       }
     },
 
