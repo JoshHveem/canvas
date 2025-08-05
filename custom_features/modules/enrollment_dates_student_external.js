@@ -163,7 +163,13 @@
     });
 
     $('#btech-student-progress-bar').css({
-      textAlign: 'center'
+      textAlign: 'center',
+      marginBottom: '1rem'
+    });
+
+    $('#btech-student-end-date').css({
+      textAlign: 'center',
+      marginBottom: '1rem'
     });
 
     $('#btech-student-progress-bar .background').css({
@@ -280,6 +286,11 @@
         </div> 
       `);
       $("#btech-student-progress-bar").append(el);
+
+      if (this.enrollment.end_at) {
+        console.log(this.enrollment.end_at);
+
+      }
     },
 
     /*
@@ -465,6 +476,7 @@
   if (/^\/courses\/[0-9]+(\/modules){0,1}$/.test(window.location.pathname)) {
     // Add containers for the different elements to the modules header bar
     $(".header-bar").after("<div id='btech-countdown'></div>");
+    $(".header-bar").after("<div id='btech-student-end-date'></div>");
     $(".header-bar").after("<div id='btech-student-progress-bar'></div>");
     $(".header-bar-right").css("width", "100%");
     // start it off
