@@ -294,6 +294,12 @@
         'MINUTES',
         // 'SECONDS'
       ];
+      let vals = this.calcTimeVals();
+      console.log(vals.days);
+      console.log(this.final_countdown_days);
+      if (vals.days > this.final_countdown_days) {
+        groups = ['DAYS'];
+      }
 
       groups.forEach((capName) => {
         let name = capName.toLowerCase();
@@ -324,22 +330,6 @@
         this.els[name] = el;
         $("#btech-countdown").append(el);
       })
-      let vals = this.calcTimeVals();
-      console.log(vals.days);
-      console.log(this.final_countdown_days);
-      if (vals.days > this.final_countdown_days) {
-        $("#countdown-block-days span.count-title").html("DAYS REMAINING");
-        $("#countdown-block-hours").hide();
-        $("#countdown-block-minutes").hide();
-        $("#countdown-block-seconds").hide();
-      } else {
-        console.log('HIDE!')
-        $("#countdown-block-days span.count-title").html("DAYS REMAINING");
-        $("#countdown-block-hours").show();
-        $("#countdown-block-minutes").show();
-        $("#countdown-block-seconds").show();
-        $("#countdown-block-seconds").hide();
-      }
     },
 
 
