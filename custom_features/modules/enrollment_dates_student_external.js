@@ -333,6 +333,7 @@
         $("#countdown-block-minutes").hide();
         $("#countdown-block-seconds").hide();
       } else {
+        console.log('HIDE!')
         $("#countdown-block-hours").show();
         $("#countdown-block-minutes").show();
         $("#countdown-block-seconds").hide();
