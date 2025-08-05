@@ -193,7 +193,7 @@
   var Countdown = {
     enrollment: {},
     countdown_interval: null,
-    final_countdown_days: 2, // when the timer reaches this number of days remaining, it will show the hours, minutes, seconds to be a more urgent coutndown. otherwise it just shows the days
+    final_countdown_days: 7, // when the timer reaches this number of days remaining, it will show the hours, minutes, seconds to be a more urgent coutndown. otherwise it just shows the days
     els: {},
     /*
       This is a starting point for a calcEndDate script for institutions outside of Bridgerland Technical College
