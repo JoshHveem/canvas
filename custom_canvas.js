@@ -216,8 +216,8 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature('modules/enrollment_dates_teacher', {}, /^\/courses\/[0-9]+\/users\/[0-9]+$/);
       // feature("external_assignments_fullscreen", {}, /^\/courses\/[0-9]+\/(assignments)/);
       feature("kaltura/showInfo", {}, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
+      feature('modules/module_weight', {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
       if (IS_TEACHER) {
-        feature('modules/module_weight', {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
         feature('quizzes/show_analytics', {}, /^\/courses\/[0-9]+\/quizzes\/[0-9]+/);
         feature('quizzes/printing_accessibility', {}, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/);
         feature("modules/show_undelete", {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
