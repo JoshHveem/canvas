@@ -325,6 +325,8 @@
         $("#btech-countdown").append(el);
       })
       let vals = this.calcTimeVals();
+      console.log(vals.days);
+      console.log(this.final_countdown_days);
       if (vals.days > this.final_countdown_days) {
         $("#countdown-block-days span.count-title").html("DAYS REMAINING");
         $("#countdown-block-hours").hide();
