@@ -206,13 +206,14 @@ var Countdown = {
     let vals = this.calcTimeVals();
     if (vals.days > this.final_countdown_days) {
       $("#countdown-block-days span.count-title").html("DAYS REMAINING");
-      $("#countdown-block-hours").hide();
-      $("#countdown-block-minutes").hide();
-      $("#countdown-block-seconds").hide();
+      // $("#countdown-block-hours").hide();
+      // $("#countdown-block-minutes").hide();
+      // $("#countdown-block-seconds").hide();
     } else {
+      $("#countdown-block-days span.count-title").html("DAYS REMAINING");
       $("#countdown-block-hours").show();
       $("#countdown-block-minutes").show();
-      $("#countdown-block-seconds").show();
+      // $("#countdown-block-seconds").show();
     }
   },
 
