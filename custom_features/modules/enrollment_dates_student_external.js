@@ -237,7 +237,6 @@
 
       // get the enrollment data using the api
       this.enrollment = (await $.get(`/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=self&type[]=StudentEnrollment`))[0];
-      console.log(this.enrollment); 
       // sometimes there's a created_at date but not a start_at date. But if both exist
       //// start_at takes priority because sometimes enrollments are created before the student has the chance to do anything in the course
       if (this.enrollment.start_at == undefined) this.enrollment.start_at = this.enrollment.created_at;
@@ -248,7 +247,6 @@
       // Do we have dates needed for the progress bar and the countdown to work?
       let checkValidDates = (this.enrollment.start_at != undefined && this.enrollment.end_at != undefined);
 
-      console.log(`VALID DATE? ${checkValidDates}`);
       this.initProgress();
       loadStyle();
       if (!checkValidDates) return;
@@ -295,8 +293,6 @@
         // 'SECONDS'
       ];
       let vals = this.calcTimeVals();
-      console.log(vals.days);
-      console.log(this.final_countdown_days);
       if (vals.days > this.final_countdown_days) {
         groups = ['DAYS'];
       }
@@ -467,7 +463,6 @@
 
   // Only run on the course modules page or home  page
   if (/^\/courses\/[0-9]+(\/modules){0,1}$/.test(window.location.pathname)) {
-    console.log("PATH FOUND")
     // Add containers for the different elements to the modules header bar
     $(".header-bar").after("<div id='btech-countdown'></div>");
     $(".header-bar").after("<div id='btech-student-progress-bar'></div>");
