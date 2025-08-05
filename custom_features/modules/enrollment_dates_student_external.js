@@ -292,7 +292,7 @@
         'DAYS',
         'HOURS',
         'MINUTES',
-        'SECONDS'
+        // 'SECONDS'
       ];
 
       groups.forEach((capName) => {
