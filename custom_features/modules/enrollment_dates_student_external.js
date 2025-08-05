@@ -476,7 +476,6 @@
   // Only run on the course modules page or home  page
   if (/^\/courses\/[0-9]+(\/modules){0,1}$/.test(window.location.pathname)) {
     // Add containers for the different elements to the modules header bar
-    $(".header-bar").after("<div id='btech-student-end-date'></div>");
     $(".header-bar").after("<div id='btech-countdown'></div>");
     $(".header-bar").after("<div id='btech-student-progress-bar'></div>");
     $(".header-bar-right").css("width", "100%");
