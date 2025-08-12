@@ -123,6 +123,7 @@
       computed: {
         grading: function () {
           let list = this.instructor_metrics?.grading;
+          console.log(list);
           list = list.filter(data => data.academic_year == this.settings.filter.year);
           console.log(list);
           return list[0];
