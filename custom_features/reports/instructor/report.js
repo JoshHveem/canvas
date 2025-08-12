@@ -2,29 +2,12 @@
   // Create the button element
   function createButton() {
     // Create the <a> button
-    const btn = $('<a class="Button" id="canvas-courses-report-vue-gen">Instructor Report</a>');
-
-    // Create the red notification circle (hidden by default)
-    const circle = $('<span id="courses-report-alert-circle"></span>');
-
-    // Style the circle: tiny red dot, absolute position
-    circle.css({
-      position: 'absolute',
-      top: '-5px',
-      right: '-0.75rem',
-      color: 'white',
-      backgroundColor: '#b20b0f',
-      'font-size': '0.75rem',
-      'padding': '0 0.25rem',
-      borderRadius: '50%'
-    });
-    circle.hide();
+    const btn = $('<a class="Button" id="canvas-instructor-report-vue-gen">Instructor Report</a>');
 
     // Wrap the button in a relatively positioned container so the circle can be positioned correctly
     const wrapper = $('<div style="position: relative; display: inline-block;"></div>');
 
     wrapper.append(btn);
-    wrapper.append(circle);
 
     // Add the click handler
     btn.click(function () {
@@ -35,13 +18,12 @@
       });
     });
 
-    // Return the wrapper (button + circle)
     return wrapper;
   }
 
   // Function to ensure button is present
   function ensureButton(container) {
-    if ($('#canvas-courses-report-vue-gen').length === 0) {
+    if ($('#canvas-instructor-report-vue-gen').length === 0) {
       container.append(createButton());
     }
   }
@@ -55,9 +37,9 @@
 
     // Add modal container and Vue content
     let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-courses-report-vue"></div>');
-    $("#canvas-courses-report-vue").append(vueString);
-    $("#canvas-courses-report-vue").hide();
+    canvasbody.after('<div id="canvas-instructor-report-vue"></div>');
+    $("#canvas-instructor-report-vue").append(vueString);
+    $("#canvas-instructor-report-vue").hide();
 
     container = $('#right-side');
     // Initial insert
@@ -79,7 +61,7 @@
 
 
     new Vue({
-      el: '#canvas-courses-report-vue',
+      el: '#canvas-instructor-report-vue',
       created: function() {
       },
       mounted: async function () {
@@ -117,7 +99,6 @@
           settings: {
             anonymous: false,
             account: 0,
-            sort_column: 'Course Code',
             sort_dir: 1,
             filters: {
               year: '2024',
@@ -131,139 +112,6 @@
               id: '' + 0
             }
           ],
-          columns: [
-            new Column('Name', 'The name of the course.', '20rem', false, 'string', 
-              course => this.settings.anonymous ? 'COURSE NAME ' + course.course_id : (course.name ?? '')
-            ),
-            new Column('Course Code', 'The course code for the course.', '6rem', false, 'string', 
-              course => this.settings.anonymous ? 'AAAA 0000' : (course.course_code ?? '')
-            ),
-            new Column('Year', 'The academic year of the course.', '4rem', false, 'number', 
-              course => course.year ?? ''
-            ),
-            new Column('Students', 'The number of students used in the credits per week calculation.', '5rem', false, 'number', 
-              course => course.num_students_credits ?? 0
-            ),
-            new Column('Credits', `The credits value of the course.`, '5rem', false, 'string', 
-              course => Math.round(course.credits) ?? ''
-            ),
-            new Column('Credits per Week', 'The average credits per week earned by students.', '8rem', true, 'number', 
-              course => course.credits_per_week ? course.credits_per_week.toFixed(1) : 'n/a',
-              course => {
-                if (!course.credits_per_week) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !course.credits_per_week ? this.colors.black : (course.credits_per_week < 0.5) ? this.colors.red : (course.credits_per_week < 0.8 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Grades', 'The average student grade based on assignments submitted to date.', '5rem', true, 'number', 
-              course => course.average_score ? course.average_score.toFixed(1) + '%' : 'n/a',
-              course => {
-                if (!course.average_score) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !course.average_score ? this.colors.black : (course.average_score < 80) ? this.colors.red : (course.average_score < 90 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Objectives', 'The percent of student surveys who agreed the course content matched the course objectives.', '5rem', true, 'number', 
-              course => course.objectives ? (course.objectives * 100).toFixed(1) + '%' : 'n/a',
-              course => {
-                let score = course.objectives;
-                if (!score) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Relevance', 'The percentage of student surveys who agreed the course content seemed relevant to their career.', '5rem', true, 'number', 
-              course => course.relevance ? (course.relevance * 100).toFixed(1) + '%' : 'n/a',
-              course => {
-                let score = course.relevance;
-                if (!score) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Examples', 'The percent of student surveys who agreed the course contained sufficient examples.', '5rem', true, 'number', 
-              course => course.examples ? (course.examples * 100).toFixed(1) + '%' : 'n/a',
-              course => {
-                let score = course.examples;
-                if (!score) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Recommendable', 'The percent of student surveys who would recommend this course to someone they know.', '7rem', true, 'number', 
-              course => course.recommendable ? (course.recommendable * 100).toFixed(1) + '%' : 'n/a',
-              course => {
-                let score = course.recommendable;
-                if (!score) return {
-                  'background-color': this.colors.gray,
-                  'color': this.colors.black
-                }
-                return {
-                  'background-color': !score ? this.colors.black : (score < .80) ? this.colors.red : (score < .90 ? this.colors.yellow : this.colors.green),
-                  'color': this.colors.white,
-                }
-              }
-            ),
-            new Column('Tags', 'All tags from student comments', 'auto', false, 'string',
-              course => {
-                if (course.surveys.num_surveys < 3) return '';
-
-                let tagList = [];
-                for (let t in course.surveys.tags) {
-                  let tags = course.surveys.tags[t];
-                  for (let tag in tags) {
-                    let cnt = tags[tag];
-                    let perc = cnt / course.surveys.num_surveys;
-                    if (cnt > 1 && perc > 0.05) {
-                      tagList.push({ tag, cnt, perc });
-                    }
-                  }
-                }
-
-                tagList.sort((a, b) => b.cnt - a.cnt);
-
-                let html = `<div style="display: flex; flex-wrap: wrap; align-items: flex-start; line-height: normal;" class="btech-pill-container">`;
-                for (let { tag, cnt, perc } of tagList) {
-                  html += `<span title="${cnt} (${(perc * 100).toFixed(1)}%) responses" class="btech-pill-text" style="
-                    white-space: nowrap;
-                    font-size: 0.75rem;
-                    margin-right: 0.25rem;
-                    background-color: ${
-                      perc > 0.30 ? this.colors.red : (perc > 0.15 ? this.colors.orange : this.colors.yellow)
-                    };
-                    color: white;
-                  ">${tag}</span>`;
-                }
-                html += `</div>`;
-                return html;
-              },
-            )
-          ],
           courses: [],
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
@@ -275,22 +123,6 @@
         }
       },
       computed: {
-        visibleColumns: function () {
-          return this.columns.filter(function (c) {
-            return c.visible;
-          })
-        },
-        visibleRows: function () {
-          this.sortColumn();
-          return this.courses.filter((course) => {
-            if (this.settings?.filters?.year != course.year) return false;
-            if (this.settings?.filters?.hide_zero_credits && !(course.credits > 0)) return false;
-            if (this.settings?.filters?.hide_zero_students && !(course.num_students_credits > 0)) return false;
-            // if (this.settings?.filters?.hide_past_end_date && student.end_at != null && student.end_at < new Date()) return false;
-            // if (this.settings?.filters?.section != 'All' && student.section_name != this.settings?.filters?.section) return false;
-            return true;
-          })
-        }
       },
       methods: {
         async loadSettings(settings) {
@@ -339,14 +171,6 @@
               settings: settings
             }
           });
-        },
-        getColumnsWidthsString() {
-          let str = '';
-          for (let c in this.columns) {
-            let col = this.columns[c];
-            str += col.width + ' ';
-          }
-          return str;
         },
         dateToString(date) {
           date = new Date(Date.parse(date));
@@ -465,61 +289,12 @@
           let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           return diffDays;
         },
-        setSortColumn(name) {
-          if (this.settings.sort_column === name) {
-            this.settings.sort_dir *= -1;
-          } else {
-            this.settings.sort_column = name;
-            this.settings.sort_dir = 1;
-          }
-          this.saveSettings(this.settings);
-          for (let c = 0; c < this.columns.length; c++) {
-            if (this.columns[c].name !== name) {
-              //reset everything else
-              this.columns[c].sort_state = 0;
-            } else {
-              //if it's the one being sorted, set it to 1 if not 1, or set it to -1 if is already 1
-              this.columns[c].sort_state = this.settings.sort_dir;
-              sortType = this.columns[c].sort_type;
-            }
-          }
-        },
-        sortColumn() {
-          let header = this.settings.sort_column;
-          let name = this.columnNameToCode(header);
-          let sortState = this.settings?.sort_dir ?? 1;
-          let sortType = '';
-          this.courses.sort(function (a, b) {
-            let aVal = a[name] ?? -1;
-            let bVal = b[name] ?? -1;
-            //convert strings to upper case to ignore case when sorting
-            if (typeof (aVal) === 'string') aVal = aVal.toUpperCase();
-            if (typeof (bVal) === 'string') bVal = bVal.toUpperCase();
-
-            //see if not the same type and which one isn't the sort type
-            if (typeof (aVal) !== typeof (bVal)) {
-              if (typeof (aVal) !== sortType) return -1 * sortState;
-              if (typeof (bVal) !== sortType) return 1 * sortState;
-            }
-            //check if it's a string or int
-            let comp = 0;
-            if (aVal > bVal) comp = 1;
-            else if (aVal < bVal) comp = -1;
-            //flip it if reverse sorting;
-            comp *= sortState;
-            return comp
-          });
-        },
 
         calcLikert(course, name) {
           let score = (course?.surveys?.likerts ?? []).filter(likert => likert.name == name)?.[0]?.score
           return score ?? null
         },
    
-        columnNameToCode(name) {
-          return name.toLowerCase().replace(/ /g, "_");
-        },
-
         close() {
           $(this.$el).hide();
         }
