@@ -125,7 +125,8 @@
           let list = this.instructor_metrics?.grading ?? [];
           if (list.length == 0) return {};
           console.log(list);
-          list = list.filter(data => data.academic_year == this.settings.filter.year);
+          let year = this?.settings?.filter?.year ?? 2025;
+          list = list.filter(data => data.academic_year == year);
           console.log(list);
           return list[0];
         }
