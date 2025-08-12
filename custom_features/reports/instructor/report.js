@@ -110,7 +110,7 @@
               id: '' + 0
             }
           ],
-          courses: [],
+          instructor_metrics: {},
           loading: false, //CHANGE: return this to true if this doesn't work
           menu: '',
           section_names: ['All'],
@@ -121,6 +121,12 @@
         }
       },
       computed: {
+        grading: function () {
+          let list = this.instructor_metrics?.grading;
+          list = list.filter(data => data.academic_year == this.settings.filter.year);
+          console.log(list);
+          return list[0];
+        }
       },
       methods: {
         async loadSettings(settings) {
@@ -181,7 +187,7 @@
             instructorId = 1840071;
             let url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.settings.filters.year}&account_id=${this.settings.account}`;
             let resp = await bridgetools.req(url);
-            console.log(resp);
+            this.instructor_metrics = resp;
             this.loading = false;
         },
 
