@@ -90,7 +90,7 @@
         }
         accounts.sort((a, b) => a.name.localeCompare(b.name));
         this.accounts.push(...accounts);
-        this.loadCourses();
+        this.loadInstructorMetrics();
       },
 
       data: function () {
@@ -101,9 +101,7 @@
             account: 0,
             sort_dir: 1,
             filters: {
-              year: '2024',
-              hide_zero_credits: true,
-              hide_zero_students: true
+              year: '2025'
             }
           },
           accounts: [
@@ -129,7 +127,7 @@
           const fallback = JSON.parse(JSON.stringify(settings));
           let saved = {};
           try {
-            const resp = await $.get(`/api/v1/users/self/custom_data/courses?ns=edu.btech.canvas`);
+            const resp = await $.get(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`);
             if (resp.data && resp.data.settings) {
               saved = resp.data.settings;
             } else {
@@ -166,7 +164,7 @@
         },
       
         async saveSettings(settings) {
-          await $.put(`/api/v1/users/self/custom_data/courses?ns=edu.btech.canvas`, {
+          await $.put(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`, {
             data: {
               settings: settings
             }
@@ -176,94 +174,7 @@
           date = new Date(Date.parse(date));
           return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         },
-        // does not currently handle pagination
-        async graphqlUngradedSubmissions(courseId) {
-          let queryString = 
-          `{
-            course(id: "${courseId}"){
-              courseCode
-              name
-               submissionsConnection(filter: {states: [submitted, ungraded, pending_review]}) {
-                nodes {
-                  enrollmentsConnection {
-                    nodes {
-                      _id
-                    }
-                  }
-                  submittedAt
-                }
-              }
-              _id
-            }
-          }`
-          let res = await $.post("/api/graphql", { query: queryString });
-          return res.data.course;
-        },
-        async graphqlEnrollments(courseId) {
-          let queryString = 
-          `{
-            course(id: "${courseId}"){
-              enrollmentsConnection(filter: {states: active, types: StudentEnrollment}, first: 100) {
-                nodes {
-                  _id
-                  createdAt
-                  startAt
-                  endAt
-                  grades {
-                    currentScore
-                    finalScore
-                  }
-                  user {
-                    name
-                    _id
-                  }
-
-                  section {
-                    name
-                  }
-                }
-              }
-              courseCode
-              name
-              _id
-            }
-          }`
-          let res = await $.post("/api/graphql", { query: queryString });
-          return res.data.course;
-        },
-        processCourses(courses) {
-          for (let c = 0 ; c < courses.length; c++) {
-            let course = courses[c];
-            course.students = course.num_students_credits;
-            course.grades = course.average_score;
-            course.objectives = this.calcLikert(course, 'Objectives');
-            course.relevance = this.calcLikert(course, 'Workplace Relevance');
-            course.examples = this.calcLikert(course, 'Examples');
-            course.recommendable = this.calcLikert(course, 'Recommendable');
-            course.recommendations = course.surveys.has_recommendations;
-          }
-          return courses;
-        },
-
-        async getMyCourses() {
-          // Fetch 50 course IDs at a time
-          let courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
-          let courseIds = courses.map(course => course.id);
-          console.log(courseIds);
-          let limit = 50;
-          for (let i = 0; i < courseIds.length; i += limit) {
-            const chunk = courseIds.slice(i, i + limit);
-            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}`;
-            for (let id of chunk) {
-              url += '&course_ids[]=' + id;
-            }
-
-            let chunkData = await bridgetools.req(url);
-            this.courses.push(...this.processCourses(chunkData.courses)) // Append each chunk
-          }
-        },
-
-        async loadCourses() {
+        async loadInstructorMetrics() {
           this.loading = true;
           this.courses = [];
           let limit = 50;
@@ -272,15 +183,10 @@
           } else {
             let instructorId = ENV.current_user_id;
             instructorId = 1840071;
-            let url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?limit=${limit}&excludes[]=content_items&year=${this.settings.filters.year}&account_id=${this.settings.account}`;
-            let resp = {};
-            do {
-              resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
-              this.courses.push(...this.processCourses(resp.courses));
-            } while (resp?.courses?.length == limit)
+            let url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.settings.filters.year}&account_id=${this.settings.account}`;
+            let resp = await bridgetools.req(url);
+            console.log(resp);
           }
-
-
           this.loading = false;
         },
 
