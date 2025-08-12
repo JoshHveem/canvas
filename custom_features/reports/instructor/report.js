@@ -175,19 +175,14 @@
           return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         },
         async loadInstructorMetrics() {
-          this.loading = true;
-          this.courses = [];
-          let limit = 50;
-          if (this.settings.account == 0) {
-            await this.getMyCourses();
-          } else {
+            this.loading = true;
+            this.courses = [];
             let instructorId = ENV.current_user_id;
             instructorId = 1840071;
             let url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.settings.filters.year}&account_id=${this.settings.account}`;
             let resp = await bridgetools.req(url);
             console.log(resp);
-          }
-          this.loading = false;
+            this.loading = false;
         },
 
         calcDaysBetweenDates(date1, date2=new Date()) {
