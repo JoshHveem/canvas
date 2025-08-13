@@ -3,11 +3,11 @@ Vue.component('instructor-metrics-interactions', {
     <div>
         <div
             class="btech-card btech-theme"
-            aria-label="Support Hours overview card"
+            aria-label="Interactions overview card"
         >
             <!-- Header -->
             <div class="btech-row" style="margin-bottom:12px;">
-                <h4 class="btech-card-title">Support Hours Overview</h4>
+                <h4 class="btech-card-title">Interactions Overview</h4>
                 <span class="btech-pill" :title="'Filters: ' + (year || '')">
                 {{ year || '—' }}
                 </span>
@@ -23,7 +23,7 @@ Vue.component('instructor-metrics-interactions', {
                     </div>
                 </div>
 
-                <!-- Instructor Support Hours -->
+                <!-- Instructor Interactions-->
                 <div class="btech-tile" title="The number of days that pass between a student message in inbox and the instructor's reply.">
                     <div class="btech-kpi-label">Days to Reply</div>
                     <div class="btech-kpi-value">
