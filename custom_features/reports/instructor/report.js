@@ -232,6 +232,7 @@
     loadCSS("https://reports.bridgetools.dev/style/main.css");
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/grading.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/support_hours.js");
     postLoad();
   }
   _init();
