@@ -72,34 +72,6 @@ Vue.component('instructor-metrics-surveys', {
       <div v-else class="btech-muted">No Likert items provided.</div>
     </div>
 
-    <!-- Recommendations Share -->
-    <div class="btech-grid-2" style="margin-bottom:8px;">
-      <div class="btech-tile">
-        <div class="btech-row" style="margin-bottom:6px;">
-          <div style="font-size:12px; color:#374151; font-weight:600;">Recommendations Present</div>
-          <div style="font-size:12px; color:#111827; font-weight:700;">{{ recPct }}%</div>
-        </div>
-        <div class="btech-progress" role="presentation">
-          <div
-            class="fill btech-fill-success"
-            :style="{ width: recPct + '%' }"
-            role="progressbar"
-            :aria-valuenow="recPct"
-            aria-valuemin="0" aria-valuemax="100"
-            aria-label="Recommendations share"
-          ></div>
-        </div>
-        <div class="btech-muted" style="margin-top:6px;">Percentage of responses that included a recommendation.</div>
-      </div>
-      <div class="btech-tile">
-        <div class="btech-row" style="margin-bottom:6px;">
-          <div style="font-size:12px; color:#374151; font-weight:600;">Response Volume</div>
-          <div style="font-size:12px; color:#111827; font-weight:700;">{{ numSurveys.toLocaleString() }}</div>
-        </div>
-        <div class="btech-muted">Helps contextualize percentages; low N may be volatile.</div>
-      </div>
-    </div>
-
     <div class="btech-muted">
       <span style="display:inline-block; margin-right:8px;">▲ Higher Avg Likert indicates better satisfaction</span>
       <span style="display:inline-block; margin-right:8px;">• All Likert scores are scaled 0–100% for display</span>
