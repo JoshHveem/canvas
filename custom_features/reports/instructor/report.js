@@ -127,6 +127,13 @@
           let year = this?.settings?.filters?.year ?? 2025;
           list = list.filter(data => data.academic_year == year);
           return list[0];
+        },
+        support_hours: function () {
+          let list = this.instructor_metrics?.support_hours?? [];
+          if (list.length == 0) return {};
+          let year = this?.settings?.filters?.year ?? 2025;
+          list = list.filter(data => data.academic_year == year);
+          return list[0];
         }
       },
       methods: {
