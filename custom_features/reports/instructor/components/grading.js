@@ -24,7 +24,7 @@ Vue.component('instructor-metrics-grading', {
                 </div>
                 <div class="btech-tile" title="Average score across graded submissions">
                 <div class="btech-kpi-label">Average Score</div>
-                <div class="btech-kpi-value">{{ Number(grading.average_score || 0).toFixed(1) }} <span class="btech-muted">pts</span></div>
+                <div class="btech-kpi-value">{{ (Number(grading.average_score || 0) * 100).toFixed(1) }} <span class="btech-muted">%</span></div>
                 </div>
                 <div class="btech-tile" title="Median days to return a grade">
                 <div class="btech-kpi-label">Days to Grade</div>
