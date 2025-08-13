@@ -1,12 +1,6 @@
 Vue.component('instructor-metrics-support-hours', {
   template: ` 
     <div>
-        <!-- Support Hours Card (scoped under #canvas-instructor-report-vue) -->
-        <div
-            class="btech-card btech-theme"
-            v-if="supportHours"
-            aria-label="Support hours overview card"
-        >
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
             <h4 class="btech-card-title">Support Hours Overview</h4>
@@ -100,7 +94,6 @@ Vue.component('instructor-metrics-support-hours', {
         <div class="btech-muted">
             <span style="display:inline-block; margin-right:8px;">▲ Higher is more total grading time contributed</span>
             <span style="display:inline-block; margin-right:8px;">• "Weighted" accounts for course/assignment factors</span>
-        </div>
         </div>
     </div>
   `,
