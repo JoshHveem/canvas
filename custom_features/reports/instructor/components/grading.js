@@ -1,4 +1,4 @@
-Vue.component('modal', {
+Vue.component('instructor-metrics-grading', {
   template: ` 
     <div>
         <!-- Grading Card -->
