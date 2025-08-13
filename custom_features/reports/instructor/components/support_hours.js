@@ -14,10 +14,10 @@ Vue.component('instructor-metrics-support-hours', {
             </div>
 
             <!-- KPI Tiles -->
-            <div class="btech-grid-3" style="margin-bottom:12px;">
+            <div class="btech-grid-2" style="margin-bottom:12px;">
                 <!-- Hours Graded -->
                 <div class="btech-tile" title="Estimated direct hours spent grading">
-                    <div class="btech-kpi-label">Hours Graded</div>
+                    <div class="btech-kpi-label">Assignment Hours Graded</div>
                     <div class="btech-kpi-value">
                         {{ Number(supportHours.hours_graded || 0).toFixed(1) }}
                         <span class="btech-muted">hrs</span>
