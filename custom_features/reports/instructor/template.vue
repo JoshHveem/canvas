@@ -241,7 +241,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <div style="font-size:12px; color:#374151; font-weight:600;">Graded with Rubric</div>
         <div style="font-size:12px; color:#111827; font-weight:700;">
-          {{ Number(grading.perc_graded_with_rubric || 0).toFixed(0) }}%
+          {{ (Number(grading.perc_graded_with_rubric || 0) * 100).toFixed(0) }}%
         </div>
       </div>
       <div style="height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
