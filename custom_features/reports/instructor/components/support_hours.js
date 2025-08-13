@@ -24,21 +24,12 @@ Vue.component('instructor-metrics-support-hours', {
                     </div>
                 </div>
 
-                <!-- Instructor Support Hours -->
-                <div class="btech-tile" title="Broader estimate of grading-related support time">
-                    <div class="btech-kpi-label">Support Hours</div>
-                    <div class="btech-kpi-value">
-                        {{ Number(supportHours.instructor_support_hours || 0).toFixed(1) }}
-                        <span class="btech-muted">hrs</span>
-                    </div>
-                </div>
-
                 <!-- Weighted Support Hours -->
-                <div class="btech-tile" title="Support hours adjusted by course/assignment weighting">
-                    <div class="btech-kpi-label">Weighted Support Hours</div>
+                <div class="btech-tile" title="The ammount of progress hours for which this instructor is responsible">
+                    <div class="btech-kpi-label">Credits Graded</div>
                     <div class="btech-kpi-value">
-                        {{ Number(supportHours.instructor_support_hours_weighted || 0).toFixed(1) }}
-                        <span class="btech-muted">hrs</span>
+                        {{ (Number(supportHours.instructor_support_hours_weighted || 0) / 30).toFixed(1) }}
+                        <span class="btech-muted">credits</span>
                     </div>
                 </div>
             </div>
@@ -48,9 +39,9 @@ Vue.component('instructor-metrics-support-hours', {
                 <!-- % Department (Unweighted) -->
                 <div class="btech-tile">
                     <div class="btech-row" style="margin-bottom:6px;">
-                        <div style="font-size:12px; color:#374151; font-weight:600;">Department Share</div>
+                        <div style="font-size:12px; color:#374151; font-weight:600;">Department Share Assignment Hours</div>
                         <div style="font-size:12px; color:#111827; font-weight:700;">
-                        {{ Math.round((supportHours.perc_instructor_support_hours || 0) * 100) }}%
+                        {{ Math.round((supportHours.perc_hours_graded || 0) * 100) }}%
                         </div>
                     </div>
                     <div class="btech-progress" role="presentation">
@@ -61,7 +52,7 @@ Vue.component('instructor-metrics-support-hours', {
                         :aria-valuenow="(supportHours.perc_instructor_support_hours || 0) * 100"
                         aria-valuemin="0"
                         aria-valuemax="100"
-                        :aria-label="'Department share ' + Math.round((supportHours.perc_instructor_support_hours || 0) * 100) + '%'"
+                        :aria-label="'Department share ' + Math.round((supportHours.perc_hours_graded || 0) * 100) + '%'"
                         ></div>
                     </div>
                     <div class="btech-muted" style="margin-top:6px;">
@@ -72,7 +63,7 @@ Vue.component('instructor-metrics-support-hours', {
                 <!-- % Department (Weighted) -->
                 <div class="btech-tile">
                     <div class="btech-row" style="margin-bottom:6px;">
-                        <div style="font-size:12px; color:#374151; font-weight:600;">Department Share (Weighted)</div>
+                        <div style="font-size:12px; color:#374151; font-weight:600;">Department Share Credits Graded</div>
                         <div style="font-size:12px; color:#111827; font-weight:700;">
                         {{ Math.round((supportHours.perc_instructor_support_hours_weighted || 0) * 100) }}%
                         </div>
