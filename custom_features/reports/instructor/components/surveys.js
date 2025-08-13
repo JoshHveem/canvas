@@ -1,6 +1,6 @@
 Vue.component('instructor-metrics-surveys', {
   props: {
-    surveysData: { // maps from :surveys-data or :survey-metrics (kebab → camel)
+    surveys: { // maps from :surveys-data or :survey-metrics (kebab → camel)
       type: Object,
       required: true
     },
@@ -8,10 +8,10 @@ Vue.component('instructor-metrics-surveys', {
   },
   computed: {
     yearLabel() { return this.year ?? '—'; },
-    numSurveys() { return Number(this.surveysData?.num_surveys || 0); },
-    likerts() { return Array.isArray(this.surveysData?.likerts) ? this.surveysData.likerts : []; },
+    numSurveys() { return Number(this.surveys?.num_surveys || 0); },
+    likerts() { return Array.isArray(this.surveys?.likerts) ? this.surveys.likerts : []; },
     recPct() {
-      const v = Number(this.surveysData?.has_recommendations || 0);
+      const v = Number(this.surveys?.has_recommendations || 0);
       return Math.max(0, Math.min(100, Math.round(v * 100)));
     },
     avgLikertPct() {
@@ -21,7 +21,7 @@ Vue.component('instructor-metrics-surveys', {
     }
   },
   template: `
-  <div class="btech-card btech-theme" v-if="surveysData" aria-label="Student surveys overview card">
+  <div class="btech-card btech-theme" v-if="surveys" aria-label="Student surveys overview card">
     <div class="btech-row" style="margin-bottom:12px;">
       <h4 class="btech-card-title">Student Surveys</h4>
       <span class="btech-pill" :title="'Filters: ' + yearLabel">{{ yearLabel }}</span>
