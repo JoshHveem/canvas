@@ -121,6 +121,14 @@
         }
       },
       computed: {
+        surveys: function () {
+          let list = this.instructor_metrics?.surveys ?? [];
+          if (list.length == 0) return {};
+          let year = this?.settings?.filters?.year ?? 2025;
+          list = list.filter(data => data.academic_year == year);
+          console.log(list);
+          return list[0];
+        },
         interactions: function () {
           let list = this.instructor_metrics?.interactions?? [];
           if (list.length == 0) return {};
@@ -242,6 +250,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/grading.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/support_hours.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/interactions.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/surveys.js");
     postLoad();
   }
   _init();

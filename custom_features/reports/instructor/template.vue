@@ -31,6 +31,7 @@
                     <instructor-metrics-grading v-if="grading" :grading="grading" :year="settings.filters.year"></instructor-metrics-grading>
                     <instructor-metrics-support-hours v-if="support_hours" :support-hours="support_hours" :year="settings.filters.year"></instructor-metrics-support-hours>
                     <instructor-metrics-interactions v-if="interactions" :interactions="interactions" :year="settings.filters.year"></instructor-metrics-interactions>
+                    <instructor-metrics-surveys v-if="surveys" :surveys="surveys" :year="settings.filters.year"></instructor-metrics-surveys>
                 </div>
             </div>
         </div>
