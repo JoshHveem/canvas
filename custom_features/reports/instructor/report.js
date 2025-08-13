@@ -124,11 +124,8 @@
         grading: function () {
           let list = this.instructor_metrics?.grading ?? [];
           if (list.length == 0) return {};
-          console.log(this.settings.filters);
-          console.log(list);
           let year = this?.settings?.filters?.year ?? 2025;
           list = list.filter(data => data.academic_year == year);
-          console.log(list);
           return list[0];
         }
       },
@@ -192,6 +189,7 @@
             let url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.settings.filters.year}&account_id=${this.settings.account}`;
             let resp = await bridgetools.req(url);
             this.instructor_metrics = resp;
+            console.log(resp);
             this.loading = false;
         },
 
