@@ -247,15 +247,15 @@
       <div style="height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
         <div
           :style="{
-            width: Math.max(0, Math.min(100, Number(grading.perc_graded_with_rubric * 100 || 0))) + '%',
+            width: Math.max(0, Math.min(100, Number(grading.perc_graded_with_rubric || 0) * 100)) + '%',
             height: '100%',
             background: '#10b981'
           }"
           role="progressbar"
-          :aria-valuenow="Number(grading.perc_graded_with_rubric * 100 || 0)"
+          :aria-valuenow="Number(grading.perc_graded_with_rubric || 0) * 100"
           aria-valuemin="0"
           aria-valuemax="100"
-          :aria-label="'Rubric usage ' + (grading.perc_graded_with_rubric * 100 || 0) + '%'"
+          :aria-label="'Rubric usage ' + (grading.perc_graded_with_rubric || 0) * 100 + '%'"
         ></div>
       </div>
       <div style="font-size:11px; color:#6b7280; margin-top:6px;">
