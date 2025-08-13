@@ -7,6 +7,7 @@ Vue.component('instructor-metrics-surveys', {
     year: { type: [String, Number], default: null }
   },
   computed: {
+    summary() { return this.surveys.summary; },
     yearLabel() { return this.year ?? '—'; },
     numSurveys() { return Number(this.surveys?.num_surveys || 0); },
     likerts() { return Array.isArray(this.surveys?.likerts) ? this.surveys.likerts : []; },
@@ -70,6 +71,15 @@ Vue.component('instructor-metrics-surveys', {
         </div>
       </div>
       <div v-else class="btech-muted">No Likert items provided.</div>
+    </div>
+
+    <div class="btech-tile" style="margin-bottom:8px;" title="Breakdown of each Likert item">
+      <div class="btech-row" style="margin-bottom:6px;">
+        <div style="font-size:12px; color:#374151; font-weight:600;">Free Response Summary</div>
+      </div>
+      <div class="btech-row" style="margin-bottom:6px;">
+        <div style="font-size:12px; color:#374151; font-weight:600;">{{ summary }}</div>
+      </div>
     </div>
 
     <div class="btech-muted">
