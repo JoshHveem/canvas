@@ -126,6 +126,7 @@
           if (list.length == 0) return {};
           let year = this?.settings?.filters?.year ?? 2025;
           list = list.filter(data => data.academic_year == year);
+          console.log(list);
           return list[0];
         },
         grading: function () {
