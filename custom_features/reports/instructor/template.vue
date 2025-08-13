@@ -29,7 +29,7 @@
                 </div>
                 <div>
                     <instructor-metrics-grading :grading="grading" :year="settings.filters.year"></instructor-metrics-grading>
-                    <instructor-metrics-support-hours :support-hours="support_hours" :year="settings.filters.year"></instructor-metrics-grading>
+                    <instructor-metrics-support-hours :support-hours="support_hours" :year="settings.filters.year"></instructor-metrics-support-hours>
                 </div>
             </div>
         </div>
