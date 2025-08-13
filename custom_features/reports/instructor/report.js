@@ -121,6 +121,13 @@
         }
       },
       computed: {
+        interactions: function () {
+          let list = this.instructor_metrics?.interactions?? [];
+          if (list.length == 0) return {};
+          let year = this?.settings?.filters?.year ?? 2025;
+          list = list.filter(data => data.academic_year == year);
+          return list[0];
+        },
         grading: function () {
           let list = this.instructor_metrics?.grading ?? [];
           if (list.length == 0) return {};
