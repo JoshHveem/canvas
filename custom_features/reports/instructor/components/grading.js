@@ -19,28 +19,24 @@ Vue.component('instructor-metrics-grading', {
             <!-- KPI Tiles -->
             <div class="btech-grid-3" style="margin-bottom:12px;">
                 <div class="btech-tile" title="Total number of submissions graded">
-                <div class="btech-kpi-label">Assignments Graded</div>
-                <div class="btech-kpi-value">{{ (grading.assignments_graded || 0).toLocaleString() }}</div>
+                  <div class="btech-kpi-label">Assignments Graded</div>
+                  <div class="btech-kpi-value">{{ (grading.assignments_graded || 0).toLocaleString() }}</div>
                 </div>
                 <div class="btech-tile" title="Average score across graded submissions">
-                <div class="btech-kpi-label">Average Score</div>
-                <div class="btech-kpi-value">{{ (Number(grading.average_score || 0) * 100).toFixed(1) }} <span class="btech-muted">%</span></div>
-                </div>
-                <div class="btech-tile" title="Median days to return a grade">
-                <div class="btech-kpi-label">Days to Grade</div>
-                <div class="btech-kpi-value">{{ Number(grading.days_to_grade || 0).toFixed(1) }} <span class="btech-muted">days</span></div>
+                  <div class="btech-kpi-label">Average Score</div>
+                  <div class="btech-kpi-value">{{ (Number(grading.average_score || 0) * 100).toFixed(1) }} <span class="btech-muted">%</span></div>
                 </div>
                 <div class="btech-tile" title="Average attempts students make before passing">
-                <div class="btech-kpi-label">Average Attempts</div>
-                <div class="btech-kpi-value">{{ Number(grading.average_attempts || 0).toFixed(2) }} <span class="btech-muted">per student</span></div>
+                  <div class="btech-kpi-label">Average Attempts</div>
+                  <div class="btech-kpi-value">{{ Number(grading.average_attempts || 0).toFixed(2) }} <span class="btech-muted">per student</span></div>
+                </div>
+                <div class="btech-tile" title="Median days to return a grade">
+                  <div class="btech-kpi-label">Days to Grade</div>
+                  <div class="btech-kpi-value">{{ Number(grading.days_to_grade || 0).toFixed(1) }} <span class="btech-muted">days</span></div>
                 </div>
                 <div class="btech-tile" title="Average number of comments per graded submission">
-                <div class="btech-kpi-label">Comments / Submission</div>
-                <div class="btech-kpi-value">{{ Number(grading.comments_per_submission_graded || 0).toFixed(2) }}</div>
-                </div>
-                <div class="btech-tile" title="Share of students needing more than one attempt (approximate)">
-                <div class="btech-kpi-label">&gt;1 Attempt (est.)</div>
-                <div class="btech-kpi-value">{{ Math.max(0, Math.min(100, Math.round(((Number(grading.average_attempts || 0) - 1) * 100)))) }}<span class="btech-muted">%</span></div>
+                  <div class="btech-kpi-label">Comments / Submission</div>
+                  <div class="btech-kpi-value">{{ Number(grading.comments_per_submission_graded || 0).toFixed(2) }}</div>
                 </div>
             </div>
 
