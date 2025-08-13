@@ -24,3 +24,78 @@
   font-size: 0.75em; 
   color: #fff;
 }
+#canvas-instructor-report-vue .btech-theme {
+  --card-bg: #fff;
+  --card-border: #e6e6e6;
+  --tile-border: #eef2f7;
+  --muted: #6b7280;
+  --text: #111827;
+  --text-strong: #1f2937;
+  --pill-bg: #f3f4f6;
+  --pill-border: #e5e7eb;
+  --accent: #2563eb;
+  --success: #10b981;
+  --shadow: 0 1px 2px rgba(0,0,0,0.06);
+  --radius-lg: 12px;
+  --radius-md: 10px;
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --pad-md: 16px;
+  --pad-sm: 10px;
+}
+
+#canvas-instructor-report-vue .btech-card {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--pad-md);
+  margin: 12px 0;
+  box-shadow: var(--shadow);
+}
+
+#canvas-instructor-report-vue .btech-tile {
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: var(--pad-sm);
+  background: #fafafa;
+}
+
+#canvas-instructor-report-vue .btech-card-title { margin: 0; font-size: 16px; font-weight: 700; color: var(--text-strong); }
+#canvas-instructor-report-vue .btech-kpi-label  { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+#canvas-instructor-report-vue .btech-kpi-value  { font-size: 20px; font-weight: 800; color: var(--text); }
+#canvas-instructor-report-vue .btech-muted      { font-size: 11px; color: var(--muted); }
+
+#canvas-instructor-report-vue .btech-row { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-sm); }
+#canvas-instructor-report-vue .btech-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--gap-md); }
+#canvas-instructor-report-vue .btech-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--gap-md); }
+
+#canvas-instructor-report-vue .btech-pill {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1;
+  color: #374151;
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+#canvas-instructor-report-vue .btech-progress {
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+#canvas-instructor-report-vue .btech-progress > .fill { height: 100%; }
+
+#canvas-instructor-report-vue .btech-fill-accent { background: var(--accent); }
+#canvas-instructor-report-vue .btech-fill-success { background: var(--success); }
+
+@media (max-width: 720px) {
+  #canvas-instructor-report-vue .btech-grid-3,
+  #canvas-instructor-report-vue .btech-grid-2 { grid-template-columns: 1fr; }
+}
