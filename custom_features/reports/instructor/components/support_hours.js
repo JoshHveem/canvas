@@ -4,8 +4,8 @@ Vue.component('instructor-metrics-support-hours', {
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
             <h4 class="btech-card-title">Support Hours Overview</h4>
-            <span class="btech-pill" :title="'Filters: ' + (settings.filters?.year || '')">
-            {{ settings.filters?.year || '—' }}
+            <span class="btech-pill" :title="'Filters: ' + (year || '')">
+            {{ year || '—' }}
             </span>
         </div>
 
