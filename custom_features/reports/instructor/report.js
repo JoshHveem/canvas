@@ -233,6 +233,7 @@
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/grading.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/support_hours.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/interactions.js");
     postLoad();
   }
   _init();
