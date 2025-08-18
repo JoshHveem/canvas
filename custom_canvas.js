@@ -362,7 +362,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       ////Ran into issue where Vue wasn't loading properly so nobody could do anything.
       //if (IS_ISD) externalFeature('https://flags.bridgetools.dev/main.js');
 
-      //this should be working now
+      //this should be working no2w
       feature('reports/accreditation-2', {}, /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
       // feature('reports/accreditation', {}, /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
 
@@ -371,4 +371,54 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       // if (IS_ME) featureISD("cleoducktra/quiz-questions", {}, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/);
     });
   }
+
+  // main sidebar
+  function createSideMenuButton(text, url, svg) {
+    let cssText = text.toLowerCase().replace(" ", "-");
+    let sideMenu = $("#menu");
+    sideMenu.append(`
+      <li class="ic-app-header__menu-list-item">
+        <a 
+          id="global_nav_${cssText}_link" 
+          role="button" 
+          class="ic-app-header__menu-list-link" 
+          data-track-category="${text}" 
+          data-track-label="${text} button" 
+          href="${url}"
+        >
+          <div class="menu-item-icon-container" role="presentation">
+            ${svg}
+          </div>
+          <div class="menu-item__text">
+            ${text}
+          </div>
+        </a>      
+      </li>
+    `);
+  }
+
+  createSideMenuButton('Custom Features', 'https://view.monday.com/9818571309-60a24421d8442789fed38ceaaaef4e57?r=use1', `<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 120 120"
+    width="100%"
+  >
+  <polygon
+      points="60,2 115,35 115,85 60,118 5,85 5,35"
+      fill="none"
+      stroke="white"
+      stroke-width="10"
+    />
+    <text
+      x="60"
+      y="80"
+      font-family="Arial, sans-serif"
+      text-anchor="middle"
+      font-size="50"
+      font-weight="bold"
+      fill="white"
+    >
+      ISD
+    </text>
+  </svg>
+  `);
 })();
