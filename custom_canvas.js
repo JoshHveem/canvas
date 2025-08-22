@@ -53,20 +53,31 @@ if (ENV.current_user_roles !== null) {
 }
 
 function getCourseCodeFromEnv() {
-  let longName = ENV?.COURSE?.long_name ?? '';
+  let courseCode = '';
+  let match;
+
   // Regular expression breakdown:
   // - /-\s*   : Matches a dash followed by any whitespace
   // - ([A-Za-z]{4}\s\d{4}) : Captures exactly 4 letters, a space, and 4 digits (the course code)
   // - $ : Ensures the match happens at the end of the string
-  var courseCodeRegex = /-\s*([A-Za-z]{4}\s\d{4})$/;
+  let courseCodeRegex = /-\s*([A-Za-z]{4}\s\d{4})$/;
+  let longName = ENV?.COURSE?.long_name ?? '';
 
-  var match = longName.match(courseCodeRegex);
+  match = longName.match(courseCodeRegex);
   if(match) {
-    var courseCode = match[1]; // Captured course code, e.g., "ATTE 1010"
+    courseCode = match[1]; // Captured course code, e.g., "ATTE 1010"
     return courseCode;
-  } else {
-    return undefined;
+  } 
+
+  let breadcrumbsRegex = /.*?([A-Za-z]{4}\s\d{4}).*?$/;
+  let breadcrumbs = $('#breadcrumbs').text();
+  match = breadcrumbs.match(breadcrumbsRegex);
+  if (match) {
+    courseCode = match[1]
+    return
   }
+
+  return courseCode;
 }
 
 var FEATURES = {};
