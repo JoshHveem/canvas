@@ -91,6 +91,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
     if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
+      console.log(COURSE_CODE)
       let DEPT_CODE = COURSE_CODE.substring(0, 4);
       let imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.jpg`;
 
