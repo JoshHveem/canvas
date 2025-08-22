@@ -64,6 +64,7 @@ function getCourseCodeFromEnv() {
   let longName = ENV?.COURSE?.long_name ?? '';
 
   match = longName.match(courseCodeRegex);
+  console.log(match);
   if(match) {
     courseCode = match[1]; // Captured course code, e.g., "ATTE 1010"
     return courseCode;
@@ -72,11 +73,13 @@ function getCourseCodeFromEnv() {
   let breadcrumbsRegex = /.*?([A-Za-z]{4}\s\d{4}).*?$/;
   let breadcrumbs = $('#breadcrumbs').text();
   match = breadcrumbs.match(breadcrumbsRegex);
+  console.log(match);
   if (match) {
-    courseCode = match[1]
+    courseCode = match[1];
     return
   }
 
+  console.log(courseCode);
   return courseCode;
 }
 
