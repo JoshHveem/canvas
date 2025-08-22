@@ -88,15 +88,16 @@ $(document).ready(async function () {
         try {
             let data = await getGraphiCourseAssignments(courseId);
             let courseCode = data.course_code;
-            let year = extractYear(data.term_name);
-            let hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
+            let HOURS = COURSE_HOURS?.[courseCode] ?? {};
+            console.log(HOURS);
+            let hours = HOURS?.hours ?? 0;
             //Check to see if a previous year can be found if current year doesn't work
             for (let i = 1; i < 5; i++) {
                 if (hours == undefined) hours = COURSE_HOURS?.[courseCode].hours;
             }
             if (hours === undefined) hours = 0;
 
-            let credits = COURSE_HOURS?.[courseCode]?.credits ?? 0;
+            let credits = HOURS?.credits ?? 0;
             if (credits == 0) credits = hours / 30;
 
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
