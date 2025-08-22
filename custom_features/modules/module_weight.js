@@ -89,16 +89,16 @@ $(document).ready(async function () {
             let data = await getGraphiCourseAssignments(courseId);
             let courseCode = data.course_code;
             let year = extractYear(data.term_name);
-            let hours = 0;
-            if (year !== null) {
-            hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
+            let hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
             //Check to see if a previous year can be found if current year doesn't work
             for (let i = 1; i < 5; i++) {
                 if (hours == undefined) hours = COURSE_HOURS?.[courseCode].hours;
             }
             if (hours === undefined) hours = 0;
-            }
-            let credits = hours / 30;
+
+            let credits = COURSE_HOURS?.[courseCode]?.credits ?? 0;
+            if (credits == 0) credits = hours / 30;
+
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 group.assignments = group.assignmentsConnection.nodes;
                 group.points_possible = 0;
