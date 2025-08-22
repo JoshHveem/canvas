@@ -132,9 +132,9 @@ $(document).ready(async function () {
     }
     let courseId = ENV.COURSE_ID ?? ENV.course_id;
     let data;
-    console.log(courseId);
     if (courseId !== undefined) {
         data = await getAssignmentsData(courseId);
+        console.log(data);
     }
 
     if (data?.course_credits > 0) {
