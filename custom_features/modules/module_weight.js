@@ -89,7 +89,6 @@ $(document).ready(async function () {
 
         try {
             let data = await getGraphiCourseAssignments(courseId);
-            console.log(data);
             let courseCode = data.course_code;
             let HOURS = COURSE_HOURS?.[courseCode] ?? {};
             let hours = HOURS?.hours ?? 0;
@@ -116,8 +115,6 @@ $(document).ready(async function () {
                 totalPoints += group.points_possible;
                 return group;
             });
-            console.log(data);
-            console.log(totalPoints);
 
             assignmentGroups = assignmentGroups.map(group => {
                 group.credits = (group.groupWeight / 100) * credits;
@@ -125,7 +122,6 @@ $(document).ready(async function () {
 
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
-                console.log(group);
                 return group;
             });
             for (let group of assignmentGroups) {
@@ -144,14 +140,12 @@ $(document).ready(async function () {
         }
     }
     let courseId = ENV.COURSE_ID ?? ENV.course_id;
-    console.log(courseId);
     let data;
     if (courseId !== undefined) {
         data = await getAssignmentsData(courseId);
     }
 
     if (data?.course_credits > 0) {
-        console.log(data);
         let totalCredits = 0;
         let sortedModuleKeys = Object.keys(data.modules).sort((a, b) => 
             data.modules[a].position - data.modules[b].position
@@ -165,7 +159,6 @@ $(document).ready(async function () {
                 let assignment = data.assignments[aid];
                 credits += assignment.credits;
                 totalCredits += assignment.credits;
-                console.log(credits + ' / ' + totalCredits);
             }
             let coursePercentage = credits / data.course_credits;
             let totalcoursePercentage = totalCredits / data.course_credits;
