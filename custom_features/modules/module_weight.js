@@ -101,7 +101,7 @@ $(document).ready(async function () {
             let credits = HOURS?.credits ?? 0;
             if (credits == 0) credits = hours / 30;
             let totalPoints = 0;
-            for (let g in data.assignment_groups) {
+            let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 let group = data.assignment_groups[g];
                 group.points_possible = 0;
                 group.assignments = group.assignmentsConnection.nodes;
@@ -114,15 +114,16 @@ $(document).ready(async function () {
                     }
                 }
                 totalPoints += group.points_possible;
-            }
+                return group;
+            });
             console.log(totalPoints);
 
-            let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
+            assignmentGroups = assignmentGroups.map(group => {
                 group.credits = (group.groupWeight / 100) * credits;
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
                 else if (data.group_weights) group.credits_per_point = group.credits * (group.points_possible / totalPoints);
-            return group;
+                return group;
             });
             for (let group of assignmentGroups) {
                 for (let assignment of group.assignments) {
