@@ -114,6 +114,7 @@ $(document).ready(async function () {
                 }
                 totalPoints += group.points_possible;
             }
+            console.log(totalPoints);
 
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 group.points_possible = 0;
