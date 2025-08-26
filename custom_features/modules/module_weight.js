@@ -123,7 +123,7 @@ $(document).ready(async function () {
                 group.credits = (group.groupWeight / 100) * credits;
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
-                else if (data.group_weights) group.credits_per_point = group.credits * (group.points_possible / totalPoints);
+                else if (!data.group_weights) group.credits_per_point = group.credits * (group.points_possible / totalPoints);
                 return group;
             });
             for (let group of assignmentGroups) {
