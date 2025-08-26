@@ -118,7 +118,7 @@ $(document).ready(async function () {
             });
             for (let group of assignmentGroups) {
                 for (let assignment of group.assignments) {
-                    console.log(`${assignment.name}: ${assignment.pointsPossible} pts  x ${group.credits_per_point} crd / pt (${assignment.published})`)
+                    console.log(`${assignment.name}: ${assignment.pointsPossible} pts  x ${group.credits_per_point} crd / pt out of ${credits}(${assignment.published})`)
                     assignmentsDict[assignment._id] = {
                         id: assignment._id,
                         points_possible: assignment.published ? assignment.pointsPossible : 0,
