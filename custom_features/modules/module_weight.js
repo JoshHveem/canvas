@@ -121,9 +121,10 @@ $(document).ready(async function () {
 
             assignmentGroups = assignmentGroups.map(group => {
                 group.credits = (group.groupWeight / 100) * credits;
+                if (!data.group_weights) group.credits = group.credits * (group.points_possible / totalPoints);
+
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
-                else if (!data.group_weights) group.credits_per_point = group.credits * (group.points_possible / totalPoints);
                 console.log(group);
                 return group;
             });
