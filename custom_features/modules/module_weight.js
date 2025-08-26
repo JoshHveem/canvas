@@ -89,7 +89,6 @@ $(document).ready(async function () {
             let data = await getGraphiCourseAssignments(courseId);
             let courseCode = data.course_code;
             let HOURS = COURSE_HOURS?.[courseCode] ?? {};
-            console.log(HOURS);
             let hours = HOURS?.hours ?? 0;
             //Check to see if a previous year can be found if current year doesn't work
             for (let i = 1; i < 5; i++) {
@@ -101,6 +100,7 @@ $(document).ready(async function () {
             if (credits == 0) credits = hours / 30;
 
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
+                console.log(group)
                 group.assignments = group.assignmentsConnection.nodes;
                 group.points_possible = 0;
                 group.credits = (group.groupWeight / 100) * credits;
@@ -118,7 +118,6 @@ $(document).ready(async function () {
             });
             for (let group of assignmentGroups) {
                 for (let assignment of group.assignments) {
-                    console.log(`${assignment.name}: ${assignment.pointsPossible} pts  x ${group.credits_per_point} crd / pt out of ${credits}(${assignment.published})`)
                     assignmentsDict[assignment._id] = {
                         id: assignment._id,
                         points_possible: assignment.published ? assignment.pointsPossible : 0,
