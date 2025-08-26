@@ -16,6 +16,7 @@ $(document).ready(async function () {
                     term {
                         name
                     }
+                    applyGroupWeights
                     assignmentGroupsConnection {
                         nodes {
                             _id
@@ -55,7 +56,8 @@ $(document).ready(async function () {
             if (course == undefined) return {};
             courseData.name = course?.name;
             courseData.course_code = course?.courseCode;
-            courseData.term_name = course?.term?.name
+            courseData.term_name = course?.term?.name;
+            courseData.group_weights = course?.applyGroupWeights;
             const assignmentGroups = course?.assignmentGroupsConnection?.nodes;
 
             // Push current assignmentGroups to results (deep merge may be needed depending on structure)
@@ -98,12 +100,9 @@ $(document).ready(async function () {
 
             let credits = HOURS?.credits ?? 0;
             if (credits == 0) credits = hours / 30;
-
-            let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
-                console.log(group)
-                group.assignments = group.assignmentsConnection.nodes;
-                group.points_possible = 0;
-                group.credits = (group.groupWeight / 100) * credits;
+            let totalPoints = 0;
+            for (let g in data.assignment_groups) {
+                let group = data.assignment_groups[g];
                 for (let assignment of group.assignments) {
                     if (assignment.published) group.points_possible += assignment.pointsPossible;
                     let modules = assignment?.quiz?.modules ?? assignment?.modules;
@@ -112,8 +111,16 @@ $(document).ready(async function () {
                         modulesDict[module._id].assignments.push(assignment._id);
                     }
                 }
+                totalPoints += group.points_possible;
+            }
+
+            let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
+                group.assignments = group.assignmentsConnection.nodes;
+                group.points_possible = 0;
+                group.credits = (group.groupWeight / 100) * credits;
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
+                else if (data.group_weights) group.credits_per_point = group.credits * (group.points_possible / totalPoints);
             return group;
             });
             for (let group of assignmentGroups) {
