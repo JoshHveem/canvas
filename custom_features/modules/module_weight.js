@@ -136,10 +136,10 @@ $(document).ready(async function () {
     let data;
     if (courseId !== undefined) {
         data = await getAssignmentsData(courseId);
-        console.log(data);
     }
 
     if (data?.course_credits > 0) {
+        console.log(data);
         let totalCredits = 0;
         let sortedModuleKeys = Object.keys(data.modules).sort((a, b) => 
             data.modules[a].position - data.modules[b].position
