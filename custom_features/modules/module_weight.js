@@ -102,7 +102,6 @@ $(document).ready(async function () {
             if (credits == 0) credits = hours / 30;
             let totalPoints = 0;
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
-                let group = data.assignment_groups[g];
                 group.points_possible = 0;
                 group.assignments = group.assignmentsConnection.nodes;
                 for (let assignment of group.assignments) {
