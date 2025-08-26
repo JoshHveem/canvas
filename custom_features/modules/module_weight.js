@@ -153,6 +153,7 @@ $(document).ready(async function () {
                 let assignment = data.assignments[aid];
                 credits += assignment.credits;
                 totalCredits += assignment.credits;
+                console.log(credits + ' / ' + totalCredits);
             }
             let coursePercentage = credits / data.course_credits;
             let totalcoursePercentage = totalCredits / data.course_credits;
