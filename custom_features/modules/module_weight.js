@@ -103,6 +103,7 @@ $(document).ready(async function () {
             let totalPoints = 0;
             for (let g in data.assignment_groups) {
                 let group = data.assignment_groups[g];
+                group.points_possible = 0;
                 group.assignments = group.assignmentsConnection.nodes;
                 for (let assignment of group.assignments) {
                     if (assignment.published) group.points_possible += assignment.pointsPossible;
@@ -117,7 +118,6 @@ $(document).ready(async function () {
             console.log(totalPoints);
 
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
-                group.points_possible = 0;
                 group.credits = (group.groupWeight / 100) * credits;
                 group.credits_per_point = 0;
                 if (group.points_possible > 0) group.credits_per_point = group.credits / group.points_possible;
