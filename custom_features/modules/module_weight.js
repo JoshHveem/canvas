@@ -89,6 +89,7 @@ $(document).ready(async function () {
 
         try {
             let data = await getGraphiCourseAssignments(courseId);
+            console.log(data);
             let courseCode = data.course_code;
             let HOURS = COURSE_HOURS?.[courseCode] ?? {};
             let hours = HOURS?.hours ?? 0;
