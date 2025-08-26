@@ -115,7 +115,7 @@ $(document).ready(async function () {
                 totalPoints += group.points_possible;
                 return group;
             });
-            console.log(group);
+            console.log(data);
             console.log(totalPoints);
 
             assignmentGroups = assignmentGroups.map(group => {
