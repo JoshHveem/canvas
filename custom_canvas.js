@@ -88,7 +88,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
     if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
-      console.log(COURSE_CODE)
       let DEPT_CODE = COURSE_CODE.substring(0, 4);
       let imageUrl = `https://bridgetools.dev/canvas/media/course-banners/${DEPT_CODE}.jpg`;
 
@@ -235,7 +234,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         feature('quizzes/printing_accessibility', {}, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/);
         feature("modules/show_undelete", {}, /^\/courses\/[0-9]+(\/modules){0,1}$/);
         feature("sections/conclude_all", {}, /^\/courses\/[0-9]+\/sections\/[0-9]+/);
-        featureISD('transfer_navigation', {}, /^\/courses\/[0-9]+\/settings/);
+        feature('transfer_navigation', {}, /^\/courses\/[0-9]+\/settings/);
       } else {
         // feature("check_linked_item_completed", {}, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
       }
