@@ -436,5 +436,32 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         </text>
       </svg>`
     );
+    createSideMenuButton(
+      'Contact ISD',
+      'https://teams.microsoft.com/l/chat/0/0?users=jhveem@btech.edu,katie.stapley@btech.edu,logan.mano@btech.edu,mikaela.wilkins@btech.edu',
+      `<svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 120 120"
+        width="100%"
+      >
+        <polygon
+          points="60,2 115,35 115,85 60,118 5,85 5,35"
+          fill="none"
+          stroke="white"
+          stroke-width="10"
+        />
+        <text
+          x="60"
+          y="80"
+          font-family="Arial, sans-serif"
+          text-anchor="middle"
+          font-size="50"
+          font-weight="bold"
+          fill="white"
+        >
+          ? 
+        </text>
+      </svg>`
+    )
   }
 })();
