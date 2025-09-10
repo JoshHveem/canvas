@@ -108,7 +108,7 @@
           const base = {
             year: this.settings.filters.year,
             account: this.settings.account,
-            instructorId: ENV.current_user_id  // optional; child can use or ignore
+            instructorId: 1840071 // ENV.current_user_id  // optional; child can use or ignore
           };
           return base; // other reports can use what they need from base
         },
