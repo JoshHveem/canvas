@@ -1,4 +1,12 @@
 Vue.component('department-report', {
+  template: `
+    <div>
+      <!-- Could show a loading indicator if you like -->
+      <div v-if="!loading && (!grading || !Object.keys(grading).length) && (!surveys || !Object.keys(surveys).length)" class="btech-card btech-theme">
+        <div class="btech-muted" style="text-align:center;">No department data for {{ year }}.</div>
+      </div>
+    </div>
+  `,
   props: {
     year: { type: [Number, String], required: true },
     account: { type: [Number, String], required: true },
@@ -7,30 +15,42 @@ Vue.component('department-report', {
   data() {
     return {
       loading: false,
-      instructor_metrics: {}
+      department_metrics: {}
     }
   },
   computed: {
-    surveys() {
-      let list = this.instructor_metrics?.surveys ?? [];
+    cpl() {
+      let list = this.department_metrics?.cpl ?? [];
+      if (!list.length) return {};
+      const yr = Number(this.year) || new Date().getFullYear();
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    courseSurveys() {
+      let list = this.department_metrics?.course_surveys ?? [];
+      if (!list.length) return {};
+      const yr = Number(this.year) || new Date().getFullYear();
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    instructorSurveys() {
+      let list = this.department_metrics?.instructor_surveys ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     interactions() {
-      let list = this.instructor_metrics?.interactions ?? [];
+      let list = this.department_metrics?.interactions ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     grading() {
-      let list = this.instructor_metrics?.grading ?? [];
+      let list = this.department_metrics?.grading ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     supportHours() {
-      let list = this.instructor_metrics?.support_hours ?? [];
+      let list = this.department_metrics?.support_hours ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
@@ -49,11 +69,11 @@ Vue.component('department-report', {
         this.loading = true;
         const url = `https://reports.bridgetools.dev/api/departments?year=${this.year}&dept=${this.account}`;
         const resp = await bridgetools.req(url);
-        this.instructor_metrics = resp || {};
+        this.department_metrics = resp || {};
         // console.log('Instructor metrics', resp);
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
-        this.instructor_metrics = {};
+        this.department_metrics = {};
       } finally {
         this.loading = false;
       }
@@ -69,13 +89,4 @@ Vue.component('department-report', {
       return score ?? null;
     }
   },
-  template: `
-    <div>
-      <!-- Could show a loading indicator if you like -->
-      <div>Coming Soon</div>
-      <div v-if="!loading && (!grading || !Object.keys(grading).length) && (!surveys || !Object.keys(surveys).length)" class="btech-card btech-theme">
-        <div class="btech-muted" style="text-align:center;">No department data for {{ year }}.</div>
-      </div>
-    </div>
-  `
 });
