@@ -22,11 +22,11 @@ Vue.component('instructor-metrics-grading', {
                   <div class="btech-kpi-label">Assignments Graded</div>
                   <div class="btech-kpi-value">{{ (grading.assignments_graded || 0).toLocaleString() }}</div>
                 </div>
-                <div class="btech-tile" title="Average attempts students make before passing">
+                <div class="btech-tile" title="Average attempts students make before passing (Goal: < 1.1">
                   <div class="btech-kpi-label">Average Attempts</div>
                   <div class="btech-kpi-value">{{ Number(grading.average_attempts || 0).toFixed(2) }} <span class="btech-muted">per student</span></div>
                 </div>
-                <div class="btech-tile" title="Median days to return a grade">
+                <div class="btech-tile" title="Median days to return a grade (Goal: < 2)">
                   <div class="btech-kpi-label">Days to Grade</div>
                   <div class="btech-kpi-value">{{ Number(grading.days_to_grade || 0).toFixed(1) }} <span class="btech-muted">days</span></div>
                 </div>
@@ -37,11 +37,11 @@ Vue.component('instructor-metrics-grading', {
                         <span class="btech-muted">credits</span>
                     </div>
                 </div>
-                <div class="btech-tile" title="Average number of comments per graded submission">
+                <div class="btech-tile" title="Average number of comments per graded submission (Goal: >= 1)">
                   <div class="btech-kpi-label">Comments / Submission</div>
                   <div class="btech-kpi-value">{{ Number(grading.comments_per_submission_graded || 0).toFixed(2) }}</div>
                 </div>
-                <div class="btech-tile" title="The number of days that pass between a student message in inbox and the instructor's reply.">
+                <div class="btech-tile" title="The number of days that pass between a student message in inbox and the instructor's reply. (Goal: < 2)">
                     <div class="btech-kpi-label">Days to Reply</div>
                     <div class="btech-kpi-value">
                         {{ Number(interactions.days_to_reply || 0).toFixed(1) }}
