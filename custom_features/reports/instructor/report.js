@@ -99,6 +99,7 @@
           settings: {
             anonymous: false,
             account: 0,
+            reportType: 'instructor',
             sort_dir: 1,
             filters: {
               year: '2025'
@@ -117,7 +118,13 @@
           section_filter: 'All',
           end_date_filter: true,
           hide_missing_end_date: true,
-          hide_past_end_date: false 
+          hide_past_end_date: false,
+          reportTypes: [
+            { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
+            { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
+            { value: 'course',     label: 'Course',     component: 'course-report',     title: 'Course Report' },
+            { value: 'student',    label: 'Student',    component: 'student-report',    title: 'Student Report' },
+          ],
         }
       },
       computed: {
@@ -150,9 +157,33 @@
           let year = this?.settings?.filters?.year ?? 2025;
           list = list.filter(data => data.academic_year == year);
           return list[0];
-        }
+        },
+        currentReportMeta() {
+          const fallback = this.reportTypes[0];
+          return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
+        },
+        currentReportProps() {
+          const base = { year: this.settings.filters.year };
+
+          // Only the instructor report needs the full set right now
+          if (this.currentReportMeta.value === 'instructor') {
+            return Object.assign({}, base, {
+              grading: this.grading,
+              interactions: this.interactions,
+              supportHours: this.support_hours,
+              surveys: this.surveys
+            });
+          }
+          return base;
+        },
       },
       methods: {
+        onReportChange() {
+          this.saveSettings(this.settings);
+          // Optionally reload data per report type
+          // if (this.settings.reportType === 'instructor') this.loadInstructorMetrics();
+          // else if (this.settings.reportType === 'department') this.loadDepartmentMetrics();
+        },
         async loadSettings(settings) {
           const fallback = JSON.parse(JSON.stringify(settings));
           let saved = {};
@@ -160,39 +191,26 @@
             const resp = await $.get(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`);
             if (resp.data && resp.data.settings) {
               saved = resp.data.settings;
-            } else {
-              console.warn('No saved settings found; using defaults.');
             }
-          } catch (err) {
-            console.warn('Failed to load saved settings; using defaults.', err);
-          }
+          } catch (err) { /* keep defaults */ }
 
-          // Deep merge:
-          const merged = JSON.parse(JSON.stringify(fallback)); // start fresh
+          const merged = JSON.parse(JSON.stringify(fallback));
           merged.account = saved.account ?? fallback.account;
+          merged.reportType = saved.reportType ?? fallback.reportType; // 👈 NEW
 
-          // Merge filters:
-          if (saved.filters) {
-            merged.filters = Object.assign({}, fallback.filters, saved.filters);
-          } else {
-            merged.filters = JSON.parse(JSON.stringify(fallback.filters));
-          }
+          if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
+          else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
 
-          if (merged.anonymous === "true") merged.anonymous = true;
-          else merged.anonymous = false;
-
-          // 🔑 Normalize: convert string "true"/"false" to real booleans
+          if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
           for (const key in merged.filters) {
             const val = merged.filters[key];
             if (val === "true") merged.filters[key] = true;
             else if (val === "false") merged.filters[key] = false;
           }
-
-          // hard override of whatever was saved. It was too confusing, especially if you select a section in one course that doesn't exist in another.
           merged.filters.section = 'All';
           return merged;
         },
-      
+
         async saveSettings(settings) {
           await $.put(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`, {
             data: {
@@ -251,6 +269,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/support_hours.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/interactions.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/menu.js");
     postLoad();
   }
   _init();
