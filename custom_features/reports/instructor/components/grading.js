@@ -103,7 +103,8 @@ Vue.component('instructor-metrics-grading', {
   `,
   props: {
     year: 0,
-    grading: {}
+    grading: {},
+    supportHours: {}
   },
   computed: {
   },
