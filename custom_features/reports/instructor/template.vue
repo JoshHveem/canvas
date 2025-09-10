@@ -28,8 +28,7 @@
                 >
                 </div>
                 <div>
-                    <instructor-metrics-grading v-if="grading" :support-hours="support_hours" :grading="grading" :year="settings.filters.year"></instructor-metrics-grading>
-                    <instructor-metrics-interactions v-if="interactions" :interactions="interactions" :year="settings.filters.year"></instructor-metrics-interactions>
+                    <instructor-metrics-grading v-if="grading" :interactions="interactions" :support-hours="support_hours" :grading="grading" :year="settings.filters.year"></instructor-metrics-grading>
                     <instructor-metrics-surveys v-if="surveys" :surveys="surveys" :year="settings.filters.year"></instructor-metrics-surveys>
                 </div>
             </div>

@@ -30,15 +30,22 @@ Vue.component('instructor-metrics-grading', {
                   <div class="btech-kpi-label">Days to Grade</div>
                   <div class="btech-kpi-value">{{ Number(grading.days_to_grade || 0).toFixed(1) }} <span class="btech-muted">days</span></div>
                 </div>
-                <div class="btech-tile" title="Average number of comments per graded submission">
-                  <div class="btech-kpi-label">Comments / Submission</div>
-                  <div class="btech-kpi-value">{{ Number(grading.comments_per_submission_graded || 0).toFixed(2) }}</div>
-                </div>
                 <div class="btech-tile" title="The ammount of progress hours for which this instructor is responsible">
                     <div class="btech-kpi-label">Credits Graded</div>
                     <div class="btech-kpi-value">
                         {{ (Number(supportHours.instructor_support_hours_weighted || 0) / 30).toFixed(1) }}
                         <span class="btech-muted">credits</span>
+                    </div>
+                </div>
+                <div class="btech-tile" title="Average number of comments per graded submission">
+                  <div class="btech-kpi-label">Comments / Submission</div>
+                  <div class="btech-kpi-value">{{ Number(grading.comments_per_submission_graded || 0).toFixed(2) }}</div>
+                </div>
+                <div class="btech-tile" title="The number of days that pass between a student message in inbox and the instructor's reply.">
+                    <div class="btech-kpi-label">Days to Reply</div>
+                    <div class="btech-kpi-value">
+                        {{ Number(interactions.days_to_reply || 0).toFixed(1) }}
+                        <span class="btech-muted">days</span>
                     </div>
                 </div>
             </div>
@@ -104,7 +111,8 @@ Vue.component('instructor-metrics-grading', {
   props: {
     year: 0,
     grading: {},
-    supportHours: {}
+    supportHours: {},
+    interactions: {}
   },
   computed: {
   },
