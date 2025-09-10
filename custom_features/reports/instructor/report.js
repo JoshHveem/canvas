@@ -179,6 +179,7 @@
 
     // The instructor report wrapper now owns its data & methods:
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/instructor-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/department-report.js");
 
     postLoad();
   }
