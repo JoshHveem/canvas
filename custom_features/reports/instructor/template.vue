@@ -1,37 +1,60 @@
 <template>
-    <div class='btech-modal btech-canvas-report' style='display: inline-block;'>
-        <div class='btech-modal-content'>
-            <div class='btech-modal-content-inner'>
-                <span class='btech-close' v-on:click='close()'>&times;</span>
-                <h3 style='text-align: center;'>Instructor Report</h3>
-                <div
-                    style="display: inline-block;"
-                >
-                    <label>Year</label>
-                    <select 
-                        v-model="settings.filters.year" 
-                        @change="
-                        saveSettings(settings);
-                        "
-                    >
-                        <option
-                            v-for="year in Array.from({ length: 5}, (_, i) => new Date().getFullYear() - i)"
-                            :key="year"
-                            :value="year"
-                        >
-                        {{ year }}
-                        </option>
-                    </select>
-                </div>
-                <div
-                style="display: inline-block;"
-                >
-                </div>
-                <div>
-                    <instructor-metrics-grading v-if="grading" :interactions="interactions" :support-hours="support_hours" :grading="grading" :year="settings.filters.year"></instructor-metrics-grading>
-                    <instructor-metrics-surveys v-if="surveys" :surveys="surveys" :year="settings.filters.year"></instructor-metrics-surveys>
-                </div>
-            </div>
+  <div class="btech-modal btech-canvas-report" style="display:inline-block;">
+    <div class="btech-modal-content">
+      <div class="btech-modal-content-inner">
+        <span class="btech-close" v-on:click="close()">&times;</span>
+
+        <!-- Header / Controls -->
+        <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:10px;">
+          <h3 class="btech-card-title" style="margin:0; flex:1; text-align:center;">
+            {{ currentReportMeta.title }}
+          </h3>
+
+          <!-- Report Type -->
+          <div style="display:inline-block;">
+            <label class="btech-muted" style="display:block; font-size:12px;">Report</label>
+            <select
+              v-model="settings.reportType"
+              aria-label="Select report type"
+              @change="onReportChange"
+            >
+              <option
+                v-for="rt in reportTypes"
+                :key="rt.value"
+                :value="rt.value"
+              >
+                {{ rt.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Year -->
+          <div style="display:inline-block;">
+            <label class="btech-muted" style="display:block; font-size:12px;">Year</label>
+            <select
+              v-model="settings.filters.year"
+              aria-label="Select year"
+              @change="saveSettings(settings)"
+            >
+              <option
+                v-for="year in Array.from({ length: 5}, (_, i) => new Date().getFullYear() - i)"
+                :key="year"
+                :value="year"
+              >
+                {{ year }}
+              </option>
+            </select>
+          </div>
         </div>
+
+        <!-- Dynamic report body -->
+        <keep-alive>
+          <component
+            :is="currentReportMeta.component"
+            v-bind="currentReportProps"
+          />
+        </keep-alive>
+      </div>
     </div>
+  </div>
 </template>
