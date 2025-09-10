@@ -1,4 +1,50 @@
 (async function () {
+  // accounts.mixin.js
+  window.BtechAccountsMixin = {
+    data() {
+      return {
+        accounts: [
+          { name: 'My Courses', id: '' + 0 }
+        ],
+        accountsLoading: false
+      }
+    },
+    methods: {
+      async loadAccounts() {
+        try {
+          this.accountsLoading = true;
+
+          // Pull root accounts
+          let accountsData = await canvasGet('/api/v1/accounts');
+
+          // If college-level admin, pull sub-accounts of 3
+          for (let a = 0; a < accountsData.length; a++) {
+            let account = accountsData[a];
+            if (account.id == 3) {
+              accountsData = await canvasGet('/api/v1/accounts/3/sub_accounts');
+              break;
+            }
+          }
+
+          // Filter to children of 3
+          const accounts = [];
+          for (let a = 0; a < accountsData.length; a++) {
+            const account = accountsData[a];
+            if (account.parent_account_id == 3) {
+              accounts.push({ name: account.name, id: '' + account.id });
+            }
+          }
+
+          accounts.sort((a, b) => a.name.localeCompare(b.name));
+          // Keep "My Courses" at the front and append the rest
+          this.accounts.splice(1, this.accounts.length - 1, ...accounts);
+        } finally {
+          this.accountsLoading = false;
+        }
+      }
+    }
+  };
+
   function createButton() {
     const btn = $('<a class="Button" id="canvas-instructor-report-vue-gen">Reports</a>');
     const wrapper = $('<div style="position: relative; display: inline-block;"></div>');

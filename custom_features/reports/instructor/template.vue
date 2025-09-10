@@ -28,6 +28,25 @@
             </select>
           </div>
 
+          <!-- Account -->
+          <div style="display:inline-block;">
+            <label class="btech-muted" style="display:block; font-size:12px;">Account</label>
+            <select
+              v-model="settings.account"
+              aria-label="Select account"
+              @change="saveSettings(settings)"
+            >
+              <option
+                v-for="acc in accounts"
+                :key="acc.id"
+                :value="acc.id"
+              >
+                {{ acc.name }}
+              </option>
+            </select>
+          </div>
+
+
           <!-- Year -->
           <div style="display:inline-block;">
             <label class="btech-muted" style="display:block; font-size:12px;">Year</label>
