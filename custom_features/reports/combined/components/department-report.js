@@ -73,10 +73,6 @@ Vue.component('department-report', {
                 <div class="btech-kpi-label">Comments per Submission</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.comments_per_submission_graded || 0).toLocaleString() }}</div>
               </div>
-              <div class="btech-tile" title="Total number of assignments submissions graded">
-                <div class="btech-kpi-label">Graded with Rubric</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.graded_with_rubric * 100 || 0).toLocaleString() }}%</div>
-              </div>
           </div>
           <div class="btech-tile">
               <div class="btech-row" style="margin-bottom:6px;">
