@@ -2,7 +2,6 @@ Vue.component('department-report', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
-  
       <department-cpl
         :cpl="cpl"
         :year="year"
