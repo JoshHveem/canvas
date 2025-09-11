@@ -2,6 +2,7 @@ Vue.component('department-instructor-surveys', {
   props: {
     surveys: { // maps from :surveys-data or :survey-metrics (kebab → camel)
       type: Object,
+      default: {},
       required: true
     },
     year: { type: [String, Number], default: null }
@@ -22,7 +23,7 @@ Vue.component('department-instructor-surveys', {
     }
   },
   template: `
-  <div class="btech-card btech-theme" v-if="surveys" aria-label="Student surveys overview card">
+  <div class="btech-card btech-theme" aria-label="Student surveys overview card">
     <div class="btech-row" style="margin-bottom:12px;">
       <h4 class="btech-card-title">Instructor Evaluations</h4>
       <span class="btech-pill" :title="'Filters: ' + yearLabel">{{ yearLabel }}</span>
