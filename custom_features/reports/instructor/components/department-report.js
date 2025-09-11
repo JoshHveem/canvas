@@ -48,15 +48,15 @@ Vue.component('department-report', {
           <div class="btech-grid-3" style="margin-bottom:12px;">
               <div class="btech-tile" title="Number of Assignments Graded">
                 <div class="btech-kpi-label">Assignments Graded</div>
-                <div class="btech-kpi-value">{{ (instructor_metrics.assignments_graded || 0).toLocaleString() }}</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.assignments_graded || 0).toLocaleString() }}</div>
               </div>
               <div class="btech-tile" title="Total number of assignments submissions graded">
                 <div class="btech-kpi-label">Average Attempts</div>
-                <div class="btech-kpi-value">{{ (instructor_metrics.average_attempts * 100 || 0).toLocaleString() }}%</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.average_attempts * 100 || 0).toLocaleString() }}%</div>
               </div>
               <div class="btech-tile" title="Average days to grade">
                 <div class="btech-kpi-label">Days to Grade</div>
-                <div class="btech-kpi-value">{{ (cpl.days_to_grade || 0).toLocaleString() }} days</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.days_to_grade || 0).toLocaleString() }} days</div>
               </div>
           </div>
         </div>
