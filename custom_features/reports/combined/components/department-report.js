@@ -56,12 +56,6 @@ Vue.component('department-report', {
               </div>
               <kpi-tile
                 label="Weekly Submission Workload"
-                :goal="{ comparator: '>=', target: 25, betterDirection: 'higher' }"
-                :decimals="0"
-                title="Estimated assignments per week based on recommended full-time graders"
-              /> 
-              <kpi-tile
-                label="Weekly Submission Workload"
                 :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
                 :decimals="0"
                 :goal="{ comparator:'between', min: 15, max: 50, label:'~ 25' }"
