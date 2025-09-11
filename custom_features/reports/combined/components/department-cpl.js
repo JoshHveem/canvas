@@ -34,6 +34,22 @@ Vue.component('department-cpl', {
               :goal="{ comparator:'gt', target:60, label:'>= 60' }"
               title="Completion"
             />
+            <kpi-tile
+              label="Placement"
+              :value="cpl.placement * 100"
+              unit="%"
+              :decimals="0"
+              :goal="{ comparator:'gt', target:70, label:'>= 70' }"
+              title="Placement"
+            />
+            <kpi-tile
+              label="Licensure"
+              :value="cpl.licensure * 100"
+              unit="%"
+              :decimals="0"
+              :goal="{ comparator:'gt', target:70, label:'>= 70' }"
+              title="Licensure"
+            />
             <div class="btech-tile" title="Total number of submissions graded">
             <div class="btech-kpi-label">Placement</div>
             <div class="btech-kpi-value">{{ (cpl.placement * 100 || 0).toLocaleString() }}%</div>
