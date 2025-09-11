@@ -48,7 +48,7 @@ Vue.component('department-report', {
           <div class="btech-grid-3" style="margin-bottom:12px;">
               <div class="btech-tile" title="Graders that graded at least 5% of all submissions">
                 <div class="btech-kpi-label">Active Graders</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.active_graders || 0).toLocaleString() }}</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.num_instructors || 0).toLocaleString() }}</div>
               </div>
               <div class="btech-tile" title="Number of Assignments Graded">
                 <div class="btech-kpi-label">Assignments Graded</div>
