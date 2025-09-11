@@ -16,6 +16,7 @@ Vue.component('department-instructor-metrics', {
             v-if="instructorMetrics"
             aria-label="Instructor Metrics"
         >
+            {{cpl}}
           <!-- Header -->
           <div class="btech-row" style="margin-bottom:12px;">
               <h4 class="btech-card-title">Instructors Overview</h4>
