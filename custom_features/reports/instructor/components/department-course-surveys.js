@@ -1,30 +1,59 @@
 Vue.component('department-course-surveys', {
   props: {
-    surveys: { // maps from :surveys-data or :survey-metrics (kebab → camel)
-      type: Object,
-      required: true
-    },
+    surveys: { type: Object, required: true },
     year: { type: [String, Number], default: null }
   },
+
   computed: {
-    summary() { return this.surveys.summary; },
+    summary() { return this.surveys?.summary ?? ''; },
     yearLabel() { return this.year ?? '—'; },
     numSurveys() { return Number(this.surveys?.num_surveys || 0); },
-    likerts() { return Array.isArray(this.surveys?.likerts) ? this.surveys.likerts : []; },
+
+    // Normalize likerts specifically for COURSE surveys
+    // 1) If server sent surveys.likerts as an array, use that.
+    // 2) Else, construct from flat fields in a fixed display order.
+    likerts() {
+      const arr = Array.isArray(this.surveys?.likerts) ? this.surveys.likerts : null;
+      if (arr && arr.length) return arr;
+
+      const src = this.surveys || {};
+      const map = [
+        { name: 'Objectives',             key: 'likert_objectives' },
+        { name: 'Workplace Relevance',    key: 'likert_workplace_relevance' },
+        { name: 'Examples',               key: 'likert_examples' },
+        { name: 'Recommendable',          key: 'likert_recommendable' },
+      ];
+
+      const out = [];
+      for (const { name, key } of map) {
+        const score = Number(src[key]);
+        if (!Number.isNaN(score) && score !== null && score !== undefined) {
+          out.push({ name, score });
+        }
+      }
+      return out;
+    },
+
+    // If has_recommendations is stored as a proportion (0-1), show percent.
+    // If it's a count, you can swap this to compute (count / numSurveys) * 100.
     recPct() {
       const v = Number(this.surveys?.has_recommendations || 0);
-      return Math.max(0, Math.min(100, Math.round(v * 100)));
+      const pct = v <= 1 ? v * 100 : v; // auto-handle if already in 0–100
+      return Math.max(0, Math.min(100, Math.round(pct)));
     },
+
     avgLikertPct() {
       if (!this.likerts.length) return 0;
       const avg = this.likerts.reduce((s, x) => s + Number(x?.score || 0), 0) / this.likerts.length;
+      // scores are 0–1, display as %
       return Math.max(0, Math.min(100, Math.round(avg * 1000) / 10)); // one decimal
     }
   },
+
   template: `
   <div class="btech-card btech-theme" v-if="surveys" aria-label="Student surveys overview card">
     <div class="btech-row" style="margin-bottom:12px;">
-      <h4 class="btech-card-title">Student Surveys</h4>
+      <h4 class="btech-card-title">Course Evaluations</h4>
       <span class="btech-pill" :title="'Filters: ' + yearLabel">{{ yearLabel }}</span>
     </div>
 
