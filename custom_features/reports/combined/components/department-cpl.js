@@ -28,7 +28,8 @@ Vue.component('department-cpl', {
         <div class="btech-grid-3" style="margin-bottom:12px;">
             <kpi-tile
               label="Completion"
-              :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
+              :value="cpl.completion * 100"
+              unit="%"
               :decimals="0"
               :goal="{ comparator:'gt', target:60, label:'>= 60' }"
               title="Completion"
