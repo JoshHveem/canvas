@@ -1,8 +1,6 @@
 Vue.component('instructor-metrics-grading', {
   template: ` 
     <div>
-        <!-- Grading Card -->
-        <!-- Grading Card (scoped under #canvas-instructor-report-vue) -->
         <div
             class="btech-card btech-theme"
             v-if="grading"

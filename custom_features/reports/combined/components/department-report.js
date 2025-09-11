@@ -78,6 +78,17 @@ Vue.component('department-report', {
                 <div class="btech-kpi-value">{{ (instructorMetrics.graded_with_rubric * 100 || 0).toLocaleString() }}%</div>
               </div>
           </div>
+          <div class="btech-tile">
+              <div class="btech-row" style="margin-bottom:6px;">
+                  <div style="font-size:12px; color:#374151; font-weight:600;">Percentage of assignments graded with a rubric</div>
+                  <div style="font-size:12px; color:#111827; font-weight:700;">
+                  {{ Math.round((instructorMetrics.graded_with_rubric || 0) * 100) }}%
+                  </div>
+              </div>
+              <div class="btech-muted" style="margin-top:6px;">
+                  Share of all department support/gradings hours handled by this instructor.
+              </div>
+          </div>
         </div>
       <department-instructor-surveys
         v-if="instructorSurveys && Object.keys(instructorSurveys).length"
