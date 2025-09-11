@@ -16,7 +16,6 @@ Vue.component('department-cpl', {
         v-if="cpl"
         aria-label="CPL"
     >
-        {{cpl}}
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
             <h4 class="btech-card-title">Department Overview</h4>
@@ -27,10 +26,13 @@ Vue.component('department-cpl', {
 
         <!-- KPI Tiles -->
         <div class="btech-grid-3" style="margin-bottom:12px;">
-            <div class="btech-tile" title="Percentage of completers">
-            <div class="btech-kpi-label">Completion</div>
-            <div class="btech-kpi-value">{{ (cpl.completion * 100 || 0).toLocaleString() }}%</div>
-            </div>
+            <kpi-tile
+              label="Completion"
+              :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
+              :decimals="0"
+              :goal="{ comparator:'gt', target:60, label:'>= 60' }"
+              title="Completion"
+            />
             <div class="btech-tile" title="Total number of submissions graded">
             <div class="btech-kpi-label">Placement</div>
             <div class="btech-kpi-value">{{ (cpl.placement * 100 || 0).toLocaleString() }}%</div>
