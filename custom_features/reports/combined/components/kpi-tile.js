@@ -59,46 +59,93 @@ Vue.component('goal-pill', {
  * ========================== */
 Vue.component('kpi-tile', {
   props: {
-    label: { type: String, required: true },
-    value: { type: [Number, String], default: null },
-    unit:  { type: String, default: '' },
-    decimals: { type: Number, default: 1 },
-    title: { type: String, default: '' },
+    label:     { type: String, required: true },
+    value:     { type: [Number, String], default: null },
+    unit:      { type: String, default: '' },
+    decimals:  { type: Number, default: 1 },
+    title:     { type: String, default: '' },
 
-    /* Pass-through props for the inner goal pill */
-    goalComparator: { type: String, default: null }, // e.g. 'lt', 'between'
-    goalTarget:     { type: Number, default: null },
-    goalMin:        { type: Number, default: null },
-    goalMax:        { type: Number, default: null },
-    goalLabel:      { type: String, default: '' },   // e.g. "< 2 days"
+    // Provide to show a pill (omit or null to hide)
+    // goal = { comparator: 'lt'|'lte'|'gt'|'gte'|'between',
+    //          target: Number, min: Number, max: Number, label: String }
+    goal:      { type: Object, default: null },
 
-    // Optional: lightly tint the value row when a status is computed from bands (kept simple)
-    bands: { type: Array, default: () => [] } // [{ max: 2, status: 'good' }, { max: 3, status: 'warn' }, { status: 'bad' }]
+    // Optional subtle status tint via bands (kept simple)
+    bands:     { type: Array, default: () => [] } // e.g. [{ max: 2, status:'good' }, { max: 3, status:'warn' }, { status:'bad' }]
   },
 
   computed: {
-    numericValue() {
+    nValue() {
       const n = Number(this.value);
       return Number.isFinite(n) ? n : null;
     },
     displayValue() {
-      if (this.numericValue === null) return '—';
-      return typeof this.value === 'string'
-        ? this.value
-        : this.numericValue.toFixed(this.decimals);
+      if (this.nValue === null) return (typeof this.value === 'string' ? this.value : '—');
+      return typeof this.value === 'string' ? this.value : this.nValue.toFixed(this.decimals);
+    },
+
+    // ---- goal pill logic ----
+    meetsGoal() {
+      if (!this.goal || this.nValue == null) return null;
+      const g = this.goal;
+      const v = this.nValue;
+      switch ((g.comparator || '').toLowerCase()) {
+        case 'lt':  return v <  g.target;
+        case 'lte': return v <= g.target;
+        case 'gt':  return v >  g.target;
+        case 'gte': return v >= g.target;
+        case 'between': return v >= g.min && v <= g.max;
+        default: return null;
+      }
+    },
+    pillStyle() {
+      if (!this.goal) return {};
+      const good = '#10b981', bad = '#ef4444', mute = '#9ca3af';
+      const bg = (this.nValue == null) ? mute : (this.meetsGoal ? good : bad);
+      return {
+        display: 'inline-block',
+        marginLeft: '6px',
+        padding: '2px 8px',
+        borderRadius: '12px',
+        fontSize: '11px',
+        fontWeight: 600,
+        lineHeight: '16px',
+        color: '#ffffff',
+        background: bg,
+        whiteSpace: 'nowrap',
+        verticalAlign: 'middle'
+      };
+    },
+
+    // ---- visuals ----
+    tileStyle() {
+      return {
+        border: '1px solid #e5e7eb',
+        borderRadius: '16px',
+        padding: '12px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        background: '#ffffff'
+      };
+    },
+    labelRowStyle() {
+      return { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' };
+    },
+    labelStyle() {
+      return { fontSize: '12px', color: '#374151', fontWeight: 600, lineHeight: '16px' };
+    },
+    unitStyle() {
+      return { fontSize: '12px', color: '#6b7280', fontWeight: 400 };
     },
     valueRowStyle() {
-      // Subtle background based on bands, completely optional
-      const v = this.numericValue;
+      // optional tint from bands
+      const v = this.nValue;
       let bg = 'transparent';
       if (v !== null && this.bands.length) {
         let status = 'neutral';
-        for (const band of this.bands) {
-          if (band.max === undefined || v <= band.max) { status = band.status; break; }
-        }
-        if (status === 'good') bg = 'rgba(16,185,129,0.08)';   // green tint
-        if (status === 'warn') bg = 'rgba(245,158,11,0.10)';   // amber tint
-        if (status === 'bad')  bg = 'rgba(239,68,68,0.08)';    // red tint
+        for (const b of this.bands) { if (b.max === undefined || v <= b.max) { status = b.status; break; } }
+        if (status === 'good') bg = 'rgba(16,185,129,0.08)';
+        if (status === 'warn') bg = 'rgba(245,158,11,0.10)';
+        if (status === 'bad')  bg = 'rgba(239,68,68,0.08)';
       }
       return {
         fontSize: '22px',
@@ -111,38 +158,6 @@ Vue.component('kpi-tile', {
         borderRadius: '8px',
         background: bg
       };
-    },
-    tileStyle() {
-      return {
-        border: '1px solid #e5e7eb',
-        borderRadius: '16px',
-        padding: '12px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-        background: '#ffffff'
-      };
-    },
-    labelRowStyle() {
-      return {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        marginBottom: '6px'
-      };
-    },
-    labelStyle() {
-      return {
-        fontSize: '12px',
-        color: '#374151',
-        fontWeight: 600,
-        lineHeight: '16px'
-      };
-    },
-    unitStyle() {
-      return {
-        fontSize: '12px',
-        color: '#6b7280',
-        fontWeight: 400
-      };
     }
   },
 
@@ -150,17 +165,7 @@ Vue.component('kpi-tile', {
     <div :style="tileStyle" :title="title">
       <div :style="labelRowStyle">
         <div :style="labelStyle">{{ label }}</div>
-
-        <!-- Inline goal pill placed inside the tile's label row -->
-        <goal-pill
-          v-if="goalComparator"
-          :comparator="goalComparator"
-          :value="numericValue"
-          :target="goalTarget"
-          :min="goalMin"
-          :max="goalMax"
-          :label="goalLabel"
-        />
+        <span v-if="goal" :style="pillStyle">Goal: {{ goal.label }}</span>
       </div>
 
       <div :style="valueRowStyle">
