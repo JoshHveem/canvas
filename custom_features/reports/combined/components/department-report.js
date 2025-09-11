@@ -46,14 +46,18 @@ Vue.component('department-report', {
 
           <!-- KPI Tiles -->
           <div class="btech-grid-3" style="margin-bottom:12px;">
-              <div class="btech-tile" title="Graders that graded at least 5% of all submissions">
-                <div class="btech-kpi-label">Active Graders</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.num_instructors || 0).toLocaleString() }}</div>
-              </div>
-              <div class="btech-tile" title="Number of Assignments Graded">
-                <div class="btech-kpi-label">Assignments Graded</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.assignments_graded || 0).toLocaleString() }}</div>
-              </div>
+              <kpi-tile
+                label="Active Graders"
+                :value="instructorMetrics.num_instructors || 0"
+                :decimals="0"
+                title="Number of graders that graded at least 5% of all submissions this year."
+              />
+              <kpi-tile
+                label="Assignments Graded"
+                :value="instructorMetrics.assignments_graded || 0"
+                :decimals="0"
+                title="Number of Assignments Graded this Year"
+              />
               <kpi-tile
                 label="Weekly Submission Workload"
                 :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
