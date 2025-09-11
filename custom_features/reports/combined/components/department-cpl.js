@@ -43,6 +43,7 @@ Vue.component('department-cpl', {
               title="Placement"
             />
             <kpi-tile
+              v-if="cpl.licensure > 0"
               label="Licensure"
               :value="cpl.licensure * 100"
               unit="%"
@@ -50,14 +51,6 @@ Vue.component('department-cpl', {
               :goal="{ comparator:'gt', target:70, label:'>= 70' }"
               title="Licensure"
             />
-            <div class="btech-tile" title="Total number of submissions graded">
-            <div class="btech-kpi-label">Placement</div>
-            <div class="btech-kpi-value">{{ (cpl.placement * 100 || 0).toLocaleString() }}%</div>
-            </div>
-            <div class="btech-tile" title="Total number of submissions graded">
-            <div class="btech-kpi-label">Licensure</div>
-            <div class="btech-kpi-value">{{ (cpl.licensure * 100 || 0).toLocaleString() }}%</div>
-            </div>
         </div>
     </div>
   `
