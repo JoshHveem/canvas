@@ -33,7 +33,7 @@ Vue.component('department-report', {
         </div>
       <div
             class="btech-card btech-theme"
-            v-if="instructor_metrics"
+            v-if="instructorMetrics"
             aria-label="Instructor Metrics"
         >
           <!-- Header -->
