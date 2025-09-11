@@ -46,6 +46,10 @@ Vue.component('department-report', {
 
           <!-- KPI Tiles -->
           <div class="btech-grid-3" style="margin-bottom:12px;">
+              <div class="btech-tile" title="Graders that graded at least 5% of all submissions">
+                <div class="btech-kpi-label">Active Graders</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.active_graders || 0).toLocaleString() }}</div>
+              </div>
               <div class="btech-tile" title="Number of Assignments Graded">
                 <div class="btech-kpi-label">Assignments Graded</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.assignments_graded || 0).toLocaleString() }}</div>
@@ -57,6 +61,14 @@ Vue.component('department-report', {
               <div class="btech-tile" title="Average days to grade">
                 <div class="btech-kpi-label">Days to Grade</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.days_to_grade || 0).toLocaleString() }} days</div>
+              </div>
+              <div class="btech-tile" title="Total number of assignments submissions graded">
+                <div class="btech-kpi-label">Comments per Submission</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.comments_per_submission_graded || 0).toLocaleString() }}</div>
+              </div>
+              <div class="btech-tile" title="Total number of assignments submissions graded">
+                <div class="btech-kpi-label">Graded with Rubric</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.graded_with_rubric * 100 || 0).toLocaleString() }}%</div>
               </div>
           </div>
         </div>
