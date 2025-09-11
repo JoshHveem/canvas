@@ -34,7 +34,7 @@ Vue.component('department-report', {
 
       <department-instructor-metrics
         :instructor-metrics="instructorMetrics"
-        :year="year
+        :year="year"
       />
 
       <department-instructor-surveys
