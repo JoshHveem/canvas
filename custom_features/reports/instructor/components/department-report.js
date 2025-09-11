@@ -19,15 +19,15 @@ Vue.component('department-report', {
           <div class="btech-grid-3" style="margin-bottom:12px;">
               <div class="btech-tile" title="Percentage of completers">
                 <div class="btech-kpi-label">Completion</div>
-                <div class="btech-kpi-value">{{ (cpl.completion|| 0).toLocaleString() }}</div>
+                <div class="btech-kpi-value">{{ (cpl.completion * 100 || 0).toLocaleString() }}</div>
               </div>
               <div class="btech-tile" title="Total number of submissions graded">
                 <div class="btech-kpi-label">Placement</div>
-                <div class="btech-kpi-value">{{ (cpl.placement|| 0).toLocaleString() }}</div>
+                <div class="btech-kpi-value">{{ (cpl.placement * 100 || 0).toLocaleString() }}</div>
               </div>
               <div class="btech-tile" title="Total number of submissions graded">
                 <div class="btech-kpi-label">Licensure</div>
-                <div class="btech-kpi-value">{{ (cpl.licensure|| 0).toLocaleString() }}</div>
+                <div class="btech-kpi-value">{{ (cpl.licensure * 100 || 0).toLocaleString() }}</div>
               </div>
           </div>
     </div>
