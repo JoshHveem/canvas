@@ -2,35 +2,11 @@ Vue.component('department-report', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
-      <div
-            class="btech-card btech-theme"
-            v-if="cpl"
-            aria-label="CPL"
-        >
-          <!-- Header -->
-          <div class="btech-row" style="margin-bottom:12px;">
-              <h4 class="btech-card-title">Department Overview</h4>
-              <span class="btech-pill" :title="'Filters: ' + (year || '')">
-              {{ year || '—' }}
-              </span>
-          </div>
-
-          <!-- KPI Tiles -->
-          <div class="btech-grid-3" style="margin-bottom:12px;">
-              <div class="btech-tile" title="Percentage of completers">
-                <div class="btech-kpi-label">Completion</div>
-                <div class="btech-kpi-value">{{ (cpl.completion * 100 || 0).toLocaleString() }}%</div>
-              </div>
-              <div class="btech-tile" title="Total number of submissions graded">
-                <div class="btech-kpi-label">Placement</div>
-                <div class="btech-kpi-value">{{ (cpl.placement * 100 || 0).toLocaleString() }}%</div>
-              </div>
-              <div class="btech-tile" title="Total number of submissions graded">
-                <div class="btech-kpi-label">Licensure</div>
-                <div class="btech-kpi-value">{{ (cpl.licensure * 100 || 0).toLocaleString() }}%</div>
-              </div>
-          </div>
-        </div>
+  
+      <department-cpl
+        :cpl="cpl"
+        :year="year"
+      />
 
       <department-instructor-metrics
         :instructor-metrics="instructorMetrics"
