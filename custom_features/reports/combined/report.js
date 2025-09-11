@@ -217,17 +217,17 @@
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
 
     // Instructor sub-components
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/grading.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/support_hours.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/interactions.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/department-course-surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/department-instructor-surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/menu.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/grading.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/support_hours.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/interactions.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-course-surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/menu.js");
 
     // The instructor report wrapper now owns its data & methods:
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/instructor-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/instructor/components/department-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/instructor-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-report.js");
 
     postLoad();
   }
