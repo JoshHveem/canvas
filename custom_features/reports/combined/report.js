@@ -67,7 +67,7 @@
 
   async function postLoad() {
     let vueString = '';
-    await $.get(SOURCE_URL + '/custom_features/reports/instructor/template.vue', null, function (html) {
+    await $.get(SOURCE_URL + '/custom_features/reports/combined/template.vue', null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
 
