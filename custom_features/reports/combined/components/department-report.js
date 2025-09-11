@@ -62,27 +62,41 @@ Vue.component('department-report', {
                 title="Estimated assignments per week based on recommended full-time graders"
               /> 
               <kpi-tile
-                label="Average Attempts"
-                :value="instructorMetrics.average_attempts || 0"
-                :goal="{ comparator: '<=', target: 1.1, betterDirection: 'lower' }"
-                :decimals="2"
-                title="Average attempts students make before passing"
-              /> 
-              <kpi-tile
                 label="Days to Grade"
                 :value="instructorMetrics.days_to_grade || 0"
                 unit="days"
-                :goal="{ comparator: '<=', target: 2, betterDirection: 'lower' }"
+                :bands="[
+                  { max: 2, status: 'good' },
+                  { max: 3, status: 'warn' },
+                  { status: 'bad' }
+                ]"
                 :decimals="1"
                 title="Median days to return a grade"
-              /> 
+              />
+
               <kpi-tile
                 label="Comments per Submission"
                 :value="instructorMetrics.comments_per_submission_graded || 0"
-                :goal="{ comparator: '~', target: 1.0, tolerance: 0.2, betterDirection: 'near' }"
+                :bands="[
+                  { max: 1.2, status: 'good' },
+                  { max: 1.5, status: 'warn' },
+                  { status: 'bad' }
+                ]"
                 :decimals="2"
-                title="Average number of comments per graded submission (aim around 1)"
-              />          
+                title="Average number of comments per graded submission (target ≈ 1)"
+              />
+
+              <kpi-tile
+                label="Average Attempts"
+                :value="instructorMetrics.average_attempts || 0"
+                :bands="[
+                  { max: 1.1, status: 'good' },
+                  { max: 1.3, status: 'warn' },
+                  { status: 'bad' }
+                ]"
+                :decimals="2"
+                title="Average attempts before passing"
+              />      
           </div>
           <div class="btech-tile">
               <div class="btech-row" style="margin-bottom:6px;">
