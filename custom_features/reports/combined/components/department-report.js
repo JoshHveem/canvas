@@ -39,6 +39,12 @@ Vue.component('department-report', {
     }
   },
   computed: {
+    statistics() {
+      let list = this.department_metrics?.statistics?? [];
+      if (!list.length) return {};
+      const yr = Number(this.year) || new Date().getFullYear();
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
     cpl() {
       let list = this.department_metrics?.cpl ?? [];
       if (!list.length) return {};
