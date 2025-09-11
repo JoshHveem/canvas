@@ -2,9 +2,6 @@ Vue.component('department-report', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
-      <div v-if="!loading && (!grading || !Object.keys(grading).length) && (!surveys || !Object.keys(surveys).length)" class="btech-card btech-theme">
-        <div class="btech-muted" style="text-align:center;">No department data for {{ year }}.</div>
-      </div>
     </div>
   `,
   props: {
