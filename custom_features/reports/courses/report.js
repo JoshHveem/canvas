@@ -41,7 +41,7 @@
     circle.hide();
 
     // Wrap the button in a relatively positioned container so the circle can be positioned correctly
-    const wrapper = $('<div style="position: relative; display: inline-block;"></div>');
+    const wrapper = $('<div style="position: relative; display: block;"></div>');
 
     wrapper.append(btn);
     wrapper.append(circle);

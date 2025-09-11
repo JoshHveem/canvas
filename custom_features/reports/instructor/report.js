@@ -47,7 +47,7 @@
 
   function createButton() {
     const btn = $('<a class="Button" id="canvas-instructor-report-vue-gen">Reports</a>');
-    const wrapper = $('<div style="position: relative; display: inline-block;"></div>');
+    const wrapper = $('<div style="position: relative; display: block;"></div>');
     wrapper.append(btn);
     btn.click(function () {
       $("#canvas-instructor-report-vue").show();
