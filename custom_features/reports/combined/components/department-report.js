@@ -54,6 +54,10 @@ Vue.component('department-report', {
                 <div class="btech-kpi-label">Assignments Graded</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.assignments_graded || 0).toLocaleString() }}</div>
               </div>
+              <div class="btech-tile" title="Estimated assignments per week based on the recommended full time graders">
+                <div class="btech-kpi-label">Weekly Submission Workload</div>
+                <div class="btech-kpi-value">{{ Math.round(((instructorMetrics.assignments_graded / instructorMetrics.recommendedInstructors) / 48) || 0).toLocaleString() }}</div>
+              </div>
               <div class="btech-tile" title="Total number of assignments submissions graded">
                 <div class="btech-kpi-label">Average Attempts</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.average_attempts || 0).toLocaleString() }}</div>
