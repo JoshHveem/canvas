@@ -122,12 +122,10 @@ Vue.component('department-report', {
           </div>
         </div>
       <department-instructor-surveys
-        v-if="instructorSurveys && Object.keys(instructorSurveys).length"
         :surveys="instructorSurveys"
         :year="year"
       />
       <department-course-surveys
-        v-if="courseSurveys && Object.keys(courseSurveys).length"
         :surveys="courseSurveys"
         :year="year"
       />
