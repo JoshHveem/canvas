@@ -1,4 +1,4 @@
-Vue.component('department-instructor-metrics', {
+Vue.component('department-cpl', {
   props: {
     cpl: { type: Object, default: {}, required: true },
     year: { type: [String, Number], default: null }
