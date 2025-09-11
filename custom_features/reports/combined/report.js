@@ -222,6 +222,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/interactions.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-metrics.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/menu.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
