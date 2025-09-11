@@ -52,7 +52,7 @@ Vue.component('department-report', {
               </div>
               <div class="btech-tile" title="Total number of assignments submissions graded">
                 <div class="btech-kpi-label">Average Attempts</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.average_attempts * 100 || 0).toLocaleString() }}%</div>
+                <div class="btech-kpi-value">{{ (instructorMetrics.average_attempts || 0).toLocaleString() }}</div>
               </div>
               <div class="btech-tile" title="Average days to grade">
                 <div class="btech-kpi-label">Days to Grade</div>
