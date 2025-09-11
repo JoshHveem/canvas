@@ -8,7 +8,7 @@ Vue.component('department-report', {
       />
 
       <department-statistics
-        :cpl="statistics"
+        :statistics="statistics"
         :year="year"
       />
 
