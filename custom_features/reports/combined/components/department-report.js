@@ -7,6 +7,11 @@ Vue.component('department-report', {
         :year="year"
       />
 
+      <department-statistics
+        :cpl="statistics"
+        :year="year"
+      />
+
       <department-instructor-metrics
         :instructor-metrics="instructorMetrics"
         :year="year"
