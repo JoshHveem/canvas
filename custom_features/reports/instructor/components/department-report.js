@@ -69,6 +69,7 @@ Vue.component('department-report', {
         this.loading = true;
         const url = `https://reports.bridgetools.dev/api/departments/${this.account}`;
         const resp = await bridgetools.req(url);
+        console.log(resp);
         this.department_metrics = resp || {};
         // console.log('Instructor metrics', resp);
       } catch (e) {
