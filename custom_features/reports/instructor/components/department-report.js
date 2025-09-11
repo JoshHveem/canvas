@@ -67,7 +67,7 @@ Vue.component('department-report', {
     async loadDepartmentMetrics() {
       try {
         this.loading = true;
-        const url = `https://reports.bridgetools.dev/api/departments?year=${this.year}&dept=${this.account}`;
+        const url = `https://reports.bridgetools.dev/api/departments/${this.account}`;
         const resp = await bridgetools.req(url);
         this.department_metrics = resp || {};
         // console.log('Instructor metrics', resp);
