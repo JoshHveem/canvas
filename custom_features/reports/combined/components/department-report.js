@@ -54,25 +54,35 @@ Vue.component('department-report', {
                 <div class="btech-kpi-label">Assignments Graded</div>
                 <div class="btech-kpi-value">{{ (instructorMetrics.assignments_graded || 0).toLocaleString() }}</div>
               </div>
-              <div class="btech-tile" title="Estimated assignments per week based on the recommended full time graders">
-                <div class="btech-kpi-label">Weekly Submission Workload</div>
-                <div class="btech-kpi-value">{{ (Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0).toLocaleString() }}</div>
-              </div>
-              <div class="btech-tile" title="Total number of assignments submissions graded">
-                <div class="btech-kpi-label">Average Attempts</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.average_attempts || 0).toLocaleString() }}</div>
-              </div>
-              <div class="btech-tile" title="Average days to grade">
-                <div class="btech-kpi-label">Days to Grade</div>
-                <div class="btech-kpi-value">
-                  {{ (instructorMetrics.days_to_grade || 0).toLocaleString() }}
-                  <span class="btech-muted">days</span>
-                </div>
-              </div>
-              <div class="btech-tile" title="Total number of assignments submissions graded">
-                <div class="btech-kpi-label">Comments per Submission</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.comments_per_submission_graded || 0).toLocaleString() }}</div>
-              </div>
+              <kpi-tile
+                label="Weekly Submission Workload"
+                :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
+                :goal="{ comparator: '>=', target: 25, betterDirection: 'higher' }"
+                :decimals="0"
+                title="Estimated assignments per week based on recommended full-time graders"
+              /> 
+              <kpi-tile
+                label="Average Attempts"
+                :value="instructorMetrics.average_attempts || 0"
+                :goal="{ comparator: '<=', target: 1.1, betterDirection: 'lower' }"
+                :decimals="2"
+                title="Average attempts students make before passing"
+              /> 
+              <kpi-tile
+                label="Days to Grade"
+                :value="instructorMetrics.days_to_grade || 0"
+                unit="days"
+                :goal="{ comparator: '<=', target: 2, betterDirection: 'lower' }"
+                :decimals="1"
+                title="Median days to return a grade"
+              /> 
+              <kpi-tile
+                label="Comments per Submission"
+                :value="instructorMetrics.comments_per_submission_graded || 0"
+                :goal="{ comparator: '~', target: 1.0, tolerance: 0.2, betterDirection: 'near' }"
+                :decimals="2"
+                title="Average number of comments per graded submission (aim around 1)"
+              />          
           </div>
           <div class="btech-tile">
               <div class="btech-row" style="margin-bottom:6px;">
