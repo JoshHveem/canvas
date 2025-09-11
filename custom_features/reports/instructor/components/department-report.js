@@ -60,7 +60,10 @@ Vue.component('department-report', {
               </div>
               <div class="btech-tile" title="Average days to grade">
                 <div class="btech-kpi-label">Days to Grade</div>
-                <div class="btech-kpi-value">{{ (instructorMetrics.days_to_grade || 0).toLocaleString() }} days</div>
+                <div class="btech-kpi-value">
+                  {{ (instructorMetrics.days_to_grade || 0).toLocaleString() }}
+                  <span class="btech-muted">days</span>
+                </div>
               </div>
               <div class="btech-tile" title="Total number of assignments submissions graded">
                 <div class="btech-kpi-label">Comments per Submission</div>
@@ -72,6 +75,16 @@ Vue.component('department-report', {
               </div>
           </div>
         </div>
+      <department-instructor-surveys
+        v-if="instructorSurveys && Object.keys(instructorSurveys).length"
+        :surveys="instructorSurveys"
+        :year="year"
+      />
+      <department-course-surveys
+        v-if="courseSurveys && Object.keys(courseSurveys).length"
+        :surveys="courseSurveys"
+        :year="year"
+      />
     </div>
   `,
   props: {
