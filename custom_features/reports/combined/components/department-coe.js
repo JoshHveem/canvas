@@ -6,9 +6,9 @@ Vue.component('department-coe-entry', {
   data() {
     return {
       colors: {
-        ok:    '#059669',
-        bad:   '#B91C1C',
-        muted: '#E5E7EB',
+        ok:    '#059669',  // green-600
+        bad:   '#B91C1C',  // red-700
+        muted: '#E5E7EB',  // gray-200
         white: '#FFFFFF',
         dark:  '#111827',
       }
@@ -27,25 +27,39 @@ Vue.component('department-coe-entry', {
       return Number.isFinite(n) ? n : 0;
     },
 
-    // Normalize assessments from either:
-    //   assessments: [{type, count}]  OR  flat fields assessments_<type>: <count>
+    // Normalize assessments from:
+    //  1) Array: [{type, count}]
+    //  2) Object map: { assignments: 28, quizzes: 5 }
+    //  3) Flat root keys: assessments_assignments: 28
     assessments() {
-      const a = Array.isArray(this.coe?.assessments) ? this.coe.assessments : null;
-      if (a && a.length) {
-        return a
-          .map(x => ({ type: String(x.type || ''), count: Number(x.count || 0) }))
+      const raw = this.coe?.assessments;
+
+      // 1) Already an array
+      if (Array.isArray(raw) && raw.length) {
+        return raw
+          .map(x => ({ type: String(x?.type || '').trim(), count: Number(x?.count) }))
           .filter(x => x.type && Number.isFinite(x.count));
       }
 
-      // fall back to flat fields (e.g., assessments_quizzes)
+      // 2) Object map
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        const out = [];
+        for (const [k, v] of Object.entries(raw)) {
+          const type = String(k || '').replace(/_/g, ' ').trim();
+          const count = Number(v);
+          if (type && Number.isFinite(count)) out.push({ type, count });
+        }
+        if (out.length) return out;
+      }
+
+      // 3) Flat root keys: assessments_<type>
       const out = [];
       for (const k in (this.coe || {})) {
         if (!k || !k.startsWith('assessments_')) continue;
-        // ignore a total key if present
-        if (k === 'assessments_total_valid_assignments') continue;
-        const type = k.replace(/^assessments_/, '').replace(/_/g, ' ');
+        if (k === 'assessments_total_valid_assignments') continue; // ignore aggregated total if present
+        const type = k.replace(/^assessments_/, '').replace(/_/g, ' ').trim();
         const cnt = Number(this.coe[k]);
-        if (Number.isFinite(cnt)) out.push({ type, count: cnt });
+        if (type && Number.isFinite(cnt)) out.push({ type, count: cnt });
       }
       return out;
     },
@@ -66,25 +80,19 @@ Vue.component('department-coe-entry', {
     },
 
     empPillStyle() {
-      const ok = this.meetsEmploymentSkills;
-      const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white;
-      return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
+      const bg = this.meetsEmploymentSkills ? this.colors.ok : this.colors.bad;
+      return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
     safPillStyle() {
-      const ok = this.meetsSafety;
-      const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white;
-      return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
+      const bg = this.meetsSafety ? this.colors.ok : this.colors.bad;
+      return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
     mixPillStyle() {
-      const ok = this.meetsAssessmentMix;
-      const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white;
-      return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
+      const bg = this.meetsAssessmentMix ? this.colors.ok : this.colors.bad;
+      return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
 
-    // table/grid widths
+    // layout styles
     kpiGridStyle() {
       return 'display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:8px;';
     },
@@ -113,8 +121,8 @@ Vue.component('department-coe-entry', {
     // Assessment pill style: green if >=3, gray otherwise
     assessPillStyle(count) {
       const ok = Number(count) >= 3;
-      const bg = ok ? this.okBg : this.mutedBg;
-      const fg = ok ? this.white() : this.darkText;
+      const bg = ok ? this.colors.ok : this.colors.muted;
+      const fg = ok ? this.colors.white : this.colors.dark;
       return `${this.tagPillBase} background:${bg}; color:${fg};`;
     }
   },
@@ -172,47 +180,6 @@ Vue.component('department-coe-entry', {
           <span v-if="!assessments.length" style="font-size:12px; color:#6B7280;">No assessments reported.</span>
         </div>
       </div>
-    </div>
-  `
-});
-Vue.component('department-coe', {
-  props: {
-    coeList: { type: Array, required: true, default: () => [] }, // array of COE rows
-    year:    { type: [String, Number], default: null },
-    title:   { type: String, default: 'COE' }
-  },
-  computed: {
-    sorted() {
-      const arr = [...this.coeList]; // typo guard
-      return (Array.isArray(this.coeList) ? [...this.coeList] : arr)
-        .sort((a, b) => {
-          const ya = Number(a?.academic_year || 0), yb = Number(b?.academic_year || 0);
-          if (yb !== ya) return yb - ya;
-          const ca = (a?.campus || '').toUpperCase();
-          const cb = (b?.campus || '').toUpperCase();
-          return ca < cb ? -1 : ca > cb ? 1 : 0;
-        });
-    }
-  },
-  template: `
-    <div class="btech-card btech-theme" aria-label="COE Section" style="padding:12px;">
-      <!-- Header -->
-      <div style="display:flex; align-items:center; margin-bottom:12px;">
-        <h3 class="btech-card-title" style="margin:0;">{{ title }}</h3>
-        <div style="flex:1;"></div>
-        <span class="btech-pill" style="margin-left:8px;">Total: {{ sorted.length }}</span>
-      </div>
-
-      <!-- List -->
-      <div v-if="sorted.length">
-        <department-coe-entry
-          v-for="row in sorted"
-          :key="(row.div_code || 'x') + '-' + (row.academic_year || 'y') + '-' + (row.campus || 'z')"
-          :coe="row"
-          :year="year"
-        />
-      </div>
-      <div v-else class="btech-muted" style="text-align:center; padding:12px;">No COE data available.</div>
     </div>
   `
 });
