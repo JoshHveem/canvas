@@ -99,6 +99,7 @@ Vue.component('kpi-tile', {
     },
     pillStyle() {
       if (!this.goal) return {};
+      console.log(this.colors)
       const good = this.colors.green, bad = this.colors.red, mute = this.colors.gray;
       const bg = (this.nValue == null) ? mute : (this.meetsGoal ? good : bad);
       return {
