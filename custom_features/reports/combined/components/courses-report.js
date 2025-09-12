@@ -51,7 +51,7 @@ Vue.component('courses-report', {
         new CoursesColumn('Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0
         ),
-        new CoursesColumn('Weeks', 'Avg credits/week earned by students.', '7rem', true, 'number',
+        new CoursesColumn('Weeks', 'Avg credits/week earned by students.', '4rem', true, 'number',
           c => c.credits_per_week ? (c.credits / (Number(c.credits_per_week))).toFixed(1) : 'n/a',
           c => {
             const v = Number(c.credits_per_week);
