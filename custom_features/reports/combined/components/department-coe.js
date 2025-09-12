@@ -5,7 +5,7 @@ Vue.component('department-coe-entry', {
   },
   data() {
     return {
-      colors: bridgetools.colors
+      colors: bridgetools.colors // expects { green, red, gray, white, black, ... }
     }
   },
   computed: {
@@ -21,18 +21,29 @@ Vue.component('department-coe-entry', {
       return Number.isFinite(n) ? n : 0;
     },
 
-    // Strict: expect [{ name, count }]
+    // Strict input: [{ name, count }]
+    // - normalize name
+    // - coerce count
+    // - collapse dupes (case-insensitive)
+    // - drop zero-count rows
     assessments() {
       const arr = Array.isArray(this.coe?.assessments) ? this.coe.assessments : [];
-      return arr
-        .map(x => ({ name: String(x?.name || '').trim(), count: Number(x?.count) }))
-        .filter(x => x.name && Number.isFinite(x.count));
+      const map = new Map(); // key: lowercased name
+      for (const raw of arr) {
+        const name = String(raw?.name || '').trim();
+        const key = name.toLowerCase();
+        const count = Number(raw?.count);
+        if (!name || !Number.isFinite(count) || count <= 0) continue;
+        map.set(key, (map.get(key) || { name, count: 0 }));
+        map.get(key).count += count;
+      }
+      return Array.from(map.values());
     },
 
-    strongTypes()         { return this.assessments.filter(a => a.count >= 3); },
-    meetsEmploymentSkills(){ return this.employmentSkills >= 3; },
-    meetsSafety()          { return this.safety >= 3; },
-    meetsAssessmentMix()   { return this.strongTypes.length >= 3; },
+    strongTypes()           { return this.assessments.filter(a => a.count >= 3); },
+    meetsEmploymentSkills() { return this.employmentSkills >= 3; },
+    meetsSafety()           { return this.safety >= 3; },
+    meetsAssessmentMix()    { return this.strongTypes.length >= 3; },
 
     pillStyleBase() { return 'display:inline-block; padding:2px 6px; border-radius:9999px; font-size:12px; font-weight:600;'; },
 
@@ -59,9 +70,10 @@ Vue.component('department-coe-entry', {
     tagPillBase() { return 'display:inline-block; font-size:12px; font-weight:600; padding:2px 6px; border-radius:9999px; margin:2px;'; }
   },
   methods: {
+    // green when >= 3; gray otherwise
     assessPillStyle(count) {
       const ok = Number(count) >= 3;
-      const bg = ok ? this.colors.red : this.colors.gray;
+      const bg = ok ? this.colors.green : this.colors.gray;
       const fg = ok ? this.colors.white : this.colors.black;
       return `${this.tagPillBase} background:${bg}; color:${fg};`;
     }
@@ -123,6 +135,7 @@ Vue.component('department-coe-entry', {
     </div>
   `
 });
+
 
 
 Vue.component('department-coe', {
