@@ -68,19 +68,19 @@ Vue.component('department-coe-entry', {
     empPillStyle() {
       const ok = this.meetsEmploymentSkills;
       const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white();
+      const fg = this.white;
       return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
     },
     safPillStyle() {
       const ok = this.meetsSafety;
       const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white();
+      const fg = this.white;
       return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
     },
     mixPillStyle() {
       const ok = this.meetsAssessmentMix;
       const bg = ok ? this.okBg : this.badBg;
-      const fg = this.white();
+      const fg = this.white;
       return `${this.pillStyleBase} background:${bg}; color:${fg}; margin-left:6px;`;
     },
 
