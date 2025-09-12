@@ -18,7 +18,7 @@ Vue.component('department-statistics', {
     >
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
-            <h4 class="btech-card-title">Department Overview</h4>
+            <h4 class="btech-card-title">Statistics</h4>
             <span class="btech-pill" :title="'Filters: ' + (year || '')">
             {{ year || '—' }}
             </span>
@@ -27,13 +27,13 @@ Vue.component('department-statistics', {
         <!-- KPI Tiles -->
         <div class="btech-grid-3" style="margin-bottom:12px;">
             <kpi-tile
-              label="CS Certificates"
+              label="CS Certificates Awarded"
               :value="statistics.cs_certificates"
               :decimals="0"
               title="CS Certificates"
             />
             <kpi-tile
-              label="HS Certificates"
+              label="HS Certificates Awarded"
               :value="statistics.hs_certificates"
               :decimals="0"
               title="HS Certificates"
