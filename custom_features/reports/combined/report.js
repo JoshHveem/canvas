@@ -236,6 +236,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/occupations-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/courses-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/coe-report.js");
 
     postLoad();
   }
