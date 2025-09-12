@@ -7,6 +7,10 @@ Vue.component('department-report', {
         :cpl="campus"
         :year="year"
       />
+      <department-occupations
+        :occupations="occupations"
+        :year="year"
+      />
 
       <department-statistics
         :statistics="statistics"
@@ -45,6 +49,13 @@ Vue.component('department-report', {
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    occupations() {
+      let list = this.department_metrics?.occupations?? [];
+      if (!list.length) return [];
+      const yr = Number(this.year) || new Date().getFullYear();
+      list = (list.filter(d => Number(d.academic_year) === yr)) || []
+      return list;
     },
     cpl() {
       let list = this.department_metrics?.cpl ?? [];
