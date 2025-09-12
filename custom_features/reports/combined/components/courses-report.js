@@ -16,7 +16,7 @@ class CoursesColumn {
   }
 }
 
-Vue.component('department-courses', {
+Vue.component('courses-report', {
   props: {
     account:   { type: [Number, String], required: true },   // same as your master report
     year:      { type: [Number, String], required: true },
