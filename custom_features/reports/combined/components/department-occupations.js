@@ -84,9 +84,9 @@ Vue.component('department-occupation', {
           <div class="btech-kpi-label">Outlook & Pay Rating</div>
           <goal-pill
             :value="Number(stars || 0)"
-            :target="3"
+            :target="4"
             comparator="gte"
-            label="≥ 3 ★"
+            label="≥ 4 ★"
             style="margin-left:6px;"
           />
         </div>
