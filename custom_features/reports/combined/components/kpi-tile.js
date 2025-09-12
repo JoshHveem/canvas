@@ -62,6 +62,7 @@ Vue.component('kpi-tile', {
     unit:      { type: String, default: '' },
     decimals:  { type: Number, default: 1 },
     title:     { type: String, default: '' },
+    colors: bridgetools.colors,
 
     // Provide to show a pill (omit or null to hide)
     // goal = { comparator: 'lt'|'lte'|'gt'|'gte'|'between',
@@ -98,7 +99,7 @@ Vue.component('kpi-tile', {
     },
     pillStyle() {
       if (!this.goal) return {};
-      const good = '#10b981', bad = '#ef4444', mute = '#9ca3af';
+      const good = this.colors.green, bad = this.colors.red, mute = this.colors.gray;
       const bg = (this.nValue == null) ? mute : (this.meetsGoal ? good : bad);
       return {
         display: 'inline-block',
