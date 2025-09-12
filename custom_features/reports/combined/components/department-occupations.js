@@ -59,7 +59,6 @@ Vue.component('department-occupation', {
           :value="currentEmployment"
           :decimals="0"
           unit=""
-          :goal="{ comparator:'gt', target:0, label:'> 0 roles' }"
           title="Estimated number of currently employed"
         />
         <kpi-tile
@@ -67,7 +66,6 @@ Vue.component('department-occupation', {
           :value="projectedEmployment"
           :decimals="0"
           unit=""
-          :goal="{ comparator:'gt', target:0, label:'> 0 roles' }"
           title="Estimated number of roles in projection year"
         />
         <kpi-tile
@@ -131,7 +129,6 @@ Vue.component('department-occupations', {
       <div class="btech-row" style="align-items:center; margin-bottom:12px;">
         <h3 class="btech-card-title" style="margin:0;">{{ title }}</h3>
         <div style="flex:1;"></div>
-        <span class="btech-pill" :title="'Filters: ' + yearLabel">{{ yearLabel }}</span>
         <span class="btech-pill" style="margin-left:8px;">Total: {{ sorted.length }}</span>
       </div>
 
