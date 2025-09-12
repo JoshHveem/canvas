@@ -10,9 +10,7 @@ Vue.component('goal-pill', {
     max:        { type: Number, default: null },  // for between
     label:      { type: String, default: '' },    // text to show (e.g. "< 2 days")
     // Optional color overrides
-    colorGood:  { type: String, default: '#10b981' }, // green
-    colorBad:   { type: String, default: '#ef4444' }, // red
-    colorMute:  { type: String, default: '#9ca3af' }  // gray
+    colors: bridgetools.colors,
   },
   computed: {
     meets() {
@@ -29,8 +27,8 @@ Vue.component('goal-pill', {
     },
     pillStyle() {
       const bg =
-        this.value == null ? this.colorMute :
-        this.meets ? this.colorGood : this.colorBad;
+        this.value == null ? this.colors.gray:
+        this.meets ? this.colors.green : this.colors.red;
 
       return {
         display: 'inline-block',
