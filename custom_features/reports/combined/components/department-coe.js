@@ -169,10 +169,6 @@ Vue.component('department-coe-entry', {
     </div>
   `
 });
-</script>
-
-<!-- Wrapper to list all COE rows -->
-<script>
 Vue.component('department-coe', {
   props: {
     coeList: { type: Array, required: true, default: () => [] }, // array of COE rows
