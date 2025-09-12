@@ -1,4 +1,4 @@
-Vue.component('occupations-report', {
+Vue.component('coe-report', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
