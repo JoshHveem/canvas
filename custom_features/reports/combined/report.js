@@ -141,7 +141,7 @@
             { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
             { value: 'occupations', label: 'Occupations', component: 'occupations-report', title: 'Occupations Report' },
             { value: 'courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
-            { value: 'student',    label: 'Student',    component: 'student-report',    title: 'Student Report' },
+            { value: 'coe',    label: 'COE',    component: 'coe-report',    title: 'COE Evidence' },
           ],
         }
       },
