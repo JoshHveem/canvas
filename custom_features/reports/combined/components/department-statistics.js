@@ -13,8 +13,8 @@ Vue.component('department-statistics', {
   template: `
     <div
         class="btech-card btech-theme"
-        v-if="cpl"
-        aria-label="CPL"
+        v-if="statistics"
+        aria-label="Statistics"
     >
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
