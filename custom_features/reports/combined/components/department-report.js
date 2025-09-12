@@ -47,10 +47,9 @@ Vue.component('department-report', {
     },
     cpl() {
       let list = this.department_metrics?.cpl ?? [];
-      if (!list.length) return {};
+      if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)[0]) || {}
-      console.log(list)
+      list = (list.filter(d => Number(d.academic_year) === yr)) || []
       return list;
     },
     instructorMetrics() {
