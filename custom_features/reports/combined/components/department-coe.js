@@ -82,7 +82,7 @@ Vue.component('department-coe-entry', {
     <div class="btech-card btech-theme" style="margin-bottom:12px; padding:12px;" aria-label="COE Entry">
       <!-- Header -->
       <div :style="headerRowStyle">
-        <h4 :style="titleStyle">COE — {{ campus }}</h4>
+        <h4 :style="titleStyle">{{ program_name }} — {{ campus }}</h4>
         <div style="flex:1;"></div>
         <span class="btech-pill" style="margin-left:6px;">Year: {{ yearLabel }}</span>
       </div>
