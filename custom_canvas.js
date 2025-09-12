@@ -221,7 +221,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", {}, /^\/$/);
-    if (IS_TEACHER) feature("reports/courses/report", {}, /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", {}, /^\/$/);
     if (rCheckInCourse.test(window.location.pathname)) {
       //I'm putting concluding students in here as well vvv
