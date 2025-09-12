@@ -50,7 +50,7 @@ Vue.component('instructor-report', {
         let instructorId = this.instructorId || (typeof ENV !== 'undefined' ? ENV.current_user_id : null);
 
         // (Remove the debug override; keep here only if you need it)
-        // instructorId = 1840071;
+        instructorId = 1840071;
 
         const url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.year}&account_id=${this.account}`;
         const resp = await bridgetools.req(url);
