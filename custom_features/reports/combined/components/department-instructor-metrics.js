@@ -42,7 +42,7 @@ Vue.component('department-instructor-metrics', {
                 label="Weekly Submission Workload"
                 :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
                 :decimals="0"
-                :goal="{ comparator:'between', min: 15, max: 50, label:'~ 25' }"
+                :goal="{ comparator:'between', min: 40, max: 60, label:'~ 50' }"
                 title="Median days to return a grade"
               />
               <kpi-tile
