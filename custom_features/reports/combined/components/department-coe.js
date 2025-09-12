@@ -3,6 +3,17 @@ Vue.component('department-coe-entry', {
     coe:  { type: Object, required: true },
     year: { type: [String, Number], default: null }
   },
+  data() {
+    return {
+      colors: {
+        ok:    '#059669',
+        bad:   '#B91C1C',
+        muted: '#E5E7EB',
+        white: '#FFFFFF',
+        dark:  '#111827',
+      }
+    }
+  },
   computed: {
     // Basic fields (defensive coercion)
     campus() { return this.coe?.campus || '—'; },
@@ -53,11 +64,6 @@ Vue.component('department-coe-entry', {
     pillStyleBase() {
       return 'display:inline-block; padding:2px 6px; border-radius:9999px; font-size:12px; font-weight:600;';
     },
-    okBg()     { return '#059669'; }, // green-600
-    badBg()    { return '#B91C1C'; }, // red-700
-    mutedBg()  { return '#E5E7EB'; }, // gray-200
-    white()    { return '#FFFFFF'; },
-    darkText() { return '#111827'; },
 
     empPillStyle() {
       const ok = this.meetsEmploymentSkills;
