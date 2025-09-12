@@ -89,10 +89,10 @@ Vue.component('courses-report', {
           c => this.pctText(c.recommendable),
           c => this.bandBg(c.recommendable)
         ),
-        new CoursesColumn('Tags', 'Prominent tags from student comments.', 'auto', false, 'string',
-          c => this.renderTagsHTML(c),
-          null
-        )
+        // new CoursesColumn('Tags', 'Prominent tags from student comments.', 'auto', false, 'string',
+        //   c => this.renderTagsHTML(c),
+        //   null
+        // )
       ]
     };
   },
