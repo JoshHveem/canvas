@@ -7,10 +7,6 @@ Vue.component('department-report', {
         :cpl="campus"
         :year="year"
       />
-      <department-occupations
-        :occupations="occupations"
-        :year="year"
-      />
 
       <department-statistics
         :statistics="statistics"

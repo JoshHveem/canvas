@@ -139,6 +139,7 @@
           reportTypes: [
             { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
             { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
+            { value: 'occupations', label: 'Occupations', component: 'occupations-report', title: 'Occupations Report' },
             { value: 'course',     label: 'Course',     component: 'course-report',     title: 'Course Report' },
             { value: 'student',    label: 'Student',    component: 'student-report',    title: 'Student Report' },
           ],
@@ -233,6 +234,7 @@
     // The instructor report wrapper now owns its data & methods:
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/instructor-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/occupations-report.js");
 
     postLoad();
   }
