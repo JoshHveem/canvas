@@ -15,9 +15,9 @@ Vue.component('department-coe-entry', {
     }
   },
   computed: {
-    // Basic fields (defensive coercion)
-    campus() { return this.coe?.campus || '—'; },
+    campus()    { return this.coe?.campus || '—'; },
     yearLabel() { return Number(this.coe?.academic_year) || this.year || '—'; },
+
     employmentSkills() {
       const n = Number(this.coe?.employment_skills);
       return Number.isFinite(n) ? n : 0;
@@ -27,57 +27,20 @@ Vue.component('department-coe-entry', {
       return Number.isFinite(n) ? n : 0;
     },
 
-    // Normalize assessments from:
-    //  1) Array: [{type, count}]
-    //  2) Object map: { assignments: 28, quizzes: 5 }
-    //  3) Flat root keys: assessments_assignments: 28
+    // Strict: expect [{ name, count }]
     assessments() {
-      const raw = this.coe?.assessments;
-
-      // 1) Already an array
-      if (Array.isArray(raw) && raw.length) {
-        return raw
-          .map(x => ({ type: String(x?.type || '').trim(), count: Number(x?.count) }))
-          .filter(x => x.type && Number.isFinite(x.count));
-      }
-
-      // 2) Object map
-      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-        const out = [];
-        for (const [k, v] of Object.entries(raw)) {
-          const type = String(k || '').replace(/_/g, ' ').trim();
-          const count = Number(v);
-          if (type && Number.isFinite(count)) out.push({ type, count });
-        }
-        if (out.length) return out;
-      }
-
-      // 3) Flat root keys: assessments_<type>
-      const out = [];
-      for (const k in (this.coe || {})) {
-        if (!k || !k.startsWith('assessments_')) continue;
-        if (k === 'assessments_total_valid_assignments') continue; // ignore aggregated total if present
-        const type = k.replace(/^assessments_/, '').replace(/_/g, ' ').trim();
-        const cnt = Number(this.coe[k]);
-        if (type && Number.isFinite(cnt)) out.push({ type, count: cnt });
-      }
-      return out;
+      const arr = Array.isArray(this.coe?.assessments) ? this.coe.assessments : [];
+      return arr
+        .map(x => ({ name: String(x?.name || '').trim(), count: Number(x?.count) }))
+        .filter(x => x.name && Number.isFinite(x.count));
     },
 
-    // Assessment types meeting the "3 or more" threshold
-    strongTypes() {
-      return this.assessments.filter(a => a.count >= 3);
-    },
-
-    // Targets
-    meetsEmploymentSkills() { return this.employmentSkills >= 3; },
+    strongTypes()         { return this.assessments.filter(a => a.count >= 3); },
+    meetsEmploymentSkills(){ return this.employmentSkills >= 3; },
     meetsSafety()          { return this.safety >= 3; },
     meetsAssessmentMix()   { return this.strongTypes.length >= 3; },
 
-    // Inline style helpers (muted/green/red)
-    pillStyleBase() {
-      return 'display:inline-block; padding:2px 6px; border-radius:9999px; font-size:12px; font-weight:600;';
-    },
+    pillStyleBase() { return 'display:inline-block; padding:2px 6px; border-radius:9999px; font-size:12px; font-weight:600;'; },
 
     empPillStyle() {
       const bg = this.meetsEmploymentSkills ? this.colors.ok : this.colors.bad;
@@ -92,33 +55,16 @@ Vue.component('department-coe-entry', {
       return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
 
-    // layout styles
-    kpiGridStyle() {
-      return 'display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:8px;';
-    },
-    tileStyle() {
-      return 'border:1px solid #E5E7EB; border-radius:8px; padding:10px;';
-    },
-    labelStyle() {
-      return 'font-size:12px; color:#374151; font-weight:600; margin-bottom:4px;';
-    },
-    valueStyle() {
-      return 'font-size:18px; font-weight:700;';
-    },
-    headerRowStyle() {
-      return 'display:flex; align-items:center; gap:8px; margin-bottom:8px;';
-    },
-    titleStyle() {
-      return 'margin:0; font-size:16px;';
-    },
+    kpiGridStyle()   { return 'display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:8px;'; },
+    tileStyle()      { return 'border:1px solid #E5E7EB; border-radius:8px; padding:10px;'; },
+    labelStyle()     { return 'font-size:12px; color:#374151; font-weight:600; margin-bottom:4px;'; },
+    valueStyle()     { return 'font-size:18px; font-weight:700;'; },
+    headerRowStyle() { return 'display:flex; align-items:center; gap:8px; margin-bottom:8px;'; },
+    titleStyle()     { return 'margin:0; font-size:16px;'; },
 
-    // Assessment tag pill styles
-    tagPillBase() {
-      return 'display:inline-block; font-size:12px; font-weight:600; padding:2px 6px; border-radius:9999px; margin:2px;';
-    }
+    tagPillBase() { return 'display:inline-block; font-size:12px; font-weight:600; padding:2px 6px; border-radius:9999px; margin:2px;'; }
   },
   methods: {
-    // Assessment pill style: green if >=3, gray otherwise
     assessPillStyle(count) {
       const ok = Number(count) >= 3;
       const bg = ok ? this.colors.ok : this.colors.muted;
@@ -171,11 +117,11 @@ Vue.component('department-coe-entry', {
         <div style="display:flex; flex-wrap:wrap;">
           <span
             v-for="a in assessments"
-            :key="a.type"
+            :key="a.name"
             :style="assessPillStyle(a.count)"
-            :title="a.type + ': ' + a.count"
+            :title="a.name + ': ' + a.count"
           >
-            {{ a.type }}: {{ a.count }}
+            {{ a.name }}: {{ a.count }}
           </span>
           <span v-if="!assessments.length" style="font-size:12px; color:#6B7280;">No assessments reported.</span>
         </div>
