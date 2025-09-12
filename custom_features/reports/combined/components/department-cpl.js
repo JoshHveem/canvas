@@ -18,7 +18,7 @@ Vue.component('department-cpl', {
     >
         <!-- Header -->
         <div class="btech-row" style="margin-bottom:12px;">
-            <h4 class="btech-card-title">Department Overview</h4>
+            <h4 class="btech-card-title">{{ cpl.campus }} CPL</h4>
             <span class="btech-pill" :title="'Filters: ' + (year || '')">
             {{ year || '—' }}
             </span>

@@ -3,7 +3,8 @@ Vue.component('department-report', {
     <div>
       <!-- Could show a loading indicator if you like -->
       <department-cpl
-        :cpl="cpl"
+        v-for="campus in cpl"
+        :cpl="campus"
         :year="year"
       />
 
