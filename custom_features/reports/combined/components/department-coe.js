@@ -5,13 +5,7 @@ Vue.component('department-coe-entry', {
   },
   data() {
     return {
-      colors: {
-        ok:    '#059669',  // green-600
-        bad:   '#B91C1C',  // red-700
-        muted: '#E5E7EB',  // gray-200
-        white: '#FFFFFF',
-        dark:  '#111827',
-      }
+      colors: bridgetools.colors
     }
   },
   computed: {
@@ -43,15 +37,15 @@ Vue.component('department-coe-entry', {
     pillStyleBase() { return 'display:inline-block; padding:2px 6px; border-radius:9999px; font-size:12px; font-weight:600;'; },
 
     empPillStyle() {
-      const bg = this.meetsEmploymentSkills ? this.colors.ok : this.colors.bad;
+      const bg = this.meetsEmploymentSkills ? this.colors.green : this.colors.red;
       return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
     safPillStyle() {
-      const bg = this.meetsSafety ? this.colors.ok : this.colors.bad;
+      const bg = this.meetsSafety ? this.colors.green : this.colors.red;
       return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
     mixPillStyle() {
-      const bg = this.meetsAssessmentMix ? this.colors.ok : this.colors.bad;
+      const bg = this.meetsAssessmentMix ? this.colors.green : this.colors.red;
       return `${this.pillStyleBase} background:${bg}; color:${this.colors.white}; margin-left:6px;`;
     },
 
@@ -67,8 +61,8 @@ Vue.component('department-coe-entry', {
   methods: {
     assessPillStyle(count) {
       const ok = Number(count) >= 3;
-      const bg = ok ? this.colors.ok : this.colors.muted;
-      const fg = ok ? this.colors.white : this.colors.dark;
+      const bg = ok ? this.colors.red : this.colors.gray;
+      const fg = ok ? this.colors.white : this.colors.black;
       return `${this.tagPillBase} background:${bg}; color:${fg};`;
     }
   },
