@@ -29,7 +29,7 @@
             @click="settings.reportType = rt.value; onReportChange()"
             style="
               border:1px solid #e5e7eb;
-              border-radius:9999px;
+              border-radius:12px;
               padding:6px 12px;
               font-weight:600;
               font-size:12px;
