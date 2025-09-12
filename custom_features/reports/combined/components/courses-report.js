@@ -85,7 +85,7 @@ Vue.component('courses-report', {
           c => this.pctText(c.examples),
           c => this.bandBg(c.examples)
         ),
-        new CoursesColumn('Recommendable', 'Would recommend this course.', '7rem', true, 'number',
+        new CoursesColumn('Recommend', 'Would recommend this course.', '7rem', true, 'number',
           c => this.pctText(c.recommendable),
           c => this.bandBg(c.recommendable)
         ),
