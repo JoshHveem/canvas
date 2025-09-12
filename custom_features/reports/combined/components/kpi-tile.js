@@ -10,7 +10,11 @@ Vue.component('goal-pill', {
     max:        { type: Number, default: null },  // for between
     label:      { type: String, default: '' },    // text to show (e.g. "< 2 days")
     // Optional color overrides
-    colors: bridgetools.colors,
+  },
+  data() {
+    return {
+      colors: bridgetools.colors
+    }
   },
   computed: {
     meets() {
@@ -62,7 +66,6 @@ Vue.component('kpi-tile', {
     unit:      { type: String, default: '' },
     decimals:  { type: Number, default: 1 },
     title:     { type: String, default: '' },
-    colors: bridgetools.colors,
 
     // Provide to show a pill (omit or null to hide)
     // goal = { comparator: 'lt'|'lte'|'gt'|'gte'|'between',
@@ -73,6 +76,11 @@ Vue.component('kpi-tile', {
     bands:     { type: Array, default: () => [] } // e.g. [{ max: 2, status:'good' }, { max: 3, status:'warn' }, { status:'bad' }]
   },
 
+  data() {
+    return {
+      colors: bridgetools.colors
+    }
+  },
   computed: {
     nValue() {
       const n = Number(this.value);
