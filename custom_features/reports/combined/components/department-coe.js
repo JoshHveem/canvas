@@ -177,7 +177,7 @@ Vue.component('department-coe', {
   },
   computed: {
     sorted() {
-      const arr = [...this.coe]; // typo guard
+      const arr = [...this.coeList]; // typo guard
       return (Array.isArray(this.coeList) ? [...this.coeList] : arr)
         .sort((a, b) => {
           const ya = Number(a?.academic_year || 0), yb = Number(b?.academic_year || 0);
