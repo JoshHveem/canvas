@@ -55,7 +55,6 @@ Vue.component('instructor-report', {
         const url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.year}&account_id=${this.account}`;
         const resp = await bridgetools.req(url);
         this.instructor_metrics = resp || {};
-        console.log(resp);
         // console.log('Instructor metrics', resp);
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
