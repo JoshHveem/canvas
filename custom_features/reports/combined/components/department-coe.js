@@ -129,3 +129,46 @@ Vue.component('department-coe-entry', {
     </div>
   `
 });
+
+
+Vue.component('department-coe', {
+  props: {
+    coeList: { type: Array, required: true, default: () => [] }, // array of COE rows
+    year:    { type: [String, Number], default: null },
+    title:   { type: String, default: 'COE' }
+  },
+  computed: {
+    sorted() {
+      const arr = [...this.coeList]; // typo guard
+      return (Array.isArray(this.coeList) ? [...this.coeList] : arr)
+        .sort((a, b) => {
+          const ya = Number(a?.academic_year || 0), yb = Number(b?.academic_year || 0);
+          if (yb !== ya) return yb - ya;
+          const ca = (a?.campus || '').toUpperCase();
+          const cb = (b?.campus || '').toUpperCase();
+          return ca < cb ? -1 : ca > cb ? 1 : 0;
+        });
+    }
+  },
+  template: `
+    <div class="btech-card btech-theme" aria-label="COE Section" style="padding:12px;">
+      <!-- Header -->
+      <div style="display:flex; align-items:center; margin-bottom:12px;">
+        <h3 class="btech-card-title" style="margin:0;">{{ title }}</h3>
+        <div style="flex:1;"></div>
+        <span class="btech-pill" style="margin-left:8px;">Total: {{ sorted.length }}</span>
+      </div>
+
+      <!-- List -->
+      <div v-if="sorted.length">
+        <department-coe-entry
+          v-for="row in sorted"
+          :key="(row.div_code || 'x') + '-' + (row.academic_year || 'y') + '-' + (row.campus || 'z')"
+          :coe="row"
+          :year="year"
+        />
+      </div>
+      <div v-else class="btech-muted" style="text-align:center; padding:12px;">No COE data available.</div>
+    </div>
+  `
+});
