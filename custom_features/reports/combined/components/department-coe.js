@@ -9,6 +9,7 @@ Vue.component('department-coe-entry', {
     }
   },
   computed: {
+    program_name()    { return this.coe?.program_name || '—'; },
     campus()    { return this.coe?.campus || '—'; },
     yearLabel() { return Number(this.coe?.academic_year) || this.year || '—'; },
 
