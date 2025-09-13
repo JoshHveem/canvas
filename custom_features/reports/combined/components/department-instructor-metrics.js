@@ -10,7 +10,6 @@ Vue.component('department-instructor-metrics', {
     
   },
   mounted: async function() {
-    console.log(this.instructorMetrics);
   },
 
   template: `
