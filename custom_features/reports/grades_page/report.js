@@ -22,7 +22,7 @@
   // Create the button element
   function createButton() {
     // Create the <a> button
-    const btn = $('<a class="Button" id="canvas-grades-report-vue-gen">Progress Report</a>');
+    const btn = $('<a class="Button" id="canvas-grades-report-vue-gen">Student Progress</a>');
 
     // Create the red notification circle (hidden by default)
     const circle = $('<span id="progress-report-alert-circle"></span>');
