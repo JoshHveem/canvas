@@ -9,6 +9,9 @@ Vue.component('department-instructor-metrics', {
     yearLabel() { return this.year ?? '—'; },
     
   },
+  mounted: async function() {
+    console.log(this.instructorMetrics);
+  },
 
   template: `
         <div
