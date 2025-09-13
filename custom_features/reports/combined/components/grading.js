@@ -119,6 +119,7 @@ Vue.component('instructor-metrics-grading', {
     }
   },
   async mounted() {
+    console.log(this.grading);
     this.openModal();
   },
   methods: {
