@@ -52,9 +52,12 @@ Vue.component('instructor-report', {
         // (Remove the debug override; keep here only if you need it)
         // instructorId = 1840071;
 
-        const url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.year}&account_id=${this.account}&dept_head_account_ids[]=${this.account}`;
+        // const url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.year}&account_id=${this.account}&dept_head_account_ids[]=${this.account}`;
+        const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`
         const resp = await bridgetools.req(url);
-        this.instructor_metrics = resp || {};
+        let instructors = resp || [];
+        console.log(instructors);
+        if (instructors.length === 1) this.instructor_metrics = instructors[0];
         console.log('Instructor metrics', resp);
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
