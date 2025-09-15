@@ -234,6 +234,7 @@
 
     // The instructor report wrapper now owns its data & methods:
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/instructor-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/occupations-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/courses-report.js");
