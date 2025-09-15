@@ -46,8 +46,9 @@ Vue.component('instructor-report', {
         for (let i = 0; i < this.instructors.length; i++) {
           let instructor = this.instructors[i];
           let canvasData = (await canvasGet(`/api/v1/users/${instructor.canvas_id}`))[0];
-          instructor.first_name = canvasData.first_name;
-          instructor.last_name = canvasData.last_name;
+          this.instructors[i].first_name = canvasData.first_name;
+          this.instructors[i].last_name = canvasData.last_name;
+          console.log(this.instructors[i]);
         }
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
