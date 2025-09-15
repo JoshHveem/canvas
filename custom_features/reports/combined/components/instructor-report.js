@@ -51,7 +51,7 @@ Vue.component('instructor-report', {
         }
         this.instructors = instructors;
       } catch (e) {
-        console.warn('Failed to load instructor metrics', e);
+        console.error('Failed to load instructor metrics', e);
         this.instructors = [];
       } finally {
         this.loading = false;
