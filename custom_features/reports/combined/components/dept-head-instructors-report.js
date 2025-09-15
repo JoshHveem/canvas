@@ -38,7 +38,7 @@ Vue.component('instructor-metrics-row', {
 
     // Use the weighted share (0..1)
     deptSharePct() {
-      const p = Number(this.sh?.perc_instructor_support_hours_weighted ?? this.sh?.perc_hours_graded);
+      const p = Number(this.sh?.perc_hours_graded);
       return Number.isFinite(p) ? p : 0;
     },
     daysToReply() { return this.safeNum(this.ix?.days_to_reply); },
@@ -176,7 +176,7 @@ Vue.component('instructor-metrics-overview', {
 
     sorted() {
       const arr = Array.isArray(this.instructors) ? [...this.instructors] : [];
-      const share = i => Number(i?.support_hours?.perc_instructor_support_hours_weighted ?? i?.support_hours?.perc_hours_graded) || 0;
+      const share = i => Number(i?.support_hours?.perc_hours_graded) || 0;
       const byShare  = (a,b) => share(b) - share(a);
       const byGraded = (a,b) => ((b?.grading?.assignments_graded || 0) - (a?.grading?.assignments_graded || 0));
       const byName   = (a,b) => {
