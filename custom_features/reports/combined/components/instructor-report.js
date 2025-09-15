@@ -43,7 +43,7 @@ Vue.component('instructor-report', {
         const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
         instructors = resp?.data || [];
-        for (let i = 0; i < this.instructors.length; i++) {
+        for (let i = 0; i < instructors.length; i++) {
           let canvasData = (await canvasGet(`/api/v1/users/${instructors[i].canvas_id}`))[0];
           instructors[i].first_name = canvasData.first_name;
           instructors[i].last_name = canvasData.last_name;
