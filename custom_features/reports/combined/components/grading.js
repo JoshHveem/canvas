@@ -76,17 +76,17 @@ Vue.component('instructor-metrics-grading', {
                 <div class="btech-tile">
                   <div class="btech-row" style="margin-bottom:6px;">
                       <div style="font-size:12px; color:#374151; font-weight:600;">Graded with Rubric</div>
-                      <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round((grading.graded_with_rubric || 0) * 100) }}%</div>
+                      <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round((grading.perc_graded_with_rubric || 0) * 100) }}%</div>
                   </div>
                   <div class="btech-progress" role="presentation">
                       <div
                       class="fill btech-fill-success"
-                      :style="{ width: Math.max(0, Math.min(100, (grading.graded_with_rubric || 0) * 100)) + '%' }"
+                      :style="{ width: Math.max(0, Math.min(100, (grading.perc_graded_with_rubric || 0) * 100)) + '%' }"
                       role="progressbar"
-                      :aria-valuenow="(grading.graded_with_rubric || 0) * 100"
+                      :aria-valuenow="(grading.perc_graded_with_rubric || 0) * 100"
                       aria-valuemin="0"
                       aria-valuemax="100"
-                      :aria-label="'Rubric usage ' + Math.round((grading.graded_with_rubric || 0) * 100) + '%'"
+                      :aria-label="'Rubric usage ' + Math.round((grading.perc_graded_with_rubric || 0) * 100) + '%'"
                       ></div>
                   </div>
                   <div class="btech-muted" style="margin-top:6px;">Target: 100% of graded items should use a rubric.</div>
