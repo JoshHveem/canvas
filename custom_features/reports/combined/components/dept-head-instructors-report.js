@@ -178,7 +178,7 @@ Vue.component('instructor-metrics-row', {
 /* Overview list (multiple instructors) */
 Vue.component('instructor-metrics-overview', {
   mounted: function () {
-    console.log(this.instructors);
+    // console.log(this.instructors);
   },
   props: {
     instructors: { type: Array, required: true, default: () => [] },
