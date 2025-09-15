@@ -42,6 +42,7 @@ Vue.component('instructor-report', {
         // If you need to scope to dept head, this returns all instructors under that account:
         const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
+        this.instructors = [];
         instructors = resp?.data || [];
         for (let i = 0; i < instructors.length; i++) {
           let canvasData = (await canvasGet(`/api/v1/users/${instructors[i].canvas_id}`))[0];
