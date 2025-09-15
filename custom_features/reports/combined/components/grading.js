@@ -76,7 +76,7 @@ Vue.component('instructor-metrics-grading', {
                 <div class="btech-tile">
                   <div class="btech-row" style="margin-bottom:6px;">
                       <div style="font-size:12px; color:#374151; font-weight:600;">Graded with Rubric</div>
-                      <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round((grading.graded_with_rubric || 0) * 100) }}%</div>
+                      <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round((grading.perc_graded_with_rubric || 0) * 100) }}%</div>
                   </div>
                   <div class="btech-progress" role="presentation">
                       <div
