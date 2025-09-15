@@ -43,12 +43,12 @@ Vue.component('instructor-report', {
         const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
         this.instructors = resp?.data || [];
-        console.log(this.instructors);
         instructors.map(async (instructor) => {
           let canvasData = (await canvasGet(`/api/v1/users/${instructor.canvas_id}`))[0];
           instructor.first_name = canvasData.first_name;
           instructor.last_name = canvasData.last_name;
         });
+        console.log(this.instructors);
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
         this.instructors = [];
