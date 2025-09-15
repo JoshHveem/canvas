@@ -43,6 +43,7 @@ Vue.component('instructor-metrics-row', {
       return Number.isFinite(p) ? p : null; // 0..1
     },
     deptSharePct() {
+        console.log(this.sh);
       const p = Number(this.sh?.perc_instructor_support_hours_weighted);
       return Number.isFinite(p) ? p : 0; // 0..1
     },
