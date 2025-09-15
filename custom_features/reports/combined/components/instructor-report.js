@@ -81,7 +81,7 @@ Vue.component('instructor-report', {
 
         // year slices
         grading:       oneOrYear(raw?.grading),
-        supportHours:  oneOrYear(raw?.support_hours || raw?.supportHours),
+        support_hours:  oneOrYear(raw?.support_hours || raw?.support_hours),
         interactions:  oneOrYear(raw?.interactions),
         surveys:       oneOrYear(raw?.surveys)
       };
@@ -115,7 +115,7 @@ Vue.component('instructor-report', {
       <div v-if="!loading && hasSingle">
         <instructor-metrics-grading
           :interactions="instructor.interactions"
-          :support-hours="instructor.supportHours"
+          :support-hours="instructor.support_hours"
           :grading="instructor.grading"
           :year="year"
         />
