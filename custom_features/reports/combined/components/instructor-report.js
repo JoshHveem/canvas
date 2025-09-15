@@ -42,14 +42,14 @@ Vue.component('instructor-report', {
         // If you need to scope to dept head, this returns all instructors under that account:
         const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
-        this.instructors = resp?.data || [];
+        instructors = resp?.data || [];
         for (let i = 0; i < this.instructors.length; i++) {
-          let instructor = this.instructors[i];
           let canvasData = (await canvasGet(`/api/v1/users/${instructor.canvas_id}`))[0];
-          this.instructors[i].first_name = canvasData.first_name;
-          this.instructors[i].last_name = canvasData.last_name;
-          console.log(this.instructors[i]);
+          instructors[i].first_name = canvasData.first_name;
+          instructors[i].last_name = canvasData.last_name;
+          console.log(instructors[i]);
         }
+        this.instructors = instructors;
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
         this.instructors = [];
