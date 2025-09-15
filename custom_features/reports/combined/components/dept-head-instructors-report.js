@@ -43,7 +43,6 @@ Vue.component('instructor-metrics-row', {
       return Number.isFinite(p) ? p : null; // 0..1
     },
     deptSharePct() {
-        console.log(this.sh);
       const p = Number(this.sh?.perc_instructor_support_hours_weighted);
       return Number.isFinite(p) ? p : 0; // 0..1
     },
@@ -178,6 +177,9 @@ Vue.component('instructor-metrics-row', {
 
 /* Overview list (multiple instructors) */
 Vue.component('instructor-metrics-overview', {
+  mounted: function () {
+    console.log(this.instructors);
+  },
   props: {
     instructors: { type: Array, required: true, default: () => [] },
     title: { type: String, default: 'Instructor Metrics — Overview' },
