@@ -14,7 +14,7 @@ Vue.component('instructor-metrics-row', {
         grade_days_lt: 2,
         comments_gte: 1,
         reply_days_lt: 2,
-        rubric_pct_gte: 1.0 // 100%
+        rubric_pct_gte: 0.90 // 100%
       })
     }
   },
