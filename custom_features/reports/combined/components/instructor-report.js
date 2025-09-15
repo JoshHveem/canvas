@@ -1,31 +1,51 @@
+/* =========================
+ * Instructor Report (root)
+ * ========================= */
 Vue.component('instructor-report', {
   props: {
-    year:       { type: [Number, String], required: true },
-    account:    { type: [Number, String], required: true },
+    year:         { type: [Number, String], required: true },
+    account:      { type: [Number, String], required: true },
     instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
   },
   data() {
     return {
       loading: false,
-      instructors: [] // raw from API (may include arrays per metric)
+      instructors: [],   // raw list from API
+      selected: null     // normalized instructor object for the chosen year
     };
   },
   computed: {
-    yearNum() {
-      return Number(this.year) || new Date().getFullYear();
-    },
+    yearNum() { return Number(this.year) || new Date().getFullYear(); },
 
-    // Normalize each instructor down to a single-year snapshot:
     normalizedInstructors() {
       return (Array.isArray(this.instructors) ? this.instructors : []).map(i => this._forYear(i, this.yearNum));
     },
 
-    hasMany() { return this.normalizedInstructors.length > 1; },
+    hasMany()   { return this.normalizedInstructors.length > 1; },
     hasSingle() { return this.normalizedInstructors.length === 1; },
 
-    // The single instructor object (already normalized for the chosen year)
-    instructor() {
-      return this.hasSingle ? this.normalizedInstructors[0] : null;
+    // The detail record to show (selected or the only one)
+    detailInstructor() {
+      if (this.selected) return this.selected;
+      if (this.hasSingle) return this.normalizedInstructors[0];
+      return null;
+    },
+
+    // styles for the back pill
+    backPillStyle() {
+      return [
+        'display:inline-block',
+        'cursor:pointer',
+        'user-select:none',
+        'border-radius:9999px',
+        'padding:4px 10px',
+        'font-size:12px',
+        'font-weight:700',
+        'background:#F3F4F6',
+        'color:#111827',
+        'border:1px solid #E5E7EB',
+        'margin-bottom:8px'
+      ].join(';');
     }
   },
   watch: {
@@ -39,55 +59,74 @@ Vue.component('instructor-report', {
     async loadInstructorMetrics() {
       try {
         this.loading = true;
-        // If you need to scope to dept head, this returns all instructors under that account:
+        this.selected = null; // reset selection on reload
         const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
-        this.instructors = [];
-        instructors = resp?.data || [];
-        for (let i = 0; i < instructors.length; i++) {
-          let canvasData = (await canvasGet(`/api/v1/users/${instructors[i].canvas_id}`))[0];
-          instructors[i].first_name = canvasData.first_name;
-          instructors[i].last_name = canvasData.last_name;
+
+        const incoming = resp?.data || [];
+        // enrich names from Canvas
+        for (let i = 0; i < incoming.length; i++) {
+          try {
+            const canvasData = (await canvasGet(`/api/v1/users/${incoming[i].canvas_id}`))[0];
+            incoming[i].first_name = canvasData?.first_name || incoming[i].first_name;
+            incoming[i].last_name  = canvasData?.last_name  || incoming[i].last_name;
+          } catch (e) {
+            // non-fatal; keep whatever we have
+          }
         }
-        this.instructors = instructors;
+        this.instructors = incoming;
+
+        // if exactly one, auto-select it
+        if (this.normalizedInstructors.length === 1) {
+          this.selected = this.normalizedInstructors[0];
+        }
       } catch (e) {
         console.error('Failed to load instructor metrics', e);
         this.instructors = [];
+        this.selected = null;
       } finally {
         this.loading = false;
       }
     },
 
-    // Pull one object with only the selected year’s metrics
+    // Normalize one instructor to a single-year snapshot
     _forYear(raw, yr) {
-      const pickYear = (arr) => {
-        if (!Array.isArray(arr)) return {};
-        return arr.find(d => Number(d?.academic_year) === yr) || {};
-      };
+      const pickYear = (arr) => Array.isArray(arr)
+        ? (arr.find(d => Number(d?.academic_year) === yr) || {})
+        : {};
 
-      // Some APIs send single objects already; keep them as-is if so
-      const oneOrYear = (val) => {
-        if (Array.isArray(val)) return pickYear(val);
-        return (val && Number(val.academic_year) ? (Number(val.academic_year) === yr ? val : {}) : (val || {}));
-      };
+      const oneOrYear = (val) => Array.isArray(val)
+        ? pickYear(val)
+        : (val && Number(val.academic_year)
+            ? (Number(val.academic_year) === yr ? val : {})
+            : (val || {}));
 
       return {
-        // identity/meta (pass through)
         first_name: raw?.first_name || raw?.firstName || '',
         last_name:  raw?.last_name  || raw?.lastName  || '',
-        canvas_user_id: raw?.canvas_user_id || raw?.canvasId || raw?.canvas_id || null,
+        canvas_user_id: raw?.canvas_user_id || raw?.canvasId || raw?.canvas_id || raw?.canvas_id || null,
         div_code: raw?.div_code || null,
         academic_year: yr,
 
-        // year slices
-        grading:       oneOrYear(raw?.grading),
-        support_hours:  oneOrYear(raw?.support_hours || raw?.support_hours),
-        interactions:  oneOrYear(raw?.interactions),
-        surveys:       oneOrYear(raw?.surveys)
+        grading:        oneOrYear(raw?.grading),
+        support_hours:  oneOrYear(raw?.support_hours || raw?.supportHours),
+        interactions:   oneOrYear(raw?.interactions),
+        surveys:        oneOrYear(raw?.surveys)
       };
     },
 
-    // Optional helpers (kept from your original)
+    onSelectInstructor(inst) {
+      // inst is already normalized for the year (emitted by the row component),
+      // but if you decide to emit the raw object, re-normalize here.
+      this.selected = inst;
+      // optional: scroll into view / focus, etc.
+    },
+
+    onBackToList() {
+      this.selected = null;
+    },
+
+    // (kept helpers)
     dateToString(date) {
       date = new Date(Date.parse(date));
       return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
@@ -104,30 +143,36 @@ Vue.component('instructor-report', {
         <div class="btech-muted" style="text-align:center;">Loading…</div>
       </div>
 
-      <!-- Multiple instructors: show overview list -->
+      <!-- Overview list (only when multiple and nothing selected) -->
       <instructor-metrics-overview
-        v-if="!loading && hasMany"
+        v-if="!loading && hasMany && !selected"
         :instructors="normalizedInstructors"
         :year="year"
+        @select="onSelectInstructor"
       />
 
-      <!-- Exactly one: show individual report -->
-      <div v-if="!loading && hasSingle">
+      <!-- Back button when drilled in and there are multiple -->
+      <div v-if="!loading && hasMany && selected" :style="backPillStyle" @click="onBackToList">
+        ← Back to list
+      </div>
+
+      <!-- Detail view (single or selected) -->
+      <div v-if="!loading && detailInstructor">
         <instructor-metrics-grading
-          :interactions="instructor.interactions"
-          :support-hours="instructor.support_hours"
-          :grading="instructor.grading"
+          :interactions="detailInstructor.interactions"
+          :support-hours="detailInstructor.support_hours"
+          :grading="detailInstructor.grading"
           :year="year"
         />
         <instructor-metrics-surveys
-          v-if="instructor.surveys && Object.keys(instructor.surveys).length"
-          :surveys="instructor.surveys"
+          v-if="detailInstructor.surveys && Object.keys(detailInstructor.surveys).length"
+          :surveys="detailInstructor.surveys"
           :year="year"
         />
       </div>
 
       <!-- None: empty state -->
-      <div v-if="!loading && !hasMany && !hasSingle" class="btech-card btech-theme">
+      <div v-if="!loading && !hasMany && !detailInstructor" class="btech-card btech-theme">
         <div class="btech-muted" style="text-align:center;">No instructor data for {{ year }}.</div>
       </div>
     </div>

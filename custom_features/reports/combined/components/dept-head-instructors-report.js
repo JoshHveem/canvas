@@ -2,10 +2,8 @@
  * Instructor Overview (rows)
  * =========================== */
 
-/* One instructor row */
 Vue.component('instructor-metrics-row', {
   props: {
-    // expects: { first_name, last_name, canvas_user_id, div_code, academic_year, grading, support_hours, interactions }
     instructor: { type: Object, required: true },
     goals: {
       type: Object,
@@ -14,12 +12,12 @@ Vue.component('instructor-metrics-row', {
         grade_days_lt: 2,
         comments_gte: 1,
         reply_days_lt: 2,
-        rubric_pct_gte: 0.90 // 100%
+        rubric_pct_gte: 1.00 // target 100%
       })
     }
   },
   computed: {
-    // identity
+    // identity & year slice aliases
     name() {
       const f = this.instructor?.first_name || '';
       const l = this.instructor?.last_name || '';
@@ -28,34 +26,29 @@ Vue.component('instructor-metrics-row', {
     year() { return this.instructor?.academic_year || '—'; },
     divCode() { return this.instructor?.div_code || null; },
 
-    // data groups
     g()  { return this.instructor?.grading || {}; },
     sh() { return this.instructor?.support_hours || {}; },
     ix() { return this.instructor?.interactions || {}; },
 
-    // KPIs
     assignmentsGraded() { return Number(this.g?.assignments_graded) || 0; },
     avgAttempts()       { return this.safeNum(this.g?.average_attempts); },
     daysToGrade()       { return this.safeNum(this.g?.days_to_grade); },
     commentsPerSubm()   { return this.safeNum(this.g?.comments_per_submission_graded); },
-    rubricPct()         {
-      const p = Number(this.g?.perc_graded_with_rubric);
-      return Number.isFinite(p) ? p : null; // 0..1
-    },
+    rubricPct()         { const p = Number(this.g?.perc_graded_with_rubric); return Number.isFinite(p) ? p : null; },
+
+    // Use the weighted share (0..1)
     deptSharePct() {
-      const p = Number(this.sh?.perc_hours_graded);
-      return Number.isFinite(p) ? p : 0; // 0..1
+      const p = Number(this.sh?.perc_instructor_support_hours_weighted ?? this.sh?.perc_hours_graded);
+      return Number.isFinite(p) ? p : 0;
     },
     daysToReply() { return this.safeNum(this.ix?.days_to_reply); },
 
-    // goal classes
     attemptsClass()     { return this.goalClassLT(this.avgAttempts, this.goals.attempts_lt); },
     daysToGradeClass()  { return this.goalClassLT(this.daysToGrade, this.goals.grade_days_lt); },
     commentsClass()     { return this.goalClassGTE(this.commentsPerSubm, this.goals.comments_gte); },
     replyClass()        { return this.goalClassLT(this.daysToReply, this.goals.reply_days_lt); },
     rubricClass()       { return this.goalClassGTE(this.rubricPct, this.goals.rubric_pct_gte); },
 
-    // inline styles
     rowStyle() {
       return [
         'display:grid',
@@ -66,7 +59,8 @@ Vue.component('instructor-metrics-row', {
         'border:1px solid #E5E7EB',
         'border-radius:10px',
         'margin-bottom:8px',
-        'background:#FFFFFF'
+        'background:#FFFFFF',
+        'cursor:pointer' // clickable
       ].join(';');
     },
     identityCellStyle() { return 'min-width:0'; },
@@ -79,11 +73,10 @@ Vue.component('instructor-metrics-row', {
     smallValueStyle() { return 'font-size:12px;font-weight:700;color:#111827;margin-top:4px;'; },
 
     kpiBaseStyle() { return 'min-width:0;padding:6px;border-radius:8px;border:1px solid transparent;'; },
-    kpiGoodStyle() { return this.kpiBaseStyle + 'background:#ECFDF5;border-color:#A7F3D0;'; },   // green
-    kpiBadStyle()  { return this.kpiBaseStyle + 'background:#FEF2F2;border-color:#FECACA;'; },   // red
+    kpiGoodStyle() { return this.kpiBaseStyle + 'background:#ECFDF5;border-color:#A7F3D0;'; },
+    kpiBadStyle()  { return this.kpiBaseStyle + 'background:#FEF2F2;border-color:#FECACA;'; },
     kpiNeutralStyle(){ return this.kpiBaseStyle + 'background:#FFFFFF;border-color:#E5E7EB;'; },
 
-    // share bar
     shareCellStyle() { return 'min-width:0;padding:6px;border:1px solid #E5E7EB;border-radius:8px;'; },
     shareBarStyle()  { return 'height:8px;border-radius:9999px;background:#E5E7EB;overflow:hidden;margin-top:4px;'; },
     shareFillStyle() {
@@ -92,34 +85,22 @@ Vue.component('instructor-metrics-row', {
     },
   },
   methods: {
-    safeNum(v) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    },
-    goalClassLT(val, target) {
-      if (val == null) return 'neutral';
-      return val < target ? 'good' : 'bad';
-    },
-    goalClassGTE(val, target) {
-      if (val == null) return 'neutral';
-      return val >= target ? 'good' : 'bad';
-    },
-    kpiStyleByClass(kind) {
-      if (kind === 'good') return this.kpiGoodStyle;
-      if (kind === 'bad')  return this.kpiBadStyle;
-      return this.kpiNeutralStyle;
-    },
+    safeNum(v) { const n = Number(v); return Number.isFinite(n) ? n : null; },
+    goalClassLT(val, target) { if (val == null) return 'neutral'; return val < target ? 'good' : 'bad'; },
+    goalClassGTE(val, target){ if (val == null) return 'neutral'; return val >= target ? 'good' : 'bad'; },
+    kpiStyleByClass(kind) { if (kind === 'good') return this.kpiGoodStyle; if (kind === 'bad') return this.kpiBadStyle; return this.kpiNeutralStyle; },
     fmtInt(n) { return (Number(n) || 0).toLocaleString(); },
     fmt1(n)   { return (n == null) ? '—' : Number(n).toFixed(1); },
     fmt2(n)   { return (n == null) ? '—' : Number(n).toFixed(2); },
-    fmtPct01(n) {
-      if (n == null) return '—';
-      const pct = Math.max(0, Math.min(100, n * 100));
-      return Math.round(pct) + '%';
+    fmtPct01(n) { if (n == null) return '—'; const pct = Math.max(0, Math.min(100, n * 100)); return Math.round(pct) + '%'; },
+
+    onClickRow() {
+      // Emit the normalized object you already passed in
+      this.$emit('select', this.instructor);
     }
   },
   template: `
-    <div :style="rowStyle" aria-label="Instructor row">
+    <div :style="rowStyle" aria-label="Instructor row" @click="onClickRow">
       <!-- Identity -->
       <div :style="identityCellStyle">
         <div :style="nameStyle">{{ name }}</div>
@@ -175,10 +156,11 @@ Vue.component('instructor-metrics-row', {
   `
 });
 
-/* Overview list (multiple instructors) */
+
+/* ===========================
+ * Overview list (sortable)
+ * =========================== */
 Vue.component('instructor-metrics-overview', {
-  mounted: function () {
-  },
   props: {
     instructors: { type: Array, required: true, default: () => [] },
     title: { type: String, default: 'Instructor Metrics — Overview' },
@@ -186,21 +168,16 @@ Vue.component('instructor-metrics-overview', {
     sortBy: { type: String, default: 'share' } // 'share' | 'graded' | 'name'
   },
   computed: {
-    headerStyle() {
-      return [
-        'display:flex',
-        'align-items:center',
-        'margin-bottom:12px'
-      ].join(';');
-    },
-    titleStyle() { return 'margin:0;font-size:18px;font-weight:700;color:#111827;'; },
+    headerStyle() { return ['display:flex','align-items:center','margin-bottom:12px'].join(';'); },
+    titleStyle()  { return 'margin:0;font-size:18px;font-weight:700;color:#111827;'; },
     spacerStyle() { return 'flex:1'; },
-    pillStyle() { return 'display:inline-block;border-radius:9999px;padding:2px 6px;font-size:12px;font-weight:600;background:#F3F4F6;color:#111827;margin-left:8px;'; },
-    cardStyle() { return 'padding:12px;border:1px solid #E5E7EB;border-radius:12px;background:#FFFFFF;'; },
+    pillStyle()   { return 'display:inline-block;border-radius:9999px;padding:2px 6px;font-size:12px;font-weight:600;background:#F3F4F6;color:#111827;margin-left:8px;'; },
+    cardStyle()   { return 'padding:12px;border:1px solid #E5E7EB;border-radius:12px;background:#FFFFFF;'; },
 
     sorted() {
       const arr = Array.isArray(this.instructors) ? [...this.instructors] : [];
-      const byShare  = (a,b) => ((b?.support_hours?.perc_hours_graded || 0) - (a?.support_hours?.perc_instructor_support_hours_weighted || 0));
+      const share = i => Number(i?.support_hours?.perc_instructor_support_hours_weighted ?? i?.support_hours?.perc_hours_graded) || 0;
+      const byShare  = (a,b) => share(b) - share(a);
       const byGraded = (a,b) => ((b?.grading?.assignments_graded || 0) - (a?.grading?.assignments_graded || 0));
       const byName   = (a,b) => {
         const an = ((a?.last_name || '') + ' ' + (a?.first_name || '')).toUpperCase();
@@ -209,8 +186,13 @@ Vue.component('instructor-metrics-overview', {
       };
       if (this.sortBy === 'graded') arr.sort(byGraded);
       else if (this.sortBy === 'name') arr.sort(byName);
-      else arr.sort(byShare); // default
+      else arr.sort(byShare);
       return arr;
+    }
+  },
+  methods: {
+    onSelect(inst) {
+      this.$emit('select', inst);
     }
   },
   template: `
@@ -227,6 +209,7 @@ Vue.component('instructor-metrics-overview', {
           v-for="(inst, i) in sorted"
           :key="(inst.canvas_user_id || 'u') + '-' + i"
           :instructor="inst"
+          @select="onSelect"
         />
       </div>
       <div v-else style="text-align:center;color:#6B7280;padding:12px;">No instructor data.</div>
