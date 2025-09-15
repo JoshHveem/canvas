@@ -48,7 +48,6 @@ Vue.component('instructor-report', {
           instructor.first_name = canvasData.first_name;
           instructor.last_name = canvasData.last_name;
         });
-        console.log(this.instructors);
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
         this.instructors = [];
