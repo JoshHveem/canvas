@@ -76,18 +76,18 @@ Vue.component('department-instructor-metrics', {
               <div class="btech-row" style="margin-bottom:6px;">
                   <div style="font-size:12px; color:#374151; font-weight:600;">Percentage of assignments graded with a rubric</div>
                   <div style="font-size:12px; color:#111827; font-weight:700;">
-                  {{ Math.round((instructorMetrics.graded_with_rubric || 0) * 100) }}%
+                  {{ Math.round((instructorMetrics.perc_graded_with_rubric || 0) * 100) }}%
                   </div>
               </div>
               <div class="btech-progress" role="presentation">
                   <div
                   class="fill btech-fill-accent"
-                  :style="{ width: Math.max(0, Math.min(100, (instructorMetrics.graded_with_rubric || 0) * 100)) + '%' }"
+                  :style="{ width: Math.max(0, Math.min(100, (instructorMetrics.perc_graded_with_rubric || 0) * 100)) + '%' }"
                   role="progressbar"
-                  :aria-valuenow="(instructorMetrics.graded_with_rubric || 0) * 100"
+                  :aria-valuenow="(instructorMetrics.perc_graded_with_rubric || 0) * 100"
                   aria-valuemin="0"
                   aria-valuemax="100"
-                  :aria-label="'Department share ' + Math.round((instructorMetrics.graded_with_rubric || 0) * 100) + '%'"
+                  :aria-label="'Department share ' + Math.round((instructorMetrics.perc_graded_with_rubric || 0) * 100) + '%'"
                   ></div>
               </div>
               <div class="btech-muted" style="margin-top:6px;">
