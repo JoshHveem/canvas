@@ -119,6 +119,7 @@ Vue.component('instructor-report', {
       // inst is already normalized for the year (emitted by the row component),
       // but if you decide to emit the raw object, re-normalize here.
       this.selected = inst;
+      console.log(inst);
       // optional: scroll into view / focus, etc.
     },
 
