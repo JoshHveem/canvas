@@ -1,39 +1,31 @@
 Vue.component('instructor-report', {
   props: {
-    year: { type: [Number, String], required: true },
-    account: { type: [Number, String], required: true },
+    year:       { type: [Number, String], required: true },
+    account:    { type: [Number, String], required: true },
     instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
   },
   data() {
     return {
       loading: false,
-      instructor_metrics: {}
-    }
+      instructors: [] // raw from API (may include arrays per metric)
+    };
   },
   computed: {
-    surveys() {
-      let list = this.instructor_metrics?.surveys ?? [];
-      if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
-      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    yearNum() {
+      return Number(this.year) || new Date().getFullYear();
     },
-    interactions() {
-      let list = this.instructor_metrics?.interactions ?? [];
-      if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
-      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+
+    // Normalize each instructor down to a single-year snapshot:
+    normalizedInstructors() {
+      return (Array.isArray(this.instructors) ? this.instructors : []).map(i => this._forYear(i, this.yearNum));
     },
-    grading() {
-      let list = this.instructor_metrics?.grading ?? [];
-      if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
-      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
-    },
-    supportHours() {
-      let list = this.instructor_metrics?.support_hours ?? [];
-      if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
-      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+
+    hasMany() { return this.normalizedInstructors.length > 1; },
+    hasSingle() { return this.normalizedInstructors.length === 1; },
+
+    // The single instructor object (already normalized for the chosen year)
+    instructor() {
+      return this.hasSingle ? this.normalizedInstructors[0] : null;
     }
   },
   watch: {
@@ -47,27 +39,48 @@ Vue.component('instructor-report', {
     async loadInstructorMetrics() {
       try {
         this.loading = true;
-        let instructorId = this.instructorId || (typeof ENV !== 'undefined' ? ENV.current_user_id : null);
-
-        // (Remove the debug override; keep here only if you need it)
-        // instructorId = 1840071;
-
-        // const url = `https://reports.bridgetools.dev/api/instructors/${instructorId}?year=${this.year}&account_id=${this.account}&dept_head_account_ids[]=${this.account}`;
-        const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`
+        // If you need to scope to dept head, this returns all instructors under that account:
+        const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${this.account}`;
         const resp = await bridgetools.req(url);
-        let instructors = resp.data || [];
-        console.log(instructors);
-        if (instructors.length === 1) this.instructor_metrics = instructors[0];
-        console.log('Instructor metrics', resp);
+        this.instructors = resp?.data || [];
       } catch (e) {
         console.warn('Failed to load instructor metrics', e);
-        this.instructor_metrics = {};
+        this.instructors = [];
       } finally {
         this.loading = false;
       }
     },
 
-    // Optional helpers if any child tiles use them directly:
+    // Pull one object with only the selected year’s metrics
+    _forYear(raw, yr) {
+      const pickYear = (arr) => {
+        if (!Array.isArray(arr)) return {};
+        return arr.find(d => Number(d?.academic_year) === yr) || {};
+      };
+
+      // Some APIs send single objects already; keep them as-is if so
+      const oneOrYear = (val) => {
+        if (Array.isArray(val)) return pickYear(val);
+        return (val && Number(val.academic_year) ? (Number(val.academic_year) === yr ? val : {}) : (val || {}));
+      };
+
+      return {
+        // identity/meta (pass through)
+        first_name: raw?.first_name || raw?.firstName || '',
+        last_name:  raw?.last_name  || raw?.lastName  || '',
+        canvas_user_id: raw?.canvas_user_id || raw?.canvasId || raw?.canvas_id || null,
+        div_code: raw?.div_code || null,
+        academic_year: yr,
+
+        // year slices
+        grading:       oneOrYear(raw?.grading),
+        supportHours:  oneOrYear(raw?.support_hours || raw?.supportHours),
+        interactions:  oneOrYear(raw?.interactions),
+        surveys:       oneOrYear(raw?.surveys)
+      };
+    },
+
+    // Optional helpers (kept from your original)
     dateToString(date) {
       date = new Date(Date.parse(date));
       return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
@@ -79,20 +92,35 @@ Vue.component('instructor-report', {
   },
   template: `
     <div>
-      <!-- Could show a loading indicator if you like -->
-      <instructor-metrics-grading
-        v-if="grading && Object.keys(grading).length"
-        :interactions="interactions"
-        :support-hours="supportHours"
-        :grading="grading"
+      <!-- Loading -->
+      <div v-if="loading" class="btech-card btech-theme">
+        <div class="btech-muted" style="text-align:center;">Loading…</div>
+      </div>
+
+      <!-- Multiple instructors: show overview list -->
+      <instructor-metrics-overview
+        v-if="!loading && hasMany"
+        :instructors="normalizedInstructors"
         :year="year"
       />
-      <instructor-metrics-surveys
-        v-if="surveys && Object.keys(surveys).length"
-        :surveys="surveys"
-        :year="year"
-      />
-      <div v-if="!loading && (!grading || !Object.keys(grading).length) && (!surveys || !Object.keys(surveys).length)" class="btech-card btech-theme">
+
+      <!-- Exactly one: show individual report -->
+      <div v-if="!loading && hasSingle">
+        <instructor-metrics-grading
+          :interactions="instructor.interactions"
+          :support-hours="instructor.supportHours"
+          :grading="instructor.grading"
+          :year="year"
+        />
+        <instructor-metrics-surveys
+          v-if="instructor.surveys && Object.keys(instructor.surveys).length"
+          :surveys="instructor.surveys"
+          :year="year"
+        />
+      </div>
+
+      <!-- None: empty state -->
+      <div v-if="!loading && !hasMany && !hasSingle" class="btech-card btech-theme">
         <div class="btech-muted" style="text-align:center;">No instructor data for {{ year }}.</div>
       </div>
     </div>
