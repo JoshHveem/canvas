@@ -43,7 +43,7 @@ Vue.component('instructor-metrics-row', {
       return Number.isFinite(p) ? p : null; // 0..1
     },
     deptSharePct() {
-      const p = Number(this.sh?.perc_instructor_support_hours_weighted);
+      const p = Number(this.sh?.perc_hours_graded);
       return Number.isFinite(p) ? p : 0; // 0..1
     },
     daysToReply() { return this.safeNum(this.ix?.days_to_reply); },
@@ -201,7 +201,7 @@ Vue.component('instructor-metrics-overview', {
 
     sorted() {
       const arr = Array.isArray(this.instructors) ? [...this.instructors] : [];
-      const byShare  = (a,b) => ((b?.support_hours?.perc_instructor_support_hours_weighted || 0) - (a?.support_hours?.perc_instructor_support_hours_weighted || 0));
+      const byShare  = (a,b) => ((b?.support_hours?.perc_hours_graded || 0) - (a?.support_hours?.perc_instructor_support_hours_weighted || 0));
       const byGraded = (a,b) => ((b?.grading?.assignments_graded || 0) - (a?.grading?.assignments_graded || 0));
       const byName   = (a,b) => {
         const an = ((a?.last_name || '') + ' ' + (a?.first_name || '')).toUpperCase();

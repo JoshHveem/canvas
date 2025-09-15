@@ -54,18 +54,18 @@ Vue.component('instructor-metrics-grading', {
                     <div class="btech-row" style="margin-bottom:6px;">
                         <div style="font-size:12px; color:#374151; font-weight:600;">Department Share Assignment Hours</div>
                         <div style="font-size:12px; color:#111827; font-weight:700;">
-                        {{ Math.round((supportHours.perc_instructor_support_hours_weighted || 0) * 100) }}%
+                        {{ Math.round((supportHours.perc_hours_graded || 0) * 100) }}%
                         </div>
                     </div>
                     <div class="btech-progress" role="presentation">
                         <div
                         class="fill btech-fill-accent"
-                        :style="{ width: Math.max(0, Math.min(100, (supportHours.perc_instructor_support_hours_weighted || 0) * 100)) + '%' }"
+                        :style="{ width: Math.max(0, Math.min(100, (supportHours.perc_hours_graded || 0) * 100)) + '%' }"
                         role="progressbar"
-                        :aria-valuenow="(supportHours.perc_instructor_support_hours_weighted || 0) * 100"
+                        :aria-valuenow="(supportHours.perc_hours_graded || 0) * 100"
                         aria-valuemin="0"
                         aria-valuemax="100"
-                        :aria-label="'Department share ' + Math.round((supportHours.perc_instructor_support_hours_weighted || 0) * 100) + '%'"
+                        :aria-label="'Department share ' + Math.round((supportHours.perc_hours_graded || 0) * 100) + '%'"
                         ></div>
                     </div>
                     <div class="btech-muted" style="margin-top:6px;">
