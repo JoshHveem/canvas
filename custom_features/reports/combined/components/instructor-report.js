@@ -48,7 +48,6 @@ Vue.component('instructor-report', {
           let canvasData = (await canvasGet(`/api/v1/users/${instructors[i].canvas_id}`))[0];
           instructors[i].first_name = canvasData.first_name;
           instructors[i].last_name = canvasData.last_name;
-          console.log(instructors[i]);
         }
         this.instructors = instructors;
       } catch (e) {
