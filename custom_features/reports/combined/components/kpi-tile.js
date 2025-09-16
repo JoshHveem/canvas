@@ -9,7 +9,7 @@ Vue.component('goal-pill', {
     min:        { type: Number, default: null },  // for between
     max:        { type: Number, default: null },  // for between
     label:      { type: String, default: '' },    // text to show (e.g. "< 2 days")
-    override:    { type: String, default: undefined },
+    override:    { type: String, default: ''},
     // Optional color overrides
   },
   data() {
