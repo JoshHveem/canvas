@@ -9,6 +9,7 @@ Vue.component('goal-pill', {
     min:        { type: Number, default: null },  // for between
     max:        { type: Number, default: null },  // for between
     label:      { type: String, default: '' },    // text to show (e.g. "< 2 days")
+    override:    { type: String, default: undefined },
     // Optional color overrides
   },
   data() {
@@ -87,6 +88,7 @@ Vue.component('kpi-tile', {
       return Number.isFinite(n) ? n : null;
     },
     displayValue() {
+      if (this.override !== undefined) return override;
       if (this.nValue === null) return (typeof this.value === 'string' ? this.value : '—');
       return typeof this.value === 'string' ? this.value : this.nValue.toFixed(this.decimals);
     },

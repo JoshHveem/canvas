@@ -101,6 +101,12 @@ Vue.component('department-occupation', {
           unit="$"
           title="Estimated median annual wage"
         />
+        <kpi-tile
+          label="Outlook & Pay Rating"
+          :value="Number(stars || 0)"
+          :override="starText"
+          title="State's outlook rating"
+        />
 
         <!-- Stars (compact 1/3 card) -->
         <div
