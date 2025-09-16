@@ -2,36 +2,11 @@ Vue.component('occupations-report', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
-      <department-cpl
+      <department-cpl-placement
         v-for="campus in cpl"
         :cpl="campus"
         :year="year"
       />
-
-      <div class="btech-card btech-theme" style="margin-bottom:12px; padding:12px;" aria-label="Occupation">
-        <!-- Header -->
-        <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-          <h4 class="btech-card-title" style="margin:0; font-size:16px;">Placement Stats</h4>
-        </div>
-
-        <!-- KPI Tiles -->
-        <div v-for="statistic in statistics" class="btech-grid-3" style="margin-bottom:8px;">
-          <kpi-tile
-            label="Students Placed"
-            :value="statistic.placed"
-            :decimals="0"
-            unit=""
-            title="Number of students placed this year"
-          />
-          <kpi-tile
-            label="Starting Wage"
-            :value="statistic.placed_starting_wage"
-            :decimals="0"
-            unit="$"
-            title="Median starting wage for students that reported their wage to us this year."
-          />
-        </div>
-      </div>
 
       <department-occupations
         :occupations="occupations"

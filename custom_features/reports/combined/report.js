@@ -225,6 +225,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-metrics.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-cpl.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-cpl-placement.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-occupations.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-statistics.js");
