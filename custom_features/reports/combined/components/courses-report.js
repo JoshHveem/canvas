@@ -110,7 +110,7 @@ Vue.component('courses-report', {
         if (this.filters.hide_zero_students && !(Number(c.num_students_credits) > 0)) return false;
         return true;
       });
-      console.log(this.courses);
+      console.log(this.rows);
       // sort
       return this.sortRows(rows);
     }
