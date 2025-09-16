@@ -212,6 +212,7 @@ Vue.component('courses-report', {
       return Number.isFinite(Number(score)) ? Number(score) : null;
     },
     processCourses(courses) {
+      console.log(courses);
       return courses.map(course => {
         course.students = course.num_students_credits;
         course.grades = course.average_score;
