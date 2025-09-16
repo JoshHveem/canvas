@@ -46,7 +46,7 @@ Vue.component('courses-report', {
         //   c => c.year ?? ''
         // ),
         new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
-          c => c.num_students_credits ?? 0
+          c => c.num_students_jenzabar ?? 0
         ),
         new CoursesColumn('Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0
