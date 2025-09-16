@@ -110,6 +110,7 @@ Vue.component('courses-report', {
         if (this.filters.hide_zero_students && !(Number(c.num_students_credits) > 0)) return false;
         return true;
       });
+      console.log(this.courses);
       // sort
       return this.sortRows(rows);
     }
@@ -212,7 +213,6 @@ Vue.component('courses-report', {
       return Number.isFinite(Number(score)) ? Number(score) : null;
     },
     processCourses(courses) {
-      console.log(courses);
       return courses.map(course => {
         course.students = course.num_students_credits;
         course.grades = course.average_score;
