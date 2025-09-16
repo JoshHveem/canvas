@@ -55,7 +55,7 @@ Vue.component('courses-report', {
           c => c.pct_need_extension ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
             const v = c.pct_need_extension;
-            if (v == null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            if (!v) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
               backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
