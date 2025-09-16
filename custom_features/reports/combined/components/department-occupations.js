@@ -123,7 +123,7 @@ Vue.component('department-occupation', {
             />
           </div>
           <div
-            style="font-size:16px; font-weight:700; letter-spacing:1px; line-height:1; white-space:nowrap;"
+            style="font-size:32px; font-weight:700; letter-spacing:1px; line-height:1; white-space:nowrap;"
             role="img"
             :aria-label="(stars ?? 0) + ' out of 5 stars'"
           >
