@@ -78,22 +78,31 @@ Vue.component('department-occupation', {
         />
       </div>
 
-      <!-- Stars -->
-      <div class="btech-tile" style="padding:8px; border:1px solid #E5E7EB; border-radius:8px;">
-        <div class="btech-row" style="align-items:center; margin-bottom:4px;">
-          <div class="btech-kpi-label">Outlook & Pay Rating</div>
-          <goal-pill
-            :value="Number(stars || 0)"
-            :target="4"
-            comparator="gte"
-            label="≥ 4 ★"
-            style="margin-left:6px;"
-          />
-        </div>
-        <div style="font-size:18px; font-weight:700; letter-spacing:1px;">
-          {{ starText }}
-        </div>
-      </div>
+      <div class="btech-grid-3">
+        <kpi-tile
+          label="Entry Wage (Annual)"
+          :value="entryWage"
+          :decimals="0"
+          unit="$"
+          title="Estimated entry-level annual wage"
+        />
+        <kpi-tile
+          label="Median Wage (Annual)"
+          :value="medianWage"
+          :decimals="0"
+          unit="$"
+          title="Estimated median annual wage"
+        />
+        <!-- Stars as a compact KPI -->
+        <kpi-tile
+          label="Outlook & Pay Rating"
+          :value="stars"
+          :decimals="0"
+          unit="★"
+          :goal="{ comparator:'gte', target:4, label:'≥ 4 ★' }"
+          title="5-star rating combining outlook and pay"
+        />
+      </div> 
     </div>
   `
 });
