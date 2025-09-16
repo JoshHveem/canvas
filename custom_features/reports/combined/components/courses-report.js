@@ -42,22 +42,22 @@ Vue.component('courses-report', {
         new CoursesColumn('Course Code', 'The course code for the course.', '6rem', false, 'string',
           c => this.anonymous ? 'AAAA 0000' : (c.course_code ?? '')
         ),
-        new CoursesColumn('Year', 'The academic year of the course.', '4rem', false, 'number',
-          c => c.year ?? ''
-        ),
+        // new CoursesColumn('Year', 'The academic year of the course.', '4rem', false, 'number',
+        //   c => c.year ?? ''
+        // ),
         new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
           c => c.num_students_credits ?? 0
         ),
         new CoursesColumn('Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0
         ),
-        new CoursesColumn('Weeks', 'Avg time in weeks it takes a studen to finish the course.', '4rem', true, 'number',
-          c => c.credits_per_week ? (c.credits / (Number(c.credits_per_week))).toFixed(1) : 'n/a',
+        new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', true, 'number',
+          c => c.pct_need_extension ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
-            const v = Number(c.credits_per_week);
+            const v = Number(c.pct_need_extension);
             if (!Number.isFinite(v)) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
-              backgroundColor: (v < 0.5) ? this.colors.red : (v < 0.8 ? this.colors.yellow : this.colors.green),
+              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
             };
           }
