@@ -107,7 +107,7 @@ Vue.component('department-occupation', {
           class="btech-tile"
           style="
             padding:12px; border:1px solid #E5E7EB; border-radius:16px;
-            display:flex; flex-direction:column; justify-content:space-between;
+            display:flex; flex-direction:column;
             background-color: #FFFFFF;
           "
           aria-label="Outlook & Pay Rating"
