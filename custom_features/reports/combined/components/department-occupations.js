@@ -129,7 +129,7 @@ Vue.component('department-occupation', {
       <div
         v-if="hasRequirements"
         class="btech-tile"
-        style="padding:8px; border:1px solid #E5E7EB; border-radius:8px; margin-top:8px;"
+        style="background-color: #FFF; padding:8px; border:1px solid #E5E7EB; border-radius:8px; margin-top:8px;"
         aria-label="Job Requirements"
       >
         <div class="btech-grid-3" style="gap:8px;">
