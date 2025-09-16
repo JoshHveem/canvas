@@ -66,7 +66,6 @@ Vue.component('department-occupation', {
         <h4 class="btech-card-title" style="margin:0; font-size:16px;">{{ title }}</h4>
         <div style="flex:1;"></div>
         <span class="btech-pill" style="margin-left:8px;">SOC: {{ soc }}</span>
-        <span class="btech-pill" style="margin-left:8px;">{{ yearLabel }}</span>
         <span v-if="area" class="btech-pill" style="margin-left:8px;">{{ area }}</span>
       </div>
 
