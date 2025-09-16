@@ -269,8 +269,6 @@ Vue.component('courses-report', {
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
         <h4 class="btech-card-title" style="margin:0;">Courses</h4>
         <div style="flex:1;"></div>
-        <span class="btech-pill">{{ year }}</span>
-        <span class="btech-pill" style="margin-left:8px;">Account: {{ account }}</span>
         <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
       </div>
 
