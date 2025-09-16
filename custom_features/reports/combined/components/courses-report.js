@@ -52,11 +52,10 @@ Vue.component('courses-report', {
           c => Math.round(c.credits) || 0
         ),
         new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', true, 'number',
-          c => c.pct_need_extension >= 0 ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
+          c => c.pct_need_extension !== null ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
             const v = c.pct_need_extension;
-            console.log(v === null);
-            if (!v) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
               backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
