@@ -5,16 +5,6 @@
       <div class='btech-modal-content-inner'>
         <span class='btech-close' v-on:click='close()'>&times;</span>
         <h3 style='text-align: center;'>Progress Report</h3>
-        <!-- <div
-          style="display: inline-block;"
-        >
-          <label>Progress Estimation Method</label>
-          <select v-model="settings.progress_method">
-            <option value="points_weighted">Points - Weighted (Preferred)</option>
-            <option value="points_raw">Points - Raw</option>
-            <option value="submissions">Submissions</option>
-          </select>
-        </div> -->
         <div
           style="display: inline-block;"
           v-if="!courseId"
