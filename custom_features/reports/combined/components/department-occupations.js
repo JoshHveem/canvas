@@ -99,7 +99,7 @@ Vue.component('department-occupation', {
         <div style="flex:1;"></div>
         <span class="btech-pill" style="margin-left:8px;">SOC: {{ soc }}</span>
         <span v-if="area" class="btech-pill" style="margin-left:8px;">{{ area }}</span>
-        <span v-if="area" class="btech-pill" :style="starPillStyle">{{ starText }}</span>
+        <span v-if="area" class="btech-pill" :style="starPillStyle" style="margin-left:8px;">{{ starText }}</span>
       </div>
 
       <!-- Description -->
