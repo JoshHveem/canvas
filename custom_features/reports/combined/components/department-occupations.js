@@ -110,7 +110,7 @@ Vue.component('department-occupation', {
       <!-- KPI Tiles -->
       <div class="btech-grid-3" style="margin-bottom:8px;">
         <kpi-tile
-          label="Projected Employment"
+          label="Projected Employment Growth"
           :value="growthPct"
           :override="projectedComposite"
           :goal="{ comparator:'gt', target:0, label:'> 0% (growing)' }"
