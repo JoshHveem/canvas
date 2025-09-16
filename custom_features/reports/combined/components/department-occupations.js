@@ -132,23 +132,19 @@ Vue.component('department-occupation', {
         style="padding:8px; border:1px solid #E5E7EB; border-radius:8px; margin-top:8px;"
         aria-label="Job Requirements"
       >
-        <div class="btech-row" style="align-items:center; margin-bottom:6px;">
-          <div class="btech-kpi-label">Requirements</div>
-        </div>
-
         <div class="btech-grid-3" style="gap:8px;">
           <div v-if="educationText">
-            <div class="btech-kpi-label" style="margin-bottom:2px;">Education</div>
+            <div class="btech-kpi-label" style="margin-bottom:2px;"><strong>Education</strong></div>
             <div style="font-size:12px; color:#374151; line-height:1.3;">{{ educationText }}</div>
           </div>
 
           <div v-if="trainingText">
-            <div class="btech-kpi-label" style="margin-bottom:2px;">Training</div>
+            <div class="btech-kpi-label" style="margin-bottom:2px;"><strong>Training</strong></div>
             <div style="font-size:12px; color:#374151; line-height:1.3;">{{ trainingText }}</div>
           </div>
 
           <div v-if="experienceText">
-            <div class="btech-kpi-label" style="margin-bottom:2px;">Experience</div>
+            <div class="btech-kpi-label" style="margin-bottom:2px;"><strong>Experience</strong></div>
             <div style="font-size:12px; color:#374151; line-height:1.3;">{{ experienceText }}</div>
           </div>
         </div>
