@@ -101,10 +101,36 @@ Vue.component('department-occupation', {
           unit="$"
           title="Estimated median annual wage"
         />
-        <!-- Stars as a compact KPI -->
-        <div class="btech-row" style="align-items:center; margin-bottom:4px;"> <div class="btech-kpi-label">Outlook & Pay Rating</div> <goal-pill :value="Number(stars || 0)" :target="4" comparator="gte" label="≥ 4 ★" style="margin-left:6px;" /> </div> <div style="font-size:18px; font-weight:700; letter-spacing:1px;"> {{ starText }} </div>
-        
-      </div> 
+
+        <!-- Stars (compact 1/3 card) -->
+        <div
+          class="btech-tile"
+          style="
+            padding:8px; border:1px solid #E5E7EB; border-radius:8px;
+            display:flex; flex-direction:column; justify-content:space-between; height:100%;
+          "
+          aria-label="Outlook & Pay Rating"
+        >
+          <div class="btech-row" style="align-items:center; margin-bottom:4px;">
+            <div class="btech-kpi-label">Outlook &amp; Pay Rating</div>
+            <goal-pill
+              :value="Number(stars || 0)"
+              :target="4"
+              comparator="gte"
+              label="≥ 4 ★"
+              style="margin-left:6px;"
+            />
+          </div>
+          <div
+            style="font-size:16px; font-weight:700; letter-spacing:1px; line-height:1; white-space:nowrap;"
+            role="img"
+            :aria-label="(stars ?? 0) + ' out of 5 stars'"
+          >
+                  {{ starText }}
+          </div>
+        </div>
+      </div>
+
     </div>
   `
 });
