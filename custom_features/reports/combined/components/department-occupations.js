@@ -105,37 +105,9 @@ Vue.component('department-occupation', {
           label="Outlook & Pay Rating"
           :value="Number(stars || 0)"
           :override="starText"
+          :goal="{ comparator:'gte', target:4, label:'>= 4★' }"
           title="State's outlook rating"
         />
-
-        <!-- Stars (compact 1/3 card) -->
-        <div
-          class="btech-tile"
-          style="
-            padding:12px; border:1px solid #E5E7EB; border-radius:16px;
-            display:flex; flex-direction:column;
-            background-color: #FFFFFF;
-          "
-          aria-label="Outlook & Pay Rating"
-        >
-          <div class="btech-row" style="align-items:center; margin-bottom:4px;">
-            <div class="btech-kpi-label">Outlook &amp; Pay Rating</div>
-            <goal-pill
-              :value="Number(stars || 0)"
-              :target="4"
-              comparator="gte"
-              label="≥ 4 ★"
-              style="margin-left:6px;"
-            />
-          </div>
-          <div
-            style="font-size:32px; font-weight:700; letter-spacing:1px; line-height:1; white-space:nowrap;"
-            role="img"
-            :aria-label="(stars ?? 0) + ' out of 5 stars'"
-          >
-                  {{ starText }}
-          </div>
-        </div>
       </div>
 
     </div>
