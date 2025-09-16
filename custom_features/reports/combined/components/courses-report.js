@@ -54,8 +54,8 @@ Vue.component('courses-report', {
         new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', true, 'number',
           c => c.pct_need_extension ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
-            const v = Number(c.pct_need_extension);
-            if (!Number.isFinite(v)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            const v = c.pct_need_extension;
+            if (v) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
               backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
