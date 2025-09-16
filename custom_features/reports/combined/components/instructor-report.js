@@ -18,9 +18,10 @@ Vue.component('instructor-report', {
     yearNum() { return Number(this.year) || new Date().getFullYear(); },
 
     normalizedInstructors() {
-      return (Array.isArray(this.instructors) ? this.instructors : []).map(i => this._forYear(i, this.yearNum));
-    },
-
+    return (Array.isArray(this.instructors) ? this.instructors : [])
+      .map(i => this._forYear(i, this.yearNum))
+      .filter(i => Number(i?.grading?.assignments_graded) > 0);
+  },
     hasMany()   { return this.normalizedInstructors.length > 1; },
     hasSingle() { return this.normalizedInstructors.length === 1; },
 
