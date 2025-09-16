@@ -20,7 +20,8 @@ Vue.component('instructor-report', {
     normalizedInstructors() {
     return (Array.isArray(this.instructors) ? this.instructors : [])
       .map(i => this._forYear(i, this.yearNum))
-      .filter(i => Number(i?.grading?.assignments_graded) > 0);
+      .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
+      ;
   },
     hasMany()   { return this.normalizedInstructors.length > 1; },
     hasSingle() { return this.normalizedInstructors.length === 1; },
