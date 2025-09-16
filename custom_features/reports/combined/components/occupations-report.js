@@ -15,17 +15,17 @@ Vue.component('occupations-report', {
         </div>
 
         <!-- KPI Tiles -->
-        <div class="btech-grid-3" style="margin-bottom:8px;">
+        <div v-for="statistic in statistics" class="btech-grid-3" style="margin-bottom:8px;">
           <kpi-tile
             label="Students Placed"
-            :value="statistics.placed"
+            :value="statistic.placed"
             :decimals="0"
             unit=""
             title="Number of students placed this year"
           />
           <kpi-tile
             label="Starting Wage"
-            :value="statistics.placed_starting_wage"
+            :value="statistic.placed_starting_wage"
             :decimals="0"
             unit="$"
             title="Median starting wage for students that reported their wage to us this year."
@@ -52,7 +52,7 @@ Vue.component('occupations-report', {
   },
   computed: {
     statistics() {
-      let list = this.department_metrics?.statistics?? [];
+      let list = this.department_metrics?.statistics ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
       list = (list.filter(d => Number(d.academic_year) === yr)) || []
