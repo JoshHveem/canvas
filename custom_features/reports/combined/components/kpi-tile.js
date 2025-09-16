@@ -9,7 +9,6 @@ Vue.component('goal-pill', {
     min:        { type: Number, default: null },  // for between
     max:        { type: Number, default: null },  // for between
     label:      { type: String, default: '' },    // text to show (e.g. "< 2 days")
-    override:    { type: String, default: ''},
     // Optional color overrides
   },
   data() {
@@ -74,7 +73,8 @@ Vue.component('kpi-tile', {
     goal:      { type: Object, default: null },
 
     // Optional subtle status tint via bands (kept simple)
-    bands:     { type: Array, default: () => [] } // e.g. [{ max: 2, status:'good' }, { max: 3, status:'warn' }, { status:'bad' }]
+    bands:     { type: Array, default: () => [] }, // e.g. [{ max: 2, status:'good' }, { max: 3, status:'warn' }, { status:'bad' }]
+    override:    { type: String, default: undefined } 
   },
 
   data() {
