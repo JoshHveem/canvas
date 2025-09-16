@@ -37,6 +37,21 @@ Vue.component('department-occupation', {
       const n = Number(this.occupation?.stars);
       return Number.isFinite(n) ? n : null;
     },
+    educationText() {
+      const s = (this.occupation?.education || '').trim();
+      return s || null;
+    },
+    trainingText() {
+      const s = (this.occupation?.training || '').trim();
+      return s || null;
+    },
+    experienceText() {
+      const s = (this.occupation?.experience || '').trim();
+      return s || null;
+    },
+    hasRequirements() {
+      return !!(this.educationText || this.trainingText || this.experienceText);
+    },
     yearLabel() { return this.year ?? '—'; },
     // Quick star string (★★★★★ with dim for remainder)
     starText() {
@@ -108,6 +123,35 @@ Vue.component('department-occupation', {
           :goal="{ comparator:'gte', target:4, label:'>= 4★' }"
           title="State's outlook rating"
         />
+      </div>
+
+      <!-- Requirements -->
+      <div
+        v-if="hasRequirements"
+        class="btech-tile"
+        style="padding:8px; border:1px solid #E5E7EB; border-radius:8px; margin-top:8px;"
+        aria-label="Job Requirements"
+      >
+        <div class="btech-row" style="align-items:center; margin-bottom:6px;">
+          <div class="btech-kpi-label">Requirements</div>
+        </div>
+
+        <div class="btech-grid-3" style="gap:8px;">
+          <div v-if="educationText">
+            <div class="btech-kpi-label" style="margin-bottom:2px;">Education</div>
+            <div style="font-size:12px; color:#374151; line-height:1.3;">{{ educationText }}</div>
+          </div>
+
+          <div v-if="trainingText">
+            <div class="btech-kpi-label" style="margin-bottom:2px;">Training</div>
+            <div style="font-size:12px; color:#374151; line-height:1.3;">{{ trainingText }}</div>
+          </div>
+
+          <div v-if="experienceText">
+            <div class="btech-kpi-label" style="margin-bottom:2px;">Experience</div>
+            <div style="font-size:12px; color:#374151; line-height:1.3;">{{ experienceText }}</div>
+          </div>
+        </div>
       </div>
 
     </div>
