@@ -120,8 +120,6 @@ Vue.component('department-occupation', {
           label="Annual Openings"
           :value="annualOpenings"
           :decimals="0"
-          unit=""
-          :goal="{ comparator:'gt', target:0, label:'> 0' }"
           title="Estimated annual job openings"
         />
         <kpi-tile
