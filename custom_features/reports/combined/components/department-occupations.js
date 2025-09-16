@@ -17,6 +17,23 @@ Vue.component('department-occupation', {
       const n = Number(this.occupation?.projected_employment);
       return Number.isFinite(n) ? n : null;
     },
+    annualOpenings() {
+      const n = Number(this.occupation?.annual_openings);
+      return Number.isFinite(n) ? n : null;
+    },
+    growthDelta() {
+      if (this.currentEmployment == null || this.projectedEmployment == null) return null;
+      return this.projectedEmployment - this.currentEmployment;
+    },
+    projectedComposite() {
+      // render "current ± delta", e.g. "1,230 + 120" or "1,230 − 80"
+      const cur = this.currentEmployment, d = this.growthDelta;
+      if (cur == null || d == null) return null;
+      const fmt = n => Number(n).toLocaleString();
+      const sign = d >= 0 ? '+' : '−'; // U+2212 minus for nicer typography
+      return `${fmt(cur)} ${sign} ${fmt(Math.abs(d))}`;
+    },
+
     growthAbs() {
       if (this.currentEmployment == null || this.projectedEmployment == null) return null;
       return this.projectedEmployment - this.currentEmployment;
@@ -77,18 +94,17 @@ Vue.component('department-occupation', {
       <!-- KPI Tiles -->
       <div class="btech-grid-3" style="margin-bottom:8px;">
         <kpi-tile
-          label="Current Employment"
-          :value="currentEmployment"
-          :decimals="0"
-          unit=""
-          title="Estimated number of currently employed"
-        />
-        <kpi-tile
           label="Projected Employment"
           :value="projectedEmployment"
+          :override="projectedComposite"
+          title="Current employment ± change to reach projected"
+        />
+        <kpi-tile
+          label="Annual Openings"
+          :value="annualOpenings"
           :decimals="0"
           unit=""
-          title="Estimated number of roles in projection year"
+          title="Estimated annual job openings"
         />
         <kpi-tile
           label="Growth"
@@ -97,10 +113,7 @@ Vue.component('department-occupation', {
           :decimals="0"
           :goal="{ comparator:'gt', target:0, label:'> 0% (growing)' }"
           title="Projected growth from current to projection"
-        />
-      </div>
-
-      <div class="btech-grid-3">
+        /> 
         <kpi-tile
           label="Entry Wage (Annual)"
           :value="entryWage"
