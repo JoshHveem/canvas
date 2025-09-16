@@ -25,6 +25,14 @@ Vue.component('department-occupation', {
       if (this.currentEmployment == null || this.currentEmployment === 0 || this.projectedEmployment == null) return null;
       return (this.projectedEmployment - this.currentEmployment) / this.currentEmployment * 100;
     },
+    entryWage() {
+      const n = Number(this.occupation?.entry_wage);
+      return Number.isFinite(n) ? n : null;
+    },
+    medianWage() {
+      const n = Number(this.occupation?.median_wage);
+      return Number.isFinite(n) ? n : null;
+    },
     stars() {
       const n = Number(this.occupation?.stars);
       return Number.isFinite(n) ? n : null;
