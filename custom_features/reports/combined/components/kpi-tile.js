@@ -88,8 +88,7 @@ Vue.component('kpi-tile', {
       return Number.isFinite(n) ? n : null;
     },
     displayValue() {
-      console.log(this.override);
-      if (this.override !== undefined) return override;
+      if (this.override !== undefined) return this.override;
       if (this.nValue === null) return (typeof this.value === 'string' ? this.value : '—');
       return typeof this.value === 'string' ? this.value : this.nValue.toFixed(this.decimals);
     },
