@@ -9,6 +9,7 @@ Vue.component('department-occupation', {
     soc() { return this.occupation?.soc_code || '—'; },
     desc() { return this.occupation?.description || ''; },
     area() { return this.occupation?.area || ''; },
+
     currentEmployment() {
       const n = Number(this.occupation?.current_employment);
       return Number.isFinite(n) ? n : null;
@@ -25,11 +26,23 @@ Vue.component('department-occupation', {
       if (this.currentEmployment == null || this.currentEmployment === 0 || this.projectedEmployment == null) return null;
       return (this.projectedEmployment - this.currentEmployment) / this.currentEmployment * 100;
     },
+
+    // NEW: wages
+    entryWage() {
+      const n = Number(this.occupation?.entry_wage);
+      return Number.isFinite(n) ? n : null;
+    },
+    medianWage() {
+      const n = Number(this.occupation?.median_wage);
+      return Number.isFinite(n) ? n : null;
+    },
+
     stars() {
       const n = Number(this.occupation?.stars);
       return Number.isFinite(n) ? n : null;
     },
     yearLabel() { return this.year ?? '—'; },
+
     // Quick star string (★★★★★ with dim for remainder)
     starText() {
       const s = Math.max(0, Math.min(5, Math.round(this.stars || 0)));
@@ -52,7 +65,7 @@ Vue.component('department-occupation', {
         {{ desc }}
       </div>
 
-      <!-- KPI Tiles -->
+      <!-- KPI Tiles: Row 1 -->
       <div class="btech-grid-3" style="margin-bottom:8px;">
         <kpi-tile
           label="Current Employment"
@@ -78,70 +91,32 @@ Vue.component('department-occupation', {
         />
       </div>
 
-      <!-- Stars -->
-      <div class="btech-tile" style="padding:8px; border:1px solid #E5E7EB; border-radius:8px;">
-        <div class="btech-row" style="align-items:center; margin-bottom:4px;">
-          <div class="btech-kpi-label">Outlook & Pay Rating</div>
-          <goal-pill
-            :value="Number(stars || 0)"
-            :target="4"
-            comparator="gte"
-            label="≥ 4 ★"
-            style="margin-left:6px;"
-          />
-        </div>
-        <div style="font-size:18px; font-weight:700; letter-spacing:1px;">
-          {{ starText }}
-        </div>
-      </div>
-    </div>
-  `
-});
-
-
-/* Occupations list (wrapper) */
-Vue.component('department-occupations', {
-  props: {
-    occupations: { type: Array, required: true, default: () => [] },
-    year: { type: [String, Number], default: null },
-    title: { type: String, default: 'Occupations' }
-  },
-  computed: {
-    yearLabel() { return this.year ?? '—'; },
-    sorted() {
-      // Sort: stars desc, then projected_employment desc, then title asc
-      const copy = [...this.occupations];
-      copy.sort((a, b) => {
-        const sa = Number(a?.stars || 0), sb = Number(b?.stars || 0);
-        if (sb !== sa) return sb - sa;
-        const pa = Number(a?.projected_employment || 0), pb = Number(b?.projected_employment || 0);
-        if (pb !== pa) return pb - pa;
-        const ta = (a?.title || '').toUpperCase();
-        const tb = (b?.title || '').toUpperCase();
-        return ta < tb ? -1 : ta > tb ? 1 : 0;
-      });
-      return copy;
-    }
-  },
-  template: `
-    <div class="btech-card btech-theme" aria-label="Occupations" style="padding:12px;">
-      <!-- Header -->
-      <div class="btech-row" style="align-items:center; margin-bottom:12px;">
-        <h3 class="btech-card-title" style="margin:0;">{{ title }}</h3>
-        <div style="flex:1;"></div>
-        <span class="btech-pill" style="margin-left:8px;">Total: {{ sorted.length }}</span>
-      </div>
-
-      <!-- List -->
-      <div v-if="sorted.length">
-        <department-occupation
-          v-for="occ in sorted"
-          :key="occ.soc_code || occ.title"
-          :occupation="occ"
-          :year="year"
+      <!-- KPI Tiles: Row 2 (NEW) -->
+      <div class="btech-grid-3">
+        <kpi-tile
+          label="Entry Wage (Annual)"
+          :value="entryWage"
+          :decimals="0"
+          unit="$"
+          title="Estimated entry-level annual wage"
+        />
+        <kpi-tile
+          label="Median Wage (Annual)"
+          :value="medianWage"
+          :decimals="0"
+          unit="$"
+          title="Estimated median annual wage"
+        />
+        <!-- Stars as a compact KPI -->
+        <kpi-tile
+          label="Outlook & Pay Rating"
+          :value="stars"
+          :decimals="0"
+          unit="★"
+          :goal="{ comparator:'gte', target:4, label:'≥ 4 ★' }"
+          title="5-star rating combining outlook and pay"
         />
       </div>
-      <div v-else class="btech-muted" style="text-align:center; padding:12px;">No occupations available.</div>
     </div>
   `
 });
