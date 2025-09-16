@@ -4,7 +4,22 @@ Vue.component('department-occupation', {
     occupation: { type: Object, required: true },
     year: { type: [String, Number], default: null }
   },
+  data() {
+    return {
+      colors: bridgetools.colors
+    }
+  },
   computed: {
+    starPillStyle() {
+      // Handle both string colors (e.g. "#10B981") and palette objects (e.g. {500:"#10B981"})
+      const pick = c => (typeof c === 'string' ? c : (c?.[500] || c?.base || Object.values(c||{})[0] || '#999'));
+      const bg = Number(this.stars || 0) >= 4 ? pick(this.colors.green) : pick(this.colors.red);
+      return {
+        backgroundColor: bg,
+        color: '#fff',
+        borderColor: 'transparent'
+      };
+    },
     title() { return this.occupation?.title || 'Occupation'; },
     soc() { return this.occupation?.soc_code || '—'; },
     desc() { return this.occupation?.description || ''; },
@@ -84,6 +99,7 @@ Vue.component('department-occupation', {
         <div style="flex:1;"></div>
         <span class="btech-pill" style="margin-left:8px;">SOC: {{ soc }}</span>
         <span v-if="area" class="btech-pill" style="margin-left:8px;">{{ area }}</span>
+        <span v-if="area" class="btech-pill" :style="starPillStyle">{{ starText }}</span>
       </div>
 
       <!-- Description -->
@@ -95,8 +111,9 @@ Vue.component('department-occupation', {
       <div class="btech-grid-3" style="margin-bottom:8px;">
         <kpi-tile
           label="Projected Employment"
-          :value="projectedEmployment"
+          :value="growthPct"
           :override="projectedComposite"
+          :goal="{ comparator:'gt', target:0, label:'> 0% (growing)' }"
           title="Current employment ± change to reach projected"
         />
         <kpi-tile
@@ -104,22 +121,8 @@ Vue.component('department-occupation', {
           :value="annualOpenings"
           :decimals="0"
           unit=""
+          :goal="{ comparator:'gt', target:0, label:'> 0' }"
           title="Estimated annual job openings"
-        />
-        <kpi-tile
-          label="Growth"
-          :value="growthPct"
-          unit="%"
-          :decimals="0"
-          :goal="{ comparator:'gt', target:0, label:'> 0% (growing)' }"
-          title="Projected growth from current to projection"
-        /> 
-        <kpi-tile
-          label="Entry Wage (Annual)"
-          :value="entryWage"
-          :decimals="0"
-          unit="$"
-          title="Estimated entry-level annual wage"
         />
         <kpi-tile
           label="Median Wage (Annual)"
@@ -127,13 +130,6 @@ Vue.component('department-occupation', {
           :decimals="0"
           unit="$"
           title="Estimated median annual wage"
-        />
-        <kpi-tile
-          label="Outlook & Pay Rating"
-          :value="Number(stars || 0)"
-          :override="starText"
-          :goal="{ comparator:'gte', target:4, label:'>= 4★' }"
-          title="State's outlook rating"
         />
       </div>
 
