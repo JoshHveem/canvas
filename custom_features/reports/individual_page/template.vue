@@ -38,10 +38,20 @@
                     :student-tree="tree"
                 ></show-student-ind-credits>
               </div>
+              <set-goal
+                v-if="settingGoal"
+                class="btech-modal"
+                :colors="colors"
+                :course-progress-goals="goal"
+                :user="user"
+                :student-tree="tree"
+                @close="settingGoal = false;"
+              >
+
+              </set-goal>
               <div
                 v-if="
                   user.name !== undefined 
-                  && permissions.includes('admin') 
                   && !settingGoal
                 "
                 @click="settingGoal = true;"
