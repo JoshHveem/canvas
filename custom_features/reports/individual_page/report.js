@@ -152,7 +152,7 @@
           loadingMessage: "Loading Results...",
           loadingProgress: 0,
           accessDenied: false,
-          settingGoal: true,
+          settingGoal: false,
           menu: 'report',
           IS_TEACHER: false,
           enrollment_tab: {
