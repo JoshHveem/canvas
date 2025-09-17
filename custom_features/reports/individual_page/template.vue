@@ -51,8 +51,7 @@
               </set-goal>
               <div
                 v-if="
-                  user.name !== undefined 
-                  && !settingGoal
+                  !settingGoal
                 "
                 @click="settingGoal = true;"
                 style="
