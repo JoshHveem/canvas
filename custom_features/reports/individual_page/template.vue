@@ -25,7 +25,7 @@
 
           <div v-else>
             <div v-if="menu=='report'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;">
+              <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
                 <select @change="changeTree(user)" v-model="currentDepartment">
                   <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
                 </select>
