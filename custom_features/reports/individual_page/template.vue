@@ -52,7 +52,6 @@
               <div
                 v-if="
                   user.name !== undefined 
-                  && currentSubMenu =='Progress'
                   && permissions.includes('admin') 
                   && !settingGoal
                 "
