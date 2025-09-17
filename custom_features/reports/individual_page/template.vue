@@ -40,7 +40,6 @@
               </div>
               <set-goal
                 v-if="settingGoal"
-                class="btech-modal"
                 :colors="colors"
                 :course-progress-goals="goal"
                 :user="user"
