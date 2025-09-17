@@ -143,6 +143,7 @@
           tree: {
             other: {}
           },
+          goal: undefined,
           colors: bridgetools.colors,
           settings: {},
           terms: [],
@@ -207,6 +208,9 @@
             //app.saveSettings("individualReport");
           }
           return settings;
+        },
+        setGoal(goal) {
+          this.goal = goal;
         },
 
         async refreshHSEnrollmentTerms() {
