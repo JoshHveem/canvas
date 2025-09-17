@@ -151,6 +151,7 @@
           loadingMessage: "Loading Results...",
           loadingProgress: 0,
           accessDenied: false,
+          settingGoal: true,
           menu: 'report',
           IS_TEACHER: false,
           enrollment_tab: {
@@ -429,6 +430,7 @@
   await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
   loadCSS("https://reports.bridgetools.dev/style/main.css");
   loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
+  await $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/progress_meeting/setGoal.js");
   $.getScript("https://d3js.org/d3.v6.min.js").done(function () {
     $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js").done(function () {
       $.getScript("https://reports.bridgetools.dev/components/icons/alert.js").done(function () {

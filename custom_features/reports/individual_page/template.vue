@@ -29,22 +29,52 @@
                 <select @change="changeTree(user)" v-model="currentDepartment">
                   <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
                 </select>
-                <show-student-ind
-                    v-if="user.name !== undefined && tree.name !== undefined && currentDepartment.year < 2023"
-                    style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                    :colors="colors"
-                    :user="user"
-                    :settings="settings"
-                    :student-tree="tree"
-                ></show-student-ind>
                 <show-student-ind-credits
-                    v-if="user.name !== undefined && tree.name !== undefined && currentDepartment.year >= 2023"
+                    v-if="user.name !== undefined && tree.name !== undefined"
                     style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
                     :colors="colors"
                     :user="user"
                     :settings="settings"
                     :student-tree="tree"
                 ></show-student-ind-credits>
+              </div>
+              <set-goal
+                v-if="settingGoal"
+                class="btech-modal"
+                :colors="colors"
+                :course-progress-goals="goal"
+                :user="user"
+                :student-tree="tree"
+                @close="settingGoal = false;"
+              >
+
+              </set-goal>
+              <div
+                v-if="
+                  user.name !== undefined 
+                  && currentSubMenu =='Progress'
+                  && permissions.includes('admin') 
+                  && !settingGoal
+                "
+                @click="settingGoal = true;"
+                style="
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    width: 2rem;
+                    height: 2rem;
+                    border-radius: 50%;
+                    border: none;
+                    background-color: #000000;
+                    color: white;
+                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                    font-size: 2rem;
+                    text-align: center;
+                    line-height: 2rem;
+                    cursor: pointer;
+                "
+              >
+                <icon-people style="width: 1.5rem; height: 1.5rem;" :fill="colors.white"></icon-people>
               </div>
             </div>
 
