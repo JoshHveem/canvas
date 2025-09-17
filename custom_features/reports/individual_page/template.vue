@@ -50,10 +50,7 @@
 
               </set-goal>
               <div
-                v-if="
-                  !settingGoal
-                "
-                @click="settingGoal = true;"
+                @click="settingGoal = !settingGoal;"
                 style="
                     position: fixed;
                     bottom: 20px;
