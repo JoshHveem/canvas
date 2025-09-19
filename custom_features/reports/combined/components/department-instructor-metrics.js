@@ -71,7 +71,7 @@ Vue.component('department-instructor-metrics', {
                 title="Average attempts per student"
               />  
           </div>
-          <div class="btech-tile">
+          <div class="btech-tile" style="background-color: #FFF;">
               <div class="btech-row" style="margin-bottom:6px;">
                   <div style="font-size:12px; color:#374151; font-weight:600;">Percentage of assignments graded with a rubric</div>
                   <div style="font-size:12px; color:#111827; font-weight:700;">
