@@ -29,23 +29,22 @@ Vue.component('department-instructor-metrics', {
           <!-- KPI Tiles -->
           <div class="btech-grid-3" style="margin-bottom:12px;">
               <kpi-tile
-                label="Active Graders"
-                :value="instructorMetrics.num_instructors || 0"
-                :decimals="0"
-                title="Number of graders that graded at least 5% of all submissions this year."
-              />
-              <kpi-tile
                 label="Assignments Graded"
                 :value="instructorMetrics.assignments_graded || 0"
                 :decimals="0"
                 title="Number of Assignments Graded this Year"
               />
               <kpi-tile
-                label="Weekly Submission Workload"
-                :value="Math.round((instructorMetrics.assignments_graded / instructorMetrics.recommended_instructors) / 48) || 0"
+                label="Students per Day"
+                :value="instructorMetrics.full_time_students_per_day || 0"
                 :decimals="0"
-                :goal="{ comparator:'between', min: 40, max: 60, label:'~ 50' }"
-                title="Median days to return a grade"
+                title="Based on credits earned across the department in the year, an estimate of full time students your department is working with each day."
+              />
+              <kpi-tile
+                label="Daily Submission Workload"
+                :value="instructorMetrics.assignments_per_day || 0"
+                :decimals="0"
+                title="Average number of assignments submitted each day."
               />
               <kpi-tile
                 label="Days to Grade"
