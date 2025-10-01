@@ -1,6 +1,6 @@
 $(async function () {
-  async function checkTag(tagType, linkParam) {
-    $(tagType).each(async function () {
+  async function checkFileEl(elLocator, linkParam) {
+    $(elLocator).each(async function () {
       const img = $(this);
       const src = img.attr(linkParam);
 
@@ -31,6 +31,6 @@ $(async function () {
       }
     });
   }
-  checkTag("img", "src");
-  checkTag("a", "href");
+  checkFileEl("img", "src");
+  checkFileEl(".file_download_btn", "href");
 });
