@@ -80,9 +80,6 @@ function getCourseCodeFromEnv() {
   return courseCode;
 }
 
-var FEATURES = {};
-var IMPORTED_FEATURE = {};
-
 var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 (async function() {
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
