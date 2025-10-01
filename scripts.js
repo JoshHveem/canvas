@@ -61,7 +61,6 @@ async function feature(f, data = {}, regex = "") {
   if (check) {
     await $.getScript(SOURCE_URL + "/custom_features/" + f + ".js");
   }
-  return
 }
 
 function externalFeature(url, regex = "") {
