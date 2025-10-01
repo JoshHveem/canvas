@@ -40,18 +40,13 @@ function toPrecision(number, numberAfterDecimal) {
   return parseFloat(number.toFixed(numberAfterDecimal));
 }
 
-async function feature(f, data = {}, regex = "") {
-  //feature is the name of the feature file without .js, if it's in a subfolder, include that too
-  //potentially flesh out these files so they're objects with methods. Then call an init function on load with the data variable having all the custom variables needed for each department
-  //if you go this route, you could save each feature in a dict with the string provided here as the key and then in the feature itself, store itself in the dict
-  //reset IMPORTED_FEATURE;
+async function feature(f, regex = "") {
   let check = false;
   if (regex === "") {
     check = true;
   } else {
     if (!Array.isArray(regex)) regex = [regex];
     for (var i = 0; i < regex.length; i++) {
-
       let reg = regex[i];
       if (reg.test(window.location.pathname)) {
         check = true;
