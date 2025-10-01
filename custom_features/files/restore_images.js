@@ -1,8 +1,8 @@
 $(async function () {
-  async function checkTag(tagType) {
+  async function checkTag(tagType, linkParam) {
     $(tagType).each(async function () {
       const img = $(this);
-      const src = img.attr("src");
+      const src = img.attr(linkParam);
 
       // Match Canvas preview image URL: /courses/{course_id}/files/{file_id}/preview
       const match = src.match(/\/courses\/(\d+)\/files\/(\d+)/);
@@ -31,6 +31,6 @@ $(async function () {
       }
     });
   }
-  checkTag("img");
-  checkTag("a");
+  checkTag("img", "src");
+  checkTag("a", "href");
 });
