@@ -1,5 +1,5 @@
-$(function () {
-  $("img").each(function () {
+$(async function () {
+  $("img").each(async function () {
     const img = $(this);
     const src = img.attr("src");
 
@@ -9,6 +9,8 @@ $(function () {
     if (match) {
       const courseId = match[1];
       const fileId = match[2];
+      let file = await canvasGet(`/api/v1/courses/${courseId}/files/${fileId}`);
+      console.log(file);
 
       // Check if the image is broken
       $("<img>")
