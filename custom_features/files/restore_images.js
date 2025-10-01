@@ -4,7 +4,7 @@ $(async function () {
     const src = img.attr("src");
 
     // Match Canvas preview image URL: /courses/{course_id}/files/{file_id}/preview
-    const match = src.match(/\/courses\/(\d+)\/files\/(\d+)\/preview/);
+    const match = src.match(/\/courses\/(\d+)\/files\/(\d+)/);
 
     if (match) {
       const courseId = match[1];
