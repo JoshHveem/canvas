@@ -11,7 +11,6 @@ $(async function () {
       const fileId = match[2];
       try {
         let file = await canvasGet(`/api/v1/courses/${courseId}/files/${fileId}`);
-        console.log(file);
       } catch (err) {
         const restoreBtn = $(`
           <button style="margin:5px; background:#ffd; border:1px solid #ccc;" class="canvas-restore-btn" data-course-id="${courseId}" data-file-id="${fileId}">
