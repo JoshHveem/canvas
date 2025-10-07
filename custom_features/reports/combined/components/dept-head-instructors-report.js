@@ -251,7 +251,7 @@ Vue.component('instructors-report', {
         v-for="(inst, i) in visibleRows" 
         :key="(inst.canvas_user_id || 'u') + '-' + i" 
         :style="rowStyle(i)"
-        @click="onSelect(inst)
+        @click="onSelect(inst)"
         >
         <div 
           v-for="col in visibleColumns" 
