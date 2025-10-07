@@ -111,7 +111,7 @@ Vue.component('instructors-report', {
         ),
         new InstructorColumn(
           'Dept Share', 'Share of dept support/graded hours', '10rem', 'number',
-          i => this.renderDeptShareBar(i),
+          i => this.renderBar(i?.support_hours?.perc_hours_graded),
           null,
           i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
         ),
@@ -176,8 +176,8 @@ Vue.component('instructors-report', {
   },
 
   methods: {
-    renderDeptShareBar(inst) {
-  const val = Number(inst?.support_hours?.perc_hours_graded) || 0;
+    renderBar(decimalVal) {
+  const val = Number(decimalVal) || 0;
   const pct = Math.max(0, Math.min(100, val * 100));
   const bgTrack = '#E5E7EB';
   const bgFill  = this.colors.indigo || '#6366F1';
