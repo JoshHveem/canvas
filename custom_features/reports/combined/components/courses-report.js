@@ -1,6 +1,6 @@
 // Reusable column helper (same idea as your standalone)
 class CoursesColumn {
-  constructor(name, description, width, average, sort_type, getContent = (course) => course.course_name ?? '', style_formula = null) {
+  constructor(name, description, width, average, sort_type, getContent = (course) => course.course_name ?? '', sort_val_func = null, style_formula = null) {
     this.name = name;
     this.description = description;
     this.width = width;
@@ -13,6 +13,9 @@ class CoursesColumn {
   }
   get_style(course) {
     return this.style_formula ? this.style_formula(course) : {};
+  }
+  getSortValue(course) {
+    return this.sort_val_func ? this.sort_val_func(course) : this.getContent(course)
   }
 }
 
@@ -36,22 +39,32 @@ Vue.component('courses-report', {
       sort_column: 'Course Code',
       sort_dir: 1,
       columns: [
-        new CoursesColumn('Name', 'The name of the course.', '20rem', false, 'string',
-          c => this.anonymous ? 'COURSE NAME ' + (c.course_id || '') : (c.name ?? '')
+        new CoursesColumn(
+          'Name', 'The name of the course.', '20rem', false, 'string',
+          c => this.anonymous ? 'COURSE NAME ' + (c.course_id || '') : (c.name ?? ''),
+          null,
+          c => (c.name ?? '')
         ),
-        new CoursesColumn('Course Code', 'The course code for the course.', '6rem', false, 'string',
-          c => this.anonymous ? 'AAAA 0000' : (c.course_code ?? '')
+        new CoursesColumn(
+          'Course Code', 'The course code for the course.', '6rem', false, 'string',
+          c => this.anonymous ? 'AAAA 0000' : (c.course_code ?? ''),
+          null,
+          c => (c.course_code ?? '')
         ),
-        // new CoursesColumn('Year', 'The academic year of the course.', '4rem', false, 'number',
-        //   c => c.year ?? ''
-        // ),
-        new CoursesColumn('Crdts', 'The credits value of the course.', '4rem', false, 'number',
-          c => Math.round(c.credits) || 0
+        new CoursesColumn(
+          'Crdts', 'The credits value of the course.', '4rem', false, 'number',
+          c => Math.round(c.credits) || 0,
+          null,
+          c => Number(c.credits ?? Number.NaN)
         ),
-        new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
-          c => c.num_students_jenzabar ?? 0
+        new CoursesColumn(
+          'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
+          c => c.num_students_jenzabar ?? 0,
+          null,
+          c => Number(c.num_students_jenzabar ?? Number.NaN)
         ),
-        new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
+        new CoursesColumn(
+          'Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
           c => c.pct_need_extension !== null ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
             const v = c.pct_need_extension;
@@ -60,9 +73,11 @@ Vue.component('courses-report', {
               backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
             };
-          }
+          },
+          c => Number(c.pct_need_extension ?? Number.NaN) // sort on raw 0–1 value
         ),
-        new CoursesColumn('Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
+        new CoursesColumn(
+          'Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
           c => Number.isFinite(Number(c.average_score)) ? Number(c.average_score).toFixed(1) + '%' : 'n/a',
           c => {
             const v = Number(c.average_score);
@@ -71,29 +86,35 @@ Vue.component('courses-report', {
               backgroundColor: (v < 80) ? this.colors.red : (v < 90 ? this.colors.yellow : this.colors.green),
               color: this.colors.white
             };
-          }
+          },
+          c => Number(c.average_score ?? Number.NaN)
         ),
-        new CoursesColumn('Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
+        new CoursesColumn(
+          'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
           c => this.pctText(c.objectives),
-          c => this.bandBg(c.objectives)
+          c => this.bandBg(c.objectives),
+          c => Number(c.objectives ?? Number.NaN) // raw 0–1
         ),
-        new CoursesColumn('Relevance', 'Content relevant to career.', '6rem', true, 'number',
+        new CoursesColumn(
+          'Relevance', 'Content relevant to career.', '6rem', true, 'number',
           c => this.pctText(c.relevance),
-          c => this.bandBg(c.relevance)
+          c => this.bandBg(c.relevance),
+          c => Number(c.relevance ?? Number.NaN)
         ),
-        new CoursesColumn('Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
+        new CoursesColumn(
+          'Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
           c => this.pctText(c.examples),
-          c => this.bandBg(c.examples)
+          c => this.bandBg(c.examples),
+          c => Number(c.examples ?? Number.NaN)
         ),
-        new CoursesColumn('Recommend', 'Would recommend this course.', '7rem', true, 'number',
+        new CoursesColumn(
+          'Recommend', 'Would recommend this course.', '7rem', true, 'number',
           c => this.pctText(c.recommendable),
-          c => this.bandBg(c.recommendable)
+          c => this.bandBg(c.recommendable),
+          c => Number(c.recommendable ?? Number.NaN)
         ),
-        // new CoursesColumn('Tags', 'Prominent tags from student comments.', 'auto', false, 'string',
-        //   c => this.renderTagsHTML(c),
-        //   null
-        // )
       ]
+
     };
   },
 
@@ -171,37 +192,57 @@ Vue.component('courses-report', {
     },
     sortRows(rows) {
       const header = this.sort_column;
-      const key = this.columnNameToCode(header);
       const dir = this.sort_dir;
       const col = this.columns.find(c => c.name === header);
       const sortType = col ? col.sort_type : 'string';
 
+      const toStringKey = v => ('' + (v ?? '')).toUpperCase();
+
       return rows.slice().sort((a, b) => {
-        let av = a[key]; let bv = b[key];
-        // normalize content if coming from getContent; else use fields
-        if (header === 'Name') { av = a.name ?? ''; bv = b.name ?? ''; }
-        if (header === 'Course Code') { av = a.course_code ?? ''; bv = b.course_code ?? ''; }
-        if (header === 'Year') { av = Number(a.year ?? -1); bv = Number(b.year ?? -1); }
-        if (header === 'Students') { av = Number(a.num_students_credits ?? -1); bv = Number(b.num_students_credits ?? -1); }
-        if (header === 'Credits') { av = Number(a.credits ?? -1); bv = Number(b.credits ?? -1); }
-        if (header === 'Credits per Week') { av = Number(a.credits_per_week ?? -1); bv = Number(b.credits_per_week ?? -1); }
-        if (header === 'Grades') { av = Number(a.average_score ?? -1); bv = Number(b.average_score ?? -1); }
-        if (['Objectives','Relevance','Examples','Recommendable'].includes(header)) {
-          const map = { Objectives:'objectives', Relevance:'relevance', Examples:'examples', Recommendable:'recommendable' };
-          av = Number(a[map[header]] ?? -1);
-          bv = Number(b[map[header]] ?? -1);
+        let av, bv;
+
+        if (col && typeof col.getSortValue === 'function') {
+          av = col.getSortValue(a);
+          bv = col.getSortValue(b);
+        } else {
+          // Fallbacks if a column didn’t define getSortValue
+          const key = this.columnNameToCode(header); // e.g., 'Course Code' -> 'course_code'
+          av = a[key];
+          bv = b[key];
+          // Last-resort: parse from rendered content if numeric
+          if (sortType !== 'string') {
+            const parsePercentish = (x) => {
+              const s = String(x ?? '').replace('%', '').trim();
+              const n = Number(s);
+              return Number.isFinite(n) ? n : Number.NaN;
+            };
+            if (!Number.isFinite(Number(av)) && col?.getContent) av = parsePercentish(col.getContent(a));
+            if (!Number.isFinite(Number(bv)) && col?.getContent) bv = parsePercentish(col.getContent(b));
+          }
         }
 
+        // Normalize types
         if (sortType === 'string') {
-          av = ('' + (av ?? '')).toUpperCase();
-          bv = ('' + (bv ?? '')).toUpperCase();
+          av = toStringKey(av);
+          bv = toStringKey(bv);
         } else {
-          av = Number(av); bv = Number(bv);
+          av = Number(av);
+          bv = Number(bv);
         }
-        let comp = (av > bv) ? 1 : (av < bv ? -1 : 0);
+
+        // Deterministic NaN handling
+        const aNaN = Number.isNaN(av);
+        const bNaN = Number.isNaN(bv);
+        let comp;
+        if (aNaN && bNaN) comp = 0;
+        else if (aNaN) comp = 1;         // push NaNs to bottom on ascending
+        else if (bNaN) comp = -1;
+        else comp = av > bv ? 1 : (av < bv ? -1 : 0);
+
         return comp * dir;
       });
     },
+
     columnNameToCode(name) {
       return (name || '').toLowerCase().replace(/ /g, '_');
     },
