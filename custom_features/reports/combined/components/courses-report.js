@@ -45,11 +45,11 @@ Vue.component('courses-report', {
         // new CoursesColumn('Year', 'The academic year of the course.', '4rem', false, 'number',
         //   c => c.year ?? ''
         // ),
-        new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
-          c => c.num_students_jenzabar ?? 0
-        ),
         new CoursesColumn('Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0
+        ),
+        new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
+          c => c.num_students_jenzabar ?? 0
         ),
         new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', true, 'number',
           c => c.pct_need_extension !== null ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
