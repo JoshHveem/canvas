@@ -192,7 +192,7 @@ Vue.component('kpi-fill-bar', {
     mode:  { type: String, default: 'gte' },           // 'gte' (higher is better) | 'lt' (lower is better)
     height:{ type: [Number, String], default: 6 },     // px
     showLabel: { type: Boolean, default: true },       // show % label
-    labelPos: { type: String, default: 'right' },      // 'right' | 'below' | 'none'
+    labelPos: { type: String, default: 'none' },      // 'right' | 'below' | 'none'
   },
   computed: {
     colors() {
