@@ -119,7 +119,7 @@ Vue.component('instructors-report', {
           'Avg Attempts', 'Avg attempts (goal < ' + this?.goals?.attempts_lt + ')', '7rem', 'number',
           i => {
             const v = Number(i?.grading?.average_attempts);
-            return Number.isFinite(v) ? v.toFixed(2) : '—';
+            return Number.isFinite(v) ? v.toFixed(2) : 'N/A';
           },
           i => band(i?.grading?.average_attempts, this.goals.attempts_lt),
           i => Number(i?.grading?.average_attempts ?? Number.NaN)
@@ -128,7 +128,7 @@ Vue.component('instructors-report', {
           'Days to Grade', 'Median days to grade (goal < ' + this?.goals?.grade_days_lt + ')', '7rem', 'number',
           i => {
             const v = Number(i?.grading?.days_to_grade);
-            return Number.isFinite(v) ? v.toFixed(1) : '—';
+            return Number.isFinite(v) ? v.toFixed(1) : 'N/A';
           },
           i => band(i?.grading?.days_to_grade, this.goals.grade_days_lt),
           i => Number(i?.grading?.days_to_grade ?? Number.NaN)
@@ -137,9 +137,9 @@ Vue.component('instructors-report', {
           'Comments/Subm', 'Comments per graded submission (goal ≥ ' + this?.goals?.comments_gte + ')', '8rem', 'number',
           i => {
             const v = Number(i?.grading?.comments_per_submission_graded);
-            return Number.isFinite(v) ? v.toFixed(2) : '—';
+            return Number.isFinite(v) ? v.toFixed(2) : 'N/A';
           },
-          i => band(i?.grading?.comments_per_submission_graded, this.goals.comments_gte, /*goodIfGte*/true),
+          i => band(i?.grading?.comments_per_submission_graded, this.goals.comments_gte, true),
           i => Number(i?.grading?.comments_per_submission_graded ?? Number.NaN)
         ),
         new InstructorColumn(
@@ -154,7 +154,7 @@ Vue.component('instructors-report', {
         new InstructorColumn(
           'Rubric Used', 'Percent graded with rubric (goal 100%)', '7rem', 'number',
           i => pct01(i?.grading?.perc_graded_with_rubric),
-          i => band(i?.grading?.perc_graded_with_rubric, 1, /*goodIfGte*/true),
+          i => band(i?.grading?.perc_graded_with_rubric, 0.9, true),
           i => Number(i?.grading?.perc_graded_with_rubric ?? Number.NaN)
         ),
       ]
