@@ -51,7 +51,7 @@ Vue.component('courses-report', {
         new CoursesColumn('Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
           c => c.num_students_jenzabar ?? 0
         ),
-        new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', true, 'number',
+        new CoursesColumn('Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
           c => c.pct_need_extension !== null ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
             const v = c.pct_need_extension;
@@ -110,7 +110,6 @@ Vue.component('courses-report', {
         if (this.filters.hide_zero_students && !(Number(c.num_students_credits) > 0)) return false;
         return true;
       });
-      console.log(rows);
       // sort
       return this.sortRows(rows);
     }
