@@ -251,6 +251,7 @@ Vue.component('instructors-report', {
         v-for="(inst, i) in visibleRows" 
         :key="(inst.canvas_user_id || 'u') + '-' + i" 
         :style="rowStyle(i)"
+        style="cursor:pointer;"
         @click="onSelect(inst)"
         >
         <div 
@@ -259,7 +260,7 @@ Vue.component('instructors-report', {
           style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
         >
           <span v-if="col.name === 'Name'">
-            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank">{{ col.getContent(inst) }}</a>
+            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>{{ col.getContent(inst) }}</a>
           </span>
           <span v-else :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(inst)"
                 v-html="col.getContent(inst)"></span>
