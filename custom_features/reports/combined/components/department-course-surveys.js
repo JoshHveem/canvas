@@ -89,7 +89,7 @@ Vue.component('department-course-surveys', {
 
           <!-- New reusable bar -->
           <btech-fill-bar
-            :value="Number(item.score || 0)"  <!-- 0–1 -->
+            :value="Number(item.score || 0)"
             :goal="1"
             mode="gte"
             :height="6"
