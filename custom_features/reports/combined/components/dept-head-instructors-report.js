@@ -91,12 +91,12 @@ Vue.component('instructors-report', {
           null,
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
-        new InstructorColumn(
-          'Year', 'Academic year', '5rem', 'string',
-          i => (i?.academic_year ?? '—'),
-          null,
-          i => String(i?.academic_year ?? '')
-        ),
+        // new InstructorColumn(
+        //   'Year', 'Academic year', '5rem', 'string',
+        //   i => (i?.academic_year ?? '—'),
+        //   null,
+        //   i => String(i?.academic_year ?? '')
+        // ),
         new InstructorColumn(
           'Assign. Graded', 'Assignments graded', '7rem', 'number',
           i => (Number(i?.grading?.assignments_graded) || 0).toLocaleString(),
