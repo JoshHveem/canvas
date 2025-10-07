@@ -133,7 +133,7 @@ Vue.component('instructors-report', {
         new InstructorColumn(
           'Days to Reply', 'Median days to reply (goal < ' + this?.goals?.reply_days_lt + ')', '7rem', 'number',
           i => {
-            const v = Number(i?.interactions?.days_to_reply ?? Number.NaN);
+            const v = Number(i?.interactions?.days_to_reply);
             return Number.isFinite(v) ? v.toFixed(1) : 'N/A';
           },
           i => band(i?.interactions?.days_to_reply, this.goals.reply_days_lt),
