@@ -147,7 +147,7 @@ Vue.component('instructor-report', {
       </div>
 
       <!-- Overview list (only when multiple and nothing selected) -->
-      <instructor-metrics-overview
+      <instructors-report
         v-if="!loading && hasMany && !selected"
         :instructors="normalizedInstructors"
         :year="year"
