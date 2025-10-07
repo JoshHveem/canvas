@@ -79,7 +79,7 @@ Vue.component('department-instructor-metrics', {
                   </div>
               </div>
               <kpi-fill-bar
-                :value="Number(instructorMetrics.graded_with_rubric.score || 0)"
+                :value="Number(instructorMetrics.graded_with_rubric.score || 0) * 100"
                 :goal="1"
                 mode="gte"
                 :height="6"
