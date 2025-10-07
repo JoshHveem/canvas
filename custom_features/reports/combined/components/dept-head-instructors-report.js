@@ -171,18 +171,24 @@ Vue.component('instructors-report', {
 
   methods: {
     renderDeptShareBar(inst) {
-      const val = Number(inst?.support_hours?.perc_hours_graded) || 0;
-      const pct = Math.max(0, Math.min(100, val * 100));
-      const bg  = this.colors.indigo || '#6366F1';
-      return `
-        <div style="width:100%;display:flex;flex-direction:column;">
-          <div style="font-size:.7rem;font-weight:700;color:#111827;margin-top:2px;text-align:center;">${pct.toFixed(0)}%</div>
-          <div style="height:6px;background:#E5E7EB;border-radius:9999px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${bg};"></div>
-          </div>
-        </div>
-      `;
-    },
+  const val = Number(inst?.support_hours?.perc_hours_graded) || 0;
+  const pct = Math.max(0, Math.min(100, val * 100));
+  const bgTrack = '#E5E7EB';      // light gray
+  const bgFill  = this.colors.indigo || '#6366F1';
+  const textCol = '#111827';
+
+  return `
+    <div style="width:100%;display:flex;flex-direction:column;align-items:stretch;">
+      <div style="height:6px;background:${bgTrack};border-radius:9999px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${bgFill};transition:width .3s;"></div>
+      </div>
+      <div style="font-size:.7rem;font-weight:700;color:${textCol};margin-top:3px;text-align:center;">
+        ${pct.toFixed(0)}%
+      </div>
+    </div>
+  `;
+},
+
     onSelect(inst) {
       this.$emit('select', inst);
     },
