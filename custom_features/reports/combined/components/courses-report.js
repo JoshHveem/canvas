@@ -96,31 +96,31 @@ Vue.component('courses-report', {
               color: this.colors.white
             };
           },
-          c => Number(c.average_score ?? Number.NaN)
+          c => Number(c.average_score ?? -1)
         ),
         new CoursesColumn(
           'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
           c => this.pctText(c.objectives),
           c => this.bandBg(c.objectives),
-          c => Number(c.objectives ?? Number.NaN) // raw 0–1
+          c => Number(c.objectives ?? -1) // raw 0–1
         ),
         new CoursesColumn(
           'Relevance', 'Content relevant to career.', '6rem', true, 'number',
           c => this.pctText(c.relevance),
           c => this.bandBg(c.relevance),
-          c => Number(c.relevance ?? Number.NaN)
+          c => Number(c.relevance ?? -1)
         ),
         new CoursesColumn(
           'Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
           c => this.pctText(c.examples),
           c => this.bandBg(c.examples),
-          c => Number(c.examples ?? Number.NaN)
+          c => Number(c.examples ?? -1)
         ),
         new CoursesColumn(
           'Recommend', 'Would recommend this course.', '7rem', true, 'number',
           c => this.pctText(c.recommendable),
           c => this.bandBg(c.recommendable),
-          c => Number(c.recommendable ?? Number.NaN)
+          c => Number(c.recommendable ?? -1)
         ),
       ]
 
