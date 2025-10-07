@@ -185,6 +185,15 @@ Vue.component('instructors-report', {
       gap:6px;
     ">
       <div style="
+        width:2.5rem;
+        text-align:right;
+        font-size:.75rem;
+        font-weight:700;
+        color:${textCol};
+      ">
+        ${pct.toFixed(0)}%
+      </div>
+      <div style="
         flex:1;
         height:6px;
         background:${bgTrack};
@@ -197,15 +206,6 @@ Vue.component('instructors-report', {
           background:${bgFill};
           transition:width .3s;
         "></div>
-      </div>
-      <div style="
-        width:2.5rem;
-        text-align:right;
-        font-size:.75rem;
-        font-weight:700;
-        color:${textCol};
-      ">
-        ${pct.toFixed(0)}%
       </div>
     </div>
   `;
