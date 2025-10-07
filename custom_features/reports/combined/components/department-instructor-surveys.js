@@ -42,32 +42,32 @@ Vue.component('department-instructor-surveys', {
     </div>
 
     <!-- Likert Breakdown -->
-    <div class="btech-tile" style="margin-bottom:8px;" title="Breakdown of each Likert item">
-      <div class="btech-row" style="margin-bottom:6px;">
-        <div style="font-size:12px; color:#374151; font-weight:600;">Likert Breakdown</div>
-        <div class="btech-muted">0%–100%</div>
-      </div>
+    <!-- Likert Breakdown -->
+      <div class="btech-tile" style="margin-bottom:8px;" title="Breakdown of each Likert item">
+        <div class="btech-row" style="margin-bottom:6px;">
+          <div style="font-size:12px; color:#374151; font-weight:600;">Likert Breakdown</div>
+          <div class="btech-muted">0%–100%</div>
+        </div>
 
-      <div v-if="likerts.length">
-        <div v-for="(item, idx) in likerts" :key="idx" style="margin-bottom:10px;">
-          <div class="btech-row" style="margin-bottom:6px;">
-            <div style="font-size:12px; color:#374151; font-weight:600;">{{ item.name || 'Item ' + (idx+1) }}</div>
-            <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round(Number(item.score || 0) * 100) }}%</div>
-          </div>
-          <div class="btech-progress" role="presentation">
-            <div
-              class="fill btech-fill-accent"
-              :style="{ width: Math.max(0, Math.min(100, Number(item.score || 0) * 100)) + '%' }"
-              role="progressbar"
-              :aria-valuenow="Math.max(0, Math.min(100, Number(item.score || 0) * 100))"
-              aria-valuemin="0" aria-valuemax="100"
-              :aria-label="(item.name || ('Likert ' + (idx+1))) + ' ' + Math.round(Number(item.score || 0) * 100) + '%'"
-            ></div>
+        <div v-if="likerts.length">
+          <div v-for="(item, idx) in likerts" :key="idx" style="margin-bottom:10px;">
+            <div class="btech-row" style="margin-bottom:6px;">
+              <div style="font-size:12px; color:#374151; font-weight:600;">{{ item.name || 'Item ' + (idx+1) }}</div>
+              <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round(Number(item.score || 0) * 100) }}%</div>
+            </div>
+
+            <!-- New KPI bar: score is 0–1, higher is better, goal=1 -->
+            <kpi-fill-bar
+              :value="Number(item.score || 0)"
+              :goal="1"
+              mode="gte"
+              :height="6"
+              label-pos="right"
+            />
           </div>
         </div>
-      </div>
-      <div v-else class="btech-muted">No Likert items provided.</div>
-    </div>
+        <div v-else class="btech-muted">No Likert items provided.</div>
+      </div> 
 
     <div class="btech-tile" style="margin-bottom:8px;" title="Breakdown of each Likert item">
       <div class="btech-row" style="margin-bottom:6px;">
