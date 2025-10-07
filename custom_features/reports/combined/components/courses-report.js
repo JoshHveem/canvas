@@ -22,7 +22,7 @@ class CoursesColumn {
     const raw = this.getContent(course);
     if (this.sort_type === 'number') {
       const n = Number(String(raw ?? '').replace('%', '').trim());
-      return Number.isFinite(n) ? n : Number.NaN;
+      return Number.isFinite(n) ? n : 0;
     }
     return ('' + (raw ?? '')).toUpperCase();
   }
