@@ -41,7 +41,7 @@ Vue.component('department-instructor-metrics', {
                 title="Average number of assignments submitted each day."
               />
               <kpi-tile
-                label="Students per Day"
+                label="Full Time Students per Day"
                 :value="instructorMetrics.full_time_students_per_day || 0"
                 :decimals="0"
                 title="Based on credits earned across the department in the year, an estimate of full time students your department is working with each day."
