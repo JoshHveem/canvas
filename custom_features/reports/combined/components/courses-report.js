@@ -10,12 +10,21 @@ class CoursesColumn {
     this.visible = true;
     this.getContent = getContent;
     this.style_formula = style_formula;
+    this.sort_val_func = sort_val_func;
   }
   get_style(course) {
     return this.style_formula ? this.style_formula(course) : {};
   }
   getSortValue(course) {
-    return this.sort_val_func ? this.sort_val_func(course) : this.getContent(course)
+    if (typeof this.sort_val_func === 'function') return this.sort_val_func(course);
+
+    // Fallback: derive from rendered content
+    const raw = this.getContent(course);
+    if (this.sort_type === 'number') {
+      const n = Number(String(raw ?? '').replace('%', '').trim());
+      return Number.isFinite(n) ? n : Number.NaN;
+    }
+    return ('' + (raw ?? '')).toUpperCase();
   }
 }
 
