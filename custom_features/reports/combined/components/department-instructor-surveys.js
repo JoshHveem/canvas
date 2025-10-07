@@ -39,11 +39,6 @@ Vue.component('department-instructor-surveys', {
         <div class="btech-kpi-label">Avg Likert</div>
         <div class="btech-kpi-value">{{ avgLikertPct.toFixed(1) }}<span class="btech-muted">%</span></div>
       </div>
-
-      <div class="btech-tile" title="Share of responses that include a recommendation">
-        <div class="btech-kpi-label">Has Recommendation</div>
-        <div class="btech-kpi-value">{{ recPct }}<span class="btech-muted">%</span></div>
-      </div>
     </div>
 
     <!-- Likert Breakdown -->

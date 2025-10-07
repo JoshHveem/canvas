@@ -67,11 +67,6 @@ Vue.component('department-course-surveys', {
         <div class="btech-kpi-label">Avg Likert</div>
         <div class="btech-kpi-value">{{ avgLikertPct.toFixed(1) }}<span class="btech-muted">%</span></div>
       </div>
-
-      <div class="btech-tile" title="Share of responses that include a recommendation">
-        <div class="btech-kpi-label">Has Recommendation</div>
-        <div class="btech-kpi-value">{{ recPct }}<span class="btech-muted">%</span></div>
-      </div>
     </div>
 
     <!-- Likert Breakdown -->
@@ -81,24 +76,27 @@ Vue.component('department-course-surveys', {
         <div class="btech-muted">0%–100%</div>
       </div>
 
-      <div v-if="likerts.length">
+     <div v-if="likerts.length">
         <div v-for="(item, idx) in likerts" :key="idx" style="margin-bottom:10px;">
           <div class="btech-row" style="margin-bottom:6px;">
-            <div style="font-size:12px; color:#374151; font-weight:600;">{{ item.name || 'Item ' + (idx+1) }}</div>
-            <div style="font-size:12px; color:#111827; font-weight:700;">{{ Math.round(Number(item.score || 0) * 100) }}%</div>
+            <div style="font-size:12px; color:#374151; font-weight:600;">
+              {{ item.name || 'Item ' + (idx+1) }}
+            </div>
+            <div style="font-size:12px; color:#111827; font-weight:700;">
+              {{ Math.round(Number(item.score || 0) * 100) }}%
+            </div>
           </div>
-          <div class="btech-progress" role="presentation">
-            <div
-              class="fill btech-fill-accent"
-              :style="{ width: Math.max(0, Math.min(100, Number(item.score || 0) * 100)) + '%' }"
-              role="progressbar"
-              :aria-valuenow="Math.max(0, Math.min(100, Number(item.score || 0) * 100))"
-              aria-valuemin="0" aria-valuemax="100"
-              :aria-label="(item.name || ('Likert ' + (idx+1))) + ' ' + Math.round(Number(item.score || 0) * 100) + '%'"
-            ></div>
-          </div>
+
+          <!-- New reusable bar -->
+          <btech-fill-bar
+            :value="Number(item.score || 0)"  <!-- 0–1 -->
+            :goal="1"
+            mode="gte"
+            :height="6"
+            label-pos="right"
+          />
         </div>
-      </div>
+      </div> 
       <div v-else class="btech-muted">No Likert items provided.</div>
     </div>
 
@@ -120,5 +118,107 @@ Vue.component('department-course-surveys', {
   <div class="btech-card btech-theme" v-else>
     <div class="btech-muted" style="text-align:center;">No survey data yet.</div>
   </div>
+  `
+});
+
+Vue.component('btech-fill-bar', {
+  props: {
+    value: { type: [Number, String], required: true }, // 0–1 or 0–100
+    goal:  { type: Number, default: 1 },               // target (1 for 0–1 scales, 100 for % scales)
+    mode:  { type: String, default: 'gte' },           // 'gte' (higher is better) | 'lt' (lower is better)
+    height:{ type: [Number, String], default: 6 },     // px
+    showLabel: { type: Boolean, default: true },       // show % label
+    labelPos: { type: String, default: 'right' },      // 'right' | 'below' | 'none'
+  },
+  computed: {
+    colors() {
+      return (window.bridgetools?.colors) || {
+        red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
+        green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff',
+        indigo:'#6366F1'
+      };
+    },
+    // normalize value to percent (0–100), but compare with goal in same units
+    valNum() {
+      const n = Number(this.value);
+      if (!Number.isFinite(n)) return NaN;
+      // If value <=1 and goal <=1, treat as 0–1 scale; else assume 0–100 scale
+      const isUnit = this.goal <= 1 && n <= 1;
+      return isUnit ? Math.max(0, Math.min(100, n * 100)) : Math.max(0, Math.min(100, n));
+    },
+    goalNum() {
+      // goal in % space, matching val normalization
+      const g = Number(this.goal);
+      if (!Number.isFinite(g)) return NaN;
+      return (g <= 1 ? g * 100 : g);
+    },
+    fillStyle() {
+      return {
+        height: '100%',
+        width: `${this.valNum}%`,
+        background: this.fillColor,
+        transition: 'width .25s ease'
+      };
+    },
+    trackStyle() {
+      return {
+        flex: 1,
+        height: (typeof this.height === 'number' ? `${this.height}px` : String(this.height)),
+        background: this.colors.gray,
+        borderRadius: '9999px',
+        overflow: 'hidden'
+      };
+    },
+    wrapperStyle() {
+      return {
+        width:'100%',
+        display:'flex',
+        alignItems: (this.labelPos === 'below' ? 'stretch' : 'center'),
+        gap: (this.labelPos === 'below' ? '0' : '6px'),
+        flexDirection: (this.labelPos === 'below' ? 'column' : 'row')
+      };
+    },
+    labelStyle() {
+      return {
+        width: (this.labelPos === 'right' ? '2.5rem' : 'auto'),
+        textAlign: (this.labelPos === 'right' ? 'right' : 'center'),
+        fontSize: '.75rem',
+        fontWeight: 700,
+        color: this.colors.black
+      };
+    },
+    // color logic with 0.9 / 0.75 bands
+    fillColor() {
+      const v = this.valNum;  // % space
+      const g = this.goalNum; // % space
+      if (!Number.isFinite(v) || !Number.isFinite(g)) return this.colors.gray;
+
+      const warn1 = 0.9;  // 90%
+      const warn2 = 0.75; // 75%
+
+      if (this.mode === 'gte') {
+        if (v >= g) return this.colors.green;
+        if (v >= g * warn1) return this.colors.yellow;
+        if (v >= g * warn2) return this.colors.orange;
+        return this.colors.red;
+      } else { // 'lt' — lower is better
+        if (v < g) return this.colors.green;
+        if (v < g / warn1) return this.colors.yellow; // ~11% worse than goal
+        if (v < g / warn2) return this.colors.orange; // ~33% worse than goal
+        return this.colors.red;
+      }
+    },
+    ariaNow() { return Math.round(this.valNum); },
+    labelText() { return `${Math.round(this.valNum)}%`; }
+  },
+  template: `
+    <div :style="wrapperStyle">
+      <div :style="trackStyle" role="presentation">
+        <div :style="fillStyle"></div>
+      </div>
+      <div v-if="showLabel && labelPos === 'right'" :style="labelStyle">{{ labelText }}</div>
+      <div v-if="showLabel && labelPos === 'below'" :style="labelStyle" style="margin-top:3px;">{{ labelText }}</div>
+      <div class="sr-only" role="progressbar" :aria-valuenow="ariaNow" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
   `
 });
