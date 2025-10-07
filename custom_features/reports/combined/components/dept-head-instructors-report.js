@@ -247,17 +247,20 @@ Vue.component('instructors-report', {
       </div>
 
       <!-- Rows -->
-      <div v-for="(inst, i) in visibleRows" :key="(inst.canvas_user_id || 'u') + '-' + i" :style="rowStyle(i)">
-        <div v-for="col in visibleColumns" :key="col.name"
-             style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+      <div 
+        v-for="(inst, i) in visibleRows" 
+        :key="(inst.canvas_user_id || 'u') + '-' + i" 
+        :style="rowStyle(i)"
+        @click="onSelect(inst)
+        >
+        <div 
+          v-for="col in visibleColumns" 
+          :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+        >
           <span v-if="col.name === 'Name'">
-            <a href="javascript:void(0)"
-              @click.prevent="onSelect(inst)"
-              style="font-weight:600;color:#1D4ED8;text-decoration:underline;cursor:pointer;">
-              {{ col.getContent(inst) }}
-            </a>
+            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank">{{ col.getContent(inst) }}</a>
           </span>
-
           <span v-else :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(inst)"
                 v-html="col.getContent(inst)"></span>
         </div>
