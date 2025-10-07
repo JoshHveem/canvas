@@ -104,6 +104,12 @@ Vue.component('instructors-report', {
           i => Number(i?.grading?.assignments_graded ?? Number.NaN)
         ),
         new InstructorColumn(
+          '', 'Share of dept support/graded hours', '10rem', 'number',
+          i => pct01(i?.support_hours?.perc_hours_graded),
+          null,
+          i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
+        ),
+        new InstructorColumn(
           'Dept Share', 'Share of dept support/graded hours', '10rem', 'number',
           i => this.renderDeptShareBar(i),
           null,
