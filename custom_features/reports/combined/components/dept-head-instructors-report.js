@@ -104,6 +104,12 @@ Vue.component('instructors-report', {
           i => Number(i?.grading?.assignments_graded ?? Number.NaN)
         ),
         new InstructorColumn(
+          'Dept Share', 'Share of dept support/graded hours', '7rem', 'number',
+          i => this.renderDeptShareBar(i),
+          null,
+          i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
+        ),
+        new InstructorColumn(
           'Avg Attempts', 'Avg attempts (goal < ' + this?.goals?.attempts_lt + ')', '7rem', 'number',
           i => {
             const v = Number(i?.grading?.average_attempts);
@@ -144,12 +150,6 @@ Vue.component('instructors-report', {
           i => pct01(i?.grading?.perc_graded_with_rubric),
           i => band(i?.grading?.perc_graded_with_rubric, 1, /*goodIfGte*/true),
           i => Number(i?.grading?.perc_graded_with_rubric ?? Number.NaN)
-        ),
-        new InstructorColumn(
-          'Dept Share', 'Share of dept support/graded hours', '7rem', 'number',
-          i => this.renderDeptShareBar(i),
-          null,
-          i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
         ),
       ]
     };
