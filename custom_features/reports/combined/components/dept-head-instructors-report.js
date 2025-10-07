@@ -177,45 +177,35 @@ Vue.component('instructors-report', {
 
   methods: {
     renderBar(decimalVal) {
-  const val = Number(decimalVal) || 0;
-  const pct = Math.max(0, Math.min(100, val * 100));
-  const bgTrack = '#E5E7EB';
-  const bgFill  = this.colors.indigo || '#6366F1';
-  const textCol = '#111827';
+      const val = Number(decimalVal) || 0;
+      const pct = Math.max(0, Math.min(100, val * 100));
+      const bgTrack = '#E5E7EB';
+      const bgFill  = this.colors.indigo || '#6366F1';
 
-  return `
-    <div style="
-      width: 90%;
-      display:flex;
-      align-items:center;
-      gap:6px;
-    ">
-      <div style="
-        width:2.5rem;
-        text-align:right;
-        font-size:.75rem;
-        font-weight:700;
-        color:${textCol};
-      ">
-        ${pct.toFixed(0)}%
-      </div>
-      <div style="
-        flex:1;
-        height:6px;
-        background:${bgTrack};
-        border-radius:9999px;
-        overflow:hidden;
-      ">
+      return `
         <div style="
-          height:100%;
-          width:${pct}%;
-          background:${bgFill};
-          transition:width .3s;
-        "></div>
-      </div>
-    </div>
-  `;
-},
+          width: 90%;
+          display:flex;
+          align-items:center;
+          gap:6px;
+        ">
+          <div style="
+            flex:1;
+            height:6px;
+            background:${bgTrack};
+            border-radius:9999px;
+            overflow:hidden;
+          ">
+            <div style="
+              height:100%;
+              width:${pct}%;
+              background:${bgFill};
+              transition:width .3s;
+            "></div>
+          </div>
+        </div>
+      `;
+    },
 
     onSelect(inst) {
       this.$emit('select', inst);
