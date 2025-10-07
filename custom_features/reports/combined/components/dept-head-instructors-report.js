@@ -55,7 +55,7 @@ Vue.component('instructors-report', {
         grade_days_lt: 2,
         comments_gte: 1,
         reply_days_lt: 2,
-        rubric_pct_gte: 1.00 // target 100%
+        rubric_pct_gte: .90 // target 100%
       })
     }
   },
