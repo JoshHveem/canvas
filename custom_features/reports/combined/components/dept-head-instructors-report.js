@@ -92,12 +92,6 @@ Vue.component('instructors-report', {
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
         new InstructorColumn(
-          'ID', 'Canvas user id', '6rem', 'string',
-          i => (i?.canvas_user_id ?? '—'),
-          null,
-          i => String(i?.canvas_user_id ?? '')
-        ),
-        new InstructorColumn(
           'Year', 'Academic year', '5rem', 'string',
           i => (i?.academic_year ?? '—'),
           null,
