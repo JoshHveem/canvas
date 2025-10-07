@@ -1,6 +1,6 @@
 // Reusable column helper (same idea as your standalone)
 class CoursesColumn {
-  constructor(name, description, width, average, sort_type, getContent = (course) => course.course_name ?? '', sort_val_func = null, style_formula = null) {
+  constructor(name, description, width, average, sort_type, getContent = (course) => course.course_name ?? '', style_formula = null, sort_val_func = null) {
     this.name = name;
     this.description = description;
     this.width = width;
