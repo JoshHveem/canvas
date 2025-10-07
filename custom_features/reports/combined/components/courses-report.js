@@ -64,13 +64,13 @@ Vue.component('courses-report', {
           'Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0,
           null,
-          c => Number(c.credits ?? 0)
+          c => Number(c.credits ?? -1)
         ),
         new CoursesColumn(
           'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
           c => c.num_students_jenzabar ?? 0,
           null,
-          c => Number(c.num_students_jenzabar ?? 0)
+          c => Number(c.num_students_jenzabar ?? -1)
         ),
         new CoursesColumn(
           'Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
@@ -83,7 +83,7 @@ Vue.component('courses-report', {
               color: this.colors.white
             };
           },
-          c => Number(c.pct_need_extension ?? 0) // sort on raw 0–1 value
+          c => Number(c.pct_need_extension ?? -1) // sort on raw 0–1 value
         ),
         new CoursesColumn(
           'Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
