@@ -173,16 +173,38 @@ Vue.component('instructors-report', {
     renderDeptShareBar(inst) {
   const val = Number(inst?.support_hours?.perc_hours_graded) || 0;
   const pct = Math.max(0, Math.min(100, val * 100));
-  const bgTrack = '#E5E7EB';      // light gray
+  const bgTrack = '#E5E7EB';
   const bgFill  = this.colors.indigo || '#6366F1';
   const textCol = '#111827';
 
   return `
-    <div style="width:100%;display:flex;flex-direction:column;align-items:stretch;">
-      <div style="height:6px;background:${bgTrack};border-radius:9999px;overflow:hidden;">
-        <div style="height:100%;width:${pct}%;background:${bgFill};transition:width .3s;"></div>
+    <div style="
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    ">
+      <div style="
+        flex:1;
+        height:6px;
+        background:${bgTrack};
+        border-radius:9999px;
+        overflow:hidden;
+      ">
+        <div style="
+          height:100%;
+          width:${pct}%;
+          background:${bgFill};
+          transition:width .3s;
+        "></div>
       </div>
-      <div style="font-size:.7rem;font-weight:700;color:${textCol};margin-top:3px;text-align:center;">
+      <div style="
+        width:2.5rem;
+        text-align:right;
+        font-size:.75rem;
+        font-weight:700;
+        color:${textCol};
+      ">
         ${pct.toFixed(0)}%
       </div>
     </div>
