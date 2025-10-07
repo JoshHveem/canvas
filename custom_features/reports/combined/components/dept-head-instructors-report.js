@@ -71,14 +71,31 @@ Vue.component('instructors-report', {
       const n = Number(v);
       return Number.isFinite(n) ? (n * 100).toFixed(0) + '%' : '—';
     };
-    const band = (n, goodIfLt, goodIfGte=false) => {
+    const band = (n, goal, goodIfGte = false) => {
       const v = Number(n);
       if (!Number.isFinite(v)) return { backgroundColor: colors.gray, color: colors.black };
+
+      // Tolerances — adjust as needed
+      const warn1 = 0.9;  // 90%
+      const warn2 = 0.75; // 75%
+
+      let color = colors.red;
+
       if (goodIfGte) {
-        return { backgroundColor: (v >= goodIfLt ? colors.green : colors.red), color: colors.white };
+        // Higher is better
+        if (v >= goal) color = colors.green;
+        else if (v >= goal * warn1) color = colors.yellow;
+        else if (v >= goal * warn2) color = colors.orange;
+      } else {
+        // Lower is better
+        if (v < goal) color = colors.green;
+        else if (v < goal / warn1) color = colors.yellow;
+        else if (v < goal / warn2) color = colors.orange;
       }
-      return { backgroundColor: (v < goodIfLt ? colors.green : colors.red), color: colors.white };
+
+      return { backgroundColor: color, color: colors.white };
     };
+
 
     return {
       colors,
