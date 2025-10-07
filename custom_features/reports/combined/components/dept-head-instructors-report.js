@@ -176,6 +176,9 @@ Vue.component('instructors-report', {
   },
 
   methods: {
+    onSelect(inst) {
+      this.$emit('select', inst);
+    },
     getColumnsWidthsString() { return this.columns.map(c => c.width).join(' '); },
     setSortColumn(name) {
       if (this.sort_column === name) this.sort_dir *= -1;
@@ -248,8 +251,13 @@ Vue.component('instructors-report', {
         <div v-for="col in visibleColumns" :key="col.name"
              style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
           <span v-if="col.name === 'Name'">
-            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank">{{ col.getContent(inst) }}</a>
+            <a href="javascript:void(0)"
+              @click.prevent="onSelect(inst)"
+              style="font-weight:600;color:#1D4ED8;text-decoration:underline;cursor:pointer;">
+              {{ col.getContent(inst) }}
+            </a>
           </span>
+
           <span v-else :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(inst)"
                 v-html="col.getContent(inst)"></span>
         </div>
