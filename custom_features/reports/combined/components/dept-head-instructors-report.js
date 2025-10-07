@@ -176,10 +176,10 @@ Vue.component('instructors-report', {
       const bg  = this.colors.indigo || '#6366F1';
       return `
         <div style="width:100%;display:flex;flex-direction:column;">
+          <div style="font-size:.7rem;font-weight:700;color:#111827;margin-top:2px;text-align:center;">${pct.toFixed(0)}%</div>
           <div style="height:6px;background:#E5E7EB;border-radius:9999px;overflow:hidden;">
             <div style="height:100%;width:${pct}%;background:${bg};"></div>
           </div>
-          <div style="font-size:.7rem;font-weight:700;color:#111827;margin-top:2px;text-align:center;">${pct.toFixed(0)}%</div>
         </div>
       `;
     },
