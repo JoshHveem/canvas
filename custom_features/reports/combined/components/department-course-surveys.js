@@ -193,9 +193,9 @@ Vue.component('btech-fill-bar', {
       const warn2 = 0.75; // 75%
 
       if (this.mode === 'gte') {
-        if (v >= 0.95) return this.colors.green;
-        if (v >= 0.9) return this.colors.yellow;
-        if (v >= 0.8) return this.colors.orange;
+        if (v >= 95) return this.colors.green;
+        if (v >= 90) return this.colors.yellow;
+        if (v >= 80) return this.colors.orange;
         return this.colors.red;
       } else { // 'lt' — lower is better
         if (v < g) return this.colors.green;
