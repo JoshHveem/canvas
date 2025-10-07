@@ -147,14 +147,8 @@ Vue.component('instructors-report', {
         ),
         new InstructorColumn(
           'Dept Share', 'Share of dept support/graded hours', '7rem', 'number',
-          i => pct01(i?.support_hours?.perc_hours_graded),
-          i => ({ // neutral pill w/ indigo bar look
-            borderRadius:'9999px',
-            padding:'2px 6px',
-            fontWeight:'700',
-            fontSize:'.75rem',
-            color:this.colors.black
-          }),
+          i => renderDeptShareBar(i),
+          null,
           i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
         ),
       ]
@@ -176,6 +170,19 @@ Vue.component('instructors-report', {
   },
 
   methods: {
+    renderDeptShareBar(inst) {
+      const val = Number(inst?.support_hours?.perc_hours_graded) || 0;
+      const pct = Math.max(0, Math.min(100, val * 100));
+      const bg  = this.colors.indigo || '#6366F1';
+      return `
+        <div style="width:100%;display:flex;flex-direction:column;">
+          <div style="height:6px;background:#E5E7EB;border-radius:9999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${bg};"></div>
+          </div>
+          <div style="font-size:.7rem;font-weight:700;color:#111827;margin-top:2px;text-align:center;">${pct.toFixed(0)}%</div>
+        </div>
+      `;
+    },
     onSelect(inst) {
       this.$emit('select', inst);
     },
