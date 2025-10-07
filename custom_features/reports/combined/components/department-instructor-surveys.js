@@ -62,7 +62,6 @@ Vue.component('department-instructor-surveys', {
               :goal="1"
               mode="gte"
               :height="6"
-              label-pos="right"
             />
           </div>
         </div>

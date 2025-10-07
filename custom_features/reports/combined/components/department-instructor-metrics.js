@@ -83,7 +83,6 @@ Vue.component('department-instructor-metrics', {
                 :goal="1"
                 mode="gte"
                 :height="6"
-                label-pos="right"
               />
               <div class="btech-muted" style="margin-top:6px;">
                   Share of all department support/gradings hours handled by this instructor.
