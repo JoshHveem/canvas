@@ -153,8 +153,7 @@ Vue.component('instructors-report', {
             padding:'2px 6px',
             fontWeight:'700',
             fontSize:'.75rem',
-            color:this.colors.white,
-            backgroundColor:this.colors.indigo
+            color:this.colors.black
           }),
           i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
         ),
