@@ -179,7 +179,7 @@ Vue.component('instructors-report', {
 
   return `
     <div style="
-      width:100%;
+      width: 90%;
       display:flex;
       align-items:center;
       gap:6px;
