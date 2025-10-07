@@ -97,14 +97,14 @@ Vue.component('instructors-report', {
         //   null,
         //   i => String(i?.academic_year ?? '')
         // ),
+        // new InstructorColumn(
+        //   'Assign. Graded', 'Assignments graded', '7rem', 'number',
+        //   i => (Number(i?.grading?.assignments_graded) || 0).toLocaleString(),
+        //   null,
+        //   i => Number(i?.grading?.assignments_graded ?? Number.NaN)
+        // ),
         new InstructorColumn(
-          'Assign. Graded', 'Assignments graded', '7rem', 'number',
-          i => (Number(i?.grading?.assignments_graded) || 0).toLocaleString(),
-          null,
-          i => Number(i?.grading?.assignments_graded ?? Number.NaN)
-        ),
-        new InstructorColumn(
-          'Dept Share', 'Share of dept support/graded hours', '10rem', 'number',
+          'Weighted Share of Grading', 'Weights graded assignments by their point value. Assumes larger point assignments takes more time to grade.', '10rem', 'number',
           i => this.renderBar(i?.support_hours?.perc_hours_graded),
           null,
           i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
