@@ -78,17 +78,13 @@ Vue.component('department-instructor-metrics', {
                   {{ Math.round((instructorMetrics.graded_with_rubric || 0) * 100) }}%
                   </div>
               </div>
-              <div class="btech-progress" role="presentation">
-                  <div
-                  class="fill btech-fill-accent"
-                  :style="{ width: Math.max(0, Math.min(100, (instructorMetrics.graded_with_rubric || 0) * 100)) + '%' }"
-                  role="progressbar"
-                  :aria-valuenow="(instructorMetrics.graded_with_rubric || 0) * 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  :aria-label="'Department share ' + Math.round((instructorMetrics.graded_with_rubric || 0) * 100) + '%'"
-                  ></div>
-              </div>
+              <kpi-fill-bar
+                :value="Number(instructorMetrics.graded_with_rubric.score || 0)"
+                :goal="1"
+                mode="gte"
+                :height="6"
+                label-pos="right"
+              />
               <div class="btech-muted" style="margin-top:6px;">
                   Share of all department support/gradings hours handled by this instructor.
               </div>
