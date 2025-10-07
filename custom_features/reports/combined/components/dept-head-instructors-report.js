@@ -104,7 +104,7 @@ Vue.component('instructors-report', {
         //   i => Number(i?.grading?.assignments_graded ?? Number.NaN)
         // ),
         new InstructorColumn(
-          'Weighted Share of Grading', 'Weights graded assignments by their point value. Assumes larger point assignments takes more time to grade.', '10rem', 'number',
+          'Weighted Share of Grading', 'Weights graded assignments by their point value. Assumes larger point assignments takes more time to grade.', '11rem', 'number',
           i => this.renderBar(i?.support_hours?.perc_hours_graded),
           null,
           i => Number(i?.support_hours?.perc_hours_graded ?? Number.NaN)
