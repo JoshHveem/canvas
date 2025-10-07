@@ -132,11 +132,7 @@ Vue.component('btech-fill-bar', {
   },
   computed: {
     colors() {
-      return (window.bridgetools?.colors) || {
-        red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
-        green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff',
-        indigo:'#6366F1'
-      };
+      return window.bridgetools?.colors;
     },
     // normalize value to percent (0–100), but compare with goal in same units
     valNum() {
@@ -197,9 +193,9 @@ Vue.component('btech-fill-bar', {
       const warn2 = 0.75; // 75%
 
       if (this.mode === 'gte') {
-        if (v >= g) return this.colors.green;
-        if (v >= g * warn1) return this.colors.yellow;
-        if (v >= g * warn2) return this.colors.orange;
+        if (v >= 0.95) return this.colors.green;
+        if (v >= 0.9) return this.colors.yellow;
+        if (v >= 0.8) return this.colors.orange;
         return this.colors.red;
       } else { // 'lt' — lower is better
         if (v < g) return this.colors.green;
