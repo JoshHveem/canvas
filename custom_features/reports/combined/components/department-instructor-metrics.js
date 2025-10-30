@@ -35,16 +35,16 @@ Vue.component('department-instructor-metrics', {
                 title="Number of Assignments Graded this Year"
               />
               <kpi-tile
-                label="Students per Day"
-                :value="instructorMetrics.full_time_students_per_day || 0"
-                :decimals="0"
-                title="Based on credits earned across the department in the year, an estimate of full time students your department is working with each day."
-              />
-              <kpi-tile
-                label="Daily Submission Workload"
+                label="Assignments Graded per Day"
                 :value="instructorMetrics.assignments_per_day || 0"
                 :decimals="0"
                 title="Average number of assignments submitted each day."
+              />
+              <kpi-tile
+                label="Full Time Students per Day"
+                :value="instructorMetrics.full_time_students_per_day || 0"
+                :decimals="0"
+                title="Based on credits earned across the department in the year, an estimate of full time students your department is working with each day."
               />
               <kpi-tile
                 label="Days to Grade"
