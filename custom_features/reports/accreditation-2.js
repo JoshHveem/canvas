@@ -192,6 +192,7 @@
                   let campus = userData.courses?.[courseCode]?.campus;
                   if (campus == 'LC') campus = 'Logan Campus';
                   else if (campus == 'BC') campus = 'Brigham City Campus';
+                  else if (campus == 'RM') campus = 'Distance';
                   this.campuses[student.id] = campus;
                 }
               }

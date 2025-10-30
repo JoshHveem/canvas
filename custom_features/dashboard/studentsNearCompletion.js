@@ -29,7 +29,6 @@ async function getCompletedEnrollments() {
   `;
 
   const res = await $.post(`/api/graphql`, { query });
-  console.log(res);
 
   // capture “now” once
   const now = new Date();

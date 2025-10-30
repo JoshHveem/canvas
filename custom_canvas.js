@@ -198,7 +198,10 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     }
  
     let currentUser = parseInt(ENV.current_user.id);
-    IS_ME = (currentUser === 1893418);
+    IS_ME = (
+      currentUser === 1893418 // Josh
+      || currentUser === 2210696 // Logan
+    );
     IS_ISD = (ISDIDS.includes(currentUser));
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
@@ -219,6 +222,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
+    if (IS_ME) feature("reports/logan_test", /^\/$/); // test for logan to build out a dashboard
     if (rCheckInCourse.test(window.location.pathname)) {
       //I'm putting concluding students in here as well vvv
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
