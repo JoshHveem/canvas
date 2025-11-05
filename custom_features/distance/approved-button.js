@@ -15,7 +15,7 @@
 
 
   //api call to get list of distance approved module items
-  let approvals = [];;
+  let approvals = [];
   try {
     await $.get("https://distance.bridgetools.dev/api/courses/" + ENV.COURSE_ID + "/approval", data => {approvals = data});
   } catch (err) {
@@ -25,8 +25,8 @@
   //get all module items in current course
   let items = await canvasGet('/api/v1/courses/' + ENV.COURSE_ID + '/modules?include[]=items&include[]=content_details');
   //set colors
-  let contentNotApprovedColor = "rgb(166, 178, 186)";
-  let contentApprovedColor = "rgb(11, 135, 75)";
+  let contentNotApprovedColor = bridgetools.colors.darkGray;
+  let contentApprovedColor = bridgetools.colors.canvasGreen;
 
 
   //clear away any distance approved icons on the chance this gets run more than once on a page
