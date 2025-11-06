@@ -183,11 +183,11 @@
             for (let st in section.students) {
               let student = section.students[st];
               if ((student.id in this.campuses)) continue;
+              this.campuses[student.id] = '';
               let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
               if (!(student.id in this.enrollmentTypes)) {
                 this.enrollmentTypes[student.id] = userData.enrollment_type;
               }
-              this.campuses[student.id] = '';
               let degrees = userData.degrees;
               for (let d = 0; d < degrees.length; d++) {
                 let degree = degrees[d];
