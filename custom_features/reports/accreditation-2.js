@@ -194,7 +194,7 @@
                   let entry = new Date(degree.entry_date);
                   let exit = new Date(degree.exit_date);
                   let campus = degree.campus;
-                  let distance = degree.distance;
+                  let distance = degree.distance_approved;
                   if (distance) campus = 'Distance';
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
