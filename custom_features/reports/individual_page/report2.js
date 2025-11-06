@@ -219,8 +219,7 @@
         async loadUser(userId) {
           let tree;
           let user = await bridgetools.req("https://reports.bridgetools.dev/api2/students/" + userId + "?requester_id=" + ENV.current_user_id);
-          console.log(user);
-          if (user === "") {
+          if (user?._id) {
             try {
               await $.get("/api/v1/users/" + userId, function (data) {
                 user = {
