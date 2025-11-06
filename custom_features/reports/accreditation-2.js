@@ -182,26 +182,24 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
+              if ((student.id in this.campuses)) continue;
               let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
               if (!(student.id in this.enrollmentTypes)) {
                 this.enrollmentTypes[student.id] = userData.enrollment_type;
               }
-              if (!(student.id in this.campuses)) {
-                this.campuses[student.id] = '';
-                let degrees = userData.degrees;
-                for (let d = 0; d < degrees.length; d++) {
-                  let degree = degrees[d];
-                  let entry = new Date(degree.entry_date);
-                  let exit = new Date(degree.exit_date);
-                  let campus = degree.campus;
-                  let distance = degree.distance_approved;
-                  if (distance) campus = 'Distance';
-                  else if (campus == 'L') campus = 'Logan Campus';
-                  else if (campus == 'B') campus = 'Brigham City Campus';
-                  else campus = '';
-                  this.campuses[student.id] = campus;
-                  break
-                }
+              this.campuses[student.id] = '';
+              let degrees = userData.degrees;
+              for (let d = 0; d < degrees.length; d++) {
+                let degree = degrees[d];
+                let entry = new Date(degree.entry_date);
+                let exit = new Date(degree.exit_date);
+                let campus = degree.campus;
+                let distance = degree.distance_approved;
+                if (distance) campus = 'Distance';
+                else if (campus == 'L') campus = 'Logan Campus';
+                else if (campus == 'B') campus = 'Brigham City Campus';
+                this.campuses[student.id] = campus;
+                break
               }
             }
           }
