@@ -223,7 +223,7 @@
           await $.get(reqUrl, data => {
             authCode = data.data.auth_code;
           });
-          await $.get("https://reports.bridgetools.dev/api/students/" + userId + "?requester_id=" + ENV.current_user_id + "&auth_code=" + authCode, function (data) {
+          await $.get("https://reports.bridgetools.dev/api2/students/" + userId + "?requester_id=" + ENV.current_user_id + "&auth_code=" + authCode, function (data) {
             user = data;
           });
           if (user === "") {
