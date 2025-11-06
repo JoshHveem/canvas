@@ -37,7 +37,7 @@
     let modal = $('#canvas-individual-report-vue');
     modal.hide();
 
-    this.APP = new Vue({
+    APP = new Vue({
       el: '#canvas-individual-report-vue',
       mounted: async function () {
         this.loadingProgress = 0;
@@ -356,7 +356,7 @@
     })
     gen_report_button.click(function () {
       let modal = $('#canvas-individual-report-vue');
-      this.APP.refreshHSEnrollmentTerms();
+      APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",
         "canvasId": ENV.current_user_id
