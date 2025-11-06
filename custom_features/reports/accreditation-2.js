@@ -184,22 +184,26 @@
               let student = section.students[st];
               if ((student.id in this.campuses)) continue;
               this.campuses[student.id] = '';
-              let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
-              if (!(student.id in this.enrollmentTypes)) {
-                this.enrollmentTypes[student.id] = userData.enrollment_type;
-              }
-              let degrees = userData.degrees;
-              for (let d = 0; d < degrees.length; d++) {
-                let degree = degrees[d];
-                let entry = new Date(degree.entry_date);
-                let exit = new Date(degree.exit_date);
-                let campus = degree.campus;
-                let distance = degree.distance_approved;
-                if (distance) campus = 'Distance';
-                else if (campus == 'L') campus = 'Logan Campus';
-                else if (campus == 'B') campus = 'Brigham City Campus';
-                this.campuses[student.id] = campus;
-                break
+              try {
+                let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
+                if (!(student.id in this.enrollmentTypes)) {
+                  this.enrollmentTypes[student.id] = userData.enrollment_type;
+                }
+                let degrees = userData.degrees;
+                for (let d = 0; d < degrees.length; d++) {
+                  let degree = degrees[d];
+                  let entry = new Date(degree.entry_date);
+                  let exit = new Date(degree.exit_date);
+                  let campus = degree.campus;
+                  let distance = degree.distance_approved;
+                  if (distance) campus = 'Distance';
+                  else if (campus == 'L') campus = 'Logan Campus';
+                  else if (campus == 'B') campus = 'Brigham City Campus';
+                  this.campuses[student.id] = campus;
+                  break
+                }
+              } catch (err) {
+                console.log(err);
               }
             }
           }
