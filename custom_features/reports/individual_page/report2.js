@@ -40,8 +40,7 @@
     this.APP = new Vue({
       el: '#canvas-individual-report-vue',
       mounted: async function () {
-        let app = this;
-        app.loadingProgress = 0;
+        this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;
         // if (!IS_TEACHER) this.menu = 'period';
         if (IS_TEACHER) { //also change this to ref the url and not whether or not is teacher
@@ -52,7 +51,7 @@
         }
 
         this.loadingMessage = "Loading Settings";
-        let settings = await app.loadSettings();
+        let settings = await this.loadSettings();
         this.settings = settings;
         this.loadingProgress += 10;
 
@@ -63,14 +62,14 @@
         this.enrollmentData = enrollmentData;
 
         try {
-          let user = await app.loadUser(this.userId);
+          let user = await this.loadUser(this.userId);
           console.log(user);
           this.user = user;
         } catch(err) {
           console.log(err);
-          app.user = {};
+          this.user = {};
         }
-        app.loadingProgress += 10;
+        this.loadingProgress += 10;
         this.loading = false;
         
       },
@@ -155,12 +154,11 @@
         },
 
         async refreshHSEnrollmentTerms() {
-          let app = this;
           let terms;
-          await $.get("https://canvas.bridgetools.dev/api/enroll_hs/" + app.userId, function (data) {
+          await $.get("https://canvas.bridgetools.dev/api/enroll_hs/" + this.userId, function (data) {
             terms = data;
           });
-          app.terms = terms
+          this.terms = terms
         },
 
         async getHSEnrollment() {
@@ -180,29 +178,27 @@
           return formattedDate;
         },
         async deleteHSEnrollmentTerm(term) {
-          let app = this;
           await $.delete('https://canvas.bridgetools.dev/api/enroll_hs/' + term._id, {});
-          for (let i = 0; i < app.terms.length; i++) {
-            if (app.terms[i]._id === term._id) {
-              app.terms.splice(i, 1);
+          for (let i = 0; i < this.terms.length; i++) {
+            if (this.terms[i]._id === term._id) {
+              this.terms.splice(i, 1);
               return;
             }
           }
         },
 
         async enrollHS() {
-          let app = this;
           await $.post('https://canvas.bridgetools.dev/api/enroll_hs', {
-            'students': JSON.stringify([app.userId]),
+            'students': JSON.stringify([this.userId]),
             'term_data': JSON.stringify({
-              hours: app.enrollment_tab.saveTerm.hours,
-              type: app.enrollment_tab.saveTerm.type,
-              startDate: app.enrollment_tab.saveTerm.startDate,
-              endDate: app.enrollment_tab.saveTerm.endDate,
-              school: app.enrollment_tab.saveTerm.school
+              hours: this.enrollment_tab.saveTerm.hours,
+              type: this.enrollment_tab.saveTerm.type,
+              startDate: this.enrollment_tab.saveTerm.startDate,
+              endDate: this.enrollment_tab.saveTerm.endDate,
+              school: this.enrollment_tab.saveTerm.school
             }),
           }, function (data) {
-            app.refreshHSEnrollmentTerms();
+            this.refreshHSEnrollmentTerms();
           })
         },
 
@@ -346,10 +342,9 @@
         },
 
         async changeTree(user) {
-          let app = this;
-          let tree = await app.loadTree(app.currentDepartment.dept, app.currentDepartment.year);
-          user = app.updateUserCourseInfo(user, tree);
-          app.user = user;
+          let tree = await this.loadTree(this.currentDepartment.dept, this.currentDepartment.year);
+          user = this.updateUserCourseInfo(user, tree);
+          this.user = user;
         },
 
         updateUserCourseInfo(user, tree) {
@@ -361,7 +356,7 @@
     })
     gen_report_button.click(function () {
       let modal = $('#canvas-individual-report-vue');
-      app.APP.refreshHSEnrollmentTerms();
+      this.APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",
         "canvasId": ENV.current_user_id
