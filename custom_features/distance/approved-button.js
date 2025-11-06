@@ -23,7 +23,7 @@
   }
 
   //get all module items in current course
-  let items = await canvasGet('/api/v1/courses/' + ENV.COURSE_ID + '/modules?include[]=items&include[]=content_details');
+  let modules = await canvasGet('/api/v1/courses/' + ENV.COURSE_ID + '/modules?include[]=items&include[]=content_details');
   //set colors
   let contentNotApprovedColor = bridgetools.colors.darkGray;
   let contentApprovedColor = bridgetools.colors.canvasGreen;
@@ -32,11 +32,11 @@
   //clear away any distance approved icons on the chance this gets run more than once on a page
   $('.ig-distance-approved').each(function () {
     $(this).remove();
-  })
+  });
 
   //iterate over each module item and add the icon if it's in the list of approved items
-  for (let m = 0; m < items.length; m++) {
-      let module = items[m];
+  for (let m = 0; m < modules.length; m++) {
+      let module = modules[m];
       for (let i = 0; i < module.items.length; i++) {
           let item = module.items[i];
 
@@ -58,7 +58,7 @@
               //default to not approved
               let color = contentNotApprovedColor;
               // made it black to be more obvious
-              if (approved) color = "rgb(0, 0, 0)";
+              if (approved) color = bridgetools.colors.black;
               if (IS_ISD && approved) color = contentApprovedColor;
               let distanceApprovedButton = $(`<span class="ig-distance-approved" style="cursor: pointer; float: right;"></span>`);
               let icon = $(workFromHomeIcon);
@@ -73,6 +73,7 @@
                       approved = !approved;
                       if (approved) icon.css("fill", contentApprovedColor);
                       if (!approved) icon.css("fill", contentNotApprovedColor);
+                      // SHOULD ADD A CATCH TO EITHER REVERT COLOR OR RESEND REQUEST IF THIS REQUEST RETURNS A FAIL
                       $.post("https://distance.bridgetools.dev/api/courses/" + ENV.COURSE_ID + "/approval", {
                           title: item.title,
                           type: item.type,
@@ -89,5 +90,4 @@
           }
       }
   }
-
 })();

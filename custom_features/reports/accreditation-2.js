@@ -182,18 +182,25 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
-              let userData = await bridgetools.req(`https://reports.bridgetools.dev/api/students/${student.id}`);
+              let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
               if (!(student.id in this.enrollmentTypes)) {
                 this.enrollmentTypes[student.id] = userData.enrollment_type;
               }
               if (!(student.id in this.campuses)) {
                 this.campuses[student.id] = '';
-                if (userData.courses?.[courseCode]?.campus) {
-                  let campus = userData.courses?.[courseCode]?.campus;
-                  if (campus == 'LC') campus = 'Logan Campus';
-                  else if (campus == 'BC') campus = 'Brigham City Campus';
-                  else if (campus == 'RM') campus = 'Distance';
+                let degrees = userData.degrees;
+                for (let d = 0; d < degrees.length; d++) {
+                  let degree = degrees[d];
+                  let entry = new Date(degree.entry_date);
+                  let exit = new Date(degree.exit_date);
+                  let campus = degree.campus;
+                  let distance = degree.distance;
+                  if (distance) campus = 'Distance';
+                  else if (campus == 'L') campus = 'Logan Campus';
+                  else if (campus == 'B') campus = 'Brigham City Campus';
+                  else continue;
                   this.campuses[student.id] = campus;
+                  break
                 }
               }
             }
