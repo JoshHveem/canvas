@@ -196,7 +196,7 @@
                   let exit = new Date(degree.exit_date);
                   let campus = degree.campus;
                   let distance = degree.distance_approved;
-                  if (distance) campus = 'Distance';
+                  if (distance) campus = 'Online';
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
                   this.campuses[student.id] = campus;
