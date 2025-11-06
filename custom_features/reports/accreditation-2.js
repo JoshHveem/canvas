@@ -200,6 +200,7 @@
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
                   this.campuses[student.id] = campus;
+                  this.enrollmentTypes[student.id] = 'CS';
                   break
                 }
               } catch (err) {
