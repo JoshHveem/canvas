@@ -198,7 +198,7 @@
                   if (distance) campus = 'Distance';
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
-                  else continue;
+                  else campus = '';
                   this.campuses[student.id] = campus;
                   break
                 }
