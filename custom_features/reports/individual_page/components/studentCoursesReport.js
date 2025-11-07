@@ -87,7 +87,7 @@ Vue.component('student-courses-report', {
                   'background-color': colors.blue,
                   'color': '#ffffff',
                 }">
-                {{ degree.graded_hours }}
+                {{ Math.round(degree.graded_hours * 10) / 10 }}
               </span>
             </div>
           </div>
