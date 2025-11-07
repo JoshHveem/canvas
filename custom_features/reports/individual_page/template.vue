@@ -4,11 +4,11 @@
       <div class="btech-tabs">
         <ul>
           <li @click="menu='report'">Progress Report</li>
-          <li @click="menu='grades'">Grades Report</li>
-          <li @click="menu='hours'">Hours Report</li>
-          <li @click="menu='employment skills'">Employment Skills</li>
+          <!-- <li @click="menu='grades'">Grades Report</li> -->
+          <!-- <li @click="menu='hours'">Hours Report</li> -->
+          <!-- <li @click="menu='employment skills'">Employment Skills</li> -->
           <li @click="menu='period'">Grades Between Dates</li>
-          <li v-if="IS_TEACHER" @click="menu='enroll'">HS Enrollment Periods</li>
+          <!-- <li v-if="IS_TEACHER" @click="menu='enroll'">HS Enrollment Periods</li> -->
           <li style='float: right;' v-on:click='close()'>X</li>
         </ul>
       </div>
@@ -38,16 +38,6 @@
                     :student-tree="tree"
                 ></show-student-ind-credits>
               </div>
-              <set-goal
-                v-if="settingGoal"
-                :colors="colors"
-                :course-progress-goals="goal"
-                :user="user"
-                :student-tree="tree"
-                @close="settingGoal = false;"
-              >
-
-              </set-goal>
               <div
                 @click="settingGoal = !settingGoal;"
                 style="
