@@ -247,31 +247,35 @@
   
   
 
-  await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
-  //styling
-  loadCSS("https://reports.bridgetools.dev/style/main.css");
-  loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-  //libraries
-  await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-  await $.getScript("https://d3js.org/d3.v6.min.js");
-  await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
-  //icons
-  await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
-  await $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js");
-  //components
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js");
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseRowInd.js");
-  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseProgressBarInd.js");
-  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/indHeaderCredits.js");
-  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentIndCredits.js");
-  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentHours.js");
-  await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
-  await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
-  await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
-  postLoad();
+  try {
+    await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
+    //styling
+    loadCSS("https://reports.bridgetools.dev/style/main.css");
+    loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
+    //libraries
+    await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
+    await $.getScript("https://d3js.org/d3.v6.min.js");
+    await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
+    //icons
+    await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
+    await $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js");
+    //components
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseRowInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseProgressBarInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/indHeaderCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentIndCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentHours.js");
+    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
+    await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
+    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+    postLoad();
+  } catch (err) {
+    console.log(err);
+  }
   function loadCSS(url) {
     var style = document.createElement('link'),
       head = document.head || document.getElementsByTagName('head')[0];
