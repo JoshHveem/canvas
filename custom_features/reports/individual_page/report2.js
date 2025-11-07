@@ -6,6 +6,191 @@
 */
 (async function () {
   //Confirm with Instructional Team before going live
+  function initialize_user_data(user) {
+    user.include_hours = []; //list of courses that are counting towards sap
+    user.transfer_courses = [];
+    user.courses = user.courses ?? {};
+    user.entry_date = user.entry_date ? new Date(user.entry_date) : "N/A";
+    user.last_login = user.last_login ? new Date(user.last_login) : "N/A";
+    user.days_since_last_submission = bridgetools.getDaysSinceLastSubmission(user); 
+
+    user.completed_hours = 0;
+    user.graded_hours = 0;
+    user.completed_credits = 0;
+    user.average_score = 0;
+
+    user.treeCourses = {
+      core: [],
+      elective: [],
+      other: [] 
+    }
+  }
+
+  function getCourseHours(tree, course, courseCode) {
+    let courseHours = course.hours;
+    let programCourseData;
+    //If no defined hours, check the program tree for hours
+    if (courseHours == undefined) {
+      if (courseCode in tree.courses.core) programCourseData = tree.courses.core[courseCode];
+      else if (courseCode in tree.courses.elective) programCourseData = tree.courses.elective[courseCode];
+      if (programCourseData !== undefined) courseHours = programCourseData.hours;
+    }
+    courseHours = parseInt(courseHours);
+    return courseHours;
+  }
+
+  function getCourseCredits(tree, course, courseCode) {
+    let courseCredits = course.credits;
+    let programCourseData;
+    //If no defined hours, check the program tree for credits 
+    if (courseCredits == undefined) {
+      if (courseCode in tree.courses.core) programCourseData = tree.courses.core[courseCode];
+      else if (courseCode in tree.courses.elective) programCourseData = tree.courses.elective[courseCode];
+      if (programCourseData !== undefined) courseCredits = programCourseData.credits;
+    }
+    courseCredits = parseInt(courseCredits);
+    return courseCredits;
+  }
+
+  function updateTreeCourses(user, tree, courseData) {
+    //
+    if (courseData.is_transfer) user.transfer_courses.push(courseData.code);
+
+    //
+    if (courseData.code in tree.courses.core) {
+      user.treeCourses.core.push(courseData);
+    } else if (courseData.code in tree.courses.elective) {
+      user.treeCourses.elective.push(courseData);
+    } else {
+      user.treeCourses.other.push(courseData);
+    }
+  }
+
+  function processUserData(user, tree, override) {
+    tree.courses = tree.courses ?? {};
+    tree.courses.core = tree.courses.core ?? {};
+    tree.courses.elective = tree.courses.elective ?? {};
+
+
+    //current method for calculating start and end date, defaults to today if nothing there
+    ////maybe not the best, but it'll have to do
+    let userTreeData = {};
+    for (let d in user.degrees) {
+      let dept = user.degrees[d];
+      if (dept.dept == tree.dept_code && dept.year == tree.year) {
+        userTreeData = dept;
+      }
+    }
+
+
+    user.start = userTreeData?.start ?? "";
+    user.start = user.start.replace("Z", "-0600");
+    user.start = new Date(user.start);
+
+    user.end = userTreeData?.end ?? "";
+    user.end = user.end.replace("Z", "-0600");
+    user.end = new Date(user.end);
+
+    initialize_user_data(user);
+    for (let courseCode in user.courses) {
+      let course = user.courses[courseCode];
+      //this is a visual to show which hours are being included in the report. mostly for debugging
+      let courseHours = getCourseHours(tree, course, courseCode);
+      let courseCredits = getCourseCredits(tree, course, courseCode);
+      course.hours = courseHours;
+      course.credits = courseCredits;
+      let progress = course.progress;
+      if (progress >= 100) progress = 100;
+
+      courseEntryDateStr = course?.entry || course.start;
+      courseEntryDate = new Date(courseEntryDateStr)
+      courseStartDate = new Date(course.start);
+
+      let courseData = {
+        'code': courseCode,
+        'course_id': course.canvas_id,
+        'last_activity': course.last_activity,
+        'progress': parseFloat(progress),
+        'start': courseStartDate,
+        'entry': courseEntryDate,
+        'hours': courseHours,
+        'credits': courseCredits,
+        'include_hours': course.include_hours,
+        'is_transfer': course.is_transfer
+      }
+      updateTreeCourses(user, tree, courseData);
+
+      //Had a don't include if course score is null, but it was excluding courses that should belong. Hopefully this doesn't screw things up
+      ////I believe that was to fix the course grade average being off. I've tried a fix
+      //In this setup, I'm only averaging grades for courses completed DURING their current enrollment, IE courses counting in their SAP
+      //Transfer courses would NOT be included.
+      //Whether this is useful will depend on department, and may need to include both averages...
+      //If there's an override score, ignore everything else
+      let checkValidCourse = bridgetools.checkValidCourse(user, tree, course, courseCode, courseEntryDate);
+      let courseCompletedHours = course.hours * progress * .01;
+      let courseCompletedCredits = Math.floor(course.credits * progress * .01 * 4) / 4;
+
+      if (course.is_transfer && (courseCode in tree.courses.core || courseCode in tree.courses.elective)) {
+        user.transfer_hours += user.completed_hours;
+        user.transfer_credits += user.completed_hours;
+      }
+      if (checkValidCourse) {
+        user.include_hours.push(courseCode);
+        let score = course.score;
+        if (isNaN(score)) {
+          score = null;
+        }
+
+        if (checkValidCourse) {
+          user.completed_hours += courseCompletedHours;
+          user.completed_credits += courseCompletedCredits;
+        } 
+
+        bridgetools.updateAverages(
+          user
+          , score
+          , checkValidCourse
+          , courseCompletedHours
+        );
+
+      } else {
+        courseEntryDate = undefined;
+      }
+    }
+
+    user.average_score /= user.graded_hours;
+    if (isNaN(user.average_score)) user.average_score = undefined;
+
+
+    user.enrolled_hours = Math.round(user.enrolled_hours);
+    user.unaccrued_hours = user?.unaccrued_hours ?? 0;
+    user.completed_hours = Math.round(user.completed_hours);
+    user.completed_credits = Math.floor(user.completed_credits * 4) / 4;
+
+
+    //EGP
+    let totalDays = (user.end - user.start) / (24 * 60 * 60 * 1000);
+    let today = (new Date().setHours(0,0,0,0));
+    let currentDays = (today - user.start) / (24 * 60 * 60 * 1000);
+    let perc = (currentDays / totalDays);
+    let requiredCredits = Math.ceil((tree.hours * perc * 10)) / 10;
+    let lastDay = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+    let lastDays = (lastDay - user.start) / (24 * 60 * 60 * 1000);
+    let lastPerc = (lastDays / totalDays);
+    let lastRequiredCredits = Math.ceil(tree.hours * lastPerc);
+    user.required_credits = requiredCredits;
+    // WITH CREDITS, DOES IT DO ANY GOOD FOR STUDENT TO KNOW REQUIRED CREDITS AT THAT MOMENT? SEEMS LIKE END OF MONTH IS ALL THAT MATTERS
+    user.unaccrued_required_credits = lastRequiredCredits - requiredCredits;
+    user.egp = Math.round((user.required_credits / user.completed_credits) * 1000) / 10;
+    user.egp_change = 0;
+
+    //need to sort so newest month is first to then grab first entry for sap change
+    user.historical_data.sort(function (a, b) {
+      return (b.year - a.year) || (b.month - a.month)
+    })
+
+    return user;
+  }
   async function postLoad() {
     let vueString = '';
     //gen an initial uuid
@@ -187,6 +372,7 @@
 
             // Be tolerant of missing degrees
             user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
+            user.courses = Array.isArray(bridgetoolsUser?.courses) ? bridgetoolsUser.courses: [];
           } catch (err) {
             console.log(err);
             return {};
