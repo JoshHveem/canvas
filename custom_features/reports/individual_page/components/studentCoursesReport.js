@@ -156,7 +156,21 @@ Vue.component('student-courses-report', {
       console.log(this.user.courses);
       for (let courseCode in core) {
         let data = core[courseCode];
+        data.course_code = courseCode;
+        let userData = this.getUserCourseData(courseCode);
+        if (userData) {
+          data.progress = userData.progress;
+          data.final_score = userData.final_score;
+          data.credits_per_day = userData.credits_per_day;
+          data.days_in_course = userData.time_in_course / (60 * 60 * 24);
+        }
+        list.push(data);
       }
+      list.sort((a, b) => {
+        const ad = String(a.course_code || '').toLowerCase();
+        const bd = String(b.course_code || '').toLowerCase();
+        return ad > bd ? 1 : ad < bd ? -1 : 0;
+      });
       return list;
     }
   },
@@ -166,9 +180,16 @@ Vue.component('student-courses-report', {
     }
   },
   mounted() {
-      // let entry = new Date();
+    // let entry = new Date();
   },
   methods: {
+    getUserCourseData(courseCode) {
+      for (let c in this.user.courses) {
+        let course = this.user.courses[c];
+        if (course.course_code == courseCode) return course;
+      }
+      return undefined;
+    },
     calcLastLoginColorBg(date) {
       let app = this;
       if (typeof date == 'string') {
