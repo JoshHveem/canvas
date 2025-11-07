@@ -104,21 +104,7 @@ Vue.component('student-courses-report', {
               'background-color': colors.gray,
               'color': colors.black,
             }">
-              {{dateToString(user.start)}}
-            </span>
-          </div>
-          <div 
-            style="cursor: help;"
-            title="A projection of when this student will finish based on their current pace."
-            class="data-item">
-            <span style="display: inline-block; width: 12rem;">Projected Completion Date</span>
-            <span 
-              v-if="user.egp && user.completed_hours"
-              class="btech-pill-text" :style="{
-              'background-color': colors.blue,
-              'color': colors.white,
-            }">
-              {{dateToString(projected_completion_date)}}
+              {{dateToString(degree.entry_date)}}
             </span>
           </div>
           <div 
