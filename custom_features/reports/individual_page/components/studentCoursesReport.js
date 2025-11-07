@@ -34,10 +34,10 @@ Vue.component('student-courses-report', {
           <div style="display: inline-block; width: 3rem; font-size: 1rem;">
             <span 
               class="btech-pill-text" :style="{
-                'background-color': degree?.average_score ? (Math.round(degree.average_score * 100) < 60 ? colors.red : Math.round(degree.average_score * 100) < 80 ? colors.yellow : colors.green) : colors.gray,
+                'background-color': degree?.average_score ? (Math.round(degree.average_score) < 60 ? colors.red : Math.round(degree.average_score) < 80 ? colors.yellow : colors.green) : colors.gray,
                 'color': degree?.average_score ? colors.white : colors.black,
               }">
-              {{degree?.average_score ? Math.round(degree.average_score * 100) + '%' : "N/A"}}
+              {{degree?.average_score ? Math.round(degree.average_score) + '%' : "N/A"}}
             </span>
           </div>
           <div 
