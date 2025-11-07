@@ -248,6 +248,7 @@
   
 
   try {
+    console.log(SOURCE_URL);
     await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
