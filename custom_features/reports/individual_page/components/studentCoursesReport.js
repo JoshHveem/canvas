@@ -178,6 +178,7 @@ Vue.component('student-courses-report', {
         }
         list.push(data);
       }
+      console.log(list);
       list.sort((a, b) => {
         const ad = String(a.course_code || '').toLowerCase();
         const bd = String(b.course_code || '').toLowerCase();
