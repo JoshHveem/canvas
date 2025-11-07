@@ -115,8 +115,14 @@ Vue.component('course-row-ind', {
     },
     whatif: false,
     includeHours: false,
-    istransfer: false,
-    iswithdraw: false
+    istransfer: {
+      type: Boolean,
+      default: false
+    },
+    iswithdraw: {
+      type: Boolean,
+      default: false
+    }
   },
   computed: {
     checkValidCourseId: function() {
