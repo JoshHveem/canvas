@@ -194,7 +194,7 @@
   async function postLoad() {
     let vueString = '';
     //gen an initial uuid
-    await $.get(SOURCE_URL + '/custom_features/reports/individual_page/template.vue', null, function (html) {
+    await $.get(SOURCE_URL + '/custom_features/reports/individual_page/template2.vue', null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
@@ -265,6 +265,8 @@
           enrollmentData:  undefined,
           userId: null,
           user: {},
+          canvasUser: {},
+          bridgetoolsUser: {},
           tree: {
             other: {}
           },
@@ -363,21 +365,19 @@
         async loadUser(userId) {
           let user = {};
           try {
-            const bridgetoolsUser = await bridgetools.req(
+            this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
             );
-            const canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
-            console.log(bridgetoolsUser);
-            console.log(canvasUser);
+            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
-            // Be tolerant of missing degrees
-            user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
-            user.courses = Array.isArray(bridgetoolsUser?.courses) ? bridgetoolsUser.courses: [];
           } catch (err) {
             console.log(err);
             return {};
           }
           console.log(user);
+          // Be tolerant of missing degrees
+          user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
+          user.courses = Array.isArray(bridgetoolsUser?.courses) ? bridgetoolsUser.courses: [];
 
           // Guard degree ops
           const date = new Date();
