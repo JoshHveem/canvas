@@ -146,7 +146,8 @@ Vue.component('student-courses-report', {
     settings: {}
   },
   computed: {
-    checkValidCourseId: function() {
+    degree: function() {
+      return {};
     },
   },
   data() {
