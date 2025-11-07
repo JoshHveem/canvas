@@ -135,6 +135,7 @@ Vue.component('student-courses-report', {
             :progress="course?.progress ?? 0"
             :colors="colors"
             :credits="course?.credits"
+            :score="course?.final_score"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-code="course.course_code"

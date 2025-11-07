@@ -16,7 +16,7 @@ Vue.component('course-row-ind', {
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
             class="btech-pill-text" 
-            v-show="course.final_score !== undefined"
+            v-show="score !== undefined"
             :style="{
               'background-color': gradeBGColor,
               'color': colors.white,
@@ -39,9 +39,13 @@ Vue.component('course-row-ind', {
       type: Number,
       default: 0
     },
-    course: {
-      type: Object,
-      default: () => ({type: 'someType'})
+    score: {
+      type: Number,
+      default: undefined 
+    },
+    state: {
+      type: String,
+      default: '' 
     },
     courseName: {
       type: String,
