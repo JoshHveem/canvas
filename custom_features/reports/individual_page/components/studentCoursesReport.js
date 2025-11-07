@@ -72,7 +72,7 @@ Vue.component('student-courses-report', {
                   'background-color': colors.gray,
                   'color': '#000000',
                 }">
-                {{studentTree.hours}}
+                {{tree.hours}}
               </span>
             </div>
           </div>
