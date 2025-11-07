@@ -279,11 +279,8 @@
             title: 'Courses'
           },
           reportTypes: [
-            { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
-            { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
-            { value: 'occupations', label: 'Occupations', component: 'occupations-report', title: 'Occupations Report' },
             { value: 'courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
-            { value: 'coe',    label: 'COE',    component: 'coe-report',    title: 'COE Evidence' },
+            { value: 'grades',    label: 'Grades',    component: 'grades-report',    title: 'Grades Between Dates' },
           ],
           currentDegree: null,
           enrollmentData:  undefined,
