@@ -44,6 +44,9 @@
             {{ rt.label }}
           </button>
         </div>
+        <keep-alive>
+          <component :is="currentReportMeta.component" v-bind="currentReportProps" />
+        </keep-alive>
       </div>
     </div>
   </div>
