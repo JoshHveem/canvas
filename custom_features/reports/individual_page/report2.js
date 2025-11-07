@@ -279,8 +279,8 @@
             title: 'Courses'
           },
           reportTypes: [
-            { value: 'courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
-            { value: 'grades',    label: 'Grades',    component: 'grades-report',    title: 'Grades Between Dates' },
+            { value: 'student-courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
+            { value: 'student-grades',    label: 'Grades',    component: 'grades-report',    title: 'Grades Between Dates' },
           ],
           currentDegree: null,
           enrollmentData:  undefined,
@@ -301,7 +301,6 @@
           loadingProgress: 0,
           accessDenied: false,
           settingGoal: false,
-          menu: 'report',
           IS_TEACHER: false,
           enrollment_tab: {
             managedStudent: {},
