@@ -147,6 +147,7 @@ Vue.component('student-courses-report', {
   },
   computed: {
     degree: function() {
+      console.log(cdegree);
       return {};
     },
   },
