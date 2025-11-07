@@ -104,7 +104,7 @@ Vue.component('student-courses-report', {
               'background-color': colors.gray,
               'color': colors.black,
             }">
-              {{dateToString(degree.entry_date)}}
+              {{dateToString(degree?.entry_date ?? '')}}
             </span>
           </div>
           <div 
