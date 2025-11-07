@@ -38,7 +38,7 @@ Vue.component('course-row-ind', {
           </span>
         </div>
         <course-progress-bar-ind
-          :progress="progress"
+          :progress="progress * 100"
           :colors="colors"
           :whatif="whatif"
         ></course-progress-bar-ind> 
