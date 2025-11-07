@@ -258,12 +258,33 @@
         this.loading = false;
         
       },
+      computed: {
+        currentReportMeta() {
+          const fallback = this.reportTypes[0];
+          return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
+        },
+        currentReportProps() {
+          const base = {
+            year: this.settings.filters.year,
+            account: this.settings.account,
+            instructorId: ENV.current_user_id  // optional; child can use or ignore
+          };
+          return base; // other reports can use what they need from base
+        },
+      },
 
       data: function () {
         return {
           currentReportMeta: {
             title: 'Courses'
           },
+          reportTypes: [
+            { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
+            { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
+            { value: 'occupations', label: 'Occupations', component: 'occupations-report', title: 'Occupations Report' },
+            { value: 'courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
+            { value: 'coe',    label: 'COE',    component: 'coe-report',    title: 'COE Evidence' },
+          ],
           currentDegree: null,
           enrollmentData:  undefined,
           userId: null,
