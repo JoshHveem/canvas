@@ -32,7 +32,7 @@ Vue.component('course-row-ind', {
             :title="(includeHours ? 'Included in ESAP' : ( istransfer ? 'Transfer Course' : 'Course Hours')) + '. Click to toggle whether included in What If Calculations'"
             :style="{
               'cursor': 'help',
-              'background-color': (progress == 0 && course.state == 'completed') ? colors.gray : (includeHours ? ( whatif ? colors.purple : (istransfer ? colors.orange: colors.blue)) : (istransfer ? colors.orange : colors.gray)),
+              'background-color': (progress == 0 && course.state == 'completed') ? colors.gray : (includeHours ? (istransfer ? colors.orange: colors.blue)),
               'color': (progress == 0 && course.state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}

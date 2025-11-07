@@ -130,7 +130,18 @@ Vue.component('student-courses-report', {
       <!-- courses -->
       <div>
         <div>Core</div>
-        <course-row-ind v-for="course in core">{{ course }}</course-row-ind>
+        <div v-for="(course, i) in core">
+          <course-row-ind
+            :progress="course.progress"
+            :colors="colors"
+            :credits="course.credits"
+            :course="course"
+            :course-name="course.name"
+            :course-code="course.course_code"
+            :user-canvas-id="'' + user.canvas_id"
+            :istransfer="user?.transfer_courses?.includes(courseCode)"
+          ></course-row-ind>
+        </div>
 
         <div>Electives</div>
 
