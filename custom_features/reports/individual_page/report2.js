@@ -336,10 +336,42 @@
       },
 
       methods: {
-        close() {
-          let modal = $('#canvas-individual-report-vue');
-          modal.hide();
+        onReportChange() {
+          this.saveSettings(this.settings);
         },
+
+        async loadSettings(settings) {
+          const fallback = JSON.parse(JSON.stringify(settings));
+          let saved = {};
+          try {
+            const resp = await $.get(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`);
+            if (resp.data && resp.data.settings) saved = resp.data.settings;
+          } catch (err) { /* keep defaults */ }
+
+          const merged = JSON.parse(JSON.stringify(fallback));
+          merged.account = saved.account ?? fallback.account;
+          merged.reportType = saved.reportType ?? fallback.reportType;
+
+          if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
+          else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+
+          if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
+          for (const key in merged.filters) {
+            const val = merged.filters[key];
+            if (val === "true") merged.filters[key] = true;
+            else if (val === "false") merged.filters[key] = false;
+          }
+          merged.filters.section = 'All';
+          return merged;
+        },
+
+        async saveSettings(settings) {
+          await $.put(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`, {
+            data: { settings: settings }
+          });
+        },
+
+        close() { $(this.$el).hide(); },
         async loadSettings() {
           let settings = await bridgetools.req("https://reports.bridgetools.dev/api/settings/" + ENV.current_user_id);
           if (settings.individualReport == undefined) {
