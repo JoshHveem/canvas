@@ -76,6 +76,32 @@ Vue.component('student-courses-report', {
       // let entry = new Date();
   },
   methods: {
+    calcLastLoginColorBg(date) {
+      let app = this;
+      if (typeof date == 'string') {
+        if (date == "") return app.colors.red;
+        date = new Date(date);
+      }
+      let now = new Date();
+      let diff = now - date;
+      let days = diff / (1000 * 3600 * 24);
+      if (days >= 7) return app.colors.red;
+      if (days >= 5) return app.colors.yellow;
+      return app.colors.green;
+    },
+
+    dateToString(date) {
+      if (typeof date == 'string') {
+        if (date == "" || date == "N/A") return "N/A";
+        date = new Date(date);
+      }
+      if (date == null) return "N/A";
+      let year = date.getFullYear();
+      let month = (1 + date.getMonth()).toString().padStart(2, '0');
+      let day = date.getDate().toString().padStart(2, '0');
+
+      return month + '/' + day + '/' + year;
+    },
   },
   destroyed: function () {
   }
