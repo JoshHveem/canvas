@@ -1,6 +1,7 @@
 Vue.component('student-courses-report', {
   template:` 
     <div>
+      <!-- Name -->
       <div style="margin-bottom: 2rem;">
         <div class="btech-user-name" style="margin-bottom: .25rem;">
           <div style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
@@ -56,6 +57,8 @@ Vue.component('student-courses-report', {
           </div>
         </div>
       </div>
+
+      <!-- Avatar and Data -->
       <div 
         class="btech-department-report-student-hours"
       >
@@ -122,6 +125,11 @@ Vue.component('student-courses-report', {
             </span>
           </div>
         </div>
+      </div>
+
+      <!-- courses -->
+      <div>
+        {{ tree }}
       </div>
     </div>
   `,
