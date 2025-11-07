@@ -32,8 +32,8 @@ Vue.component('course-row-ind', {
             :title="(includeHours ? 'Included in ESAP' : ( istransfer ? 'Transfer Course' : 'Course Hours')) + '. Click to toggle whether included in What If Calculations'"
             :style="{
               'cursor': 'help',
-              'background-color': (progress == 0 && course.state == 'completed') ? colors.gray : (includeHours ? (istransfer ? colors.orange: colors.blue)),
-              'color': (progress == 0 && course.state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
+              'background-color': (progress == 0 && state == 'completed') ? colors.gray : (includeHours ? (istransfer ? colors.orange: colors.blue)),
+              'color': (progress == 0 && state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
@@ -53,7 +53,7 @@ Vue.component('course-row-ind', {
               'color': colors.black
             }"
           >
-            {{course.state}}
+            {{state}}
           </span>
         </div>
         <span
@@ -65,7 +65,7 @@ Vue.component('course-row-ind', {
           }"
         >Withdrawn</span>
         <span
-          v-else-if="daysEnrolled > 0 && course.state !== 'completed'"
+          v-else-if="daysEnrolled > 0 && state !== 'completed'"
           class="btech-pill-text"
           :style="{
             'background-color': colors.gray,

@@ -136,11 +136,11 @@ Vue.component('student-courses-report', {
             :progress="course?.progress ?? 0"
             :colors="colors"
             :credits="course?.credits"
-            :course="course"
+            :state="course?.state ?? ''"
             :course-name="course.name"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
-            :istransfer="user?.transfer_courses?.includes(course.course_code)"
+            :istransfer="false"
           ></course-row-ind>
         </div>
 
