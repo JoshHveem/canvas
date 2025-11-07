@@ -132,6 +132,10 @@ Vue.component('student-courses-report', {
     settings: {}
   },
   computed: {
+    courses: function () {
+      console.log(this.tree);
+      return degree.courses;
+    }
   },
   data() {
     return {
