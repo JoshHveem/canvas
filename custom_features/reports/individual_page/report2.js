@@ -242,7 +242,7 @@
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
           user.last_login = this.bridgetoolsUser.last_login;
-          user.avatar_url = this.bridgetoolsUser.avatar_url;
+          user.avatar_url = this.canvasUser.avatar_url;
 
           // Guard degree ops
           const date = new Date();
