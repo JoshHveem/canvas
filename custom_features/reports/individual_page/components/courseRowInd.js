@@ -37,6 +37,11 @@ Vue.component('course-row-ind', {
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
         </div>
+        <course-progress-bar-ind
+          :progress="progress"
+          :colors="colors"
+          :whatif="whatif"
+        ></course-progress-bar-ind> 
       </div>
   `,
   props: {
