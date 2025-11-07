@@ -142,7 +142,7 @@
             studentIdInput: '',
             studentsFound: [],
             studentsNotFound: [],
-            dept: '',
+            major_code: '',
           }
         }
       },
@@ -206,8 +206,8 @@
           return formattedDate;
         },
 
-        async loadTree(deptCode, deptYear) {
-          let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + deptCode + "&year=" + deptYear;
+        async loadTree(majorCode, majorYear) {
+          let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + majorCode + "&year=" + majorYear;
           let data = await bridgetools.req(url);
           let tree = data[0] ?? {};
           if (tree?.courses === undefined) tree.courses = {};
@@ -254,20 +254,20 @@
 
           user.degrees.sort((a, b) => {
             if (a.year === b.year) {
-              const ad = String(a.dept || '').toLowerCase();
-              const bd = String(b.dept || '').toLowerCase();
+              const ad = String(a.major_code || '').toLowerCase();
+              const bd = String(b.major_code || '').toLowerCase();
               return ad > bd ? 1 : ad < bd ? -1 : 0;
             }
             return a.year > b.year ? -1 : 1;
           });
           console.log(user.degrees);
 
-          this.currentDegree = user?.degrees?.[0] ?? { dept: '', year: '' };
+          this.currentDegree = user?.degrees?.[0] ?? { major_code: '', year: '' };
 
           let tree;
           if (user?.degrees?.[0]) {
             // FIX: depts -> degrees
-            tree = await this.loadTree(user.degrees[0].dept, user.degrees[0].year);
+            tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].year);
           } else {
             tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
           }
@@ -278,7 +278,7 @@
 
 
         async changeTree(user) {
-          let tree = await this.loadTree(this.currentDegree.dept, this.currentDegree.year);
+          let tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.year);
           user = this.updateUserCourseInfo(user, tree);
           this.user = user;
         },
