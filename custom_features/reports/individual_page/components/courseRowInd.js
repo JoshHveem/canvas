@@ -42,6 +42,34 @@ Vue.component('course-row-ind', {
           :colors="colors"
           :whatif="whatif"
         ></course-progress-bar-ind> 
+        <div style="display: inline-block; width: 5rem; font-size: 1rem;">
+          <span
+            class="btech-pill-text"
+            :style="{
+              'background-color': colors.gray,
+              'color': colors.black
+            }"
+          >
+            {{state}}
+          </span>
+        </div>
+        <span
+          v-if="course?.is_withdraw"
+          class="btech-pill-text"
+          :style="{
+            'background-color': colors.gray,
+            'color': colors.black
+          }"
+        >Withdrawn</span>
+        <span
+          v-else-if="daysEnrolled > 0 && state !== 'completed'"
+          class="btech-pill-text"
+          :style="{
+            'background-color': colors.gray,
+            'color': colors.black
+          }"
+        >{{daysEnrolled}} Day(s) Enrolled</span>
+      </div>
       </div>
   `,
   props: {
