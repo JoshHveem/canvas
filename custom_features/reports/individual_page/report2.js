@@ -76,7 +76,7 @@
 
       data: function () {
         return {
-          currentDepartment: null,
+          currentDegree: null,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -145,24 +145,8 @@
               critical: 0,
               show: false
             }
-            //app.saveSettings("individualReport");
           }
           return settings;
-        },
-        setGoal(goal) {
-          this.goal = goal;
-        },
-
-        async refreshHSEnrollmentTerms() {
-          let terms;
-          await $.get("https://canvas.bridgetools.dev/api/enroll_hs/" + this.userId, function (data) {
-            terms = data;
-          });
-          this.terms = terms
-        },
-
-        async getHSEnrollment() {
-
         },
 
         formatDate(date) {
@@ -177,31 +161,6 @@
           let formattedDate = month + "/" + day + "/" + date.getFullYear();
           return formattedDate;
         },
-        async deleteHSEnrollmentTerm(term) {
-          await $.delete('https://canvas.bridgetools.dev/api/enroll_hs/' + term._id, {});
-          for (let i = 0; i < this.terms.length; i++) {
-            if (this.terms[i]._id === term._id) {
-              this.terms.splice(i, 1);
-              return;
-            }
-          }
-        },
-
-        async enrollHS() {
-          await $.post('https://canvas.bridgetools.dev/api/enroll_hs', {
-            'students': JSON.stringify([this.userId]),
-            'term_data': JSON.stringify({
-              hours: this.enrollment_tab.saveTerm.hours,
-              type: this.enrollment_tab.saveTerm.type,
-              startDate: this.enrollment_tab.saveTerm.startDate,
-              endDate: this.enrollment_tab.saveTerm.endDate,
-              school: this.enrollment_tab.saveTerm.school
-            }),
-          }, function (data) {
-            this.refreshHSEnrollmentTerms();
-          })
-        },
-
 
         async loadTree(deptCode, deptYear) {
           let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + deptCode + "&year=" + deptYear;
@@ -218,82 +177,34 @@
 
         async loadUser(userId) {
           let tree;
-          let user = await bridgetools.req("https://reports.bridgetools.dev/api2/students/" + userId + "?requester_id=" + ENV.current_user_id);
-          if (user?._id) {
-            try {
-              await $.get("/api/v1/users/" + userId, function (data) {
-                user = {
-                  name: data.name,
-                  sis_id: data.sis_user_id,
-                  canvas_id: data.id,
-                  enrollment_type: "",
-                  last_login: "",
-                  enrolled_hours: 0,
-                  enrolledHours: 0,
-                  completedHours: 0,
-                  avatar_url: data.avatar_url,
-                  courses: {},
-                  treeCourses: {
-                    other: []
-                  },
-                  submissions: [],
-                }
-              });
-            } catch (err) {
-              user = {
-                name: "",
-                sis_id: "",
-                canvas_id: this.userId,
-                enrollment_type: "",
-                last_login: "",
-                enrolled_hours: 0,
-                enrolledHours: 0,
-                completedHours: 0,
-                avatar_url: "",
-                courses: {},
-                treeCourses: {
-                  other: []
-                },
-                submissions: [],
-              }
-            }
+          let user = {};
+          try {
+            let bridgetoolsUser = await bridgetools.req("https://reports.bridgetools.dev/api2/students/" + userId + "?requester_id=" + ENV.current_user_id);
+            console.log(bridgetoolsUser);
+            let canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+            console.log(canvasUser);
+            user.degrees = bridgetoolsUser.degrees;
+          } catch (err) {
+            console.log(err);
+            return {};
+          }
 
-            let enrollmentData = this.enrollmentData;
-            for (let e in enrollmentData) {
-              let enrollment = enrollmentData[e];
-              let courseName = "";
-              await $.get("/api/v1/courses/" + enrollment.course_id, function (data) {
-                courseName = data.name;
-              })
-              let final_score = enrollment.grades.final_score;
-              if (final_score === undefined || final_score === null) final_score = 0;
-              let current_score = enrollment.grades.current_score;
-              if (current_score === undefined || current_score === null) current_score = 0;
-              let progress = 0;
-              if (current_score !== 0) progress = (final_score / current_score) * 100;
-              let courseCode = "";
-              let courseCodeM = "";
-              if (enrollment.sis_course_id != null) {
-                courseCodeM = enrollment.sis_course_id.match(/([A-Z]{4} [0-9]{4})/);
-                if (courseCodeM) courseCode = courseCodeM[1];
-              }
-              if (courseCode !== "") {
-                let courseData = {
-                  code: courseCode,
-                  course_id: enrollment.course_id,
-                  hours: 0,
-                  last_activity: enrollment.last_activity_at,
-                  start: enrollment.created_at,
-                  progress: progress,
-                  state: enrollment.enrollment_state,
-                  enabled: true,
-                  name: courseName,
-                  score: current_score
-                }
-                user.courses[courseCode] = courseData;
-                user.treeCourses.other.push(courseData)
-              }
+          let date = new Date();
+          let maxyear = date.getFullYear();
+          let month = date.getMonth() + 1;
+          if (month <= 6) maxyear -= 1;
+
+          user.degrees = user.degrees.filter((degree) => degree.year <= maxyear);
+          user.degrees.sort((a, b) => {
+            if (a.year == b.year) {
+              return (a.dept.toLowerCase() > b.dept.toLowerCase()) ? 1 : ((a.dept.toLowerCase() < b.dept.toLowerCase()) ? -1 : 0)
             }
+            return (a.year > b.year) ? -1 : ((a.year < b.year) ? 1 : 0)
+          });
+          this.currentDegree = user?.degrees?.[0] ?? {dept: '', year: ''};
+          if (user?.degrees?.[0]) {
+            tree = await this.loadTree(user.degrees[0].dept, user.depts[0].year);
+          } else {
             tree = {
               hours: 0,
               name: "",
@@ -302,40 +213,15 @@
                 elective: {}
               }
             }
-          } else {
-            let date = new Date();
-            let maxyear = date.getFullYear();
-            let month = date.getMonth() + 1;
-            if (month <= 6) maxyear -= 1;
-
-            user.depts = user.depts.filter((dept) => dept.year <= maxyear);
-            user.depts.sort((a, b) => {
-              if (a.year == b.year) {
-                return (a.dept.toLowerCase() > b.dept.toLowerCase()) ? 1 : ((a.dept.toLowerCase() < b.dept.toLowerCase()) ? -1 : 0)
-              }
-              return (a.year > b.year) ? -1 : ((a.year < b.year) ? 1 : 0)
-            });
-            this.currentDepartment = user?.depts?.[0] ?? {dept: '', year: ''};
-            if (user?.depts?.[0]) {
-              tree = await this.loadTree(user.depts[0].dept, user.depts[0].year);
-            } else {
-              tree = {
-                hours: 0,
-                name: "",
-                courses: {
-                  core: {},
-                  elective: {}
-                }
-              }
-            }
           }
+          console.log(tree);
 
           user = this.updateUserCourseInfo(user, tree);
           return user;
         },
 
         async changeTree(user) {
-          let tree = await this.loadTree(this.currentDepartment.dept, this.currentDepartment.year);
+          let tree = await this.loadTree(this.currentDegree.dept, this.currentDegree.year);
           user = this.updateUserCourseInfo(user, tree);
           this.user = user;
         },
@@ -361,51 +247,30 @@
   
 
   await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
+  //styling
   loadCSS("https://reports.bridgetools.dev/style/main.css");
   loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/progress_meeting/setGoal.js");
+  //libraries
   await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-  $.getScript("https://d3js.org/d3.v6.min.js").done(function () {
-    $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js").done(function () {
-      $.getScript("https://reports.bridgetools.dev/components/icons/alert.js").done(function () {
-        $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js").done(function () {
-          $.getScript("https://reports.bridgetools.dev/department_report/components/courseRowInd.js").done(function () {
-            $.getScript("https://reports.bridgetools.dev/department_report/components/courseProgressBarInd.js").done(function () {
-              $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js").done(function () {
-                $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js").done(function () {
-                  $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js").done(function () {
-                    $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js").done(function () {
-                      $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indGraphs.js").done(function () {
-                        $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indHeader.js").done(function () {
-                          $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indHeaderCredits.js").done(function () {
-                            $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentInd.js").done(function () {
-                              $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentIndCredits.js").done(function () {
-                                $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentHours.js").done(function () {
-                                  $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentEmploymentSkills.js").done(function () {
-                                    $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js').done(function () {
-                                      $.getScript("https://reports.bridgetools.dev/department_report/graphs.js").done(function () {
-                                        $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js').done(function () {
-                                          postLoad();
-                                        });
-                                      });
-                                    });
-                                  });
-                                });
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
+  await $.getScript("https://d3js.org/d3.v6.min.js");
+  await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
+  //icons
+  await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
+  await $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js");
+  //components
+  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js");
+  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
+  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
+  await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
+  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseRowInd.js");
+  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseProgressBarInd.js");
+  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/indHeaderCredits.js");
+  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentIndCredits.js");
+  await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentHours.js");
+  await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
+  await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
+  await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+  postLoad();
   function loadCSS(url) {
     var style = document.createElement('link'),
       head = document.head || document.getElementsByTagName('head')[0];
@@ -414,20 +279,5 @@
     style.rel = "stylesheet";
     style.media = "screen,print";
     head.insertBefore(style, head.firstChild);
-  }
-  async function bridgetoolsReq(url) {
-    let reqUrl = "/api/v1/users/" + ENV.current_user_id + "/custom_data/btech-reports?ns=dev.bridgetools.reports";
-    let authCode = '';
-    await $.get(reqUrl, data => {
-      authCode = data.data.auth_code;
-    });
-    //figure out if any params exist then add autho code depending on set up.
-    if (!url.includes("?")) url += "?auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-    else url += "&auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-    let output;
-    await $.get(url, function (data) {
-      output = data;
-    });
-    return output;
   }
 })();

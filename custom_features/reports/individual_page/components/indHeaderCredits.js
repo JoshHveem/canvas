@@ -1,0 +1,348 @@
+Vue.component('ind-header-credits', {
+  template: `
+    <div
+      style="margin-block-end: 2rem;"
+    >
+      <div style="margin-bottom: 2rem;">
+        <div class="btech-user-name" style="margin-bottom: .25rem;">
+          <div style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
+            <a :href="'https://btech.instructure.com/users/' + user.canvas_id"
+              target="_blank">
+              <strong>{{settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")"}}<span v-if="user.pronoun !== undefined">{{user.pronoun}}</span></strong>
+            </a>
+          </div>
+          <div
+            v-if="user.enrollment_type == 'CS' && user?.academic_probation?.probation != undefined"
+            :title="user?.academic_probation?.probation == undefined ? 'No current probations' : user?.academic_probation?.probation" 
+            style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
+          >
+            <icon-alert 
+              :fill="user?.academic_probation?.category == -4 ? (user.academic_probation.code.includes('2') ? colors.orange : colors.yellow) : (user?.academic_probation?.category == -5 ? colors.red : colors.gray)" 
+              width="1.5rem" 
+              height="1.5rem"
+            ></icon-alert>
+          </div>
+          <div 
+            v-if="user.enrollment_type == 'CS' && user?.leave_of_absence?.end != undefined"
+            style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
+            <span 
+              class="btech-pill-text" 
+              :title="user?.leave_of_absence?.end ? 'Ends ' + dateToString(new Date(user.leave_of_absence.end)) : 'Not on LOA'"
+              :style="{
+                'cursor': 'help',
+                'background-color': user?.leave_of_absence?.end ? colors.red : colors.gray,
+                'color': colors.white,
+              }">
+                LOA
+            </span>
+          </div>
+          <div
+            v-if="user.enrollment_type == 'CS' && user.distance_approved"
+            :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'" 
+            style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
+          >
+            <icon-distance-approved :class="{'distance-approved': user.distance_approved, 'not-distance-approved': !user.distance_approved}" width="1.5rem" height="1.5rem"></icon-distance-approved>
+          </div>
+          <span>
+            Avg. Grade
+          </span>
+          <div style="display: inline-block; width: 3rem; font-size: 1rem;">
+            <span 
+              class="btech-pill-text" :style="{
+                'background-color': whatif ? colors.gray : user?.average_score ? (Math.round(user.average_score * 100) < 60 ? colors.red : Math.round(user.average_score * 100) < 80 ? colors.yellow : colors.green) : colors.gray,
+                'color': whatif ? colors.black : user?.average_score ? colors.white : colors.black,
+              }">
+              {{user?.average_score ? Math.round(user.average_score * 100) + '%' : "N/A"}}
+            </span>
+          </div>
+          <div 
+            v-if="whatif && user?.whatif?.average_score !== undefined"
+            style="display: inline-block; width: 3rem; font-size: 1rem;">
+            <span 
+              v-if="whatif && user?.whatif?.average_score !== undefined"
+              class="btech-pill-text" :style="{
+                'background-color': Math.round(whatifdata.average_score * 100) < 60 ? colors.red : Math.round(whatifdata.average_score * 100) < 80 ? colors.yellow : colors.green,
+                'color': colors.white,
+              }">
+              {{Math.round(whatifdata.average_score * 100) + '%'}}
+            </span>
+          </div>
+          <div 
+            title="The last time this user's data was updated."
+            style="float: right; display: inline-block; width: 10rem; font-size: 1rem; cursor: help;">
+            <div style="display: inline-block; width: 3rem; font-size: 1rem;">
+              <span 
+                class="btech-pill-text" 
+                :style="{
+                  'background-color': colors.gray,
+                  'color': '#000000',
+                }"
+              >
+                {{dateToString(user.last_update)}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div 
+        class="btech-department-report-student-hours"
+      >
+        <div style="height: 200px; width: 200px;" class="btech-department-report-student-avatar">
+          <img style="position: absolute;" v-if="user.avatar_url !== undefined" :src="user.avatar_url">
+          <div
+            v-show="avatarHover"
+            style="
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              position: absolute;
+              border-radius: 50%; 
+              height: 180px;
+              width: 180px;
+              padding: 10px;
+            "
+            :style="{
+              'background-color': (
+                (user.egp <= 100) ? colors.darkGreen : (user.egp < 150 ? colors.orange: colors.darkRed)
+              ) + 88,
+              'color': '#ffffff',
+            }"
+          >
+            <div
+              style="display:grid;" 
+            >
+              <div style="text-align: center; font-size: 1rem;">EGP<br>Estimated<br>Graduation Progress</div>
+              <div style="text-align: center; font-size: 2rem;">{{user.egp}}%</div>
+            </div>
+          </div>
+          <div 
+            @mouseover="avatarHover = true;"
+            @mouseleave="avatarHover = false;"
+            id="btech-department-report-student-progress-donut" style="position: absolute;"></div>
+        </div>
+        <div style="display: inline-block;">
+          <div class="data-item">
+            <span class="data-item-title">
+              Certificate Credits 
+            </span>
+            <div style="display: inline-block; width: 4rem; font-size: 1rem;">
+              <span class="btech-pill-text" :style="{
+                  'background-color': colors.gray,
+                  'color': '#000000',
+                }">
+                {{studentTree.hours}}
+              </span>
+            </div>
+          </div>
+          <div class="data-item">
+            <span class="data-item-title">
+              Earned Credits 
+            </span>
+            <div style="display: inline-block; width: 6rem; font-size: 1rem;">
+              <span 
+                class="btech-pill-text" 
+                :style="{
+                  'background-color': whatif ? colors.purple : colors.blue,
+                  'color': '#ffffff',
+                }">
+                {{whatif ? user.completed_credits + ' + ' + (whatifdata.completed_credits - user.completed_credits) : user.completed_credits}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div 
+            style="cursor: help;"
+            title="The student's program start date."
+            class="data-item">
+            <span style="display: inline-block; width: 12rem;">Start Date</span>
+            <span 
+              v-if="user.egp && user.completed_hours"
+              class="btech-pill-text" :style="{
+              'background-color': colors.gray,
+              'color': colors.black,
+            }">
+              {{dateToString(user.start)}}
+            </span>
+          </div>
+          <div 
+            style="cursor: help;"
+            title="A projection of when this student will finish based on their current pace."
+            class="data-item">
+            <span style="display: inline-block; width: 12rem;">Projected Completion Date</span>
+            <span 
+              v-if="user.egp && user.completed_hours"
+              class="btech-pill-text" :style="{
+              'background-color': colors.blue,
+              'color': colors.white,
+            }">
+              {{dateToString(projected_completion_date)}}
+            </span>
+          </div>
+          <div 
+            style="cursor: help;"
+            title="The last time the student logged into Canvas."
+            class="data-item">
+            <span style="display: inline-block; width: 12rem;">
+              Last Login   
+            </span>
+            <span class="btech-pill-text" :style="{
+                'background-color': calcLastLoginColorBg(user.last_login),
+                'color': '#ffffff',
+              }">
+              {{dateToString(user.last_login)}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  props: {
+    colors: {
+      type: Object,
+      default: () => ({})
+    },
+    user: {
+      type: Object,
+      default: () => ({})
+    },
+    studentTree: {
+      type: Object,
+      default: () => ({})
+    },
+    whatifdata: {
+      type: Object,
+      default: () => ({})
+    },
+    whatif: {
+      type: Boolean,
+      default: undefined
+    },
+    settings: {
+      type: Object,
+      default: () => ({})
+    },
+    updateinc: Number
+  },
+  computed: {
+    estimated_completion_date() {
+      let weekHours = Object.values(this.user.contracted_hours).reduce((a,b) => a + b);
+      let numWeeks = (this.studentTree.hours - this.user.completed_hours) / weekHours;
+      let estimated = new Date();
+      estimated.setDate(estimated.getDate() + Math.round(numWeeks) * 7);
+      return estimated;
+    },
+    projected_completion_date() {
+      let weekHours = Object.values(this.user.contracted_hours).reduce((a,b) => a + b);
+      if (!this?.user?.end || !this?.user?.start) return "";
+      let start = new Date(this.user.start);
+      let end = new Date(this.user.end);
+      let numWeeks = (this.studentTree.hours - this.user.completed_credits) / this.studentTree.hours;
+      let remaining = (end - start) * this.user.egp * 0.01;
+      let projected = new Date(start.getTime() + remaining);
+      // projected.setDate(projected.getDate() + Math.round(numWeeks * this.user.egp * 0.01) * 7);
+      return projected;
+
+    }
+  },
+  watch: {
+  },
+  data() {
+    return {
+      avatarHover: false,
+      donut: {}
+    }
+  },
+  mounted() {
+    let graph = new SubmissionsGraphBar();
+    graph._init(this.user, this.colors);
+    let pageviewGraph = new PageViewsGraphBar();
+    pageviewGraph._init(this.user, this.colors);
+    let donut = new ProgressGraphDonut();
+    this.donut = donut;
+  },
+  methods: {
+    updateHeader () {
+      let donut = this.donut;
+      donut._init('btech-department-report-student-progress-donut', this.colors.gray);
+      donut.fillHours( 
+        {
+          max: this.studentTree.hours, 
+          hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
+          color: this.whatif ? this.colors.purple : this.colors.blue, 
+          // next: {
+          //   max: this.studentTree.hours, 
+          //   hours: this.user.finalized_credits, 
+          //   color: this.colors.blue, 
+          // }
+        }
+      );
+    },
+
+    getEGPBG(egp) {
+      return egp <= 100 ? this.colors.green : egp < 150 ? this.colors.yellow : this.colors.red;
+    },
+
+    calcClockHoursRatioText() {
+      let app = this;
+      let user = app.user;
+      let clock_hours = 0;
+      if (user.clock_hours !== undefined) {
+        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
+      }
+      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return "N/A";
+      return Math.round((clock_hours/ user.completed_hours) * 100) + "%";
+    },
+    calcClockHoursRatioTextColor() {
+      let app = this;
+      let user = app.user;
+      let clock_hours = 0;
+      if (user.clock_hours !== undefined) {
+        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
+      }
+      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return "#000000";
+      return "#FFFFFF";
+
+    },
+    calcClockHoursRatioColorBg() {
+      let app = this;
+      let user = app.user;
+      let clock_hours = 0;
+      if (user.clock_hours !== undefined) {
+        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
+      }
+      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return app.colors.gray;
+      let timePerc = Math.round((clock_hours/ user.completed_hours) * 100);
+      return this.getEGPBG(timePerc);
+
+    },
+
+    calcLastLoginColorBg(date) {
+      let app = this;
+      if (typeof date == 'string') {
+        if (date == "") return app.colors.red;
+        date = new Date(date);
+      }
+      let now = new Date();
+      let diff = now - date;
+      let days = diff / (1000 * 3600 * 24);
+      if (days >= 7) return app.colors.red;
+      if (days >= 5) return app.colors.yellow;
+      return app.colors.green;
+    },
+
+    dateToString(date) {
+      if (typeof date == 'string') {
+        if (date == "" || date == "N/A") return "N/A";
+        date = new Date(date);
+      }
+      if (date == null) return "N/A";
+      let year = date.getFullYear();
+      let month = (1 + date.getMonth()).toString().padStart(2, '0');
+      let day = date.getDate().toString().padStart(2, '0');
+
+      return month + '/' + day + '/' + year;
+    },
+
+  }
+})
