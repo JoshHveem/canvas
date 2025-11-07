@@ -1,6 +1,7 @@
 Vue.component('student-courses-report', {
   template:` 
     <div>
+      {{ degree }}
       <div style="margin-bottom: 2rem;">
         <div class="btech-user-name" style="margin-bottom: .25rem;">
           <div style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
