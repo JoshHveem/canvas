@@ -99,7 +99,7 @@ Vue.component('student-courses-report', {
             class="data-item">
             <span style="display: inline-block; width: 12rem;">Start Date</span>
             <span 
-              v-if="degree.entry_date"
+              v-if="degree?.entry_date"
               class="btech-pill-text" :style="{
               'background-color': colors.gray,
               'color': colors.black,
