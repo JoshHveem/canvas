@@ -63,7 +63,6 @@
 
         try {
           let user = await this.loadUser(this.userId);
-          console.log(user);
           this.user = user;
         } catch(err) {
           console.log(err);
@@ -260,9 +259,9 @@
             }
             return a.academic_year > b.academic_year ? -1 : 1;
           });
-          console.log(user.degrees);
 
           this.currentDegree = user?.degrees?.[0] ?? { major_code: '', academic_year: '' };
+          console.log(this.currentDegree);
 
           let tree;
           if (user?.degrees?.[0]) {
