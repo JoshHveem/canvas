@@ -250,24 +250,24 @@
           let maxyear = date.getFullYear();
           if ((date.getMonth() + 1) <= 6) maxyear -= 1;
 
-          user.degrees = (user.degrees || []).filter(d => Number(d?.year) <= maxyear);
+          user.degrees = (user.degrees || []).filter(d => Number(d?.academic_year) <= maxyear);
 
           user.degrees.sort((a, b) => {
-            if (a.year === b.year) {
+            if (a.academic_year=== b.academic_year) {
               const ad = String(a.major_code || '').toLowerCase();
               const bd = String(b.major_code || '').toLowerCase();
               return ad > bd ? 1 : ad < bd ? -1 : 0;
             }
-            return a.year > b.year ? -1 : 1;
+            return a.academic_year > b.academic_year ? -1 : 1;
           });
           console.log(user.degrees);
 
-          this.currentDegree = user?.degrees?.[0] ?? { major_code: '', year: '' };
+          this.currentDegree = user?.degrees?.[0] ?? { major_code: '', academic_year: '' };
 
           let tree;
           if (user?.degrees?.[0]) {
             // FIX: depts -> degrees
-            tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].year);
+            tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].academic_year);
           } else {
             tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
           }
@@ -278,7 +278,7 @@
 
 
         async changeTree(user) {
-          let tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.year);
+          let tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.academic_year);
           user = this.updateUserCourseInfo(user, tree);
           this.user = user;
         },
