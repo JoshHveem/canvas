@@ -182,6 +182,8 @@
               `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
             );
             const canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+            console.log(bridgetoolsUser);
+            console.log(canvasUser);
 
             // Be tolerant of missing degrees
             user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
