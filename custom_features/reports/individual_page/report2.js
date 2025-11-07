@@ -243,6 +243,7 @@
           user.last_login = this.bridgetoolsUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
+          user.transfer_courses = [];
 
           // Guard degree ops
           const date = new Date();
@@ -310,6 +311,8 @@
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
     /*
     //libraries
     await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
@@ -323,8 +326,6 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
