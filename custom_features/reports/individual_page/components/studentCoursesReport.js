@@ -69,6 +69,7 @@ Vue.component('student-courses-report', {
   },
   data() {
     return {
+      colors: bridgetools.colors
     }
   },
   mounted() {
