@@ -44,6 +44,9 @@
             {{ rt.label }}
           </button>
         </div>
+        <student-courses-report
+          :user="user"
+        ></student-courses-report>
         <keep-alive>
           <component :is="currentReportMeta.component" />
         </keep-alive>
