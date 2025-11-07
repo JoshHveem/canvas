@@ -59,7 +59,8 @@ Vue.component('student-courses-report', {
     </div>
   `,
   props: {
-    user: {}
+    user: {},
+    settings: {}
   },
   computed: {
     checkValidCourseId: function() {
