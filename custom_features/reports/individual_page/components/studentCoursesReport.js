@@ -142,7 +142,7 @@ Vue.component('student-courses-report', {
   props: {
     user: {},
     cdegree: '',
-    degree: {},
+    tree: {},
     settings: {}
   },
   computed: {
