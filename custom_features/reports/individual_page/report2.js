@@ -191,6 +191,7 @@
             console.log(err);
             return {};
           }
+          console.log(user);
 
           // Guard degree ops
           const date = new Date();
