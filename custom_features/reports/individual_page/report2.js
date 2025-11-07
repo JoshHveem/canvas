@@ -259,6 +259,7 @@
             }
             return a.year > b.year ? -1 : 1;
           });
+          console.log(user.degrees);
 
           this.currentDegree = user?.degrees?.[0] ?? { dept: '', year: '' };
 
