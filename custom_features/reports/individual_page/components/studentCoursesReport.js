@@ -129,7 +129,15 @@ Vue.component('student-courses-report', {
 
       <!-- courses -->
       <div>
-        {{ tree }}
+        <div>Core</div>
+        {{ courses }}
+
+        <div>Electives</div>
+
+
+        <div>Other</div>
+
+
       </div>
     </div>
   `,
@@ -141,7 +149,11 @@ Vue.component('student-courses-report', {
   },
   computed: {
     courses: function () {
-      console.log(this.tree);
+      let courses = this.tree.courses;
+      let core = courses.core.map((code, data) => {
+        console.log(code);
+        console.log(data);
+      })
       return degree.courses;
     }
   },
