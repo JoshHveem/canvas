@@ -265,11 +265,11 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseRowInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/courseProgressBarInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/indHeaderCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentIndCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_report/components/individual_report/showStudentHours.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
