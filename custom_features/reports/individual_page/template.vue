@@ -38,6 +38,21 @@
                     :student-tree="tree"
                 ></show-student-ind-credits>
               </div>
+            </div>
+            <div v-if="menu=='report-old'">
+              <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
+                <select @change="changeTree(user)" v-model="currentDegree">
+                  <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
+                </select>
+                <show-student-ind-credits
+                    v-if="user.name !== undefined && tree.name !== undefined"
+                    style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
+                    :colors="colors"
+                    :user="user"
+                    :settings="settings"
+                    :student-tree="tree"
+                ></show-student-ind-credits>
+              </div>
               <div
                 @click="settingGoal = !settingGoal;"
                 style="
