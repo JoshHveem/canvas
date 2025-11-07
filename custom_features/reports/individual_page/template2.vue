@@ -48,9 +48,6 @@
           :user="user"
           :settings="settings"
         ></student-courses-report>
-        <keep-alive>
-          <component :is="currentReportMeta.component" />
-        </keep-alive>
       </div>
     </div>
   </div>
