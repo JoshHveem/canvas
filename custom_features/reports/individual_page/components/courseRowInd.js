@@ -91,8 +91,8 @@ Vue.component('course-row-ind', {
     },
     gradeBGColor: function() {
       let vm = this;
-      if (vm.course.score === undefined) return vm.colors.gray;
-      let score = vm.course.score;
+      if (vm.score === undefined) return vm.colors.gray;
+      let score = vm.score;
       if (isNaN(score)) {
         //handle letter grades
         if (score[0] == 'A') return vm.colors.green;
@@ -113,10 +113,10 @@ Vue.component('course-row-ind', {
     },
     gradeText: function() {
       let vm = this;
-      if (vm.course.score === undefined) return "N/A";
-      if (vm.course.score === null) return "N/A";
-      if (isNaN(vm.course.score)) return vm.course.score;
-      return vm.course.score + "%"
+      if (vm.score === undefined) return "N/A";
+      if (vm.score === null) return "N/A";
+      if (isNaN(vm.score)) return vm.score;
+      return vm.score + "%"
 
     },
     daysEnrolled: function() {
