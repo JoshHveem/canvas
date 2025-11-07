@@ -181,13 +181,13 @@
     user.required_credits = requiredCredits;
     // WITH CREDITS, DOES IT DO ANY GOOD FOR STUDENT TO KNOW REQUIRED CREDITS AT THAT MOMENT? SEEMS LIKE END OF MONTH IS ALL THAT MATTERS
     user.unaccrued_required_credits = lastRequiredCredits - requiredCredits;
-    user.egp = Math.round((user.required_credits / user.completed_credits) * 1000) / 10;
-    user.egp_change = 0;
 
+    /*
     //need to sort so newest month is first to then grab first entry for sap change
     user.historical_data.sort(function (a, b) {
       return (b.year - a.year) || (b.month - a.month)
     })
+    */
 
     return user;
   }
