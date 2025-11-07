@@ -236,7 +236,7 @@
         }
 
         this.loadingMessage = "Loading Settings";
-        let settings = await this.loadSettings();
+        let settings = await this.loadSettings(this.settings);
         this.settings = settings;
         this.loadingProgress += 10;
 
@@ -293,7 +293,13 @@
           },
           goal: undefined,
           colors: bridgetools.colors,
-          settings: {},
+          settings: {
+            anonymous: false,
+            account: 0,
+            reportType: 'student-courses',
+            sort_dir: 1,
+            filters: { year: '2025' }
+          },
           terms: [],
           sections: [],
           loading: true,
