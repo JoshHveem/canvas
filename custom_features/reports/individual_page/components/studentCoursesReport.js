@@ -141,7 +141,7 @@ Vue.component('student-courses-report', {
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="false"
-            iswithdraw="false"
+            :iswithdraw="false"
           ></course-row-ind>
         </div>
 
