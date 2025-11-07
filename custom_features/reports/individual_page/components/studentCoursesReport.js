@@ -133,9 +133,9 @@ Vue.component('student-courses-report', {
         <div v-for="(course, i) in core">
           {{course}}
           <course-row-ind
-            :progress="course.progress"
+            :progress="course?.progress ?? 0"
             :colors="colors"
-            :credits="course.credits"
+            :credits="course?.credits"
             :course="course"
             :course-name="course.name"
             :course-code="course.course_code"
@@ -171,6 +171,7 @@ Vue.component('student-courses-report', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
+          data.state = 'active';
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;

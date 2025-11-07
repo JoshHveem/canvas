@@ -16,7 +16,7 @@ Vue.component('course-row-ind', {
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
             class="btech-pill-text" 
-            v-show="course.score !== undefined"
+            v-show="course.final_score !== undefined"
             :style="{
               'background-color': gradeBGColor,
               'color': colors.white,
