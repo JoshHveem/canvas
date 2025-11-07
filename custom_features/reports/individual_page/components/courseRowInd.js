@@ -3,7 +3,16 @@ Vue.component('course-row-ind', {
       <div
         style="background-color: rgb(255, 255, 255); display: inline-block; width: 100%; box-sizing: border-box; font-size: 0.75rem; padding: .25rem;"
       >
-        {{courseName}}
+        <div style="display: inline-block; width: 20rem;">
+          <a :class="{
+              disabled: !checkValidCourseId 
+            }" 
+            style="text-decoration: none; color: #000000;"
+            :href="courseUrl"
+            target="_blank">
+            {{courseName}} ({{courseCode}})
+          </a>
+        </div>
       </div>
   `,
   props: {
