@@ -150,12 +150,14 @@ Vue.component('student-courses-report', {
   computed: {
     core: function () {
       let courses = this.tree?.courses ?? {};
-      console.log(courses);
-      let core = (courses?.core ?? []).map((code, data) => {
-        console.log(code);
-        console.log(data);
-      })
-      return core;
+      let core = courses?.core ?? {};
+      let list = [];
+      console.log(core);
+      console.log(this.user.courses);
+      for (let courseCode in core) {
+        let data = core[courseCode];
+      }
+      return list;
     }
   },
   data() {
