@@ -261,6 +261,9 @@
 
       data: function () {
         return {
+          currentReportMeta: {
+            title: 'Courses'
+          },
           currentDegree: null,
           enrollmentData:  undefined,
           userId: null,
