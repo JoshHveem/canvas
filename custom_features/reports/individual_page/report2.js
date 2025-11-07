@@ -243,6 +243,7 @@
           user.last_update = this.bridgetoolsUser.last_update;
           user.last_login = this.bridgetoolsUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
+          user.sis_id = this.bridgetoolsUser.sis_id;
 
           // Guard degree ops
           const date = new Date();
