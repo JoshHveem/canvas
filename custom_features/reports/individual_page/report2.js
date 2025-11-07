@@ -397,8 +397,8 @@
           }
           console.log(user);
           // Be tolerant of missing degrees
-          user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
-          user.courses = Array.isArray(bridgetoolsUser?.courses) ? bridgetoolsUser.courses: [];
+          user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
+          user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
 
           // Guard degree ops
           const date = new Date();
