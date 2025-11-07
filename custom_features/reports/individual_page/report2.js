@@ -58,7 +58,7 @@
         //load data from bridgetools
         this.loadingMessage = "Loading User Data";
         //Pulled enrollment data out of loadUser func because it is ready to use for Grades between dates out of the box and doesn't need to wait on all of the other stuff loadUser does
-        let enrollmentData = await bridgetoolsReq("https://reports.bridgetools.dev/api/students/canvas_enrollments/" + this.userId);
+        let enrollmentData = await bridgetools.req("https://reports.bridgetools.dev/api/students/canvas_enrollments/" + this.userId);
         this.enrollmentData = enrollmentData;
 
         try {
@@ -133,7 +133,7 @@
           modal.hide();
         },
         async loadSettings() {
-          let settings = await bridgetoolsReq("https://reports.bridgetools.dev/api/settings/" + ENV.current_user_id);
+          let settings = await bridgetools.req("https://reports.bridgetools.dev/api/settings/" + ENV.current_user_id);
           if (settings.individualReport == undefined) {
             settings.individualReport = {
             }
@@ -164,7 +164,7 @@
 
         async loadTree(deptCode, deptYear) {
           let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + deptCode + "&year=" + deptYear;
-          let data = await bridgetoolsReq(url);
+          let data = await bridgetools.req(url);
           let tree = data[0] ?? {};
           if (tree?.courses === undefined) tree.courses = {};
           if (tree?.courses?.core === undefined) tree.courses.core = {};
@@ -176,49 +176,50 @@
         },
 
         async loadUser(userId) {
-          let tree;
           let user = {};
           try {
-            let bridgetoolsUser = await bridgetools.req("https://reports.bridgetools.dev/api2/students/" + userId + "?requester_id=" + ENV.current_user_id);
-            console.log(bridgetoolsUser);
-            let canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
-            console.log(canvasUser);
-            user.degrees = bridgetoolsUser.degrees;
+            const bridgetoolsUser = await bridgetools.req(
+              `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
+            );
+            const canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+
+            // Be tolerant of missing degrees
+            user.degrees = Array.isArray(bridgetoolsUser?.degrees) ? bridgetoolsUser.degrees : [];
           } catch (err) {
             console.log(err);
             return {};
           }
 
-          let date = new Date();
+          // Guard degree ops
+          const date = new Date();
           let maxyear = date.getFullYear();
-          let month = date.getMonth() + 1;
-          if (month <= 6) maxyear -= 1;
+          if ((date.getMonth() + 1) <= 6) maxyear -= 1;
 
-          user.degrees = user.degrees.filter((degree) => degree.year <= maxyear);
+          user.degrees = (user.degrees || []).filter(d => Number(d?.year) <= maxyear);
+
           user.degrees.sort((a, b) => {
-            if (a.year == b.year) {
-              return (a.dept.toLowerCase() > b.dept.toLowerCase()) ? 1 : ((a.dept.toLowerCase() < b.dept.toLowerCase()) ? -1 : 0)
+            if (a.year === b.year) {
+              const ad = String(a.dept || '').toLowerCase();
+              const bd = String(b.dept || '').toLowerCase();
+              return ad > bd ? 1 : ad < bd ? -1 : 0;
             }
-            return (a.year > b.year) ? -1 : ((a.year < b.year) ? 1 : 0)
+            return a.year > b.year ? -1 : 1;
           });
-          this.currentDegree = user?.degrees?.[0] ?? {dept: '', year: ''};
+
+          this.currentDegree = user?.degrees?.[0] ?? { dept: '', year: '' };
+
+          let tree;
           if (user?.degrees?.[0]) {
-            tree = await this.loadTree(user.degrees[0].dept, user.depts[0].year);
+            // FIX: depts -> degrees
+            tree = await this.loadTree(user.degrees[0].dept, user.degrees[0].year);
           } else {
-            tree = {
-              hours: 0,
-              name: "",
-              courses: {
-                core: {},
-                elective: {}
-              }
-            }
+            tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
           }
-          console.log(tree);
 
           user = this.updateUserCourseInfo(user, tree);
           return user;
         },
+
 
         async changeTree(user) {
           let tree = await this.loadTree(this.currentDegree.dept, this.currentDegree.year);
