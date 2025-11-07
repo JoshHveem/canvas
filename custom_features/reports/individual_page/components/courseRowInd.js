@@ -26,13 +26,11 @@ Vue.component('course-row-ind', {
         </div>
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
-            v-show="(hours || credits)"
+            v-show="credits"
             class="btech-pill-text" 
             :title="(istransfer ? 'Transfer Course' : 'Course Credits')"
             :style="{
               'cursor': 'help',
-              'background-color': (progress == 0 && state == 'completed') ? colors.gray : (includeHours ? (istransfer ? colors.orange: colors.blue)),
-              'color': (progress == 0 && state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
