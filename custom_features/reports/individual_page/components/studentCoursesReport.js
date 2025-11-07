@@ -132,7 +132,7 @@ Vue.component('student-courses-report', {
         <div>Core</div>
         <div v-for="(course, i) in core">
           <course-row-ind
-            :progress="course?.progress * 100 ?? 0"
+            :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
