@@ -236,7 +236,7 @@
     })
     gen_report_button.click(function () {
       let modal = $('#canvas-individual-report-vue');
-      APP.refreshHSEnrollmentTerms();
+      // APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",
         "canvasId": ENV.current_user_id
