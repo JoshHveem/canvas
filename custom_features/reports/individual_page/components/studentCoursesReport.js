@@ -130,7 +130,7 @@ Vue.component('student-courses-report', {
       <!-- courses -->
       <div>
         <div>Core</div>
-        {{ core }}
+        <div v-for="course in core">{{ course }}</div>
 
         <div>Electives</div>
 
