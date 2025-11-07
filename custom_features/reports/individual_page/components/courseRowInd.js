@@ -54,7 +54,7 @@ Vue.component('course-row-ind', {
           </span>
         </div>
         <span
-          v-if="course?.is_withdraw"
+          v-if="iswithdraw"
           class="btech-pill-text"
           :style="{
             'background-color': colors.gray,
@@ -115,7 +115,8 @@ Vue.component('course-row-ind', {
     },
     whatif: false,
     includeHours: false,
-    istransfer: false
+    istransfer: false,
+    iswithdraw: false
   },
   computed: {
     checkValidCourseId: function() {
