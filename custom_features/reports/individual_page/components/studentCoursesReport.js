@@ -88,7 +88,7 @@ Vue.component('student-courses-report', {
                   'background-color': colors.blue,
                   'color': '#ffffff',
                 }">
-                {{ user.completed_credits}}
+                {{ user.graded_hours }}
               </span>
             </div>
           </div>
