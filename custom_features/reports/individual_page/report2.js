@@ -279,8 +279,8 @@
             title: 'Courses'
           },
           reportTypes: [
-            { value: 'student-courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
-            { value: 'student-grades',    label: 'Grades',    component: 'grades-report',    title: 'Grades Between Dates' },
+            { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
+            { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Grades Between Dates' },
           ],
           currentDegree: null,
           enrollmentData:  undefined,
@@ -420,6 +420,9 @@
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
+          user.canvas_id = this.canvasUser.id;
+          user.name = this.canvasUser.name;
+          user.academic_probation = this.bridgetoolsUser.academic_probation;
 
           // Guard degree ops
           const date = new Date();
