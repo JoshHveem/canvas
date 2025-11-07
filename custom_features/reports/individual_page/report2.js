@@ -371,22 +371,6 @@
         },
 
         close() { $(this.$el).hide(); },
-        async loadSettings() {
-          let settings = await bridgetools.req("https://reports.bridgetools.dev/api/settings/" + ENV.current_user_id);
-          if (settings.individualReport == undefined) {
-            settings.individualReport = {
-            }
-          }
-          if (settings.individualReport.attendanceCutoffs == undefined) {
-            settings.individualReport.attendanceCutoffs = {
-              good: 90,
-              checkIn: 80,
-              critical: 0,
-              show: false
-            }
-          }
-          return settings;
-        },
 
         formatDate(date) {
           date = new Date(date);
