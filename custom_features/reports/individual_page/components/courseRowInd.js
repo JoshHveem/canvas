@@ -31,6 +31,7 @@ Vue.component('course-row-ind', {
             :title="(istransfer ? 'Transfer Course' : 'Course Credits')"
             :style="{
               'cursor': 'help',
+              'background-color': (progress == 0 && state == 'completed') ? colors.gray : (istransfer ? colors.orange : colors.blue),
               'color': (progress == 0 && state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
