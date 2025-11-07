@@ -87,7 +87,7 @@ Vue.component('student-courses-report', {
                   'background-color': whatif ? colors.purple : colors.blue,
                   'color': '#ffffff',
                 }">
-                {{whatif ? user.completed_credits + ' + ' + (whatifdata.completed_credits - user.completed_credits) : user.completed_credits}}
+                {{ user.completed_credits}}
               </span>
             </div>
           </div>

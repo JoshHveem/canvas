@@ -46,7 +46,9 @@
         </div>
         <student-courses-report
           :user="user"
+          :degree="user.degrees[0]"
           :settings="settings"
+          :tree="tree"
         ></student-courses-report>
       </div>
     </div>
