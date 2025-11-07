@@ -139,7 +139,7 @@ Vue.component('student-courses-report', {
             :course-name="course.name"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
-            :istransfer="user?.transfer_courses?.includes(courseCode)"
+            :istransfer="user?.transfer_courses?.includes(course.course_code)"
           ></course-row-ind>
         </div>
 
