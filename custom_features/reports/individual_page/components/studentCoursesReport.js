@@ -84,7 +84,7 @@ Vue.component('student-courses-report', {
               <span 
                 class="btech-pill-text" 
                 :style="{
-                  'background-color': whatif ? colors.purple : colors.blue,
+                  'background-color': colors.blue,
                   'color': '#ffffff',
                 }">
                 {{ user.completed_credits}}
