@@ -61,36 +61,6 @@ Vue.component('student-courses-report', {
       >
         <div style="height: 200px; width: 200px;" class="btech-department-report-student-avatar">
           <img style="position: absolute;" v-if="user.avatar_url !== undefined" :src="user.avatar_url">
-          <div
-            v-show="avatarHover"
-            style="
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              position: absolute;
-              border-radius: 50%; 
-              height: 180px;
-              width: 180px;
-              padding: 10px;
-            "
-            :style="{
-              'background-color': (
-                (user.egp <= 100) ? colors.darkGreen : (user.egp < 150 ? colors.orange: colors.darkRed)
-              ) + 88,
-              'color': '#ffffff',
-            }"
-          >
-            <div
-              style="display:grid;" 
-            >
-              <div style="text-align: center; font-size: 1rem;">EGP<br>Estimated<br>Graduation Progress</div>
-              <div style="text-align: center; font-size: 2rem;">{{user.egp}}%</div>
-            </div>
-          </div>
-          <div 
-            @mouseover="avatarHover = true;"
-            @mouseleave="avatarHover = false;"
-            id="btech-department-report-student-progress-donut" style="position: absolute;"></div>
         </div>
         <div style="display: inline-block;">
           <div class="data-item">
