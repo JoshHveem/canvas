@@ -487,6 +487,9 @@
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
+    await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
+    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+    /*
     //libraries
     await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
     await $.getScript("https://d3js.org/d3.v6.min.js");
@@ -506,7 +509,7 @@
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
-    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+    */
     postLoad();
   } catch (err) {
     console.log(err);
