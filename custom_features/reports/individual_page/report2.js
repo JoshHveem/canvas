@@ -240,7 +240,7 @@
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = this.bridgetoolsUser.last_login;
+          user.last_login = this.canvasUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.transfer_courses = [];
