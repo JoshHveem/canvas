@@ -220,7 +220,7 @@ Vue.component('student-courses-report', {
     },
 
     dateToString(date) {
-      console.log(date);
+      console.log("DATE" + date);
       if (typeof date == 'string') {
         if (date == "" || date == "N/A") return "N/A";
         date = new Date(date);
