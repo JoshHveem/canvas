@@ -121,7 +121,7 @@ Vue.component('student-courses-report', {
                 'background-color': calcLastLoginColorBg(user.last_login),
                 'color': '#ffffff',
               }">
-              {{dateToString(user.last_login)}} {{user.last_login}}
+              {{dateToString(user.last_login)}}
             </span>
           </div>
         </div>
