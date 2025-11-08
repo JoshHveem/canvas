@@ -244,6 +244,7 @@
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.transfer_courses = [];
+          console.log(user)
 
           // Guard degree ops
           const date = new Date();
