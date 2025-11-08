@@ -225,7 +225,7 @@
               `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
             );
             console.log(this.bridgetoolsUser);
-            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}?include[]=last_login`))?.[0];
             console.log(this.canvasUser);
 
           } catch (err) {
@@ -240,7 +240,7 @@
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = this.bridgetoolsUser.last_login;
+          user.last_login = this.canvasUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.transfer_courses = [];
