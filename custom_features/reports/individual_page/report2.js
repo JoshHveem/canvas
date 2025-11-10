@@ -13,12 +13,12 @@
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-individual-report-vue"></div>');
-    $("#canvas-individual-report-vue").append(vueString);
+    canvasbody.after('<div id="canvas-individual-report-2-vue"></div>');
+    $("#canvas-individual-report-2-vue").append(vueString);
     let gen_report_button;
     let menu_bar;
     if (/^\/$/.test(window.location.pathname)) {
-      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-2-vue-gen"></a>');
       let plannerHeader = $(".PlannerHeader");
       if (plannerHeader.length > 0) {
         menu_bar = plannerHeader;
@@ -26,19 +26,19 @@
         menu_bar = $("#right-side div").last();
       }
     } else if (/^\/courses\/[0-9]+\/users\/[0-9]+$/.test(window.location.pathname)) {
-      gen_report_button = $('<a style="cursor: pointer;" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a style="cursor: pointer;" id="canvas-individual-report-2-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     } else {
-      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-2-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     }
     gen_report_button.append('Student Report');
     gen_report_button.appendTo(menu_bar);
-    let modal = $('#canvas-individual-report-vue');
+    let modal = $('#canvas-individual-report-2-vue');
     modal.hide();
 
     APP = new Vue({
-      el: '#canvas-individual-report-vue',
+      el: '#canvas-individual-report-2-vue',
       mounted: async function () {
         this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;
@@ -292,7 +292,7 @@
       }
     })
     gen_report_button.click(function () {
-      let modal = $('#canvas-individual-report-vue');
+      let modal = $('#canvas-individual-report-2-vue');
       // APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",
