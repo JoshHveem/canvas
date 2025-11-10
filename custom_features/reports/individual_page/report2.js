@@ -5,6 +5,7 @@
   Show which tab you're on
 */
 (async function () {
+  console.log("REPORT 2")
   //Confirm with Instructional Team before going live
   async function postLoad() {
     let vueString = '';
