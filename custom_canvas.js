@@ -282,7 +282,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
       feature("hs/enroll", /^\/accounts\/[0-9]+\/enrollhs$/);
       if (IS_ME) {
-        feature("reports/individual_page/report2", [
+        feature("reports/individual_page/report", [
           /^\/courses\/[0-9]+\/users\/[0-9]+$/,
           /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
           /^\/users\/[0-9]+$/,
