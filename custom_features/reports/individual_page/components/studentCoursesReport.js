@@ -22,6 +22,11 @@ Vue.component('student-courses-report', {
             ></icon-alert>
           </div>
           <div
+            style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
+          >
+            {{ degree?.campus }}
+          </div>
+          <div
             v-if=" user?.distance_approved"
             :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'" 
             style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
