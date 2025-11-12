@@ -24,7 +24,6 @@ function createNextButton() {
       <i class="icon-assignment next" aria-hidden="true">Next</i>
     </button>
   `);
-
   btn.on('click', function () {
     const nextUrl = $(this).data('nextUrl');
     if (nextUrl) {
@@ -33,7 +32,6 @@ function createNextButton() {
       showSuccessToast('All current submissions graded');
     }
   });
-
   return btn;
 }
 
@@ -52,7 +50,7 @@ async function postLoad() {
   const pieces = window.location.href.match(rUrl);
   if (!pieces) return;
 
-  const student_id = parseInt(pieces[3], 10);
+  const student_id = Number(pieces[3]);
 
   // Target container where the button lives in SpeedGrader
   const container = $('#gradebook_header .studentSelection');
@@ -64,23 +62,41 @@ async function postLoad() {
   // Pull submitted assignments for the student
   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
     student_ids: [student_id],
-    workflow_state: 'submitted'
+    workflow_state: 'submitted',
+    per_page: 100 // avoid pagination surprises
   });
+  console.log(submissions);
 
   // Compute next assignment URL if possible
   let nextUrl;
   if (Array.isArray(submissions) && submissions.length > 0) {
-    // Sort by something stable if needed; assuming API returns in desired order already
-    let nextAssignment = undefined;
-    for (let i = 0; i < submissions.length; i++) {
-      const submission = submissions[i];
-      if (submission.assignment_id === ENV.assignment_id) {
-        if (i !== submissions.length - 1) nextAssignment = submissions[i + 1];
-        break;
+    // Make order deterministic: by submitted_at then assignment_id
+    submissions.sort((a, b) => {
+      const sa = new Date(a.submitted_at || 0).getTime();
+      const sb = new Date(b.submitted_at || 0).getTime();
+      if (sa !== sb) return sa - sb;
+      return Number(a.assignment_id || 0) - Number(b.assignment_id || 0);
+    });
+
+    // DEFAULT: first submitted item (covers when current isn't in 'submitted')
+    let nextAssignment = submissions[0];
+
+    // If current assignment is in the list, prefer the one after it
+    const currId = Number(ENV.assignment_id);
+    const idx = submissions.findIndex(s => Number(s.assignment_id) === currId);
+    if (idx >= 0) {
+      if (idx < submissions.length - 1) {
+        nextAssignment = submissions[idx + 1];
+      } else {
+        // current is last submitted → no next
+        nextAssignment = undefined;
       }
     }
+
     if (nextAssignment && nextAssignment.assignment_id) {
-      nextUrl = `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignment.assignment_id}&student_id=${student_id}`;
+      nextUrl = `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${Number(nextAssignment.assignment_id)}&student_id=${student_id}`;
+    } else {
+      nextUrl = undefined; // will trigger green toast on click
     }
   }
 
@@ -89,6 +105,7 @@ async function postLoad() {
 
   // Keep it present as the DOM changes
   const observer = new MutationObserver((mutationsList) => {
+    console.log('ran mutation observer for next assignment button');
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         ensureNextButton(container, nextUrl);
@@ -103,6 +120,7 @@ async function postLoad() {
   try {
     await postLoad();
   } catch (e) {
+    // optional: log or swallow
     console.error('Next Assignment observer init failed:', e);
   }
 })();
