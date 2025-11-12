@@ -67,6 +67,7 @@ async function postLoad() {
 
   // Keep it present as the DOM changes
   const observer = new MutationObserver((mutationsList) => {
+    console.log('ran mutation observer for next assignment button');
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         ensureNextButton(container, nextUrl);
