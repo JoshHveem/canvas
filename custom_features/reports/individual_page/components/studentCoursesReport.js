@@ -134,7 +134,7 @@ Vue.component('student-courses-report', {
 
       <!-- courses -->
       <div>
-        <div>Core</div>
+        <h2>Core</h2>
         <div v-for="(course, i) in core">
           <course-row-ind
             :progress="(course?.progress ?? 0) * 100"
@@ -150,10 +150,37 @@ Vue.component('student-courses-report', {
           ></course-row-ind>
         </div>
 
-        <div>Electives</div>
+        <h2>Electives</h2>
+        <div v-for="(course, i) in electives">
+          <course-row-ind
+            :progress="(course?.progress ?? 0) * 100"
+            :colors="colors"
+            :credits="course?.credits"
+            :score="course?.final_score"
+            :state="course?.state ?? ''"
+            :course-name="course.name"
+            :course-code="course.course_code"
+            :user-canvas-id="'' + user.canvas_id"
+            :istransfer="false"
+            :iswithdraw="false"
+          ></course-row-ind>
+        </div>
 
-
-        <div>Other</div>
+        <h2>Other</h2>
+        <div v-for="(course, i) in others">
+          <course-row-ind
+            :progress="(course?.progress ?? 0) * 100"
+            :colors="colors"
+            :credits="course?.credits"
+            :score="course?.final_score"
+            :state="course?.state ?? ''"
+            :course-name="course.name"
+            :course-code="course.course_code"
+            :user-canvas-id="'' + user.canvas_id"
+            :istransfer="false"
+            :iswithdraw="false"
+          ></course-row-ind>
+        </div>
 
 
       </div>
@@ -170,7 +197,6 @@ Vue.component('student-courses-report', {
       let courses = this.tree?.courses ?? {};
       let core = courses?.core ?? {};
       let list = [];
-      console.log(this.user.courses);
       for (let courseCode in core) {
         let data = core[courseCode];
         data.course_code = courseCode;
@@ -190,6 +216,33 @@ Vue.component('student-courses-report', {
         return ad > bd ? 1 : ad < bd ? -1 : 0;
       });
       return list;
+    },
+    electives: function () {
+      let courses = this.tree?.courses ?? {};
+      let electives = courses?.electives ?? {};
+      let list = [];
+      for (let courseCode in electives) {
+        let data = core[courseCode];
+        data.course_code = courseCode;
+        let userData = this.getUserCourseData(courseCode);
+        if (userData) {
+          data.state = 'active';
+          data.progress = userData.progress;
+          data.final_score = userData.final_score;
+          data.credits_per_day = userData.credits_per_day;
+          data.days_in_course = userData.time_in_course / (60 * 60 * 24);
+        }
+        list.push(data);
+      }
+      list.sort((a, b) => {
+        const ad = String(a.course_code || '').toLowerCase();
+        const bd = String(b.course_code || '').toLowerCase();
+        return ad > bd ? 1 : ad < bd ? -1 : 0;
+      });
+      return list;
+    },
+    others: function () {
+      return []
     }
   },
   data() {
