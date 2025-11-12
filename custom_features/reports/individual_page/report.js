@@ -136,7 +136,7 @@
 
       data: function () {
         return {
-          currentDepartment: null,
+          currentDepartment: {},
           enrollmentData:  undefined,
           userId: null,
           user: {},
