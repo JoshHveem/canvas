@@ -1,8 +1,11 @@
 /*
   FOR TESTING: url param for disabling custom js and css
   ?global_includes=0
+
+  Upload this to the theme editor, the rest is pulled from https://bridgetools.dev/canvas
+  https://btech.instructure.com/accounts/3/theme_editor
 */
-// https://btech.instructure.com/accounts/3/theme_editor
+
 
 var ISDIDS= [
   1893418, // Josh 
@@ -20,17 +23,17 @@ var ISDIDS= [
 ];
 
 function getCSSVar(cssvar) {
-    var r = document.querySelector(':root');
-    var rs = getComputedStyle(r);
-    let val = rs.getPropertyValue(cssvar)
-    return val;
+  var r = document.querySelector(':root');
+  var rs = getComputedStyle(r);
+  let val = rs.getPropertyValue(cssvar)
+  return val;
 }
 
 // Create a function for setting a variable value
 function setCSSVar(cssvar, val) {
-    var r = document.querySelector(':root');
-    r.style.setProperty(cssvar, val);
-    getCSSVar(cssvar);
+  var r = document.querySelector(':root');
+  r.style.setProperty(cssvar, val);
+  getCSSVar(cssvar);
 }
 
 
@@ -207,6 +210,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
     feature("welcome_banner", /^\/$/);
+    feature('side_menus');
 
     feature('modules/enrollment_dates_student_external', /^\/courses\/[0-9]+(\/modules){0,1}$/);
     feature("login_page", /^\/login/);
@@ -235,8 +239,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         feature("modules/show_undelete", /^\/courses\/[0-9]+(\/modules){0,1}$/);
         feature("sections/conclude_all", /^\/courses\/[0-9]+\/sections\/[0-9]+/);
         feature('transfer_navigation', /^\/courses\/[0-9]+\/settings/);
-      } else {
-        // feature("check_linked_item_completed", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
       }
     }
 
@@ -255,212 +257,111 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     feature("page_formatting/image_map", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
     feature("page_formatting/image_formatting", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
     feature("editor_toolbar/images", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
-    // feature("editor_toolbar/tables", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
     feature("editor_toolbar/headers", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
-    // feature("page_formatting/sidebar_comments", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
     feature("page_formatting/print_rubric", /^\/courses\/[0-9]+\/(assignments)/);
 
     //OTHER FEATURES
     featureISD('hs_section_adder', /^\/accounts\/[0-9]+$/);
-    // featureISD("editor_toolbar/sidebar", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(.+?)\/edit/);
-    // featureISD("course_reviewer/sidebar", /^\/courses\/[0-9]+/);
     featureISD("course_reviewer/assignment_score", /^\/courses\/[0-9]+\/assignments\/[0-9]+/);
     featureISD("course_reviewer/quiz_score", /^\/courses\/[0-9]+\/quizzes\/[0-9]+/);
     featureISD("course_reviewer/discussion_score", /^\/courses\/[0-9]+\/discussion_topics\/[0-9]+/);
     featureISD("course_reviewer/page_score", /^\/courses\/[0-9]+\/pages\/.+/);
-    $.getScript(SOURCE_URL + "/course_data/course_hours.js").done(() => {
-      //GENERAL FEATURES
-      //feature("reports/dashboard/banner-report", /^\/$/);
-      if (!IS_TEACHER) {
+    
+    // need to load course hours before continuing
+    await $.getScript(SOURCE_URL + "/course_data/course_hours.js");
+    //GENERAL FEATURES
+    if (!IS_TEACHER) {
+      feature("reports/individual_page/report", [
+        /^\/$/,
+        /^\/courses\/[0-9]+\/grades$/,
+        /^\/courses\/[0-9]+\/grades\/[0-9]+$/
+      ]);
+    }
+    if (IS_TEACHER) {
+      feature("files/restore_images", /^\/courses\/[0-9]+/);
+      feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
+      feature("hs/enroll", /^\/accounts\/[0-9]+\/enrollhs$/);
+      if (IS_ME) {
         feature("reports/individual_page/report", [
-          /^\/$/,
-          /^\/courses\/[0-9]+\/grades$/,
+          /^\/courses\/[0-9]+\/users\/[0-9]+$/,
+          /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
+          /^\/users\/[0-9]+$/,
+          /^\/courses\/[0-9]+\/grades\/[0-9]+$/
+        ]);
+      } else {
+        feature("reports/individual_page/report", [
+          /^\/courses\/[0-9]+\/users\/[0-9]+$/,
+          /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
+          /^\/users\/[0-9]+$/,
           /^\/courses\/[0-9]+\/grades\/[0-9]+$/
         ]);
       }
-      if (IS_TEACHER) {
-        feature("files/restore_images", /^\/courses\/[0-9]+/);
-        feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
-        feature("hs/enroll", /^\/accounts\/[0-9]+\/enrollhs$/);
-        if (IS_ME) {
-          feature("reports/individual_page/report2", [
-            /^\/courses\/[0-9]+\/users\/[0-9]+$/,
-            /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-            /^\/users\/[0-9]+$/,
-            /^\/courses\/[0-9]+\/grades\/[0-9]+$/
-          ]);
-        } else {
-          feature("reports/individual_page/report", [
-            /^\/courses\/[0-9]+\/users\/[0-9]+$/,
-            /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-            /^\/users\/[0-9]+$/,
-            /^\/courses\/[0-9]+\/grades\/[0-9]+$/
-          ]);
-        }
-      }
-      feature("password_reset", [
-        /^\/courses\/[0-9]+\/users\/[0-9]+$/,
-        /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-        /^\/users\/[0-9]+$/
-      ]);
-      let rCheckInDepartment = /^\/accounts\/([0-9]+)/;
-      if (rCheckInDepartment.test(window.location.pathname)) {
-        CURRENT_DEPARTMENT_ID = parseInt(window.location.pathname.match(rCheckInDepartment)[1]);
-      }
-      if (rCheckInCourse.test(window.location.pathname)) {
-        feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-        $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
-        featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-        IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
-        $.get('/api/v1/courses/' + CURRENT_COURSE_ID, function (courseData) {
-          CURRENT_DEPARTMENT_ID = courseData.account_id;
-          if (CURRENT_DEPARTMENT_ID == 3827) { //NURSING
-            feature('department_specific/replace_course_code_with_name', /^\/courses\/[0-9]+/);
-          }
-          //AVAILABLE TO EVERYONE
-          // $.getScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js", function() {
-          //   feature('modules/enrollment_dates_student', /^\/courses\/[0-9]+(\/modules){0,1}$/);
-          // });
-          feature("quizzes/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
-          feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
-          feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/);
-          feature('speed_grader/answer_key', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/);
-          feature('speed_grader/assignment_page_link', /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/)
-          feature("rubrics/sortable", [/\/rubrics/, /\/assignments\//]);
-          feature("calendar/signup", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
-          feature("highlight_comments_same_date", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
-          if (IS_BLUEPRINT) feature("page_formatting/prep_parts_list_for_sharing", /^\/courses\/[0-9]+\/pages\/parts-list-master/);
-          if (IS_BLUEPRINT) feature('blueprint_association_links');
-          feature('modules/convert_to_page');
-          feature("report_broken_content", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
-          //COURSE SPECIFIC FEATURES
-          //DEPARTMENT SPECIFIC IMPORTS
-          if (IS_TEACHER) {
-            feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
-          }
-          feature("grades_page/highlighted_grades_page_items", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
-          feature("grades_page/attempts", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
+    }
+    feature("password_reset", [
+      /^\/courses\/[0-9]+\/users\/[0-9]+$/,
+      /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
+      /^\/users\/[0-9]+$/
+    ]);
+    let rCheckInDepartment = /^\/accounts\/([0-9]+)/;
+    if (rCheckInDepartment.test(window.location.pathname)) {
+      CURRENT_DEPARTMENT_ID = parseInt(window.location.pathname.match(rCheckInDepartment)[1]);
+    }
 
-          if (CURRENT_DEPARTMENT_ID == 4218) { // DATA ANALYTICS
-            feature("department_specific/data_analytics_feedback_report", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-          }
-          if (CURRENT_DEPARTMENT_ID === 3824) { // DENTAL
-            // feature("grades_page/highlighted_grades_page_items_dental", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
-            feature("rubrics/attempts_data", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
-            feature("rubrics/gen_comment", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
-          }
-          if (CURRENT_DEPARTMENT_ID === 3833) { //business
-            feature("department_specific/business_hs");
-            feature("previous-enrollment-data/previous_enrollment_period_grades");
-          }
-        });
-      }
-
-      if (ENV?.current_user_roles?.includes('root_admin')) {
-        feature("remove_former_employees", /^\/accounts\/3\/users\/[0-9]+/)
-      }
-
+    //only run if in a course
+    if (rCheckInCourse.test(window.location.pathname)) {
+      $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
+      feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
+      let courseData = await $.get('/api/v1/courses/' + CURRENT_COURSE_ID);
+      CURRENT_DEPARTMENT_ID = courseData.account_id;
+      //AVAILABLE TO EVERYONE
+      feature("quizzes/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
+      feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
+      feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Primarily used by Drafting / Digital Design. Possibly others
+      feature('speed_grader/answer_key', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Not sure if this is used.
+      feature('speed_grader/assignment_page_link', /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/)
+      // feature("rubrics/sortable", [/\/rubrics/, /\/assignments\//]); // Canvas built their own thing
+      // feature("calendar/signup", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/); // was kind of an IT only thing that they aren't using and will be replaced by tools like Acuity
+      feature("highlight_comments_same_date", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
+      // feature('modules/convert_to_page'); //useful, but not necessary, and a good place to start with cleanup
+      feature("report_broken_content", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
+      feature("grades_page/highlighted_grades_page_items", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
+      feature("grades_page/attempts", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
       feature("quizzes/question_bank_sorter", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/);
       feature("sort_assignment_groups", /assignments$/)
-      // feature("rubrics/add_criteria_from_csv", new RegExp('/(rubrics|assignments\/)'));
-      // feature("rubrics/create_rubric_from_csv", new RegExp('^/(course|account)s/([0-9]+)/rubrics$'));
-      //ISD ONLY
-      // featureISD("modules/show_hours", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      feature('reports/accreditation-2', /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
+
+      if (IS_BLUEPRINT) feature("page_formatting/prep_parts_list_for_sharing", /^\/courses\/[0-9]+\/pages\/parts-list-master/);
+      if (IS_BLUEPRINT) feature('blueprint_association_links'); // need to add in regex filter
+
       featureISD("modules/delete_module_items", /^\/courses\/[0-9]+(\/modules){0,1}$/);
 
-      //Don't turn on flags unless figure out a way to not display the flag tool by default.
-      ////Ran into issue where Vue wasn't loading properly so nobody could do anything.
-      //if (IS_ISD) externalFeature('https://flags.bridgetools.dev/main.js');
+      //COURSE SPECIFIC FEATURES
+      //DEPARTMENT SPECIFIC IMPORTS
+      if (IS_TEACHER) {
+        feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
+      }
+      if (CURRENT_DEPARTMENT_ID == 3827) { //NURSING
+        feature('department_specific/replace_course_code_with_name', /^\/courses\/[0-9]+/);
+      }
 
-      //this should be working no2w
-      feature('reports/accreditation-2', /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
-      // feature('reports/accreditation', /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
+      if (CURRENT_DEPARTMENT_ID == 4218) { // DATA ANALYTICS
+        feature("department_specific/data_analytics_feedback_report", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      }
+      if (CURRENT_DEPARTMENT_ID === 3824) { // DENTAL
+        feature("rubrics/attempts_data", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
+        feature("rubrics/gen_comment", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
+      }
+      if (CURRENT_DEPARTMENT_ID === 3833) { //business
+        // need to add in the regex stuff
+        feature("department_specific/business_hs");
+        feature("previous-enrollment-data/previous_enrollment_period_grades");
+      }
+    }
 
-      // if (IS_ME) $.getScript("https://bridgetools.dev/collaborator/import.js");
-      // featureISD("cleoducktra/main", /^/);
-      // if (IS_ME) featureISD("cleoducktra/quiz-questions", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/);
-    });
-  }
-
-  // main sidebar
-  function createSideMenuButton(text, url, svg) {
-    let cssText = text.toLowerCase().replace(" ", "-");
-    let sideMenu = $("#menu");
-    sideMenu.append(`
-      <li class="ic-app-header__menu-list-item">
-        <a 
-          id="global_nav_${cssText}_link" 
-          role="button" 
-          class="ic-app-header__menu-list-link" 
-          data-track-category="${text}" 
-          data-track-label="${text} button" 
-          href="${url}"
-        >
-          <div class="menu-item-icon-container" role="presentation">
-            ${svg}
-          </div>
-          <div class="menu-item__text">
-            ${text}
-          </div>
-        </a>      
-      </li>
-    `);
-  }
-
-  if (IS_TEACHER) {
-    // createSideMenuButton(
-    //   'Custom Features', 
-    //   'https://view.monday.com/9818571309-60a24421d8442789fed38ceaaaef4e57?r=use1', 
-    //   `<svg
-    //     xmlns="http://www.w3.org/2000/svg"
-    //     viewBox="0 0 120 120"
-    //     width="100%"
-    //   >
-    //     <polygon
-    //       points="60,2 115,35 115,85 60,118 5,85 5,35"
-    //       fill="none"
-    //       stroke="white"
-    //       stroke-width="10"
-    //     />
-    //     <text
-    //       x="60"
-    //       y="80"
-    //       font-family="Arial, sans-serif"
-    //       text-anchor="middle"
-    //       font-size="50"
-    //       font-weight="bold"
-    //       fill="white"
-    //     >
-    //       ISD
-    //     </text>
-    //   </svg>`
-    // );
-    createSideMenuButton(
-      'Contact ISD',
-      'https://teams.microsoft.com/l/chat/0/0?users=jhveem@btech.edu,katie.stapley@btech.edu,logan.mano@btech.edu,mikaela.wilkins@btech.edu',
-      `<svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 120 120"
-        width="100%"
-      >
-        <polygon
-          points="60,2 115,35 115,85 60,118 5,85 5,35"
-          fill="none"
-          stroke="white"
-          stroke-width="10"
-        />
-        <text
-          x="60"
-          y="80"
-          font-family="Arial, sans-serif"
-          text-anchor="middle"
-          font-size="50"
-          font-weight="bold"
-          fill="white"
-        >
-          ISD 
-        </text>
-      </svg>`
-    )
+    if (ENV?.current_user_roles?.includes('root_admin')) {
+      feature("remove_former_employees", /^\/accounts\/3\/users\/[0-9]+/)
+    }
   }
 })();

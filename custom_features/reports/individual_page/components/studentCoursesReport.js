@@ -170,7 +170,6 @@ Vue.component('student-courses-report', {
       let courses = this.tree?.courses ?? {};
       let core = courses?.core ?? {};
       let list = [];
-      console.log(core);
       console.log(this.user.courses);
       for (let courseCode in core) {
         let data = core[courseCode];
@@ -185,7 +184,6 @@ Vue.component('student-courses-report', {
         }
         list.push(data);
       }
-      console.log(list);
       list.sort((a, b) => {
         const ad = String(a.course_code || '').toLowerCase();
         const bd = String(b.course_code || '').toLowerCase();

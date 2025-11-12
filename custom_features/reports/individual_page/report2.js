@@ -5,6 +5,7 @@
   Show which tab you're on
 */
 (async function () {
+  console.log("REPORT 2")
   //Confirm with Instructional Team before going live
   async function postLoad() {
     let vueString = '';
@@ -13,12 +14,12 @@
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-individual-report-vue"></div>');
-    $("#canvas-individual-report-vue").append(vueString);
+    canvasbody.after('<div id="canvas-individual-report-2-vue"></div>');
+    $("#canvas-individual-report-2-vue").append(vueString);
     let gen_report_button;
     let menu_bar;
     if (/^\/$/.test(window.location.pathname)) {
-      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-2-vue-gen"></a>');
       let plannerHeader = $(".PlannerHeader");
       if (plannerHeader.length > 0) {
         menu_bar = plannerHeader;
@@ -26,19 +27,19 @@
         menu_bar = $("#right-side div").last();
       }
     } else if (/^\/courses\/[0-9]+\/users\/[0-9]+$/.test(window.location.pathname)) {
-      gen_report_button = $('<a style="cursor: pointer;" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a style="cursor: pointer;" id="canvas-individual-report-2-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     } else {
-      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
+      gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-2-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     }
     gen_report_button.append('Student Report');
     gen_report_button.appendTo(menu_bar);
-    let modal = $('#canvas-individual-report-vue');
+    let modal = $('#canvas-individual-report-2-vue');
     modal.hide();
 
     APP = new Vue({
-      el: '#canvas-individual-report-vue',
+      el: '#canvas-individual-report-2-vue',
       mounted: async function () {
         this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;
@@ -225,7 +226,7 @@
               `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
             );
             console.log(this.bridgetoolsUser);
-            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}?include[]=last_login`))?.[0];
             console.log(this.canvasUser);
 
           } catch (err) {
@@ -240,10 +241,11 @@
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = this.bridgetoolsUser.last_login;
+          user.last_login = this.canvasUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.transfer_courses = [];
+          console.log(user);
 
           // Guard degree ops
           const date = new Date();
@@ -291,7 +293,7 @@
       }
     })
     gen_report_button.click(function () {
-      let modal = $('#canvas-individual-report-vue');
+      let modal = $('#canvas-individual-report-2-vue');
       // APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",

@@ -4,11 +4,11 @@
       <div class="btech-tabs">
         <ul>
           <li @click="menu='report'">Progress Report</li>
-          <!-- <li @click="menu='grades'">Grades Report</li> -->
-          <!-- <li @click="menu='hours'">Hours Report</li> -->
-          <!-- <li @click="menu='employment skills'">Employment Skills</li> -->
+          <li @click="menu='grades'">Grades Report</li>
+          <li @click="menu='hours'">Hours Report</li>
+          <li @click="menu='employment skills'">Employment Skills</li>
           <li @click="menu='period'">Grades Between Dates</li>
-          <!-- <li v-if="IS_TEACHER" @click="menu='enroll'">HS Enrollment Periods</li> -->
+          <li v-if="IS_TEACHER" @click="menu='enroll'">HS Enrollment Periods</li>
           <li style='float: right;' v-on:click='close()'>X</li>
         </ul>
       </div>
@@ -26,7 +26,7 @@
           <div v-else>
             <div v-if="menu=='report'">
               <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
-                <select @change="changeTree(user)" v-model="currentDegree">
+                <select @change="changeTree(user)" v-model="currentDepartment">
                   <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
                 </select>
                 <show-student-ind-credits
@@ -41,7 +41,7 @@
             </div>
             <div v-if="menu=='report-old'">
               <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
-                <select @change="changeTree(user)" v-model="currentDegree">
+                <select @change="changeTree(user)" v-model="currentDepartment">
                   <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
                 </select>
                 <show-student-ind-credits
