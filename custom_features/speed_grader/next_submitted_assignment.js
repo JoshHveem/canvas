@@ -34,6 +34,7 @@ async function postLoad() {
     student_ids: [student_id],
     workflow_state: 'submitted'
   });
+  console.log(submissions)
 
   if (!Array.isArray(submissions) || submissions.length === 0) return;
 
