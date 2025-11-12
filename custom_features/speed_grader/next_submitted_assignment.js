@@ -1,5 +1,21 @@
 // == Next Assignment Button (Observer Format) ==
-function createNextButton(nextUrl) {
+function showSuccessToast(message) {
+  // Minimal green toast; auto-removes after 3s
+  const toast = $(`
+    <div role="alert" aria-live="polite"
+         style="
+           position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+           background: #2e7d32; color: #fff; padding: 12px 16px;
+           border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+           font-size: 14px;">
+      ${message}
+    </div>
+  `);
+  $('body').append(toast);
+  setTimeout(() => toast.fadeOut(200, () => toast.remove()), 3000);
+}
+
+function createNextButton() {
   const btn = $(`
     <button id="next-assignment-button"
             class="Button Button--icon-action gradebookMoveToNext next"
@@ -8,17 +24,26 @@ function createNextButton(nextUrl) {
       <i class="icon-assignment next" aria-hidden="true">Next</i>
     </button>
   `);
+
   btn.on('click', function () {
-    window.location.href = nextUrl;
+    const nextUrl = $(this).data('nextUrl');
+    if (nextUrl) {
+      window.location.href = nextUrl;
+    } else {
+      showSuccessToast('All current submissions graded');
+    }
   });
+
   return btn;
 }
 
 function ensureNextButton(container, nextUrl) {
-  if (!nextUrl) return; // nothing to add if we don't have a destination
-  if ($('#next-assignment-button').length === 0) {
-    container.append(createNextButton(nextUrl));
+  let btn = $('#next-assignment-button');
+  if (btn.length === 0) {
+    btn = createNextButton().appendTo(container);
   }
+  // Always keep the latest destination (or undefined) on the button
+  btn.data('nextUrl', nextUrl);
 }
 
 async function postLoad() {
@@ -29,46 +54,41 @@ async function postLoad() {
 
   const student_id = parseInt(pieces[3], 10);
 
+  // Target container where the button lives in SpeedGrader
+  const container = $('#gradebook_header .studentSelection');
+  if (container.length === 0) return;
+
+  // Add the button immediately (will show toast until we know a next URL)
+  ensureNextButton(container, undefined);
+
   // Pull submitted assignments for the student
   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
     student_ids: [student_id],
     workflow_state: 'submitted'
   });
-  console.log(submissions)
 
-  if (!Array.isArray(submissions) || submissions.length === 0) return;
-
-  // Determine "next" assignment relative to current ENV.assignment_id
-  let nextAssignment = submissions[0];
-  for (let i = 0; i < submissions.length; i++) {
-    const submission = submissions[i];
-    if (submission.assignment_id === ENV.assignment_id) {
-      if (i !== submissions.length - 1) {
-        nextAssignment = submissions[i + 1];
-      } else {
-        // we're on the last submitted item; no next destination
-        nextAssignment = undefined;
+  // Compute next assignment URL if possible
+  let nextUrl;
+  if (Array.isArray(submissions) && submissions.length > 0) {
+    // Sort by something stable if needed; assuming API returns in desired order already
+    let nextAssignment = undefined;
+    for (let i = 0; i < submissions.length; i++) {
+      const submission = submissions[i];
+      if (submission.assignment_id === ENV.assignment_id) {
+        if (i !== submissions.length - 1) nextAssignment = submissions[i + 1];
+        break;
       }
-      break;
+    }
+    if (nextAssignment && nextAssignment.assignment_id) {
+      nextUrl = `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignment.assignment_id}&student_id=${student_id}`;
     }
   }
 
-  // Build next URL if available
-  let nextUrl = undefined;
-  if (nextAssignment && nextAssignment.assignment_id) {
-    nextUrl = `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignment.assignment_id}&student_id=${student_id}`;
-  }
-
-  // Target container where the button lives in SpeedGrader
-  const container = $('#gradebook_header .studentSelection');
-  if (container.length === 0) return;
-
-  // Initial ensure
+  // Update the button with the computed nextUrl (or leave undefined for toast)
   ensureNextButton(container, nextUrl);
 
   // Keep it present as the DOM changes
   const observer = new MutationObserver((mutationsList) => {
-    console.log('ran mutation observer for next assignment button');
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         ensureNextButton(container, nextUrl);
@@ -83,7 +103,6 @@ async function postLoad() {
   try {
     await postLoad();
   } catch (e) {
-    // optional: log or swallow
     console.error('Next Assignment observer init failed:', e);
   }
 })();
