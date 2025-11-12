@@ -29,6 +29,6 @@
     nextAssignmentButton.click(function () {
       window.location.href = (url);
     });
-    $("#gradebook_header .subheadContent--flex-end").append(nextAssignmentButton);;
+    $("#gradebook_header .studentSelection").append(nextAssignmentButton);;
   }
 })();
