@@ -131,12 +131,12 @@ Vue.component('course-row-ind', {
   computed: {
     checkValidCourseId: function() {
       let vm = this;
-      if (vm.courseId === undefined) return false;
+      if (vm.courseId === undefined || vm.courseId === '') return false;
       return true;
     },
     courseUrl: function() {
       let vm = this;
-      if (vm.courseId === undefined) return '';
+      if (vm.courseId === undefined || vm.courseId === '') return '';
       return 'https://btech.instructure.com/courses/' + vm.courseId + '/grades/' + vm.userCanvasId
     },
     enrolled: function() {
