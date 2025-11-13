@@ -286,13 +286,33 @@ Vue.component('student-courses-report', {
   },
   data() {
     return {
-      colors: bridgetools.colors
+      colors: bridgetools.colors,
+      donut: {}
     }
   },
   mounted() {
     // let entry = new Date();
+    let donut = new ProgressGraphDonut();
+    this.donut = donut;
   },
+
   methods: {
+    updateHeader () {
+      let donut = this.donut;
+      donut._init('btech-department-report-student-progress-donut', this.colors.gray);
+      donut.fillHours( 
+        {
+          max: this.studentTree.hours, 
+          hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
+          color: this.whatif ? this.colors.purple : this.colors.blue, 
+          // next: {
+          //   max: this.studentTree.hours, 
+          //   hours: this.user.finalized_credits, 
+          //   color: this.colors.blue, 
+          // }
+        }
+      );
+    },
     getUserCourseData(courseCode) {
       for (let c in this.user.courses) {
         let course = this.user.courses[c];
