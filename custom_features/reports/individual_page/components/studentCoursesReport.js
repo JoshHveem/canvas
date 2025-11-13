@@ -304,8 +304,8 @@ Vue.component('student-courses-report', {
       donut.fillHours( 
         {
           max: this.studentTree.hours, 
-          hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
-          color: this.whatif ? this.colors.purple : this.colors.blue, 
+          hours: this.degree.graded_hours, 
+          color: this.colors.blue, 
           // next: {
           //   max: this.studentTree.hours, 
           //   hours: this.user.finalized_credits, 
