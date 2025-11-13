@@ -219,7 +219,6 @@ Vue.component('student-courses-report', {
     },
     electives: function () {
       let courses = this.tree?.courses ?? {};
-      console.log(this.tree);
       let electives = courses?.elective ?? {};
       let list = [];
       for (let courseCode in electives) {
@@ -244,6 +243,7 @@ Vue.component('student-courses-report', {
     },
     others: function () {
       const userCourses = this.user?.courses ?? {};
+      console.log(userCourses);
       const courses = this.tree?.courses ?? {};
       const core = courses.core ?? {};
       const electives = courses.elective ?? {};
