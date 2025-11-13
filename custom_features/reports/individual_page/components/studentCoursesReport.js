@@ -1,13 +1,6 @@
 Vue.component('student-courses-report', {
   template:` 
     <div>
-      <ind-header-credits
-        :colors="colors"
-        :user="user"
-        :degree="degree"
-        :tree="tree"
-        :settings="settings"
-      ></ind-header-credits> 
 
       <!-- courses -->
       <div>

@@ -44,6 +44,15 @@
             {{ rt.label }}
           </button>
         </div>
+        <div>
+        <ind-header-credits
+          :colors="colors"
+          :user="user"
+          :degree="degree"
+          :tree="tree"
+          :settings="settings"
+        ></ind-header-credits> 
+      </div>
         <div v-show="settings.reportType === 'student-courses'">
           <student-courses-report
             :user="user"
