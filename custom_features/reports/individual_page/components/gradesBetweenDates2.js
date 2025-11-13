@@ -41,8 +41,8 @@
                 <th>Course</th>
                 <th>Term Grades</th>
                 <th>Term Completed</th>
-                <th>Course Hours</th>
-                <th>Hours Completed</th>
+                <th>Course Credits</th>
+                <th>Credits Completed</th>
               </tr>
             </thead>
             <tbody border='1'>
@@ -58,9 +58,9 @@
 
                 <td>{{getGradesBetweenDates(course.course_id)}}</td>
                 <td>{{getProgressBetweenDates(course.course_id)}}</td>
-                <td><input style="padding: 0px 4px; margin: 0px; width: 3rem;" v-model="course.hours" type="text">
+                <td><input style="padding: 0px 4px; margin: 0px; width: 3rem;" v-model="course.credits" type="text">
                 </td>
-                <td>{{getHoursCompleted(course)}}</td>
+                <td>{{getCreditsCompleted(course)}}</td>
               </tr>
               <tr height="10px"></tr>
             </tbody>
@@ -85,16 +85,16 @@
                 <td>{{weightedGradeForTerm()}}%</td>
               </tr>
               <tr v-if='showGradeDetails'>
-                <td><b>Hours Completed</b></td>
-                <td>{{sumHoursCompleted()}}</td>
+                <td><b>Credits Completed</b></td>
+                <td>{{sumCreditsCompleted()}}</td>
               </tr>
               <tr v-if='showGradeDetails'>
-                <td><b>Hours Enrolled</b></td>
-                <td>{{estimatedHoursEnrolled}}</td>
+                <td><b>Credits Enrolled</b></td>
+                <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
               <tr>
-                <td><b>Estimated Hours Required</b></td>
-                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedHoursRequired" type="text">
+                <td><b>Estimated Credits Required</b></td>
+                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
                 </td>
               </tr>
             </tfoot>
@@ -196,8 +196,8 @@
         includedAssignments: {},
         courseTotalPoints: {},
         courseAssignmentGroups: {},
-        estimatedHoursEnrolled: 0,
-        estimatedHoursRequired: 0,
+        estimatedCreditsEnrolled: 0,
+        estimatedCreditsRequired: 0,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
         loadingProgress: 0,
@@ -209,7 +209,7 @@
         columns: [
           new Column('Name', '', false, 'string', false, false),
           new Column('State', '', false, 'string', false),
-          new Column('Hours', '', false, 'number', false),
+          new Column('Credits', '', false, 'number', false),
           new Column('Grade To Date', '', true, 'number', true),
           new Column('Final Grade', '', true, 'number', true),
           new Column('Points', '', true, 'number', true),
@@ -585,6 +585,7 @@
             let state = active ? 'Active' : completed ? 'Completed' : 'N/A';
             let courseRow = this.newCourse(course.id, state, course.name, year, course.course_code);
             course.hours = courseRow.hours;
+            course.credits = courseRow.hours / 30;
           }
           this.loadingProgress += (50 / courses.length) * 0.5;
 
@@ -608,9 +609,8 @@
         this.selectedTerm = term;
         this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
         this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
-        this.estimatedHoursEnrolled = new Date(term.exit_date) - new Date(term.entry_date);
-        console.log("ESTIMATED HOURS")
-        console.log(this.estimatedHoursEnrolled / (60 * 60 * 24 * 7 * 5 * 1000));
+        this.estimatedCreditsEnrolled = new Date(term.exit_date) - new Date(term.entry_date);
+        this.estimatedCreditsEnrolled /= (60 * 60 * 24 * 7 * 5 * 1000);
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
       },
@@ -619,14 +619,14 @@
         this.courses.forEach(course => sum += this.progressBetweenDates[course.id]);
         return sum;
       },
-      sumHoursCompleted() {
+      sumCreditsCompleted() {
         let sum = 0;
         this.courses.forEach(course => {
           let progress = this.progressBetweenDates[course.course_id];
-          let hours = course.hours;
-          if (hours == "N/A") hours = 0;
-          if (progress > 0 && hours > 0) {
-            sum += Math.round(progress * hours) * .01;
+          let credits = course.hours / 30;
+          if (credits == "N/A") hours = 0;
+          if (progress > 0 && credits > 0) {
+            sum += Math.round(progress * credits) * .01;
           }
         })
         return parseFloat(sum.toFixed(2)) ?? 0;
@@ -634,21 +634,21 @@
 
       weightedGradeForTerm() {
         let totalWeightedGrade = 0;
-        let totalHoursCompleted = this.sumHoursCompleted();
+        let totalCreditsCompleted = this.sumCreditsCompleted();
         let totalProgress = this.sumProgressBetweenDates();
         for (let c in this.courses) {
           let course = this.courses[c];
           let progress = this.progressBetweenDates[course.course_id];
           let grade = this.gradesBetweenDates[course.course_id];
           if (progress !== undefined && grade !== undefined && grade != "N/A") {
-            if (totalHoursCompleted === 0) {
+            if (totalCreditsCompleted === 0) {
               let weightedGrade = grade * (progress / totalProgress);
               totalWeightedGrade += weightedGrade;
             } else {
-              let hoursCompleted = this.getHoursCompleted(course);
+              let creditsCompleted = this.getCreditsCompleted(course);
               let weightedGrade = grade;
-              //have some check to not = 0 if total hours completed is 0
-              weightedGrade *= (hoursCompleted / totalHoursCompleted);
+              //have some check to not = 0 if total credits completed is 0
+              weightedGrade *= (creditsCompleted / totalCreditsCompleted);
               totalWeightedGrade += weightedGrade;
             }
           }
@@ -658,18 +658,18 @@
         return output;
       },
 
-      getHoursEnrolled(courseId) {
-        let hours = this.hoursBetweenDates[courseId];
-        if (hours !== undefined) return hours;
+      getCreditsEnrolled(courseId) {
+        let credits = this.hoursBetweenDates[courseId] / 30;
+        if (credits !== undefined) return credits;
         return "N/A";
       },
 
       weightedFinalGradeForTerm() {
-        let requiredHours = this.estimatedHoursRequired * .67;
-        let hoursCompleted = this.sumHoursCompleted();
+        let requiredCredits = this.estimatedCreditsRequired;
+        let creditsCompleted = this.sumCreditsCompleted();
         let grade = this.weightedGradeForTerm();
-        if ((hoursCompleted < requiredHours) && (requiredHours !== 0 && hoursCompleted !== 0)) {
-          grade *= (hoursCompleted / requiredHours);
+        if ((creditsCompleted < requiredCredits) && (requiredCredits !== 0 && creditsCompleted !== 0)) {
+          grade *= (creditsCompleted / requiredCredits);
         }
         let output = grade.toFixed(2);
         if (isNaN(output)) return 0;
@@ -688,12 +688,13 @@
         return "";
       },
 
-      getHoursCompleted(course) {
+      getCreditsCompleted(course) {
         let progress = this.progressBetweenDates[course.course_id];
         let completed = 0;
         if (progress !== undefined) completed = parseFloat((Math.round(progress * course.hours) * .01).toFixed(2));
         if (isNaN(completed)) completed = 0;
-        return completed;
+        credits = completed / 30;
+        return credits;
       },
 
       sortColumn(header) {
@@ -903,12 +904,11 @@
         }
         this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
-        //estimate the hours enrolled from the hours between dates data collected
         //this value can be edited by the instructor
-        this.estimatedHoursEnrolled = this.selectedTerm.hours;
-        let estimatedHoursRequired = Math.floor(this.estimatedHoursEnrolled * midtermPercentCompleted);
-        if (isNaN(estimatedHoursRequired)) estimatedHoursRequired = 0;
-        this.estimatedHoursRequired = estimatedHoursRequired;
+        this.estimatedCreditsEnrolled = this.selectedTerm.hours;
+        let estimatedCreditsRequired = Math.floor(this.estimatedCreditsEnrolled * midtermPercentCompleted);
+        if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
+        this.estimatedCreditsRequired = estimatedCreditsRequired;
       },
 
       calcCourseGroupPointsPossible(courseId, groupId, sumGroupWeights) {
