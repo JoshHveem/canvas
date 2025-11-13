@@ -693,7 +693,7 @@
         let completed = 0;
         if (progress !== undefined) completed = parseFloat((Math.round(progress * course.hours) * .01).toFixed(2));
         if (isNaN(completed)) completed = 0;
-        credits = completed / 30;
+        credits = Math.round((completed / 30) * 100) / 100;
         return credits;
       },
 
