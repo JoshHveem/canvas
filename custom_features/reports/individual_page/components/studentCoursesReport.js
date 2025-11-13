@@ -315,20 +315,18 @@ Vue.component('student-courses-report', {
   methods: {
     updateHeader () {
       let donut = this.donut;
-      donut._init('btech-department-report-student-progress-donut', this.colors.gray);
-      console.log(this.tree);
-      donut.fillHours( 
-        {
-          max: this?.tree?.hours ?? 0, 
-          hours: this?.degree?.graded_hours ?? 0, 
-          color: this.colors.blue, 
-          // next: {
-          //   max: this.studentTree.hours, 
-          //   hours: this.user.finalized_credits, 
-          //   color: this.colors.blue, 
-          // }
-        }
-      );
+      try {
+        donut._init('btech-department-report-student-progress-donut', this.colors.gray);
+        donut.fillHours( 
+          {
+            max: this?.tree?.hours ?? 0, 
+            hours: this?.degree?.graded_hours ?? 0, 
+            color: this.colors.blue, 
+          }
+        );
+      } catch (err) {
+        console.error(err);
+      }
     },
     getUserCourseData(courseCode) {
       for (let c in this.user.courses) {
