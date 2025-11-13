@@ -157,7 +157,9 @@
       methods: {
         resetUser() {
           console.log(this.$refs);
-          this.$refs.studentcoursesreport.updateHeader();
+          if (this?.$refs?.studentcoursesreport) {
+            this.$refs.studentcoursesreport.updateHeader();
+          }
         },
         onReportChange() {
           this.saveSettings(this.settings);
