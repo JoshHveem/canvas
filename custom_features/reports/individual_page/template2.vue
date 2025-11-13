@@ -44,21 +44,24 @@
             {{ rt.label }}
           </button>
         </div>
-        <student-courses-report
-          v-if="settings.reportType === 'student-courses'"
-          :user="user"
-          :degree="currentDegree"
-          :settings="settings"
-          :tree="tree"
-        ></student-courses-report>
-        <show-grades-between-dates
-          v-if="enrollmentData != undefined"
-          :user="user"
-          :enrollments="enrollmentData"
-          :user-id="userId"
-          :terms="terms"
-          :IS-TEACHER="IS_TEACHER"
-        ></show-grades-between-dates>
+        <div v-show="settings.reportType === 'student-courses'">
+          <student-courses-report
+            :user="user"
+            :degree="currentDegree"
+            :settings="settings"
+            :tree="tree"
+          ></student-courses-report>
+        </div>
+        <div v-show="settings.reportType === 'student-grades'">
+          <show-grades-between-dates
+            v-if="enrollmentData != undefined"
+            :user="user"
+            :enrollments="enrollmentData"
+            :user-id="userId"
+            :terms="terms"
+            :IS-TEACHER="IS_TEACHER"
+          ></show-grades-between-dates>
+        </div>
       </div>
     </div>
   </div>
