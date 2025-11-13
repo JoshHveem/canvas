@@ -609,8 +609,13 @@
         this.selectedTerm = term;
         this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
         this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
-        this.estimatedCreditsEnrolled = new Date(term.exit_date) - new Date(term.entry_date);
-        this.estimatedCreditsEnrolled /= (60 * 60 * 24 * 7 * 5 * 1000);
+        this.estimatedCreditsEnrolled = 
+          Math.round(
+            (
+              (new Date(term.exit_date) - new Date(term.entry_date)) 
+              / (60 * 60 * 24 * 7 * 5 * 1000)
+            ) * 100
+          ) / 100;
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
       },
