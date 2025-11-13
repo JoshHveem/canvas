@@ -905,7 +905,6 @@
         this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
         //this value can be edited by the instructor
-        this.estimatedCreditsEnrolled = this.selectedTerm.hours;
         let estimatedCreditsRequired = Math.floor(this.estimatedCreditsEnrolled * midtermPercentCompleted);
         if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
         this.estimatedCreditsRequired = estimatedCreditsRequired;
