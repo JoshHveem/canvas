@@ -262,7 +262,6 @@
           });
 
           this.currentDegree = user?.degrees?.[0] ?? { major_code: '', academic_year: '' };
-          console.log(this.currentDegree);
 
           let tree;
           if (user?.degrees?.[0]) {

@@ -3,16 +3,17 @@ Vue.component('ind-header-credits', {
     <div
       style="margin-block-end: 2rem;"
     >
+      <!-- Name -->
       <div style="margin-bottom: 2rem;">
         <div class="btech-user-name" style="margin-bottom: .25rem;">
           <div style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
             <a :href="'https://btech.instructure.com/users/' + user.canvas_id"
               target="_blank">
-              <strong>{{settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")"}}<span v-if="user.pronoun !== undefined">{{user.pronoun}}</span></strong>
+              <strong>{{settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")"}}</strong>
             </a>
           </div>
           <div
-            v-if="user.enrollment_type == 'CS' && user?.academic_probation?.probation != undefined"
+            v-if="user?.academic_probation?.probation != undefined"
             :title="user?.academic_probation?.probation == undefined ? 'No current probations' : user?.academic_probation?.probation" 
             style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
           >
@@ -22,22 +23,13 @@ Vue.component('ind-header-credits', {
               height="1.5rem"
             ></icon-alert>
           </div>
-          <div 
-            v-if="user.enrollment_type == 'CS' && user?.leave_of_absence?.end != undefined"
-            style="display: inline-block; padding-right: .5rem; font-size: 1rem;">
-            <span 
-              class="btech-pill-text" 
-              :title="user?.leave_of_absence?.end ? 'Ends ' + dateToString(new Date(user.leave_of_absence.end)) : 'Not on LOA'"
-              :style="{
-                'cursor': 'help',
-                'background-color': user?.leave_of_absence?.end ? colors.red : colors.gray,
-                'color': colors.white,
-              }">
-                LOA
-            </span>
+          <div
+            style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
+          >
+            {{ degree?.campus }}
           </div>
           <div
-            v-if="user.enrollment_type == 'CS' && user.distance_approved"
+            v-if=" user?.distance_approved"
             :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'" 
             style="cursor: help; display: inline-block; padding-right: .5rem; vertical-align: middle;"
           >
@@ -49,22 +41,10 @@ Vue.component('ind-header-credits', {
           <div style="display: inline-block; width: 3rem; font-size: 1rem;">
             <span 
               class="btech-pill-text" :style="{
-                'background-color': whatif ? colors.gray : user?.average_score ? (Math.round(user.average_score * 100) < 60 ? colors.red : Math.round(user.average_score * 100) < 80 ? colors.yellow : colors.green) : colors.gray,
-                'color': whatif ? colors.black : user?.average_score ? colors.white : colors.black,
+                'background-color': degree?.average_score ? (Math.round(degree.average_score) < 60 ? colors.red : Math.round(degree.average_score) < 80 ? colors.yellow : colors.green) : colors.gray,
+                'color': degree?.average_score ? colors.white : colors.black,
               }">
-              {{user?.average_score ? Math.round(user.average_score * 100) + '%' : "N/A"}}
-            </span>
-          </div>
-          <div 
-            v-if="whatif && user?.whatif?.average_score !== undefined"
-            style="display: inline-block; width: 3rem; font-size: 1rem;">
-            <span 
-              v-if="whatif && user?.whatif?.average_score !== undefined"
-              class="btech-pill-text" :style="{
-                'background-color': Math.round(whatifdata.average_score * 100) < 60 ? colors.red : Math.round(whatifdata.average_score * 100) < 80 ? colors.yellow : colors.green,
-                'color': colors.white,
-              }">
-              {{Math.round(whatifdata.average_score * 100) + '%'}}
+              {{degree?.average_score ? Math.round(degree.average_score) + '%' : "N/A"}}
             </span>
           </div>
           <div 
@@ -78,46 +58,19 @@ Vue.component('ind-header-credits', {
                   'color': '#000000',
                 }"
               >
-                {{dateToString(user.last_update)}}
+                {{dateToString(user?.last_update)}}
               </span>
             </div>
           </div>
         </div>
       </div>
+
       <div 
         class="btech-department-report-student-hours"
       >
         <div style="height: 200px; width: 200px;" class="btech-department-report-student-avatar">
           <img style="position: absolute;" v-if="user.avatar_url !== undefined" :src="user.avatar_url">
-          <div
-            v-show="avatarHover"
-            style="
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              position: absolute;
-              border-radius: 50%; 
-              height: 180px;
-              width: 180px;
-              padding: 10px;
-            "
-            :style="{
-              'background-color': (
-                (user.egp <= 100) ? colors.darkGreen : (user.egp < 150 ? colors.orange: colors.darkRed)
-              ) + 88,
-              'color': '#ffffff',
-            }"
-          >
-            <div
-              style="display:grid;" 
-            >
-              <div style="text-align: center; font-size: 1rem;">EGP<br>Estimated<br>Graduation Progress</div>
-              <div style="text-align: center; font-size: 2rem;">{{user.egp}}%</div>
-            </div>
-          </div>
           <div 
-            @mouseover="avatarHover = true;"
-            @mouseleave="avatarHover = false;"
             id="btech-department-report-student-progress-donut" style="position: absolute;"></div>
         </div>
         <div style="display: inline-block;">
@@ -130,7 +83,7 @@ Vue.component('ind-header-credits', {
                   'background-color': colors.gray,
                   'color': '#000000',
                 }">
-                {{studentTree.hours}}
+                {{tree.hours}}
               </span>
             </div>
           </div>
@@ -142,10 +95,10 @@ Vue.component('ind-header-credits', {
               <span 
                 class="btech-pill-text" 
                 :style="{
-                  'background-color': whatif ? colors.purple : colors.blue,
+                  'background-color': colors.blue,
                   'color': '#ffffff',
                 }">
-                {{whatif ? user.completed_credits + ' + ' + (whatifdata.completed_credits - user.completed_credits) : user.completed_credits}}
+                {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }}
               </span>
             </div>
           </div>
@@ -157,26 +110,12 @@ Vue.component('ind-header-credits', {
             class="data-item">
             <span style="display: inline-block; width: 12rem;">Start Date</span>
             <span 
-              v-if="user.egp && user.completed_hours"
+              v-if="degree?.entry_date"
               class="btech-pill-text" :style="{
               'background-color': colors.gray,
               'color': colors.black,
             }">
-              {{dateToString(user.start)}}
-            </span>
-          </div>
-          <div 
-            style="cursor: help;"
-            title="A projection of when this student will finish based on their current pace."
-            class="data-item">
-            <span style="display: inline-block; width: 12rem;">Projected Completion Date</span>
-            <span 
-              v-if="user.egp && user.completed_hours"
-              class="btech-pill-text" :style="{
-              'background-color': colors.blue,
-              'color': colors.white,
-            }">
-              {{dateToString(projected_completion_date)}}
+              {{dateToString(degree?.entry_date ?? '')}}
             </span>
           </div>
           <div 
@@ -194,7 +133,7 @@ Vue.component('ind-header-credits', {
             </span>
           </div>
         </div>
-      </div>
+      </div> 
     </div>
   `,
   props: {
@@ -206,17 +145,13 @@ Vue.component('ind-header-credits', {
       type: Object,
       default: () => ({})
     },
-    studentTree: {
+    degree: {
       type: Object,
       default: () => ({})
     },
-    whatifdata: {
+    tree: {
       type: Object,
       default: () => ({})
-    },
-    whatif: {
-      type: Boolean,
-      default: undefined
     },
     settings: {
       type: Object,
@@ -225,25 +160,6 @@ Vue.component('ind-header-credits', {
     updateinc: Number
   },
   computed: {
-    estimated_completion_date() {
-      let weekHours = Object.values(this.user.contracted_hours).reduce((a,b) => a + b);
-      let numWeeks = (this.studentTree.hours - this.user.completed_hours) / weekHours;
-      let estimated = new Date();
-      estimated.setDate(estimated.getDate() + Math.round(numWeeks) * 7);
-      return estimated;
-    },
-    projected_completion_date() {
-      let weekHours = Object.values(this.user.contracted_hours).reduce((a,b) => a + b);
-      if (!this?.user?.end || !this?.user?.start) return "";
-      let start = new Date(this.user.start);
-      let end = new Date(this.user.end);
-      let numWeeks = (this.studentTree.hours - this.user.completed_credits) / this.studentTree.hours;
-      let remaining = (end - start) * this.user.egp * 0.01;
-      let projected = new Date(start.getTime() + remaining);
-      // projected.setDate(projected.getDate() + Math.round(numWeeks * this.user.egp * 0.01) * 7);
-      return projected;
-
-    }
   },
   watch: {
   },
@@ -281,44 +197,6 @@ Vue.component('ind-header-credits', {
       } catch (err) {
         console.error(err);
       }
-    },
-
-    getEGPBG(egp) {
-      return egp <= 100 ? this.colors.green : egp < 150 ? this.colors.yellow : this.colors.red;
-    },
-
-    calcClockHoursRatioText() {
-      let app = this;
-      let user = app.user;
-      let clock_hours = 0;
-      if (user.clock_hours !== undefined) {
-        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
-      }
-      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return "N/A";
-      return Math.round((clock_hours/ user.completed_hours) * 100) + "%";
-    },
-    calcClockHoursRatioTextColor() {
-      let app = this;
-      let user = app.user;
-      let clock_hours = 0;
-      if (user.clock_hours !== undefined) {
-        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
-      }
-      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return "#000000";
-      return "#FFFFFF";
-
-    },
-    calcClockHoursRatioColorBg() {
-      let app = this;
-      let user = app.user;
-      let clock_hours = 0;
-      if (user.clock_hours !== undefined) {
-        if (user.clock_hours.total !== undefined) clock_hours = user.clock_hours.total;
-      }
-      if (clock_hours == 0 || user.completed_hours === undefined || user.completed_hours === 0) return app.colors.gray;
-      let timePerc = Math.round((clock_hours/ user.completed_hours) * 100);
-      return this.getEGPBG(timePerc);
-
     },
 
     calcLastLoginColorBg(date) {
