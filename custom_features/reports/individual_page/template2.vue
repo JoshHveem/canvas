@@ -45,6 +45,7 @@
           </button>
         </div>
         <student-courses-report
+          v-if="settings.reportType === 'student-courses'"
           :user="user"
           :degree="currentDegree"
           :settings="settings"
