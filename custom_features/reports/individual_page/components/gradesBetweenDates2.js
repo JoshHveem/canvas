@@ -15,6 +15,7 @@
   Vue.component('grades-between-dates', {
     template: ` 
       <div>
+        {{ terms }}
         <div v-if='loadingAssignments'>
           <progress 
             id="load-progress" 
