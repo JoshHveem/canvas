@@ -290,11 +290,24 @@ Vue.component('student-courses-report', {
       donut: {}
     }
   },
+  watch: {
+    // fires whenever `tree` is replaced by the parent
+    tree: {
+      handler (newVal, oldVal) {
+        if (!newVal) return;
+        // make sure DOM is updated before touching the donut, just in case
+        this.$nextTick(() => {
+          this.updateHeader();
+        });
+      },
+      deep: true,     // needed if the parent mutates properties inside `tree`
+      immediate: true // optional: also run once on component creation
+    }
+  },
   mounted() {
     // let entry = new Date();
     let donut = new ProgressGraphDonut();
     this.donut = donut;
-    this.updateHeader();
   },
 
   methods: {
@@ -304,8 +317,8 @@ Vue.component('student-courses-report', {
       console.log(this.tree);
       donut.fillHours( 
         {
-          max: this.tree.hours, 
-          hours: this.degree.graded_hours, 
+          max: this?.tree?.hours ?? 0, 
+          hours: this?.degree?.graded_hours ?? 0, 
           color: this.colors.blue, 
           // next: {
           //   max: this.studentTree.hours, 
