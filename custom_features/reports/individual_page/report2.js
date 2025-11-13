@@ -313,6 +313,7 @@
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates2.js');
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
     await $.getScript("https://d3js.org/d3.v6.min.js");
     /*
     //libraries
@@ -326,7 +327,6 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');

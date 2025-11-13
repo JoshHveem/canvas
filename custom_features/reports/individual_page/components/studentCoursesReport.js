@@ -169,17 +169,6 @@ Vue.component('student-courses-report', {
   },
   watch: {
     // fires whenever `tree` is replaced by the parent
-    tree: {
-      handler (newVal, oldVal) {
-        if (!newVal) return;
-        // make sure DOM is updated before touching the donut, just in case
-        this.$nextTick(() => {
-          this.updateHeader();
-        });
-      },
-      deep: true,     // needed if the parent mutates properties inside `tree`
-      immediate: true // optional: also run once on component creation
-    }
   },
   mounted() {
     // let entry = new Date();
