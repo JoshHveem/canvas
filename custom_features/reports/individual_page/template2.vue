@@ -51,6 +51,14 @@
           :settings="settings"
           :tree="tree"
         ></student-courses-report>
+        <show-grades-between-dates
+          v-if="enrollmentData != undefined"
+          :user="user"
+          :enrollments="enrollmentData"
+          :user-id="userId"
+          :terms="terms"
+          :IS-TEACHER="IS_TEACHER"
+        ></show-grades-between-dates>
       </div>
     </div>
   </div>
