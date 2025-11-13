@@ -97,6 +97,10 @@ Vue.component('course-row-ind', {
       type: String,
       default: ''
     },
+    courseId: {
+      type: String,
+      default: ''
+    },
     courseCode: {
       type: String,
       default: ''

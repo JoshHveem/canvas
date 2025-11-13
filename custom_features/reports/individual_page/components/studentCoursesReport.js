@@ -143,6 +143,7 @@ Vue.component('student-courses-report', {
             :score="course?.final_score"
             :state="course?.state ?? ''"
             :course-name="course.name"
+            :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="false"
@@ -159,6 +160,7 @@ Vue.component('student-courses-report', {
             :score="course?.final_score"
             :state="course?.state ?? ''"
             :course-name="course.name"
+            :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="false"
@@ -175,6 +177,7 @@ Vue.component('student-courses-report', {
             :score="course?.final_score"
             :state="course?.state ?? ''"
             :course-name="course.name"
+            :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="false"
@@ -203,6 +206,7 @@ Vue.component('student-courses-report', {
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
           data.state = 'active';
+          data.course_id = data.id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;
@@ -227,6 +231,7 @@ Vue.component('student-courses-report', {
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
           data.state = 'active';
+          data.course_id = data.id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;
@@ -243,7 +248,6 @@ Vue.component('student-courses-report', {
     },
     others: function () {
       const userCourses = this.user?.courses ?? {};
-      console.log(userCourses);
       const courses = this.tree?.courses ?? {};
       const core = courses.core ?? {};
       const electives = courses.elective ?? {};
