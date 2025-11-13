@@ -610,7 +610,7 @@
         this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
         this.estimatedHoursEnrolled = new Date(term.exit_date) - new Date(term.entry_date);
         console.log("ESTIMATED HOURS")
-        console.log(this.estimatedHoursEnrolled);
+        console.log(this.estimatedHoursEnrolled / (60 * 60 * 24 * 1000));
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
       },
