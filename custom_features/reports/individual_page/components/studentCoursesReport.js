@@ -206,7 +206,7 @@ Vue.component('student-courses-report', {
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
           data.state = 'active';
-          data.course_id = data.id;
+          data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;
@@ -231,7 +231,7 @@ Vue.component('student-courses-report', {
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
           data.state = 'active';
-          data.course_id = data.id;
+          data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;
