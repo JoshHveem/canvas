@@ -190,19 +190,14 @@ Vue.component('ind-header-credits', {
   },
   methods: {
     updateHeader () {
+      let donut = this.donut;
       try {
-        let donut = this.donut;
         donut._init('btech-department-report-student-progress-donut', this.colors.gray);
         donut.fillHours( 
           {
-            max: this.studentTree.hours, 
-            hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
-            color: this.whatif ? this.colors.purple : this.colors.blue, 
-            // next: {
-            //   max: this.studentTree.hours, 
-            //   hours: this.user.finalized_credits, 
-            //   color: this.colors.blue, 
-            // }
+            max: this?.tree?.hours ?? 1, 
+            hours: this?.degree?.graded_hours ?? 0, 
+            color: this.colors.blue, 
           }
         );
       } catch (err) {
