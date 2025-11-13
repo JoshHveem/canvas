@@ -243,7 +243,41 @@ Vue.component('student-courses-report', {
       return list;
     },
     others: function () {
-      return []
+      const userCourses = this.user?.courses ?? {};
+      const courses = this.tree?.courses ?? {};
+      const core = courses.core ?? {};
+      const electives = courses.elective ?? {};
+
+      const others = [];
+
+      for (let key in userCourses) {
+        const course = userCourses[key];
+        const code = course.course_code;
+
+        const isCore = code in core;
+        const isElective = code in electives;
+
+        // Only include courses that are NOT in core and NOT in electives
+        if (!isCore && !isElective) {
+          const data = { ...course }; // shallow copy so we don't mutate original
+
+          // If you want days_in_course similar to the others:
+          if (data.time_in_course != null) {
+            data.days_in_course = data.time_in_course / (60 * 60 * 24);
+          }
+
+          others.push(data);
+        }
+      }
+
+      // Optional: keep them sorted like core/electives
+      others.sort((a, b) => {
+        const ad = String(a.course_code || "").toLowerCase();
+        const bd = String(b.course_code || "").toLowerCase();
+        return ad > bd ? 1 : ad < bd ? -1 : 0;
+      });
+
+      return others;
     }
   },
   data() {
