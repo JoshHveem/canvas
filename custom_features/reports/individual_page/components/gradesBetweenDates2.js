@@ -28,7 +28,7 @@
           <div class='btech-report-submission-dates'>
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
-              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.startDate) + " to " + dateToHTMLDate(term.endDate)}} ({{term.hours}} hrs)</option>
+              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}}</option>
             </select>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change='getIncludedAssignmentsBetweenDates()'>
