@@ -2,7 +2,7 @@ Vue.component('student-courses-report', {
   template:` 
     <div>
       <ind-header-credits
-        :color="color"
+        :colors="colors"
         :user="user"
         :degree="degree"
         :tree="tree"
