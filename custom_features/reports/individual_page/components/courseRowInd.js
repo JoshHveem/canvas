@@ -131,8 +131,7 @@ Vue.component('course-row-ind', {
   computed: {
     checkValidCourseId: function() {
       let vm = this;
-      if (vm.course === undefined) return false;
-      if (vm.course.canvas_id === null || vm.course.canvas_id === undefined) return false;
+      if (vm.course_id === undefined) return false;
       return true;
     },
     courseUrl: function() {
