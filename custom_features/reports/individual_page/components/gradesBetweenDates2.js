@@ -605,9 +605,11 @@
           }
         }
         this.selectedTerm = term;
-        this.submissionDatesStart = this.dateToHTMLDate(term.startDate);
-        this.submissionDatesEnd = this.dateToHTMLDate(term.endDate);
-        this.estimatedHoursEnrolled = term.hours;
+        this.submissionDatesStart = this.dateToHTMLDate(new Date(term.entry_date));
+        this.submissionDatesEnd = this.dateToHTMLDate(new Date(term.exit_date));
+        this.estimatedHoursEnrolled = new Date(term.exit_date) - new Date(term.entry_date);
+        console.log("ESTIMATED HOURS")
+        console.log(this.estimatedHoursEnrolled);
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
       },

@@ -58,7 +58,7 @@
             :user="user"
             :enrollments="enrollmentData"
             :user-id="userId"
-            :terms="terms"
+            :terms="user.hs_terms"
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates>
         </div>
