@@ -301,9 +301,10 @@ Vue.component('student-courses-report', {
     updateHeader () {
       let donut = this.donut;
       donut._init('btech-department-report-student-progress-donut', this.colors.gray);
+      console.log(this.tree);
       donut.fillHours( 
         {
-          max: this.studentTree.hours, 
+          max: this.tree.hours, 
           hours: this.degree.graded_hours, 
           color: this.colors.blue, 
           // next: {
