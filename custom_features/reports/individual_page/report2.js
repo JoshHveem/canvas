@@ -310,7 +310,7 @@
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
-    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js');
+    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates2.js');
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
     /*
