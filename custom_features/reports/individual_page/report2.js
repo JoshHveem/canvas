@@ -313,10 +313,10 @@
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates2.js');
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript("https://d3js.org/d3.v6.min.js");
     /*
     //libraries
     await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-    await $.getScript("https://d3js.org/d3.v6.min.js");
     await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
     //icons
     await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
