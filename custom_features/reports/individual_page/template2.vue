@@ -48,7 +48,7 @@
         <ind-header-credits
           :colors="colors"
           :user="user"
-          :degree="degree"
+          :degree="currentDegree"
           :tree="tree"
           :settings="settings"
         ></ind-header-credits> 
