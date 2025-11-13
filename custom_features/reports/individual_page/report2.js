@@ -70,7 +70,20 @@
         }
         this.loadingProgress += 10;
         this.loading = false;
-        this.resetUser(); 
+      },
+      watch: {
+        // fires whenever `tree` is replaced by the parent
+        tree: {
+          handler (newVal, oldVal) {
+            if (!newVal) return;
+            // make sure DOM is updated before touching the donut, just in case
+            this.$nextTick(() => {
+              this.updateHeader();
+            });
+          },
+          deep: true,     // needed if the parent mutates properties inside `tree`
+          immediate: true // optional: also run once on component creation
+        }
       },
       computed: {
         currentReportMeta() {
@@ -155,15 +168,8 @@
       },
 
       methods: {
-        resetUser() {
-          console.log(this.$refs);
-          if (this?.$refs?.studentcoursesreport) {
-            this.$refs.studentcoursesreport.updateHeader();
-          }
-        },
         onReportChange() {
           this.saveSettings(this.settings);
-          this.resetUser();
         },
 
         async loadSettings(settings) {
