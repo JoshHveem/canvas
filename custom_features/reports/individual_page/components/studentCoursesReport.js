@@ -294,6 +294,7 @@ Vue.component('student-courses-report', {
     // let entry = new Date();
     let donut = new ProgressGraphDonut();
     this.donut = donut;
+    this.updateHeader();
   },
 
   methods: {
