@@ -69,6 +69,8 @@ Vue.component('student-courses-report', {
       >
         <div style="height: 200px; width: 200px;" class="btech-department-report-student-avatar">
           <img style="position: absolute;" v-if="user.avatar_url !== undefined" :src="user.avatar_url">
+          <div 
+            id="btech-department-report-student-progress-donut" style="position: absolute;"></div>
         </div>
         <div style="display: inline-block;">
           <div class="data-item">
