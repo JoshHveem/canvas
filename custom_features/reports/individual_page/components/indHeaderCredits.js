@@ -263,20 +263,24 @@ Vue.component('ind-header-credits', {
   },
   methods: {
     updateHeader () {
-      let donut = this.donut;
-      donut._init('btech-department-report-student-progress-donut', this.colors.gray);
-      donut.fillHours( 
-        {
-          max: this.studentTree.hours, 
-          hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
-          color: this.whatif ? this.colors.purple : this.colors.blue, 
-          // next: {
-          //   max: this.studentTree.hours, 
-          //   hours: this.user.finalized_credits, 
-          //   color: this.colors.blue, 
-          // }
-        }
-      );
+      try {
+        let donut = this.donut;
+        donut._init('btech-department-report-student-progress-donut', this.colors.gray);
+        donut.fillHours( 
+          {
+            max: this.studentTree.hours, 
+            hours: this.whatif ? this.whatifdata.completed_credits : this.user.completed_credits, 
+            color: this.whatif ? this.colors.purple : this.colors.blue, 
+            // next: {
+            //   max: this.studentTree.hours, 
+            //   hours: this.user.finalized_credits, 
+            //   color: this.colors.blue, 
+            // }
+          }
+        );
+      } catch (err) {
+        console.error(err);
+      }
     },
 
     getEGPBG(egp) {
