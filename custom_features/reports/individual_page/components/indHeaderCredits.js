@@ -181,10 +181,10 @@ Vue.component('ind-header-credits', {
     }
   },
   mounted() {
-    let graph = new SubmissionsGraphBar();
-    graph._init(this.user, this.colors);
-    let pageviewGraph = new PageViewsGraphBar();
-    pageviewGraph._init(this.user, this.colors);
+    // let graph = new SubmissionsGraphBar();
+    // graph._init(this.user, this.colors);
+    // let pageviewGraph = new PageViewsGraphBar();
+    // pageviewGraph._init(this.user, this.colors);
     let donut = new ProgressGraphDonut();
     this.donut = donut;
   },
