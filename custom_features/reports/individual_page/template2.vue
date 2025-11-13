@@ -53,14 +53,14 @@
           ></student-courses-report>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
-          <show-grades-between-dates
+          <grades-between-dates
             v-if="enrollmentData != undefined"
             :user="user"
             :enrollments="enrollmentData"
             :user-id="userId"
             :terms="terms"
             :IS-TEACHER="IS_TEACHER"
-          ></show-grades-between-dates>
+          ></grades-between-dates>
         </div>
       </div>
     </div>
