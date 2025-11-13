@@ -242,6 +242,7 @@
           user.last_login = this.bridgetoolsUser.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
+          user.hs_terms = this.bridgetoolsUser.hs_terms;
           user.transfer_courses = [];
 
           // Guard degree ops
