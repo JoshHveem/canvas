@@ -223,7 +223,7 @@ Vue.component('student-courses-report', {
       let electives = courses?.elective ?? {};
       let list = [];
       for (let courseCode in electives) {
-        let data = core[courseCode];
+        let data = electives[courseCode];
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
