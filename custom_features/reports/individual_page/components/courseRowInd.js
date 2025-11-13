@@ -40,7 +40,6 @@ Vue.component('course-row-ind', {
         <course-progress-bar-ind
           :progress="progress"
           :colors="colors"
-          :whatif="whatif"
         ></course-progress-bar-ind> 
         <div style="display: inline-block; width: 5rem; font-size: 1rem;">
           <span
@@ -117,7 +116,6 @@ Vue.component('course-row-ind', {
       type: String,
       default: ''
     },
-    whatif: false,
     includeHours: false,
     istransfer: {
       type: Boolean,

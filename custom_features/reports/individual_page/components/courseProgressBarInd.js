@@ -41,7 +41,8 @@ Vue.component('course-progress-bar-ind', {
       }
     },
     progressBarFillStyle() {
-      let pstrlen = ('' + this.progress).length * 0.5 + 1;
+      let progress = Math.round(this.progress * 10) / 10;
+      let pstrlen = ('' + progress).length * 0.5 + 1;
       return {
         'background-color': this.getFillColor(),
         'width': ((this.progress == 0) ? 0 : (this.progress * 0.01 * this.barwidth  > pstrlen) ? this.progress + '%' : pstrlen + 'rem')
