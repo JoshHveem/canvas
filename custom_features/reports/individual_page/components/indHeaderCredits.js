@@ -69,7 +69,7 @@ Vue.component('ind-header-credits', {
   <div class="btech-ind-header__bottom">
     <!-- Donut/avatar -->
     <div class="btech-ind-header__avatar btech-student-avatar">
-      <img v-if="user.avatar_url !== undefined" :src="user.avatar_url">
+      <img v-if="user.avatar_url !== undefined" style="border-radius: 50%;" :src="user.avatar_url">
       <div id="btech-department-report-student-progress-donut"></div>
     </div>
 
