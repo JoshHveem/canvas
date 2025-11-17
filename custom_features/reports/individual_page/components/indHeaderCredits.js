@@ -145,6 +145,7 @@ Vue.component('ind-header-credits', {
       let prob = this.user?.academic_probation;
       let category = prob?.category ?? 0;
       let code = prob?.code ?? '';
+      let colors = this.colors;
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
     }
   },
