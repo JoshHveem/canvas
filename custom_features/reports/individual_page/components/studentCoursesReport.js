@@ -11,12 +11,12 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.state ?? ''"
+            :state="course?.canvas_enrollment_state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
-            :istransfer="false"
+            :istransfer="course?.is_transfer"
             :iswithdraw="false"
           ></course-row-ind>
         </div>
@@ -28,12 +28,12 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.state ?? ''"
+            :state="course?.canvas_enrollment_state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
-            :istransfer="false"
+            :istransfer="course?.is_transfer"
             :iswithdraw="false"
           ></course-row-ind>
         </div>
@@ -45,7 +45,7 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.state ?? ''"
+            :state="course?.canvas_enrollment_state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
