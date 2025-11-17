@@ -308,7 +308,11 @@
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-    await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
+    try {
+      await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
+    } catch (err) {
+      console.log(err);
+    }
     await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
     await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates2.js');
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
