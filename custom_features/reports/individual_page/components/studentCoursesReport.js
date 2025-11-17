@@ -11,7 +11,7 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.canvas_enrollment_state ?? ''"
+            :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
@@ -28,7 +28,7 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.canvas_enrollment_state ?? ''"
+            :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
@@ -45,7 +45,7 @@ Vue.component('student-courses-report', {
             :colors="colors"
             :credits="course?.credits"
             :score="course?.final_score"
-            :state="course?.canvas_enrollment_state ?? ''"
+            :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
             :course-code="course.course_code"
@@ -75,7 +75,8 @@ Vue.component('student-courses-report', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
-          data.state = 'active';
+          data.state = userData.canvas_enrollment_state;
+          data.is_transfer = userData.is_transfer;
           data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
@@ -100,7 +101,8 @@ Vue.component('student-courses-report', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
-          data.state = 'active';
+          data.state = userData.canvas_enrollment_state;
+          data.is_transfer = userData.is_transfer;
           data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
