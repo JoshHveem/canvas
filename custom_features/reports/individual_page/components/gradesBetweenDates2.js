@@ -1,17 +1,4 @@
 (async function() {
-  class Column {
-    constructor(name, description, average, sort_type, percent, hideable = true) {
-      this.name = name;
-      this.description = description;
-      this.average = average;
-      this.sort_type = sort_type; //needs to be a result of typeof, probably mostly going to be string or number
-      this.sort_state = 0; //becomes 1 or -1 depending on asc or desc
-      this.visible = true;
-      this.percent = percent;
-      this.hideable = hideable;
-    }
-  }
-  
   Vue.component('grades-between-dates', {
     template: ` 
       <div>
@@ -205,25 +192,15 @@
         courseAssignmentGroups: {},
         submissionDates: [],
         courses: [],
-        columns: [
-          new Column('Name', '', false, 'string', false, false),
-          new Column('State', '', false, 'string', false),
-          new Column('Credits', '', false, 'number', false),
-          new Column('Grade To Date', '', true, 'number', true),
-          new Column('Final Grade', '', true, 'number', true),
-          new Column('Points', '', true, 'number', true),
-          new Column('Submissions', '', true, 'number', true),
-          new Column('Days Since Last Submission', '', true, 'number', false)
-        ],
       }
     },
     created: async function () {
-      // Initialize state variables
       this.loadingProgress = 0;
       this.loadingMessage = "Loading Courses";
+
       this.courses = await this.getCourseData();
 
-      if (!this.courses || this.courses.length === 0) {
+      if (!this.courses?.length) {
         this.loadingMessage = "No courses available.";
         this.loadingProgress = 100;
         return;
@@ -231,48 +208,35 @@
 
       this.submissionData = {};
       this.courseAssignmentGroups = {};
-      let submissions = [];
 
-      for (let i = 0; i < this.courses.length; i++) {
-        const course = this.courses[i];
-        
-        // Update progress and message
-        this.loadingMessage = `Loading Submissions for Course ${course.course_id}`;
-        this.loadingProgress += (50 / this.courses.length) * 0.5;
-
-        // Collect submission data
-        if (course.additionalData?.submissions) {
-          // pop the course id onto each submission
-          course.additionalData.submissions.map(sub => sub.course_id = course.id);
-          // set up course level submissions data
-          this.submissionData[course.id] = course.additionalData.submissions;
-          //push each submission in the submissions array
-          submissions.push(...course.additionalData.submissions);
-        }
-
-        // Update assignment group data
-        this.loadingMessage = `Loading Assignment Groups for Course ${course.id}`;
-        this.loadingProgress += (50 / this.courses.length) * 0.5;
-
+      const allSubmissions = this.courses.flatMap(course => {
+        const subs = course.additionalData?.submissions || [];
+        subs.forEach(sub => (sub.course_id = course.id));
+        this.submissionData[course.id] = subs;
         if (course.additionalData?.assignment_groups) {
           this.courseAssignmentGroups[course.id] = course.additionalData.assignment_groups;
         }
-      }
-
-      // Order submissions by submittedAt, oldest to newest
-      submissions.map(sub => {
-        sub.submittedAt = sub.submittedAt ? new Date(sub.submittedAt) : new Date(sub.gradedAt);
+        return subs;
       });
-      submissions = submissions
-        .filter(submission => submission.submittedAt) // Ensure submittedAt exists
+
+      // Normalize submittedAt
+      allSubmissions.forEach(sub => {
+        sub.submittedAt = sub.submittedAt
+          ? new Date(sub.submittedAt)
+          : sub.gradedAt
+          ? new Date(sub.gradedAt)
+          : null;
+      });
+
+      this.submissionDates = allSubmissions
+        .filter(s => s.submittedAt)
         .sort((a, b) => a.submittedAt - b.submittedAt);
 
-      this.submissionDates = submissions;
-      // Final updates
       this.loadingProgress = 100;
       this.loadingMessage = "Data loading complete.";
       this.loadingAssignments = false;
     },
+
 
 
     methods: {
@@ -370,77 +334,11 @@
           });
       },
 
-      extractCourseId(url) {
-        const courseIdMatch = url.match(/\/courses\/(\d+)\//);
-        return courseIdMatch ? courseIdMatch[1] : null;
-      },
-
       extractYear(termName) {
         const yearMatch = termName.match(/\b(20\d{2})\b/);
         return yearMatch ? yearMatch[1] : null;
       },
 
-      async getGraphQLDataOld(course) {
-        let query = `{
-          course(id: "${course.id}") {
-            id
-            submissionsConnection(studentIds: "${this.userId}") {
-              nodes {
-                id
-                assignmentId
-                assignment {
-                  name
-                  published
-                  pointsPossible
-                }
-                submittedAt
-                grade
-                gradedAt
-                score
-                userId
-              }
-            }
-            name
-            assignmentGroupsConnection {
-              nodes {
-                name
-                groupWeight
-                state
-
-                assignmentsConnection {
-                  nodes {
-                    _id
-                    name
-                    published
-                    pointsPossible
-                  }
-                }
-              }
-            }
-          }
-        }`;
-        try {
-          let res = await $.post(`/api/graphql`, {
-            query: query
-          });
-          let data = res.data.course;
-          return {
-            name: data.name,
-            assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
-              group.assignments = group.assignmentsConnection.nodes;
-              return group;
-            }),
-            submissions: data.submissionsConnection.nodes
-          }
-        } catch (err) {
-          console.error(err);
-          return {
-            name: course.name,
-            assignment_groups: [],
-            submissions: []
-          }
-        }
-      },
       async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection = '') {
         const pageSize = 50;    // bump up/down as you like
         let allNodes = [];
@@ -551,24 +449,24 @@
       },
 
       async getCourseData() {
-        let courses = [];
-        let coursesActive = await canvasGet(`/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term&enrollment_state=active&state[]=available&state[]=completed`)
-        courses.push(...coursesActive);
-        let coursesCompleted;
-        coursesCompleted = await canvasGet(`/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term&enrollment_state=completed&state[]=active`);
-        // Filter completed courses to only add those not already in `courses`
-        coursesCompleted.forEach(course => {
-            if (!courses.some(existingCourse => existingCourse.id === course.id)) {
-                courses.push(course);
-            }
+        const base = `/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term`;
+        const queries = [
+          `${base}&enrollment_state=active&state[]=available&state[]=completed`,
+          `${base}&enrollment_state=completed&state[]=active`,
+          `${base}&enrollment_state=completed&state[]=available&state[]=completed`,
+        ];
+
+        // Fetch all three lists in parallel
+        const results = await Promise.all(queries.map(q => canvasGet(q)));
+
+        // Deduplicate by id
+        const coursesById = new Map();
+        results.flat().forEach(course => {
+          if (!coursesById.has(course.id)) coursesById.set(course.id, course);
         });
-        coursesCompleted = await canvasGet(`/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term&enrollment_state=completed&state[]=available&state[]=completed`);
-        // Filter completed courses to only add those not already in `courses`
-        coursesCompleted.forEach(course => {
-            if (!courses.some(existingCourse => existingCourse.id === course.id)) {
-                courses.push(course);
-            }
-        });
+
+        const courses = Array.from(coursesById.values());
+
         for (let c in courses) {
           let course = courses[c];
           course.course_id = course.id;
@@ -593,28 +491,23 @@
           // let additionalDataOld = await this.getGraphQLDataOld(course);
           course.additionalData = additionalData;
           course.assignments = additionalData.submissions;
-          // await this.getAssignmentData(course);
           this.loadingProgress += (50 / courses.length) * 0.5;
         }
         return courses;
       },
       updateDatesToSelectedTerm() {
-        let term;
-        for (let i = 0; i < this.terms.length; i++) {
-          if (this.terms[i]._id === this.selectedTermId) {
-            term = this.terms[i];
-          }
-        }
+        const term = this.terms.find(t => t._id === this.selectedTermId);
+        if (!term) return;
+
         this.selectedTerm = term;
         this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
-        this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
-        this.estimatedCreditsEnrolled = 
-          Math.round(
-            (
-              (new Date(term.exit_date) - new Date(term.entry_date)) 
-              / (60 * 60 * 24 * 7 * 5 * 1000)
-            ) * 100
-          ) / 100;
+        this.submissionDatesEnd   = this.dateToHTMLDate(term.exit_date);
+
+        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
+        this.estimatedCreditsEnrolled = Number(
+          ((new Date(term.exit_date) - new Date(term.entry_date)) / msInFiveWeeks).toFixed(2)
+        );
+
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
       },
@@ -662,12 +555,6 @@
         return output;
       },
 
-      getCreditsEnrolled(courseId) {
-        let credits = this.hoursBetweenDates[courseId] / 30;
-        if (credits !== undefined) return credits;
-        return "N/A";
-      },
-
       weightedFinalGradeForTerm() {
         let requiredCredits = this.estimatedCreditsRequired;
         let creditsCompleted = this.sumCreditsCompleted();
@@ -680,16 +567,18 @@
         return output;
       },
 
+      parseDate(dateString) {
+        return dateString ? new Date(dateString) : undefined;
+      },
+
       getProgressBetweenDates(courseId) {
-        let progress = this.progressBetweenDates[courseId];
-        if (progress !== undefined) return (progress + "%");
-        return "";
+        const v = this.progressBetweenDates[courseId];
+        return v !== undefined ? `${v}%` : "";
       },
 
       getGradesBetweenDates(courseId) {
-        let grade = this.gradesBetweenDates[courseId];
-        if (grade !== undefined) return (grade + "%");
-        return "";
+        const v = this.gradesBetweenDates[courseId];
+        return v !== undefined ? `${v}%` : "";
       },
 
       getCreditsCompleted(course) {
@@ -699,25 +588,6 @@
         if (isNaN(completed)) completed = 0;
         credits = Math.round((completed / 30) * 100) / 100;
         return credits;
-      },
-
-      sortColumn(header) {
-        let app = this;
-        let name = this.columnNameToCode(header);
-        let column = app.columns.find(c => c.name === header);
-        column.sort_state = column.sort_state === 1 ? -1 : 1;
-
-        app.courses.sort((a, b) => {
-          let aVal = a[name] ?? '';
-          let bVal = b[name] ?? '';
-          
-          if (typeof aVal === 'string') aVal = aVal.toUpperCase();
-          if (typeof bVal === 'string') bVal = bVal.toUpperCase();
-
-          if (aVal < bVal) return column.sort_state * -1;
-          if (aVal > bVal) return column.sort_state * 1;
-          return 0;
-        });
       },
 
       async getIncludedAssignmentsBetweenDates() {
@@ -930,11 +800,6 @@
         return totalPoints;
       },
 
-      parseDate(dateString) {
-        if (dateString == undefined) return undefined;
-        return new Date(dateString);
-      },
-
       newCourse(id, state, name, year, courseCode) {
         let course = {};
         course.course_id = id;
@@ -965,147 +830,16 @@
         return course;
       },
 
-      
-
-      calcPointsProgress(grade, final_grade) {
-        let points = "N/A";
-        if (!isNaN(parseInt(grade)) && !isNaN(parseInt(final_grade))) {
-          points = Math.round(final_grade / grade * 100);
-          if (isNaN(points)) points = 0;
-        }
-        return points;
-      },
-
-      columnNameToCode(name) {
-        return name.toLowerCase().replace(/ /g, "_");
-      },
-
-      getColumnText(column, course) {
-        let text = course[this.columnNameToCode(column.name)];
-        if (column.name === "Name") {
-          text = course.nameHTML;
-        }
-        if (column.percent && !isNaN(text)) {
-          text += "%";
-        }
-        return text;
-      },
-      async getAssignmentData(assignments) {
-        let course_id = course.course_id;
-        let user_id = this.userId;
-        //I think this one works better, but it apparently doesn't work for all students??? Might be related to status. The one it didn't work on was inactive
-        // let url = "/api/v1/courses/" + course_id + "/analytics/users/" + user_id + "/assignments";
-        let url = "/api/v1/courses/" + course_id + "/students/submissions?student_ids[]=" + user_id + "&include=assignment";
-        try {
-          let submissions = await canvasGet(url);
-          course.assignments = submissions;
-          let total_points_possible = 0;
-          let current_points_possible = 0;
-          let most_recent = {};
-          let submitted = 0;
-          let max_submissions = 0;
-          let progress_per_day = 0;
-          let start_date = Date.parse(course.created_at);
-          let now_date = Date.now();
-          let diff_time = Math.abs(now_date - start_date);
-          let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
-          let most_recent_time = diff_time;
-          for (let a = 0; a < submissions.length; a++) {
-            let submission = submissions[a];
-            let assignment = submission.assignment;
-            let points_possible = assignment.points_possible;
-            if (submission != undefined) {
-              let submitted_at = Date.parse(submission.submitted_at);
-              total_points_possible += points_possible;
-              if (assignment.points_possible > 0) {
-                max_submissions += 1;
-                if (submission.score !== null) {
-                  current_points_possible += points_possible;
-                  submitted += 1;
-                }
-              }
-              if (Math.abs(now_date - submitted_at) < most_recent_time) {
-                most_recent_time = Math.abs(now_date - submitted_at);
-                most_recent = assignment;
-              }
-            }
-          }
-          let perc_submitted = Math.round((submitted / max_submissions) * 100);
-          if (isNaN(perc_submitted)) perc_submitted = 0;
-          course.submissions = perc_submitted;
-
-          //calc days since last submission from time since last submission
-          let most_recent_days = Math.ceil(most_recent_time / (1000 * 60 * 60 * 24));
-
-          //Change output depending on status
-          if (course.state === 'Active') {
-            course.days_since_last_submission = most_recent_days;
-          } else if (course.state == 'Completed') {
-            course.days_since_last_submission = "Complete";
-            course.points = 100;
-          } else {
-            course.days_since_last_submission = "N/A";
-            course.points = "N/A";
-          }
-        } catch (err) {
-          console.log(err);
-        }
-      },
-
-      processEnrollment(student, enrollment) {
-        let start_date = Date.parse(enrollment.created_at);
-        let now_date = Date.now();
-        let diff_time = Math.abs(now_date - start_date);
-        let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
-        let grades = enrollment.grades;
-        let current_score = grades.current_score;
-        if (current_score === null) current_score = 0;
-        let final_score = grades.final_score;
-        if (final_score === null) final_score = 0;
-
-        //update values
-        student.days_in_course = diff_days;
-        student.grade = current_score;
-        student.final_grade = final_score;
-        //there might need to be a check to see if this is a numbe
-        if (student.grade > 0 && student.grade != null) {
-          student.points = Math.round(student.final_grade / student.grade * 100);
-        }
-      },
-
       checkIncludeCourse(course) {
-        for (let g in course.groups) {
-          let group = course.groups[g];
-          if (this.checkIncludeGroup(group)) {
-            return true;
-          }
-        }
-        return false;
+        return Object.values(course.groups || {}).some(g => this.checkIncludeGroup(g));
       },
 
       checkIncludeGroup(group) {
-        if (group.include) return true;
-        /*
-        for (let a in group.assignments) {
-          let assignment = group.assignments[a];
-          if (app.checkIncludeAssignment(assignment)) {
-            return true;
-          }
-        }
-        */
-        return false;
+        return !! group.include;
       },
 
       checkIncludeAssignment(assignment) {
         return true; //show every assignment for now so people can toggle them on and off
-        if (assignment.include === true) {
-          return true;
-        }
-        return false;
-      },
-
-      close() {
-        $(this.$el).hide();
       },
 
       dateToHTMLDate(date) {
