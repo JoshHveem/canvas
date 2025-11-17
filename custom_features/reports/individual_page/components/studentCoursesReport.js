@@ -75,7 +75,7 @@ Vue.component('student-courses-report', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
-          data.state = userData.canvas_enrollment_state;
+          data.state = userData.canvas_enrollment_state ?? '';
           data.is_transfer = userData.is_transfer;
           if (data.state == '' && data.is_transfer) data.state = 'transfer';
           data.course_id = userData.course_id;
@@ -102,7 +102,7 @@ Vue.component('student-courses-report', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
-          data.state = userData.canvas_enrollment_state;
+          data.state = userData.canvas_enrollment_state ?? '';
           data.is_transfer = userData.is_transfer;
           if (data.state == '' && data.is_transfer) data.state = 'transfer';
           data.course_id = userData.course_id;
