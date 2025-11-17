@@ -11,3 +11,86 @@
 .btech-report-table tr:nth-child(even) {
   background-color: #eee;
 }
+
+/* styling for the Student Report Header (shows student name, id, credits, etc.) */
+.btech-ind-header {
+  margin-bottom: 1rem;
+}
+
+/* Top section */
+.btech-ind-header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.btech-ind-header__name-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btech-ind-header__name {
+  text-decoration: none;
+}
+
+.btech-ind-header__icon {
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btech-ind-header__pill {
+  display: inline-block;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.btech-ind-header__last-updated {
+  font-size: 0.9rem;
+  cursor: help;
+}
+
+/* Bottom section: donut + metrics */
+.btech-ind-header__bottom {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Smaller donut/avatar */
+.btech-ind-header__avatar {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.btech-ind-header__avatar img,
+.btech-ind-header__avatar #btech-department-report-student-progress-donut {
+  position: absolute;
+  inset: 0;
+}
+
+/* Metrics grid */
+.btech-ind-header__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 0.5rem;
+}
+
+.btech-data-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.btech-data-item-title {
+  white-space: nowrap;
+  margin-right: 0.5rem;
+}
