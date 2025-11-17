@@ -32,7 +32,7 @@ Vue.component('course-row-ind', {
             :style="{
               'cursor': 'help',
               'background-color': (progress == 0 && state != 'active') ? colors.gray : (istransfer ? colors.orange : colors.blue),
-              'color': (progress == 0 && state == 'completed') ? colors.black : colors.white,
+              'color': (progress == 0 && state != 'completed') ? colors.black : colors.white,
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
