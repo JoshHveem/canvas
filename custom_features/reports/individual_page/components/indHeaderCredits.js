@@ -169,14 +169,16 @@ Vue.component('ind-header-credits', {
     updateHeader () {
       let donut = this.donut;
       try {
-        donut._init('btech-department-report-student-progress-donut', this.colors.gray);
-        donut.fillHours( 
-          {
-            max: this?.tree?.hours ?? 1, 
-            hours: this?.degree?.graded_hours ?? 0, 
-            color: this.colors.blue, 
-          }
+        donut._init(
+          'btech-department-report-student-progress-donut',
+          this.colors.gray,
+          { width: 140, height: 140 } // 👈 smaller header donut
         );
+        donut.fillHours({
+          max: this?.tree?.hours ?? 1,
+          hours: this?.degree?.graded_hours ?? 0,
+          color: this.colors.blue,
+        });
       } catch (err) {
         console.error(err);
       }
