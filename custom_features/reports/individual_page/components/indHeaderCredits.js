@@ -20,7 +20,7 @@ Vue.component('ind-header-credits', {
         class="btech-ind-header__icon"
       >
         <icon-alert
-          :fill="user?.academic_probation?.category == -4 ? (user.academic_probation.code.includes('2') ? colors.orange : colors.yellow) : (user?.academic_probation?.category == -5 ? colors.red : colors.gray)"
+          :fill="academicProbationStyle"
           width="1.5rem"
           height="1.5rem"
         ></icon-alert>
@@ -141,6 +141,12 @@ Vue.component('ind-header-credits', {
     updateinc: Number
   },
   computed: {
+    academicProbationStyle: function() {
+      let prob = this.user?.academic_probation;
+      let category = prob?.category ?? 0;
+      let code = prob?.code ?? '';
+      return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
+    }
   },
   watch: {
     tree: {
