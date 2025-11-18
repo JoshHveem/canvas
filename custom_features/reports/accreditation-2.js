@@ -271,6 +271,7 @@
               }
             }
             console.log(includedStudents);
+            console.log(submissions);
 
             let output = [];
             for (let s = 0; s < submissions.length; s++) {
