@@ -1,5 +1,5 @@
 (async function() {
-  Vue.component('grades-between-dates', {
+  Vue.component('grades-between-dates-2', {
     template: ` 
       <div>
         <div v-if='loadingAssignments'>

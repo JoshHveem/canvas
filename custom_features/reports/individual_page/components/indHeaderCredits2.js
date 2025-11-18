@@ -1,4 +1,4 @@
-Vue.component('ind-header-credits', {
+Vue.component('ind-header-credits-2', {
   template: `
     <div class="btech-ind-header">
   <!-- Donut + avatar -->

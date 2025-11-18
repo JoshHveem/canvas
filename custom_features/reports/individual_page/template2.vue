@@ -45,31 +45,31 @@
           </button>
         </div>
         <div>
-        <ind-header-credits
+        <ind-header-credits-2
           :colors="colors"
           :user="user"
           :degree="currentDegree"
           :tree="tree"
           :settings="settings"
-        ></ind-header-credits> 
+        ></ind-header-credits-2> 
       </div>
         <div v-show="settings.reportType === 'student-courses'">
-          <student-courses-report
+          <student-courses-report-2
             :user="user"
             :degree="currentDegree"
             :settings="settings"
             :tree="tree"
-          ></student-courses-report>
+          ></student-courses-report-2>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
-          <grades-between-dates
+          <grades-between-dates-2
             v-if="enrollmentData != undefined"
             :user="user"
             :enrollments="enrollmentData"
             :user-id="userId"
             :terms="user.hs_terms"
             :IS-TEACHER="IS_TEACHER"
-          ></grades-between-dates>
+          ></grades-between-dates-2>
         </div>
       </div>
     </div>

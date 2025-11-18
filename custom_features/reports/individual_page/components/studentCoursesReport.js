@@ -1,4 +1,4 @@
-Vue.component('student-courses-report', {
+Vue.component('student-courses-report-2', {
   template:` 
     <div>
 
