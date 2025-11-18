@@ -187,6 +187,7 @@
               this.campuses[student.id] = '';
               try {
                 let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
+                console.log(userData);
                 if (!(student.id in this.enrollmentTypes)) {
                   this.enrollmentTypes[student.id] = userData.enrollment_type;
                 }
