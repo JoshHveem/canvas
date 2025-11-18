@@ -301,6 +301,7 @@
                 output.push(submission);
               }
             }
+            console.log(output);
             return output;
           },
 
@@ -595,8 +596,6 @@
             }
             if (submission?.attachments?.length > 0) {
               await this.downloadAttachments(submission.attachments);
-              // console.log(submission);
-              // console.log(submission.attachments.length);
               // for (let i = 0; i < submission.attachments.length; i++) {
               //   let attachment = submission.attachments[i];
               //   setTimeout(() => {
@@ -606,8 +605,6 @@
               //     document.body.appendChild(a);
               //     a.click();
               //     document.body.removeChild(a);
-              //     console.log(i);
-              //     console.log(a.download);
               //   }, i * 100); // delay of 100ms between each attachment
               // }
             }
