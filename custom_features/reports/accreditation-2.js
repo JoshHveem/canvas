@@ -202,7 +202,11 @@
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
                   this.campuses[student.id] = campus;
-                  this.enrollmentTypes[student.id] = 'CS';
+                  if (campus.toLowerCase().includes('hs')) {
+                    this.enrollmentTypes[student.id] = 'HS';
+                  } else {
+                    this.enrollmentTypes[student.id] = 'CS';
+                  }
                   break
                 }
               } catch (err) {
