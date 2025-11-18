@@ -209,6 +209,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     feature("welcome_banner", /^\/$/);
     feature('side_menus');
 
