@@ -182,12 +182,10 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
-              // console.log(student.name);
               if ((student.id in this.campuses)) continue;
               this.campuses[student.id] = '';
               try {
                 let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
-                // console.log(userData);
                 if (!(student.id in this.enrollmentTypes)) {
                   this.enrollmentTypes[student.id] = userData.enrollment_type;
                 }
@@ -270,8 +268,6 @@
                 includedStudents.push(sectionStudents[s].id);
               }
             }
-            console.log(includedStudents);
-            console.log(submissions);
 
             let output = [];
             for (let s = 0; s < submissions.length; s++) {
@@ -302,7 +298,6 @@
                 output.push(submission);
               }
             }
-            console.log(output);
             return output;
           },
 
