@@ -182,7 +182,7 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
-              console.log(student);
+              console.log(student.name);
               if ((student.id in this.campuses)) continue;
               this.campuses[student.id] = '';
               try {
