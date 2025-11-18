@@ -1,4 +1,4 @@
-Vue.component('course-progress-bar-ind', {
+Vue.component('course-progress-bar-ind-2', {
   template:` 
    <div 
     class="btech-course-progress-bar" 

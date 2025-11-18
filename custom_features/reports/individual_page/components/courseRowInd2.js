@@ -1,4 +1,4 @@
-Vue.component('course-row-ind', {
+Vue.component('course-row-ind-2', {
   template:` 
       <div
         style="background-color: rgb(255, 255, 255); display: inline-block; width: 100%; box-sizing: border-box; font-size: 0.75rem; padding: .25rem;"
@@ -37,10 +37,10 @@ Vue.component('course-row-ind', {
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
         </div>
-        <course-progress-bar-ind
+        <course-progress-bar-ind-2
           :progress="progress"
           :colors="colors"
-        ></course-progress-bar-ind> 
+        ></course-progress-bar-ind-2> 
         <div style="display: inline-block; width: 5rem; font-size: 1rem;">
           <span
             class="btech-pill-text"
