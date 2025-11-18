@@ -289,7 +289,7 @@
               //begins true for default of include all, but filter if there is a selected section
               let checkSection = true;
               if (selectedSection !== null) {
-                checkSection = includedStudents.includes(submission.user_id);
+                checkSection = includedStudents.includes(submission.user.id);
               }
 
               let submitted = true;
