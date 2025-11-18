@@ -182,12 +182,12 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
-              console.log(student.name);
+              // console.log(student.name);
               if ((student.id in this.campuses)) continue;
               this.campuses[student.id] = '';
               try {
                 let userData = await bridgetools.req(`https://reports.bridgetools.dev/api2/students/${student.id}`);
-                console.log(userData);
+                // console.log(userData);
                 if (!(student.id in this.enrollmentTypes)) {
                   this.enrollmentTypes[student.id] = userData.enrollment_type;
                 }
@@ -249,6 +249,7 @@
             let startDate = app.startDate;
             let endDate = app.endDate;
             let sectionId = app.section;
+            console.log(app.section);
             let selectedSection = null;
             if (sectionId !== '') {
               for (let s = 0; s < app.sections.length; s++) {
@@ -543,7 +544,6 @@
           async downloadSubmission(assignment, submission) {
             let app = this;
             let type = submission.submissionType;
-            console.log(submission);
             app.preparingDocument = true;
 
             //this needs to be set or it will flip preparing Document to false at the end, IE if it will be pulling up a print screen, set this to true
@@ -554,7 +554,6 @@
             if (type == 'online_quiz') {
               let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
               url = `/courses/${app.courseId}/quizzes/${assignment.quiz_id}/history?user_id=${submission.user.id}`;
-              console.log(url);
               await app.createIframe(url, app.downloadQuiz, {
                 'submission': submission,
                 'assignment': assignment
@@ -846,7 +845,6 @@
             // Wait until iframe content is fully loaded
             if (doc.readyState === 'complete') {
               injectPrintLabels();
-              console.log(doc.readyState);
               win.focus();
               win.onafterprint = () => {
                 $('title').text(ogTitle);
