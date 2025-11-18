@@ -4,7 +4,7 @@ Vue.component('ind-header-credits', {
   <!-- Donut + avatar -->
   <div class="btech-ind-header__avatar">
     <div
-      id="btech-department-report-student-progress-donut"
+      id="btech-department-report-student-progress-donut-2"
       class="btech-ind-header__donut-svg">
     </div>
     <div
@@ -179,9 +179,9 @@ Vue.component('ind-header-credits', {
       let donut = this.donut;
       try {
         donut._init(
-          'btech-department-report-student-progress-donut',
+          'btech-department-report-student-progress-donut-2',
           this.colors.gray,
-          { width: 140, height: 140 } // 👈 smaller header donut
+          { width: 140, height: 140 }
         );
         donut.fillHours({
           max: this?.tree?.hours ?? 1,
