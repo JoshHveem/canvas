@@ -162,6 +162,15 @@ Vue.component('ind-header-credits-2', {
       },
       deep: true,     // needed if the parent mutates properties inside `tree`
       immediate: true // optional: also run once on component creation
+    },
+    user: {
+      handler (newVal, oldVal) {
+        if (!newVal) return;
+        console.log(newval)
+      },
+      deep: true,     // needed if the parent mutates properties inside `tree`
+      immediate: true // optional: also run once on component creation
+
     }
   },
   data() {
