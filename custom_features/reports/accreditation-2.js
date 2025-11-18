@@ -200,11 +200,15 @@
                   else if (campus == 'L') campus = 'Logan Campus';
                   else if (campus == 'B') campus = 'Brigham City Campus';
                   this.campuses[student.id] = campus;
-                  this.enrollmentTypes[student.id] = 'CS';
+                  if (campus.toLowerCase().includes('hs')) {
+                    this.enrollmentTypes[student.id] = 'HS';
+                  } else {
+                    this.enrollmentTypes[student.id] = 'CS';
+                  }
                   break
                 }
               } catch (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           }
@@ -281,7 +285,7 @@
               //begins true for default of include all, but filter if there is a selected section
               let checkSection = true;
               if (selectedSection !== null) {
-                checkSection = includedStudents.includes(submission.user_id);
+                checkSection = includedStudents.includes(parseInt(submission.user.id));
               }
 
               let submitted = true;
@@ -541,7 +545,6 @@
           async downloadSubmission(assignment, submission) {
             let app = this;
             let type = submission.submissionType;
-            console.log(submission);
             app.preparingDocument = true;
 
             //this needs to be set or it will flip preparing Document to false at the end, IE if it will be pulling up a print screen, set this to true
@@ -552,7 +555,6 @@
             if (type == 'online_quiz') {
               let url = '/courses/' + app.courseId + '/assignments/' + assignment.id + '/submissions/' + submission.user.id + '?preview=1';
               url = `/courses/${app.courseId}/quizzes/${assignment.quiz_id}/history?user_id=${submission.user.id}`;
-              console.log(url);
               await app.createIframe(url, app.downloadQuiz, {
                 'submission': submission,
                 'assignment': assignment
@@ -590,8 +592,6 @@
             }
             if (submission?.attachments?.length > 0) {
               await this.downloadAttachments(submission.attachments);
-              // console.log(submission);
-              // console.log(submission.attachments.length);
               // for (let i = 0; i < submission.attachments.length; i++) {
               //   let attachment = submission.attachments[i];
               //   setTimeout(() => {
@@ -601,8 +601,6 @@
               //     document.body.appendChild(a);
               //     a.click();
               //     document.body.removeChild(a);
-              //     console.log(i);
-              //     console.log(a.download);
               //   }, i * 100); // delay of 100ms between each attachment
               // }
             }
@@ -844,7 +842,6 @@
             // Wait until iframe content is fully loaded
             if (doc.readyState === 'complete') {
               injectPrintLabels();
-              console.log(doc.readyState);
               win.focus();
               win.onafterprint = () => {
                 $('title').text(ogTitle);
