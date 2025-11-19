@@ -2,7 +2,6 @@ Vue.component('ind-header-credits-2', {
   template: `
     <div class="btech-ind-header">
       <!-- Donut + avatar -->
-      {{ user }}
       <div class="btech-ind-header__avatar">
         <div
           id="btech-department-report-student-progress-donut-2"
