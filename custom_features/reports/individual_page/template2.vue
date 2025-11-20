@@ -64,8 +64,8 @@
           >
             <option
               v-for="(deg, idx) in user.degrees"
-              :key="deg.id || deg.sis_program_id || idx"
-              :value="deg.id || deg.sis_program_id || idx"
+              :key="deg._id || idx"
+              :value="deg._id || idx"
             >
               {{ deg.name || deg.title || (deg.major_code + ' ' + deg.academic_year) || ('Program ' + (idx + 1)) }}
             </option>
