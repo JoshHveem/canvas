@@ -42,7 +42,7 @@
 /* inner circle for the avatar image */
 .btech-ind-header__avatar-img-wrapper {
   position: absolute;
-  inset: 5%;             /* pulls the avatar circle inside the donut ring */
+  inset: 5%;             /* pulls the avatar circle inside a little just so it doesn't poke out of the ring. Appears to be fine up to 15%, but don't want it too far on the other end either */
   border-radius: 50%;
   overflow: hidden;
 }
