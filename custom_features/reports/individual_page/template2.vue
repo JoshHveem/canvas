@@ -71,8 +71,8 @@
             </option>
           </select>
         </div>
-        <div>
-          <strong>Disclaimer:</strong> With the transition to Defined Exit, there have been reports of inaccurate Credits in the original Student Report. This is a Beta version of a new Student Report built on the defined exit structure. However, it is still under active development. HS student data and Grades (grades between dates) in particular are not fully functional. However, the student progress in individual courses here should be more update. Once this tool has reached parity with the original Student Report, we'll shut the old report off.
+        <div style="font-size: 0.75rem;">
+          <strong>Disclaimer:</strong> With the transition to Defined Exit, there have been reports of inaccurate progress information in the original Student Report. This is a Beta version of a new Student Report built on the defined exit structure. However, it is still under active development. HS student data and Grades (grades between dates) in particular are not fully functional. However, the student progress in individual courses here should be more update. Once this tool has reached parity with the original Student Report, we'll shut the old report off.
         </div>
 
         <div>
