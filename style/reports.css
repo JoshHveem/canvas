@@ -52,8 +52,9 @@
 /* Info row (everything after the donut) */
 .btech-ind-header__info {
   display: flex;
-  flex-direction: column; /* ← two rows stacked */
+  flex-direction: column;
   gap: 0.4rem;
+  flex: 1 1 auto; 
 }
 
 .btech-ind-header__row {
