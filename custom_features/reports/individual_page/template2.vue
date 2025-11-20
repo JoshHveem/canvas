@@ -17,7 +17,7 @@
           aria-label="Report type"
           style="
             display:flex; gap:8px; justify-content:center; align-items:center;
-            padding:6px; border-radius:10px; background:#f3f4f6; margin-bottom:10px;
+            padding:6px; border-radius:10px; background:#f3f4f6; margin-bottom:6px;
           "
         >
           <button
@@ -67,20 +67,23 @@
               :key="deg.id || deg.sis_program_id || idx"
               :value="deg.id || deg.sis_program_id || idx"
             >
-              {{ deg.name || deg.title || deg.sis_program_id || ('Program ' + (idx + 1)) }}
+              {{ deg.name || deg.title || (deg.major_code + ' ' + deg.academic_year) || ('Program ' + (idx + 1)) }}
             </option>
           </select>
         </div>
 
-      <div>
-        <ind-header-credits-2
-          :colors="colors"
-          :user="user"
-          :degree="currentDegree"
-          :tree="tree"
-          :settings="settings"
-        ></ind-header-credits-2> 
-      </div>
+        <div>
+          <ind-header-credits-2
+            :colors="colors"
+            :user="user"
+            :degree="currentDegree"
+            :tree="tree"
+            :settings="settings"
+          ></ind-header-credits-2> 
+        </div>
+
+
+        
         <div v-show="settings.reportType === 'student-courses'">
           <student-courses-report-2
             :user="user"
