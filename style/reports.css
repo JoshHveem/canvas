@@ -12,11 +12,6 @@
   background-color: #eee;
 }
 
-/* styling for the Student Report Header (shows student name, id, credits, etc.) */
-.btech-ind-header {
-  margin-bottom: 1rem;
-}
-
 /* Top section */
 /* Main header layout */
 .btech-ind-header {
@@ -57,11 +52,16 @@
 /* Info row (everything after the donut) */
 .btech-ind-header__info {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;   /* stay one line on big screens, wrap on narrow */
-  gap: 0.6rem 0.9rem;
+  flex-direction: column; /* ← two rows stacked */
+  gap: 0.4rem;
 }
 
+.btech-ind-header__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+}
 /* Name / chips / labels */
 .btech-ind-header__name {
   text-decoration: none;
