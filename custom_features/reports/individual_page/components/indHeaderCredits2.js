@@ -57,42 +57,6 @@ Vue.component('ind-header-credits-2', {
           </icon-distance-approved>
         </div>
 
-        <!-- Avg grade -->
-        <span class="btech-ind-header__label">Avg. Grade</span>
-        <span
-          class="btech-pill-text btech-ind-header__pill"
-          :style="{
-            'background-color': degree?.average_score ? (Math.round(degree.average_score) < 60 ? colors.red : Math.round(degree.average_score) < 80 ? colors.yellow : colors.green) : colors.gray,
-            'color': degree?.average_score ? colors.white : colors.black,
-          }">
-          {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
-        </span>
-
-        <!-- Certificate credits -->
-        <span class="btech-ind-header__label">Cert Credits</span>
-        <span
-          class="btech-pill-text btech-ind-header__pill"
-          :style="{ 'background-color': colors.gray, 'color': '#000000' }">
-          {{ tree.hours }}
-        </span>
-
-        <!-- Earned credits -->
-        <span class="btech-ind-header__label">Earned</span>
-        <span
-          class="btech-pill-text btech-ind-header__pill"
-          :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-          {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }}
-        </span>
-
-        <!-- Start date -->
-        <span class="btech-ind-header__label">Start</span>
-        <span
-          v-if="degree?.entry_date"
-          class="btech-pill-text btech-ind-header__pill"
-          :style="{ 'background-color': colors.gray, 'color': colors.black }">
-          {{ dateToString(degree?.entry_date ?? '') }}
-        </span>
-
         <!-- Last login -->
         <span class="btech-ind-header__label">Last Login</span>
         <span
@@ -114,6 +78,27 @@ Vue.component('ind-header-credits-2', {
           class="btech-pill-text btech-ind-header__pill"
           :style="{ 'background-color': colors.gray, 'color': '#000000' }">
           {{ dateToString(user?.last_update) }}
+        </span>
+      </div>
+
+      <div class="btech-ind-header__info">
+        <!-- Earned credits -->
+        <span class="btech-ind-header__label">Credits Earned</span>
+        <span
+          class="btech-pill-text btech-ind-header__pill"
+          :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
+          {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }} / {{ tree.hours }}
+        </span>
+
+        <!-- Avg grade -->
+        <span class="btech-ind-header__label">Avg. Grade</span>
+        <span
+          class="btech-pill-text btech-ind-header__pill"
+          :style="{
+            'background-color': degree?.average_score ? (Math.round(degree.average_score) < 60 ? colors.red : Math.round(degree.average_score) < 80 ? colors.yellow : colors.green) : colors.gray,
+            'color': degree?.average_score ? colors.white : colors.black,
+          }">
+          {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
         </span>
       </div>
     </div>
