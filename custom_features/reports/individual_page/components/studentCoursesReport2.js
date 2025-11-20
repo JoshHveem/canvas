@@ -6,7 +6,7 @@ Vue.component('student-courses-report-2', {
       <div>
         <h2>Core</h2>
         <div v-for="(course, i) in core">
-          <course-row-ind
+          <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
@@ -18,12 +18,12 @@ Vue.component('student-courses-report-2', {
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
-          ></course-row-ind>
+          ></course-row-ind-2>
         </div>
 
         <h2>Electives</h2>
         <div v-for="(course, i) in electives">
-          <course-row-ind
+          <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
@@ -35,12 +35,12 @@ Vue.component('student-courses-report-2', {
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
-          ></course-row-ind>
+          ></course-row-ind-2>
         </div>
 
         <h2>Other</h2>
         <div v-for="(course, i) in others">
-          <course-row-ind
+          <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
@@ -52,7 +52,7 @@ Vue.component('student-courses-report-2', {
             :user-canvas-id="'' + user.canvas_id"
             :istransfer="false"
             :iswithdraw="false"
-          ></course-row-ind>
+          ></course-row-ind-2>
         </div>
 
 
