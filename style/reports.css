@@ -12,6 +12,31 @@
   background-color: #eee;
 }
 
+
+/* Degree switcher */
+.btech-degree-switcher {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.btech-degree-switcher__label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.btech-degree-switcher__select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 12px;
+  background: #fff;
+}
+
+
 /* Top section */
 /* Main header layout */
 .btech-ind-header {

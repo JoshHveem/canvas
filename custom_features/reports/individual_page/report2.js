@@ -71,21 +71,6 @@
         this.loadingProgress += 10;
         this.loading = false;
       },
-      computed: {
-        currentReportMeta() {
-          const fallback = this.reportTypes[0];
-          return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
-        },
-        currentReportProps() {
-          const base = {
-            year: this.settings.filters.year,
-            account: this.settings.account,
-            instructorId: ENV.current_user_id  // optional; child can use or ignore
-          };
-          return base; // other reports can use what they need from base
-        },
-      },
-
       data: function () {
         return {
           currentReportMeta: {
@@ -95,7 +80,7 @@
             { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
             { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Grades Between Dates' },
           ],
-          currentDegree: null,
+          currentDegreeId: null,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -144,13 +129,51 @@
           }
         }
       },
+      watch: {
+        async currentDegreeId (newVal, oldVal) {
+          const degrees = this.user?.degrees || [];
+          if (!degrees.length) return;
 
+          const deg = degrees.find((d, idx) =>
+            newVal === (d.id || d.sis_program_id || idx)
+          );
+          if (!deg) return;
+
+          // Load new tree for the selected program
+          const tree = await this.loadTree(deg.major_code, deg.academic_year);
+          this.tree = tree;
+
+          // If you eventually process user-course info based on tree:
+          this.user = this.updateUserCourseInfo(this.user, tree);
+        },
+
+        // you can keep your existing watchers here (if any)
+      },
       computed: {
-        visibleColumns: function () {
-          return this.columns.filter(function (c) {
-            return c.visible;
-          })
-        }
+        currentReportMeta() {
+          const fallback = this.reportTypes[0];
+          return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
+        },
+        currentReportProps() {
+          const base = {
+            year: this.settings.filters.year,
+            account: this.settings.account,
+            instructorId: ENV.current_user_id
+          };
+          return base;
+        },
+
+        // NEW: derive currentDegree from user.degrees + currentDegreeId
+        currentDegree() {
+          const degrees = this.user?.degrees || [];
+          if (!degrees.length) return this.currentDegree || {}; // fallback if you still set it elsewhere
+
+          const id = this.currentDegreeId;
+          const match = degrees.find((deg, idx) =>
+            id === (deg.id || deg.sis_program_id || idx)
+          );
+          return match || degrees[0];
+        },
       },
 
       methods: {
@@ -261,10 +284,11 @@
             return a.academic_year > b.academic_year ? -1 : 1;
           });
 
-          this.currentDegree = user?.degrees?.[0] ?? { major_code: '', academic_year: '' };
+          this.currentDegreeId = user?.degrees?.[0]?.id ?? 0;
+
 
           let tree;
-          if (user?.degrees?.[0]) {
+          if (this.currentDegreeId) {
             // FIX: depts -> degrees
             tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].academic_year);
           } else {

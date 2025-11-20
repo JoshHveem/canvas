@@ -44,7 +44,35 @@
             {{ rt.label }}
           </button>
         </div>
-        <div>
+
+        <!-- Degree selector sub-menu -->
+        <div
+          v-if="user?.degrees && user.degrees.length"
+          class="btech-degree-switcher"
+        >
+          <label
+            for="btech-degree-select"
+            class="btech-degree-switcher__label"
+          >
+            Program:
+          </label>
+
+          <select
+            id="btech-degree-select"
+            v-model="currentDegreeId"
+            class="btech-degree-switcher__select"
+          >
+            <option
+              v-for="(deg, idx) in user.degrees"
+              :key="deg.id || deg.sis_program_id || idx"
+              :value="deg.id || deg.sis_program_id || idx"
+            >
+              {{ deg.name || deg.title || deg.sis_program_id || ('Program ' + (idx + 1)) }}
+            </option>
+          </select>
+        </div>
+
+      <div>
         <ind-header-credits-2
           :colors="colors"
           :user="user"
