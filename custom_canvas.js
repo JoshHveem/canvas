@@ -282,14 +282,12 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("files/restore_images", /^\/courses\/[0-9]+/);
       feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
       feature("hs/enroll", /^\/accounts\/[0-9]+\/enrollhs$/);
-      if (IS_ME) {
-        feature("reports/individual_page/report2", [
-          /^\/courses\/[0-9]+\/users\/[0-9]+$/,
-          /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-          /^\/users\/[0-9]+$/,
-          /^\/courses\/[0-9]+\/grades\/[0-9]+$/
-        ]);
-      }
+      feature("reports/individual_page/report2", [
+        /^\/courses\/[0-9]+\/users\/[0-9]+$/,
+        /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
+        /^\/users\/[0-9]+$/,
+        /^\/courses\/[0-9]+\/grades\/[0-9]+$/
+      ]);
       feature("reports/individual_page/report", [
         /^\/courses\/[0-9]+\/users\/[0-9]+$/,
         /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
