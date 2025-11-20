@@ -1,87 +1,106 @@
 Vue.component('ind-header-credits-2', {
   template: `
-   <div class="btech-ind-header__info">
+    <div class="btech-ind-header">
+      <!-- Donut + avatar -->
+      <div class="btech-ind-header__avatar">
+        <div
+          v-if="user.avatar_url"
+          class="btech-ind-header__avatar-img-wrapper">
+          <img
+            :src="user.avatar_url"
+            alt=""
+            class="btech-ind-header__avatar-img">
+        </div>
+        <div
+          id="btech-department-report-student-progress-donut-2"
+          class="btech-ind-header__donut-svg">
+        </div>
+      </div>
 
-  <div class="btech-ind-header__row">
-    <!-- row 1 -->
-    <a :href="'https://btech.instructure.com/users/' + user.canvas_id"
-      target="_blank"
-      class="btech-ind-header__name">
-      <strong>
-        {{ settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")" }}
-      </strong>
-    </a>
+      <!-- All user data on one (wrappable) line -->
+      <div class="btech-ind-header__info">
 
-    <div
-      v-if="user?.academic_probation?.probation != undefined"
-      :title="user?.academic_probation?.probation == undefined ? 'No current probations' : user?.academic_probation?.probation"
-      class="btech-ind-header__icon">
-      <icon-alert
-        :fill="academicProbationStyle"
-        width="1.5rem"
-        height="1.5rem">
-      </icon-alert>
+        <div class="btech-ind-header__row">
+          <!-- row 1 -->
+          <a :href="'https://btech.instructure.com/users/' + user.canvas_id"
+            target="_blank"
+            class="btech-ind-header__name">
+            <strong>
+              {{ settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")" }}
+            </strong>
+          </a>
+
+          <div
+            v-if="user?.academic_probation?.probation != undefined"
+            :title="user?.academic_probation?.probation == undefined ? 'No current probations' : user?.academic_probation?.probation"
+            class="btech-ind-header__icon">
+            <icon-alert
+              :fill="academicProbationStyle"
+              width="1.5rem"
+              height="1.5rem">
+            </icon-alert>
+          </div>
+
+          <span class="btech-ind-header__chip">
+            {{ degree?.campus }}
+          </span>
+
+          <div
+            v-if="user?.distance_approved"
+            :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"
+            class="btech-ind-header__icon">
+            <icon-distance-approved
+              :class="{'distance-approved': user.distance_approved, 'not-distance-approved': !user.distance_approved}"
+              width="1.5rem"
+              height="1.5rem">
+            </icon-distance-approved>
+          </div>
+
+          <span class="btech-ind-header__label">Last Login</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{
+              'background-color': calcLastLoginColorBg(user.last_login),
+              'color': '#ffffff',
+            }">
+            {{ dateToString(user.last_login) }}
+          </span>
+
+          <span class="btech-ind-header__label" title="The last time this user's data was updated.">
+            Updated
+          </span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.gray, 'color': '#000000' }">
+            {{ dateToString(user?.last_update) }}
+          </span>
+        </div>
+
+        <div class="btech-ind-header__row">
+          <!-- row 2 -->
+          <span class="btech-ind-header__label">Credits Earned</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
+            {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }} / {{ tree.hours }}
+          </span>
+
+          <span class="btech-ind-header__label">Avg. Grade</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{
+              'background-color': degree?.average_score
+                ? (Math.round(degree.average_score) < 60
+                    ? colors.red
+                    : Math.round(degree.average_score) < 80
+                      ? colors.yellow
+                      : colors.green)
+                : colors.gray,
+              'color': degree?.average_score ? colors.white : colors.black,
+            }">
+            {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
+          </span>
+        </div>
+
+      </div>
+    
     </div>
-
-    <span class="btech-ind-header__chip">
-      {{ degree?.campus }}
-    </span>
-
-    <div
-      v-if="user?.distance_approved"
-      :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"
-      class="btech-ind-header__icon">
-      <icon-distance-approved
-        :class="{'distance-approved': user.distance_approved, 'not-distance-approved': !user.distance_approved}"
-        width="1.5rem"
-        height="1.5rem">
-      </icon-distance-approved>
-    </div>
-
-    <span class="btech-ind-header__label">Last Login</span>
-    <span class="btech-pill-text btech-ind-header__pill"
-      :style="{
-        'background-color': calcLastLoginColorBg(user.last_login),
-        'color': '#ffffff',
-      }">
-      {{ dateToString(user.last_login) }}
-    </span>
-
-    <span class="btech-ind-header__label" title="The last time this user's data was updated.">
-      Updated
-    </span>
-    <span class="btech-pill-text btech-ind-header__pill"
-      :style="{ 'background-color': colors.gray, 'color': '#000000' }">
-      {{ dateToString(user?.last_update) }}
-    </span>
-  </div>
-
-  <div class="btech-ind-header__row">
-    <!-- row 2 -->
-    <span class="btech-ind-header__label">Credits Earned</span>
-    <span class="btech-pill-text btech-ind-header__pill"
-      :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-      {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }} / {{ tree.hours }}
-    </span>
-
-    <span class="btech-ind-header__label">Avg. Grade</span>
-    <span class="btech-pill-text btech-ind-header__pill"
-      :style="{
-        'background-color': degree?.average_score
-          ? (Math.round(degree.average_score) < 60
-              ? colors.red
-              : Math.round(degree.average_score) < 80
-                ? colors.yellow
-                : colors.green)
-          : colors.gray,
-        'color': degree?.average_score ? colors.white : colors.black,
-      }">
-      {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
-    </span>
-  </div>
-
-</div>
- 
 
   `,
   props: {
