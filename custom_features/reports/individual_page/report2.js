@@ -135,7 +135,7 @@
           if (!degrees.length) return;
 
           const deg = degrees.find((d, idx) =>
-            newVal === (d.id || d.sis_program_id || idx)
+            newVal === (d._id || idx)
           );
           if (!deg) return;
 
@@ -170,7 +170,7 @@
 
           const id = this.currentDegreeId;
           const match = degrees.find((deg, idx) =>
-            id === (deg.id || deg.sis_program_id || idx)
+            id === (deg._id || idx)
           );
           return match || degrees[0];
         },
@@ -284,7 +284,7 @@
             return a.academic_year > b.academic_year ? -1 : 1;
           });
 
-          this.currentDegreeId = user?.degrees?.[0]?.id ?? 0;
+          this.currentDegreeId = user?.degrees?.[0]?._id ?? 0;
 
 
           let tree;
