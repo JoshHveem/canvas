@@ -29,7 +29,7 @@ Vue.component('course-row-ind-2', {
             class="btech-pill-text" 
             v-show="extensions > 0"
             :style="{
-              'background-color': extensionBGColor,
+              'background-color': extensionsBGColor,
               'color': colors.white,
             }">
             {{extensions}} Ext
