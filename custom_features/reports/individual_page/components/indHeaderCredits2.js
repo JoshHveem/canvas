@@ -57,6 +57,7 @@ Vue.component('ind-header-credits-2', {
               height="1.5rem">
             </icon-distance-approved>
           </div>
+          <div class="btech-flex-spacer"></div>
 
           <span class="btech-ind-header__label">Last Login</span>
           <span class="btech-pill-text btech-ind-header__pill"
