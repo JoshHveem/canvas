@@ -70,7 +70,7 @@ Vue.component('ind-header-credits-2', {
           </span>
 
           <span class="btech-ind-header__label" title="The last time this user's data was updated.">
-            Updated
+            Last Updated
           </span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.gray, 'color': '#000000' }">
