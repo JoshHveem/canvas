@@ -42,7 +42,6 @@
 /* inner circle for the avatar image */
 .btech-ind-header__avatar-img-wrapper {
   position: absolute;
-  inset: 18%;             /* pulls the avatar circle inside the donut ring */
   border-radius: 50%;
   overflow: hidden;
 }

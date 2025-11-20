@@ -4,16 +4,16 @@ Vue.component('ind-header-credits-2', {
       <!-- Donut + avatar -->
       <div class="btech-ind-header__avatar">
         <div
-          id="btech-department-report-student-progress-donut-2"
-          class="btech-ind-header__donut-svg">
-        </div>
-        <div
           v-if="user.avatar_url"
           class="btech-ind-header__avatar-img-wrapper">
           <img
             :src="user.avatar_url"
             alt=""
             class="btech-ind-header__avatar-img">
+        </div>
+        <div
+          id="btech-department-report-student-progress-donut-2"
+          class="btech-ind-header__donut-svg">
         </div>
       </div>
 
