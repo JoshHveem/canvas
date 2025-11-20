@@ -166,7 +166,7 @@
         // NEW: derive currentDegree from user.degrees + currentDegreeId
         currentDegree() {
           const degrees = this.user?.degrees || [];
-          if (!degrees.length) return this.currentDegree || {}; // fallback if you still set it elsewhere
+          if (!degrees.length) return {major_code: '', academic_year: 0}; // fallback if you still set it elsewhere
 
           const id = this.currentDegreeId;
           const match = degrees.find((deg, idx) =>
