@@ -32,7 +32,7 @@ Vue.component('course-row-ind-2', {
               'background-color': extensionsBGColor,
               'color': colors.white,
             }">
-            {{extensions}} Ext
+            {{extensions}} Extn
           </span>
         </div>
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
