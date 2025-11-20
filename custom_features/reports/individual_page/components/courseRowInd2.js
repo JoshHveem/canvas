@@ -26,6 +26,17 @@ Vue.component('course-row-ind-2', {
         </div>
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
+            class="btech-pill-text" 
+            v-show="extensions > 0"
+            :style="{
+              'background-color': extensionBGColor,
+              'color': colors.white,
+            }">
+            {{extensions}} Ext
+          </span>
+        </div>
+        <div style="display: inline-block; width: 4rem; font-size: 1rem;">
+          <span 
             v-show="credits"
             class="btech-pill-text" 
             :title="(istransfer ? 'Transfer Course' : 'Course Credits')"
@@ -117,6 +128,10 @@ Vue.component('course-row-ind-2', {
       default: ''
     },
     includeHours: false,
+    extensions: {
+      type: Number,
+      default: 0 
+    },
     istransfer: {
       type: Boolean,
       default: false
@@ -141,6 +156,10 @@ Vue.component('course-row-ind-2', {
       let vm = this;
       if (vm.course === undefined) return false;
       return true;
+    },
+    extensionsBGColor: function() {
+      let vm = this;
+      return vm.extensions > 2 ? vm.colors.red : (vm.extensions == 1 ? vm.colors.yellow : vm.colors.green);
     },
     gradeBGColor: function() {
       let vm = this;

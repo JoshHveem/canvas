@@ -16,6 +16,7 @@ Vue.component('student-courses-report-2', {
             :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
+            :extensions="course.num_extensions"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
           ></course-row-ind-2>
@@ -33,6 +34,7 @@ Vue.component('student-courses-report-2', {
             :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
+            :extensions="course.num_extensions"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
           ></course-row-ind-2>
@@ -50,6 +52,7 @@ Vue.component('student-courses-report-2', {
             :course-id="course.course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
+            :extensions="course.num_extensions"
             :istransfer="false"
             :iswithdraw="false"
           ></course-row-ind-2>
@@ -74,7 +77,6 @@ Vue.component('student-courses-report-2', {
         let data = core[courseCode];
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
-        console.log(userData);
         if (userData) {
           data.state = userData.canvas_enrollment_state ?? '';
           data.is_transfer = userData.is_transfer;
