@@ -19,7 +19,7 @@ Vue.component('ind-header-credits-2', {
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="user && degree" 
+        v-if="user?.name && tree?.hours" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
