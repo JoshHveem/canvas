@@ -67,7 +67,7 @@
               :key="deg._id || idx"
               :value="deg._id || idx"
             >
-              {{ deg.name || deg.title || (deg.major_code + ' ' + deg.academic_year) || ('Program ' + (idx + 1)) }}
+              {{ deg.major_code + ' ' + deg.academic_year }}
             </option>
           </select>
         </div>
