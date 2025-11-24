@@ -332,6 +332,7 @@ Vue.component('courses-report', {
           resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
           this.courses.push(...this.processCourses(resp?.courses || []));
         } while ((resp?.courses || []).length === limit);
+        console.log(this.courses);
       } finally {
         this.loading = false;
       }
