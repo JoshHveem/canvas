@@ -79,7 +79,7 @@ Vue.component('courses-report', {
             const v = c.pct_need_extension;
             if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
-              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
+              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : (v > 0 ? this.colors.yellowGreen : this.colors.green)),
               color: this.colors.white
             };
           },
@@ -92,7 +92,7 @@ Vue.component('courses-report', {
             const v = c.pct_dropped;
             if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
-              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
+              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : (v > 0 ? this.colors.yellowGreen : this.colors.green)),
               color: this.colors.white
             };
           },
@@ -105,7 +105,7 @@ Vue.component('courses-report', {
             const v = c.pct_last_active;
             if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
-              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
+              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : (v > 0 ? this.colors.yellowGreen : this.colors.green)),
               color: this.colors.white
             };
           },
