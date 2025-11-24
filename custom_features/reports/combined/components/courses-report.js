@@ -86,6 +86,19 @@ Vue.component('courses-report', {
           c => Number(c.pct_need_extension ?? -1) // sort on raw 0–1 value
         ),
         new CoursesColumn(
+          'Drop', 'Percent of students who dropped.', '4rem', false, 'number',
+          c => c.pct_dropped !== null ? (c.pct_dropped * 100).toFixed(1) + '%' : 'n/a',
+          c => {
+            const v = c.pct_need_extension;
+            if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            return {
+              backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
+              color: this.colors.white
+            };
+          },
+          c => Number(c.pct_dropped ?? -1) // sort on raw 0–1 value
+        ),
+        new CoursesColumn(
           'Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
           c => Number.isFinite(Number(c.average_score)) ? Number(c.average_score).toFixed(1) + '%' : 'n/a',
           c => {
