@@ -89,7 +89,7 @@ Vue.component('courses-report', {
           'Drop', 'Percent of students who dropped.', '4rem', false, 'number',
           c => c.pct_dropped !== null ? (c.pct_dropped * 100).toFixed(1) + '%' : 'n/a',
           c => {
-            const v = c.pct_need_extension;
+            const v = c.pct_dropped;
             if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
               backgroundColor: (v > 0.25) ? this.colors.red : (v > 0.1 ? this.colors.yellow : this.colors.green),
