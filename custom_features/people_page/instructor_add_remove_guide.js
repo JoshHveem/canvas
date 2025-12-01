@@ -16,7 +16,7 @@
                             <th style="padding:4px;">Instructors</th>
                         </tr>
                         <tr>
-                            <td style="padding:4px;"><strong>Manually Add / Remove?</strong></td>
+                            <td style="padding:4px; width: 15rem;"><strong>Manually Add / Remove?</strong></td>
                             <td style="padding:4px;">❌ No</td>
                             <td style="padding:4px;">❌ No</td>
                             <td style="padding:4px;">✔️ Yes</td>
@@ -26,7 +26,7 @@
                     <hr>
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <tr>
-                            <th style="padding:4px;">Removal Method</th>
+                            <th style="padding:4px; width: 15rem;">Removal Method</th>
                             <th style="padding:4px;">Appears on Transcript</th>
                             <th style="padding:4px;">Appears in Gradebook</th>
                             <th style="padding:4px;">Scenario</th>
