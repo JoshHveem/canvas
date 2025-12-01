@@ -29,7 +29,6 @@
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                     <tr>
                     <th style="padding:4px;">Removal Method</th>
-                    <th style="padding:4px;">Course Progress</th>
                     <th style="padding:4px;">Appears on Transcript</th>
                     <th style="padding:4px;">Appears in Gradebook</th>
                     <th style="padding:4px;">Scenario</th>
@@ -37,7 +36,6 @@
 
                     <tr>
                     <td style="padding:4px;"><strong>Conclude</strong></td>
-                    <td style="padding:4px;">100%</td>
                     <td style="padding:4px;">✔️ Yes</td>
                     <td style="padding:4px;">✔️ Yes</td>
                     <td style="padding:4px;">Student finished the course</td>
@@ -45,7 +43,6 @@
 
                     <tr>
                     <td style="padding:4px;"><strong>Deactivate</strong></td>
-                    <td style="padding:4px;">1–99%</td>
                     <td style="padding:4px;">❌ No</td>
                     <td style="padding:4px;">✔️ Yes</td>
                     <td style="padding:4px;">Began but did not finish the course</td>
@@ -53,7 +50,6 @@
 
                     <tr>
                     <td style="padding:4px;"><strong>Delete</strong></td>
-                    <td style="padding:4px;">0%</td>
                     <td style="padding:4px;">❌ No</td>
                     <td style="padding:4px;">❌ No</td>
                     <td style="padding:4px;">Accidentally added to the wrong course</td>
