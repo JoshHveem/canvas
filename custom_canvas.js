@@ -339,6 +339,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       //DEPARTMENT SPECIFIC IMPORTS
       if (IS_TEACHER) {
         feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
+        feature("people_page/instructor_add_remove_guide", /^\/courses\/[0-9]+\/users/);
       }
       if (CURRENT_DEPARTMENT_ID == 3827) { //NURSING
         feature('department_specific/replace_course_code_with_name', /^\/courses\/[0-9]+/);
