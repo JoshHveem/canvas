@@ -161,14 +161,14 @@
               class="btech-enrollment-reset"
               style="cursor: pointer; margin-left: 0.5rem;"
             >
-              Reset Date
+              Reset
             </button>
             <button
               type="button"
               class="btech-enrollment-view-all-dates"
               style="cursor: pointer; margin-left: 0.5rem;"
             >
-              View All Dates
+              Log 
             </button>
           </div>
         </div>
