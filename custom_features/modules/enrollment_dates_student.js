@@ -71,7 +71,7 @@ var Countdown = {
     }
   },
 
- init: async function() {
+  init: async function() {
     if (!ENV.current_user_is_student) return; // only show this for students
 
     // get all enrollments for this student in this course

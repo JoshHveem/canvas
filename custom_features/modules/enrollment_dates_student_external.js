@@ -234,13 +234,46 @@
       Entry point for the whole thing
     */
     init: async function() {
-      if (!ENV.current_user_is_student) return; //only show this for students
+      if (!ENV.current_user_is_student) return; // only show this for students
 
-      // get the enrollment data using the api
-      this.enrollment = (await $.get(`/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=self&type[]=StudentEnrollment`))[0];
-      // sometimes there's a created_at date but not a start_at date. But if both exist
-      //// start_at takes priority because sometimes enrollments are created before the student has the chance to do anything in the course
-      if (this.enrollment.start_at == undefined) this.enrollment.start_at = this.enrollment.created_at;
+      // get all enrollments for this student in this course
+      const enrollments = await $.get(
+        `/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=self&type[]=StudentEnrollment`
+      );
+
+      if (!enrollments || enrollments.length === 0) return;
+
+      // use the first enrollment as the base object
+      this.enrollment = enrollments[0];
+
+      // BTECH SPECIFIC
+      this.enrollment.conditionalDisplay = false;
+
+      // compute earliest start_at and latest created_at across all enrollments
+      let earliestStartAt = null;
+      let latestCreatedAt = null;
+
+      enrollments.forEach(e => {
+        if (e.start_at) {
+          if (!earliestStartAt || new Date(e.start_at) < new Date(earliestStartAt)) {
+            earliestStartAt = e.start_at;
+          }
+        }
+        if (e.created_at) {
+          if (!latestCreatedAt || new Date(e.created_at) > new Date(latestCreatedAt)) {
+            latestCreatedAt = e.created_at;
+          }
+        }
+      });
+
+      // if there was no start_at anywhere, fall back to created_at
+      if (!earliestStartAt && latestCreatedAt) {
+        earliestStartAt = latestCreatedAt;
+      }
+
+      // assign the aggregated dates back onto the "main" enrollment object
+      if (earliestStartAt) this.enrollment.start_at = earliestStartAt;
+      if (latestCreatedAt) this.enrollment.created_at = latestCreatedAt;
 
       // Try and find an end_at date if one hasn't been set
       this.calcEndDate();
@@ -248,15 +281,23 @@
       // Do we have dates needed for the progress bar and the countdown to work?
       let checkValidDates = (this.enrollment.start_at != undefined && this.enrollment.end_at != undefined);
 
+      // BTECH SPECIFIC
+      let checkDepartment = !this.disabledDepartments.includes(CURRENT_DEPARTMENT_ID);
+
+      // BTECH SPECIFIC
+      let checkNumDays = (!this.enrollment.conditionalDisplay || (this.calcTimeVals()).days < 30);
+
+      // BTECH SPECIFIC
+      if (!checkValidDates && !checkDepartment) return;
       this.initProgress();
-      loadStyle();
-      if (!checkValidDates) return;
+      if (!checkValidDates || !checkNumDays) return;
       this.initCountdown();
 
       // Animate countdown to the end 
-      this.count();    
-      loadStyle();
+      this.count();
+      this.loadStyle();
     },
+
     
     /*
       Initialize the countdown  
