@@ -35,9 +35,6 @@
       let date = dates[d];
       modalContent.append(
         `<div>
-          <span style="width: 2.5rem; display: inline-block;">
-            ${date.is_extension ? "<b>EXT</b>" : ""}
-          </span>
           <span style="width: 6rem; display: inline-block;">
             ${dateToString(new Date(date.end_date))}
           </span>
@@ -69,7 +66,7 @@
     });
   }
 
-  function changeDate(enrollment, endDateStr, isExtension) {
+  function changeDate(enrollment, endDateStr) {
     if (!endDateStr) return;
 
     let endAtDate = new Date(endDateStr);
@@ -94,7 +91,6 @@
       canvas_user_id: ENV.USER_ID,
       canvas_course_id: ENV.COURSE_ID,
       canvas_section_id: enrollment.course_section_id,
-      is_extension: isExtension,
       end_date: endAtDate,
       creator_id: ENV.current_user.id,
       creator_name: ENV.current_user.display_name,
@@ -105,9 +101,6 @@
       postData,
       "POST"
     );
-
-    if (isExtension) alert("Extension Set");
-    else alert("End Date Updated");
   }
 
   // ---- NEW: per-enrollment UI wiring ----
@@ -163,14 +156,6 @@
               class="btech-enrollment-end-date"
               value="${formattedEnd}"
             >
-            <label style="margin-left: 0.5rem; cursor: pointer;">
-              <input
-                type="checkbox"
-                class="btech-enrollment-is-extension"
-                style="cursor: pointer;"
-              >
-              Is Extension?
-            </label>
             <button
               type="button"
               class="btech-enrollment-reset"
@@ -195,7 +180,6 @@
 
     // Wire up handlers
     let $dateInput = $controlsCell.find(".btech-enrollment-end-date");
-    let $extCheckbox = $controlsCell.find(".btech-enrollment-is-extension");
 
     $controlsCell.find(".btech-enrollment-reset").on("click", function () {
       $dateInput.val("");
@@ -207,10 +191,5 @@
       showAllDatesModal();
     });
 
-    $dateInput.on("change", function () {
-      let isExtension = $extCheckbox.prop("checked");
-      changeDate(enrollment, this.value, isExtension);
-      $extCheckbox.prop("checked", false); // reset
-    });
   });
 })();
