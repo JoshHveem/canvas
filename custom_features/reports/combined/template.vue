@@ -85,7 +85,6 @@
               position:relative;
               z-index:${currentSubKey === sm.value ? 2 : 1};
               
-              /* Rounding only for edges */
               border-top-left-radius:${idx === 0 ? '999px' : '0'};
               border-bottom-left-radius:${idx === 0 ? '999px' : '0'};
               border-top-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
