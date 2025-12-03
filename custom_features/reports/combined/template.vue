@@ -53,7 +53,7 @@
           aria-label="Report view"
           style="
             display:flex; gap:6px; justify-content:center; align-items:center;
-            padding:4px 6px; border-radius:8px; background:#f9fafb; margin-bottom:12px;
+            padding:2px 6px; border-radius:8px; background:#FFFFFF; margin-bottom:12px;
           "
         >
           <button
@@ -64,16 +64,16 @@
             :tabindex="currentSubKey === sm.value ? 0 : -1"
             @click="setSubMenu(sm.value)"
             style="
-              border:1px solid #e5e7eb;
+              border:1px solid #000000;
               border-radius:999px;
-              padding:4px 10px;
+              padding:1px 10px;
               font-size:11px;
               background:white;
               cursor:pointer;
               transition: box-shadow .15s ease, background .15s ease;
             "
             :style="currentSubKey === sm.value
-              ? 'background:#2563eb; color:#fff; border-color:#2563eb; box-shadow:0 1px 3px rgba(0,0,0,.12);'
+              ? 'background:#303030; color:#fff; border-color:#101010; box-shadow:0 1px 3px rgba(0,0,0,.12);'
               : 'background:#fff; color:#111827;'"
           >
             {{ sm.label }}
