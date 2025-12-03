@@ -40,7 +40,7 @@
             "
             :style="settings.reportType === rt.value
               ? 'background:#111827; color:#fff; border-color:#111827; box-shadow:0 1px 4px rgba(0,0,0,.15);'
-              : 'background:#fff; color:#111827;'"
+              : 'background:#fff; color:#111827; border-color: #111827;'"
           >
             {{ rt.label }}
           </button>
@@ -74,7 +74,7 @@
             "
             :style="currentSubKey === sm.value
               ? 'background:#606060; color:#fff; border-color:#101010; box-shadow:0 1px 3px rgba(0,0,0,.12);'
-              : 'background:#fff; color:#111827;'"
+              : 'background:#fff; color:#111827; border-color:#101010;'"
           >
             {{ sm.label }}
           </button>
