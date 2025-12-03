@@ -148,65 +148,69 @@
     }
 
     // build the per-row controls
-    let $controls = $(`
-      <div class="btech-enrollment-end-date-row" style="margin-top: 0.5rem;">
-        <div style="margin-bottom: 0.25rem;">
-          <span style="font-weight: bold;">Set Enrollment End Date</span>
-        </div>
-        <div>
-          <input
-            type="date"
-            class="btech-enrollment-end-date"
-            value="${formattedEnd}"
-          >
-          <label style="margin-left: 0.5rem; cursor: pointer;">
+    // ---- NEW: create a brand-new <td> for the controls ----
+
+    // Build the controls
+    let $controlsCell = $(`
+      <td class="btech-end-date-cell" style="vertical-align: top;">
+        <div class="btech-enrollment-end-date-row" style="margin-top: 0.5rem;">
+          <div style="margin-bottom: 0.25rem;">
+            <span style="font-weight: bold;">Set Enrollment End Date</span>
+          </div>
+          <div>
             <input
-              type="checkbox"
-              class="btech-enrollment-is-extension"
-              style="cursor: pointer;"
+              type="date"
+              class="btech-enrollment-end-date"
+              value="${formattedEnd}"
             >
-            Is Extension?
-          </label>
-          <button
-            type="button"
-            class="btech-enrollment-reset"
-            style="cursor: pointer; margin-left: 0.5rem;"
-          >
-            Reset Date
-          </button>
-          <button
-            type="button"
-            class="btech-enrollment-view-all-dates"
-            style="cursor: pointer; margin-left: 0.5rem;"
-          >
-            View All Dates
-          </button>
+            <label style="margin-left: 0.5rem; cursor: pointer;">
+              <input
+                type="checkbox"
+                class="btech-enrollment-is-extension"
+                style="cursor: pointer;"
+              >
+              Is Extension?
+            </label>
+            <button
+              type="button"
+              class="btech-enrollment-reset"
+              style="cursor: pointer; margin-left: 0.5rem;"
+            >
+              Reset Date
+            </button>
+            <button
+              type="button"
+              class="btech-enrollment-view-all-dates"
+              style="cursor: pointer; margin-left: 0.5rem;"
+            >
+              View All Dates
+            </button>
+          </div>
         </div>
-      </div>
+      </td>
     `);
 
-    // append controls to the last <td> in this row (where conclude/delete links are)
-    $row.find("td:last").append($controls);
+    // Append NEW CELL to this <tr>
+    $row.append($controlsCell);
 
-    // wire up handlers for THIS enrollment
-    let $dateInput = $controls.find(".btech-enrollment-end-date");
-    let $extCheckbox = $controls.find(".btech-enrollment-is-extension");
+    // Wire up handlers
+    let $dateInput = $controlsCell.find(".btech-enrollment-end-date");
+    let $extCheckbox = $controlsCell.find(".btech-enrollment-is-extension");
 
-    $controls.find(".btech-enrollment-reset").on("click", function () {
+    $controlsCell.find(".btech-enrollment-reset").on("click", function () {
       $dateInput.val("");
       $extCheckbox.prop("checked", false);
       resetDate(enrollment);
     });
 
-    $controls.find(".btech-enrollment-view-all-dates").on("click", function () {
+    $controlsCell.find(".btech-enrollment-view-all-dates").on("click", function () {
       showAllDatesModal();
     });
 
     $dateInput.on("change", function () {
       let isExtension = $extCheckbox.prop("checked");
       changeDate(enrollment, this.value, isExtension);
-      // reset extension checkbox after applying
-      $extCheckbox.prop("checked", false);
+      $extCheckbox.prop("checked", false); // reset
     });
   });
 })();
