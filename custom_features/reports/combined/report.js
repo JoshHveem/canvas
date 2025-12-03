@@ -189,14 +189,6 @@
               ]
             },
           ],
-
-          reportTypes: [
-            { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
-            { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
-            { value: 'occupations', label: 'Occupations', component: 'occupations-report', title: 'Occupations Report' },
-            { value: 'courses',     label: 'Courses',     component: 'courses-report',     title: 'Courses Report' },
-            { value: 'coe',    label: 'COE',    component: 'coe-report',    title: 'COE Evidence' },
-          ],
         }
       },
 
@@ -243,6 +235,16 @@
 
       methods: {
         onReportChange() {
+          this.saveSettings(this.settings);
+        },
+
+        setSubMenu(value) {
+          // ensure object exists (defensive)
+          if (!this.settings.subMenuByType) {
+            this.$set(this.settings, 'subMenuByType', {});
+          }
+          // Vue 2: use $set so reactivity works with dynamic keys
+          this.$set(this.settings.subMenuByType, this.settings.reportType, value);
           this.saveSettings(this.settings);
         },
 
