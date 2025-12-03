@@ -125,6 +125,7 @@
             anonymous: false,
             account: 0,
             reportType: 'instructor',
+            subMenuByType: {},
             sort_dir: 1,
             filters: { year: '2025' }
           },
@@ -136,6 +137,59 @@
           end_date_filter: true,
           hide_missing_end_date: true,
           hide_past_end_date: false,
+          reportTypes: [
+            {
+              value: 'instructor',
+              label: 'Instructor',
+              component: 'instructor-report',
+              title: 'Instructor Report',
+              subMenus: [
+                { value: 'overview',     label: 'Overview' },
+                { value: 'surveys',      label: 'Surveys' },
+              ]
+            },
+            {
+              value: 'department',
+              label: 'Department',
+              component: 'department-report',
+              title: 'Department Report',
+              subMenus: [
+                { value: 'instructors', label: 'Instructors' },
+                { value: 'courses',     label: 'Courses' },
+                { value: 'coe',         label: 'COE' },
+              ]
+            },
+            {
+              value: 'occupations',
+              label: 'Occupations',
+              component: 'occupations-report',
+              title: 'Occupations Report',
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
+              ]
+            },
+            {
+              value: 'courses',
+              label: 'Courses',
+              component: 'courses-report',
+              title: 'Courses Report',
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
+                { value: 'surveys',  label: 'Surveys' },
+              ]
+            },
+            {
+              value: 'coe',
+              label: 'COE',
+              component: 'coe-report',
+              title: 'COE Evidence',
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
+                { value: 'evidence', label: 'Evidence' },
+              ]
+            },
+          ],
+
           reportTypes: [
             { value: 'instructor', label: 'Instructor', component: 'instructor-report', title: 'Instructor Report' },
             { value: 'department', label: 'Department', component: 'department-report', title: 'Department Report' },
@@ -151,15 +205,41 @@
           const fallback = this.reportTypes[0];
           return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
         },
+
+        // All submenus for the current report type (or empty)
+        currentSubMenus() {
+          const rt = this.currentReportMeta;
+          return rt && rt.subMenus ? rt.subMenus : [];
+        },
+
+        // Which submenu key is selected for this report type
+        currentSubKey() {
+          const menus = this.currentSubMenus;
+          if (!menus.length) return null;
+
+          const map = this.settings.subMenuByType || {};
+          const type = this.settings.reportType;
+          const saved = map[type];
+
+          if (saved && menus.some(m => m.value === saved)) {
+            return saved;
+          }
+          // default to first submenu if nothing saved/valid
+          return menus[0].value;
+        },
+
         currentReportProps() {
           const base = {
             year: this.settings.filters.year,
             account: this.settings.account,
-            instructorId: ENV.current_user_id  // optional; child can use or ignore
+            instructorId: ENV.current_user_id,
+            // NEW: pass selected subMenu down to child component
+            subMenu: this.currentSubKey
           };
-          return base; // other reports can use what they need from base
+          return base;
         },
       },
+
 
       methods: {
         onReportChange() {
@@ -180,6 +260,9 @@
 
           if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
           else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+
+          // NEW: restore subMenuByType if it exists
+          merged.subMenuByType = saved.subMenuByType || fallback.subMenuByType || {};
 
           if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
           for (const key in merged.filters) {
@@ -234,12 +317,13 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
 
     // The instructor report wrapper now owns its data & methods:
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/instructor-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/dept-head-instructors-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/occupations-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/courses-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/coe-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructor-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/occupations-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/coe-report.js");
 
     postLoad();
   }

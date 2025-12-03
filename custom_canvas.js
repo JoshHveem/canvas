@@ -63,7 +63,7 @@ var IS_DEPARTMENT_HEAD = roles.some(r =>
 );
 
 var IS_ISD = roles.some(r =>
-  ["AccountAdmin"].includes(r)
+  ["Department Head", "AccountAdmin"].includes(r)
 );
 let currentUser = parseInt(ENV.current_user.id);
 var IS_ME = (
