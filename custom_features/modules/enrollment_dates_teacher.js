@@ -7,7 +7,7 @@
     const month = ("0" + (date.getUTCMonth() + 1)).slice(-2);
     if (!month) return "N/A";
 
-    const day = ("0" + date.getUTCDate()).slice(-2);
+    const day = ("0" + date.getDate()).slice(-2);
     if (!day) return "N/A";
 
     return `${year}-${month}-${day}`;
@@ -18,7 +18,7 @@
     $(".conclude_enrollment_link_holder").css("display", "block");
   }
 
-  // Global "view all dates" handler, reused for every row
+  // Global "view all dates" handler, reused for every row (currently unused, but kept just in case)
   async function showAllDatesModal() {
     $("body").append(`
       <div class='btech-modal' style='display: inline-block;'>
@@ -118,6 +118,8 @@
     }
   });
 
+  const isDeptHead = !!window.IS_DEPARTMENT_HEAD;
+
   // for each row in the enrollments table, add controls
   $("tr.enrollment").each(function () {
     let $row = $(this);
@@ -140,8 +142,29 @@
       formattedEnd = `${endAt.getFullYear()}-${month}-${day}`;
     }
 
-    // Build the controls
-    let $controlsCell = $(`
+    let $controlsCell;
+
+    if (!isDeptHead) {
+      // Non-department head: read-only display only
+      $controlsCell = $(`
+        <td class="btech-end-date-cell" style="vertical-align: top;">
+          <div class="btech-enrollment-end-date-row" style="margin-top: 0.5rem;">
+            <div style="margin-bottom: 0.25rem;">
+              <span style="font-weight: bold;">Enrollment End Date</span>
+            </div>
+            <div>
+              ${formattedEnd || "—"}
+            </div>
+          </div>
+        </td>
+      `);
+
+      $row.append($controlsCell);
+      return; // no handlers, no editing
+    }
+
+    // Department head: full editable controls
+    $controlsCell = $(`
       <td class="btech-end-date-cell" style="vertical-align: top;">
         <div class="btech-enrollment-end-date-row" style="margin-top: 0.5rem;">
           <div style="margin-bottom: 0.25rem;">
@@ -169,7 +192,7 @@
     // Append NEW CELL to this <tr>
     $row.append($controlsCell);
 
-    // Wire up handlers
+    // Wire up handlers (dept head only)
     let $dateInput = $controlsCell.find(".btech-enrollment-end-date");
 
     $controlsCell.find(".btech-enrollment-reset").on("click", function () {
@@ -180,6 +203,5 @@
     $dateInput.on("change", function () {
       changeDate(enrollment, this.value);
     });
-
   });
 })();
