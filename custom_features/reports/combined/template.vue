@@ -53,14 +53,14 @@
           role="tablist"
           aria-label="Report view"
           style="
-            display:flex;
-            gap:0; /* no gaps between segments */
+            display:inline-flex;
+            gap:0;
             justify-content:center;
             align-items:center;
-            padding:2px 6px;
+            padding:0;
             border-radius:999px;
             background:#ffffff;
-            margin-bottom:12px;
+            margin:0 auto 12px auto; /* centered & bottom spacing */ 
           "
         >
           <button
