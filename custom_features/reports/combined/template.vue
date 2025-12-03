@@ -61,7 +61,6 @@
             border-radius:999px;
             background:#ffffff;
             margin-bottom:12px;
-            border:1px solid #C0C0D0;         /* enclosing pill border */
           "
         >
           <button
