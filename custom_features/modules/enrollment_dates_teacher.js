@@ -152,6 +152,7 @@
           </div>
           <div>
             <input
+              style="width: auto;"
               type="date"
               class="btech-enrollment-end-date"
               value="${formattedEnd}"
