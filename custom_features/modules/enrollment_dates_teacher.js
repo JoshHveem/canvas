@@ -1,111 +1,95 @@
-(async function() {
+(async function () {
   function dateToString(date) {
-    if (!date) return "N/A"
-    // Get the current year
+    if (!date) return "N/A";
     const year = date.getUTCFullYear();
     if (!year) return "N/A";
-    
-    // Get the current month (0-indexed, so we add 1)
-    const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+
+    const month = ("0" + (date.getUTCMonth() + 1)).slice(-2);
     if (!month) return "N/A";
-    
-    // Get the current day of the month
-    const day = ('0' + date.getUTCDate()).slice(-2);
+
+    const day = ("0" + date.getUTCDate()).slice(-2);
     if (!day) return "N/A";
+
     return `${year}-${month}-${day}`;
   }
-  //add conclude button if hidden for not concluded but not active students
-  if ($(".unconclude_enrollment_link_holder").css("display") == "none") $(".conclude_enrollment_link_holder").css("display", "block");
 
-  //The actual enrollment bit
-  $($(".more_user_information fieldset")[0]).append(`
-    <div id="student_last_attended__component">
-      <span style="margin: 0.75rem 0.5rem;">
-        <div style="margin: 0.75rem 0px;">
-          <span wrap="normal" letter-spacing="normal">
-            <b>Set Enrollment End Date</b> 
-          </span>
-        </div>
-        <div>
-          <input id="btech-enrollment-end-date" type="date" value=""> 
-          <input type="checkbox" id="btech-enrollment-is-extension" style="cursor: pointer;"><span>Is Extension?</span>
-          <button id="btech-enrollment-reset" style="cursor: pointer;">Reset Date</button>
-          <button id="btech-enrollment-view-all-dates" style="cursor: pointer;">View All Dates</button>
-        </div>
-      </span>
-    </div>
-  `);
+  // add conclude button if hidden for not concluded but not active students
+  if ($(".unconclude_enrollment_link_holder").css("display") == "none") {
+    $(".conclude_enrollment_link_holder").css("display", "block");
+  }
 
-
-  $("#btech-enrollment-view-all-dates").click(async () => {
+  // Global "view all dates" handler, reused for every row
+  async function showAllDatesModal() {
     $("body").append(`
       <div class='btech-modal' style='display: inline-block;'>
-        <!-- ERASE THE DISPLAY PIECE BEFORE GOING LIVE -->
         <div class='btech-modal-content' style='max-width: 800px;'>
           <div class='btech-modal-content-inner'></div>
         </div>
       </div>
     `);
-    let modalContent = $('body .btech-modal-content-inner');
-    let dates = await bridgetoolsReq(`https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`);
+    let modalContent = $("body .btech-modal-content-inner");
+    let dates = await bridgetoolsReq(
+      `https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`
+    );
     for (let d in dates) {
       let date = dates[d];
-      modalContent.append(`<div><span style="width: 2.5rem; display: inline-block;">${date.is_extension ? '<b>EXT</b>' : ''}</span><span style="width: 6rem; display: inline-block;">${dateToString(new Date(date.end_date))}</span>Created By: ${date.creator_name} @ ${dateToString(new Date(date.created))}</div>`)
+      modalContent.append(
+        `<div>
+          <span style="width: 2.5rem; display: inline-block;">
+            ${date.is_extension ? "<b>EXT</b>" : ""}
+          </span>
+          <span style="width: 6rem; display: inline-block;">
+            ${dateToString(new Date(date.end_date))}
+          </span>
+          Created By: ${date.creator_name} @
+          ${dateToString(new Date(date.created))}
+        </div>`
+      );
     }
-    let modal = $('body .btech-modal');
-    modal.on("click", function(event) {
+    let modal = $("body .btech-modal");
+    modal.on("click", function (event) {
       if ($(event.target).is(modal)) {
-          modal.remove();
+        modal.remove();
       }
     });
-  });
-
-  let endAtEl = document.getElementById("btech-enrollment-end-date");
-
-  $("#btech-enrollment-reset").click(() => {
-    $("#btech-enrollment-end-date").val("");
-    $("#btech-enrollment-is-extension").prop('checked', false);
-    resetDate();
-  });
-  let enrollment = (await $.get(`/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=${ENV.USER_ID}`))[0];
-  let endAt = enrollment?.end_at;
-  function resetDate() {
-    //for...reasons, this is a day off
-    $.post("/api/v1/courses/" + ENV.COURSE_ID + "/enrollments",
-      {
-        enrollment: {
-          start_at: enrollment.start_at ?? enrollment.created_at ?? new Date(),
-          end_at: "",
-          user_id: enrollment.user.id,
-          course_section_id: enrollment.course_section_id,
-          type: enrollment.type,
-          enrollment_state: "active",
-          notify: false
-        }
-      }
-    );
   }
-  function changeDate() {
-    let endAtDate = new Date(endAtEl.value);
-    let isExtension = $("#btech-enrollment-is-extension").prop('checked');
-    //reset is extension
-    $("#btech-enrollment-is-extension").prop('checked', false);
-    //for...reasons, this is a day off
+
+  // helpers to actually update/reset a specific enrollment
+  function resetDate(enrollment) {
+    $.post(`/api/v1/courses/${ENV.COURSE_ID}/enrollments`, {
+      enrollment: {
+        start_at: enrollment.start_at ?? enrollment.created_at ?? new Date(),
+        end_at: "",
+        user_id: enrollment.user.id,
+        course_section_id: enrollment.course_section_id,
+        type: enrollment.type,
+        enrollment_state: "active",
+        notify: false,
+      },
+    });
+  }
+
+  function changeDate(enrollment, endDateStr, isExtension) {
+    if (!endDateStr) return;
+
+    let endAtDate = new Date(endDateStr);
+
+    // for...reasons, this is a day off
     endAtDate.setDate(endAtDate.getDate() + 1);
-    endAtDate.setTime(endAtDate.getTime() + (6 * 60 * 60 * 1000));
-    $.post("/api/v1/courses/" + ENV.COURSE_ID + "/enrollments",
-      {
-        enrollment: {
-          start_at: enrollment.start_at ?? enrollment.created_at ?? new Date(),
-          end_at: endAtDate,
-          user_id: enrollment.user.id,
-          course_section_id: enrollment.course_section_id,
-          type: enrollment.type,
-          enrollment_state: "active",
-          notify: false
-        }
-      }
-    );
+    endAtDate.setTime(endAtDate.getTime() + 6 * 60 * 60 * 1000);
+
+    $.post(`/api/v1/courses/${ENV.COURSE_ID}/enrollments`, {
+      enrollment: {
+        start_at: enrollment.start_at ?? enrollment.created_at ?? new Date(),
+        end_at: endAtDate,
+        user_id: enrollment.user.id,
+        course_section_id: enrollment.course_section_id,
+        type: enrollment.type,
+        enrollment_state: "active",
+        notify: false,
+      },
+    });
+
     let postData = {
       canvas_user_id: ENV.USER_ID,
       canvas_course_id: ENV.COURSE_ID,
@@ -113,20 +97,116 @@
       is_extension: isExtension,
       end_date: endAtDate,
       creator_id: ENV.current_user.id,
-      creator_name: ENV.current_user.display_name
-    }
-    bridgetoolsReq(`https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`, postData, "POST");
+      creator_name: ENV.current_user.display_name,
+    };
+
+    bridgetoolsReq(
+      `https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`,
+      postData,
+      "POST"
+    );
+
     if (isExtension) alert("Extension Set");
-    else alert("End Date Updated")
+    else alert("End Date Updated");
   }
-  $(endAtEl).change(changeDate);
-  if (endAt !== undefined && endAt !== null) {
-    endAt = new Date(endAt);
 
-    var day = ("0" + endAt.getDate()).slice(-2);
-    var month = ("0" + (endAt.getMonth() + 1)).slice(-2);
+  // ---- NEW: per-enrollment UI wiring ----
 
-    endAt = `${endAt.getFullYear()}-${month}-${day}`;
-    endAtEl.value = endAt;
-  }
+  // get all enrollments for this user in this course
+  let enrollments = await $.get(
+    `/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=${ENV.USER_ID}`
+  );
+
+  // index by section id for easy lookup
+  let enrollmentsBySectionId = {};
+  enrollments.forEach((e) => {
+    if (e.course_section_id) {
+      enrollmentsBySectionId[e.course_section_id] = e;
+    }
+  });
+
+  // for each row in the enrollments table, add controls
+  $("tr.enrollment").each(function () {
+    let $row = $(this);
+
+    // find the section id from the <a href="/courses/.../sections/685759">
+    let href = $row.find("td:first a").attr("href") || "";
+    let match = href.match(/sections\/(\d+)/);
+    if (!match) return;
+
+    let sectionId = parseInt(match[1], 10);
+    let enrollment = enrollmentsBySectionId[sectionId];
+    if (!enrollment) return;
+
+    // current end date for this enrollment, formatted for <input type="date">
+    let formattedEnd = "";
+    if (enrollment.end_at) {
+      let endAt = new Date(enrollment.end_at);
+      let day = ("0" + endAt.getDate()).slice(-2);
+      let month = ("0" + (endAt.getMonth() + 1)).slice(-2);
+      formattedEnd = `${endAt.getFullYear()}-${month}-${day}`;
+    }
+
+    // build the per-row controls
+    let $controls = $(`
+      <div class="btech-enrollment-end-date-row" style="margin-top: 0.5rem;">
+        <div style="margin-bottom: 0.25rem;">
+          <span style="font-weight: bold;">Set Enrollment End Date</span>
+        </div>
+        <div>
+          <input
+            type="date"
+            class="btech-enrollment-end-date"
+            value="${formattedEnd}"
+          >
+          <label style="margin-left: 0.5rem; cursor: pointer;">
+            <input
+              type="checkbox"
+              class="btech-enrollment-is-extension"
+              style="cursor: pointer;"
+            >
+            Is Extension?
+          </label>
+          <button
+            type="button"
+            class="btech-enrollment-reset"
+            style="cursor: pointer; margin-left: 0.5rem;"
+          >
+            Reset Date
+          </button>
+          <button
+            type="button"
+            class="btech-enrollment-view-all-dates"
+            style="cursor: pointer; margin-left: 0.5rem;"
+          >
+            View All Dates
+          </button>
+        </div>
+      </div>
+    `);
+
+    // append controls to the last <td> in this row (where conclude/delete links are)
+    $row.find("td:last").append($controls);
+
+    // wire up handlers for THIS enrollment
+    let $dateInput = $controls.find(".btech-enrollment-end-date");
+    let $extCheckbox = $controls.find(".btech-enrollment-is-extension");
+
+    $controls.find(".btech-enrollment-reset").on("click", function () {
+      $dateInput.val("");
+      $extCheckbox.prop("checked", false);
+      resetDate(enrollment);
+    });
+
+    $controls.find(".btech-enrollment-view-all-dates").on("click", function () {
+      showAllDatesModal();
+    });
+
+    $dateInput.on("change", function () {
+      let isExtension = $extCheckbox.prop("checked");
+      changeDate(enrollment, this.value, isExtension);
+      // reset extension checkbox after applying
+      $extCheckbox.prop("checked", false);
+    });
+  });
 })();
