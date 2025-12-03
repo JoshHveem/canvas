@@ -183,7 +183,6 @@
 
     $controlsCell.find(".btech-enrollment-reset").on("click", function () {
       $dateInput.val("");
-      $extCheckbox.prop("checked", false);
       resetDate(enrollment);
     });
 
