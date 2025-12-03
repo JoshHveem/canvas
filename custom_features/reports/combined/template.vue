@@ -80,7 +80,7 @@
               font-size:11px;
               background:${currentSubKey === sm.value ? '#606060' : '#ffffff'};
               color:${currentSubKey === sm.value ? '#ffffff' : '#111827'};
-              border-color: #C0C0D0;
+              border:1px solid #C0C0D0;
               cursor:pointer;
               transition:all .15s ease;
               position:relative;
