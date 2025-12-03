@@ -71,78 +71,70 @@ var Countdown = {
     }
   },
 
+ init: async function() {
+    if (!ENV.current_user_is_student) return; // only show this for students
 
-  /*
-    // This is a starting point for a calcEndDate script for institutions outside of Bridgerland Technical College
-  calcEndDate: async function() {
-    let section, course, term;
-    if (!this.enrollment?.end_at) {
-      let sectionURL = `/api/v1/courses/${ENV.COURSE_ID}/sections/${this.enrollment.course_section_id}`;
-      section = (await $.get(sectionURL))
-      this.enrollment.end_at = section.end_at;
-      return;
-    }
+    // get all enrollments for this student in this course
+    const enrollments = await $.get(
+      `/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=self&type[]=StudentEnrollment`
+    );
 
-    // cs and still no end_at, check the course end date
-    if (!this.enrollment?.end_at) {
-      let courseURL = `/api/v1/courses/${ENV.COURSE_ID}`;
-      course = (await $.get(courseURL));
-      this.enrollment.end_at = course.end_at;
-      return;
-    }
+    if (!enrollments || enrollments.length === 0) return;
 
+    // use the first enrollment as the base object
+    this.enrollment = enrollments[0];
 
-    // if STILL no end_at, get the term end at
-    if (!this.enrollment?.end_at) {
-      let termURL = `/api/v1/accounts/3/terms/${course.enrollment_term_id}`;
-      term = (await $.get(termURL));
-      this.enrollment.end_at = term.end_at;
-      return;
-    }
-
-    return;
-  },
-  */
-
-  init: async function() {
-    if (!ENV.current_user_is_student) return; //only show this for students
-
-    // get the enrollment data using the api
-    this.enrollment = (await $.get(`/api/v1/courses/${ENV.COURSE_ID}/enrollments?user_id=self&type[]=StudentEnrollment`))[0];
-    
     // BTECH SPECIFIC
-    // There are some Bridgerland Technical College specific reasons we wouldn't want to show the countdown tiemr
-    this.enrollment.conditionalDisplay = false; 
+    this.enrollment.conditionalDisplay = false;
 
-    // sometimes there's a created_at date but not a start_at date. But if both exist
-    //// start_at takes priority because sometimes enrollments are created before the student has the chance to do anything in the course
-    if (this.enrollment.start_at == undefined) this.enrollment.start_at = this.enrollment.created_at;
+    // compute earliest start_at and latest created_at across all enrollments
+    let earliestStartAt = null;
+    let latestCreatedAt = null;
+
+    enrollments.forEach(e => {
+      if (e.start_at) {
+        if (!earliestStartAt || new Date(e.start_at) < new Date(earliestStartAt)) {
+          earliestStartAt = e.start_at;
+        }
+      }
+      if (e.created_at) {
+        if (!latestCreatedAt || new Date(e.created_at) > new Date(latestCreatedAt)) {
+          latestCreatedAt = e.created_at;
+        }
+      }
+    });
+
+    // if there was no start_at anywhere, fall back to created_at
+    if (!earliestStartAt && latestCreatedAt) {
+      earliestStartAt = latestCreatedAt;
+    }
+
+    // assign the aggregated dates back onto the "main" enrollment object
+    if (earliestStartAt) this.enrollment.start_at = earliestStartAt;
+    if (latestCreatedAt) this.enrollment.created_at = latestCreatedAt;
 
     // Try and find an end_at date if one hasn't been set
-    // This involves a bit of Bridgerland Technical College specific setup, so this will need to be adjusted if adopting
     this.calcEndDate();
 
     // Do we have dates needed for the progress bar and the countdown to work?
     let checkValidDates = (this.enrollment.start_at != undefined && this.enrollment.end_at != undefined);
 
     // BTECH SPECIFIC
-    // check if department has opted out
     let checkDepartment = !this.disabledDepartments.includes(CURRENT_DEPARTMENT_ID);
 
     // BTECH SPECIFIC
-    // if this is a conditional display, don't show it if the deadline's more than 30 days away
     let checkNumDays = (!this.enrollment.conditionalDisplay || (this.calcTimeVals()).days < 30);
 
     // BTECH SPECIFIC
-    // if you aren't using the BTECH specific stuff, remove the checkDepartment, this can be simplified ot a simple if (!checkValidDates) return;
     if (!checkValidDates && !checkDepartment) return;
     this.initProgress();
     if (!checkValidDates || !checkNumDays) return;
     this.initCountdown();
 
     // Animate countdown to the end 
-    this.count();    
+    this.count();
   },
+ 
   
   // Initialize the countdown  
   calcProgress: function() {
