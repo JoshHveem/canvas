@@ -60,7 +60,8 @@
             padding:0;
             border-radius:999px;
             background:#ffffff;
-            margin:0 auto 12px auto; /* centered & bottom spacing */ 
+            margin:0 auto 12px auto;
+            width: 100%;
           "
         >
           <button
