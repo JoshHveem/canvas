@@ -191,5 +191,9 @@
       showAllDatesModal();
     });
 
+    $dateInput.on("change", function () {
+      changeDate(enrollment, this.value);
+    });
+
   });
 })();
