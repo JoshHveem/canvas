@@ -251,29 +251,25 @@
 
       // compute earliest start_at and latest created_at across all enrollments
       let earliestStartAt = null;
-      let latestCreatedAt = null;
+      let latestEndAt = null;
 
       enrollments.forEach(e => {
+        if (e.start_at == undefined) e.start_at = e.created_at;
         if (e.start_at) {
           if (!earliestStartAt || new Date(e.start_at) < new Date(earliestStartAt)) {
             earliestStartAt = e.start_at;
           }
         }
-        if (e.created_at) {
-          if (!latestCreatedAt || new Date(e.created_at) > new Date(latestCreatedAt)) {
-            latestCreatedAt = e.created_at;
+        if (e.end_at) {
+          if (!latestEndAt || new Date(e.end_at) > new Date(latestEndAt)) {
+            latestEndAt = e.end_at;
           }
         }
       });
 
-      // if there was no start_at anywhere, fall back to created_at
-      if (!earliestStartAt && latestCreatedAt) {
-        earliestStartAt = latestCreatedAt;
-      }
-
       // assign the aggregated dates back onto the "main" enrollment object
       if (earliestStartAt) this.enrollment.start_at = earliestStartAt;
-      if (latestCreatedAt) this.enrollment.created_at = latestCreatedAt;
+      if (latestEndAt) this.enrollment.end_at = latestEndAt;
 
       // Try and find an end_at date if one hasn't been set
       this.calcEndDate();
