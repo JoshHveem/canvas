@@ -395,6 +395,7 @@
               _id
             }
           }`
+
           let res = await $.post("/api/graphql", { query: queryString });
           return res.data.course;
         },
