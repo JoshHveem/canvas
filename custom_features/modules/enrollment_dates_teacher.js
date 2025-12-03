@@ -140,9 +140,6 @@
       formattedEnd = `${endAt.getFullYear()}-${month}-${day}`;
     }
 
-    // build the per-row controls
-    // ---- NEW: create a brand-new <td> for the controls ----
-
     // Build the controls
     let $controlsCell = $(`
       <td class="btech-end-date-cell" style="vertical-align: top;">

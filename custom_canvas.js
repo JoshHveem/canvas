@@ -44,9 +44,10 @@ if (rCheckInCourse.test(window.location.pathname)) {
 }
 var CURRENT_DEPARTMENT_ID = null;
 var IS_BLUEPRINT = null;
-var IS_TEACHER = null;
+var IS_TEACHER = (ENV?.current_user_roles ?? []).includes("teacher", "admin")
 var IS_ME = false;
 var IS_ISD = false;
+var IS_DEPARTMENT_HEAD = (ENV?.current_user_types ?? []).includes("Department Head", "AccountAdmin");
 var COURSE_HOURS;
 
 //Should start experimenting with branching in github
