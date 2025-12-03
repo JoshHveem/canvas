@@ -47,39 +47,58 @@
         </div>
 
         <!-- Sub-menu Tabs (per report) -->
+        <!-- Sub-menu Tabs (per report) -->
         <div
           v-if="currentSubMenus && currentSubMenus.length"
           role="tablist"
           aria-label="Report view"
           style="
-            display:flex; gap:6px; justify-content:center; align-items:center;
-            padding:2px 6px; border-radius:8px; background:#FFFFFF; margin-bottom:12px;
+            display:flex;
+            gap:0; /* no gaps between segments */
+            justify-content:center;
+            align-items:center;
+            padding:2px 6px;
+            border-radius:999px;
+            background:#ffffff;
+            margin-bottom:12px;
+            border:1px solid #C0C0D0;         /* enclosing pill border */
           "
         >
           <button
-            v-for="sm in currentSubMenus"
+            v-for="(sm, idx) in currentSubMenus"
             :key="sm.value"
             role="tab"
             :aria-selected="currentSubKey === sm.value ? 'true' : 'false'"
             :tabindex="currentSubKey === sm.value ? 0 : -1"
             @click="setSubMenu(sm.value)"
-            style="
-              border:1px solid #000000;
-              border-radius:999px;
-              padding:1px 10px;
+            
+            :style="
+              `
+              border:0;
+              border-right:1px solid #C0C0D0;  
+              padding:4px 14px;
               font-size:11px;
-              background:white;
+              background:${currentSubKey === sm.value ? '#606060' : '#ffffff'};
+              color:${currentSubKey === sm.value ? '#ffffff' : '#111827'};
               cursor:pointer;
-              transition: box-shadow .15s ease, background .15s ease;
+              transition:all .15s ease;
+              position:relative;
+              z-index:${currentSubKey === sm.value ? 2 : 1};
+              
+              /* Rounding only for edges */
+              border-top-left-radius:${idx === 0 ? '999px' : '0'};
+              border-bottom-left-radius:${idx === 0 ? '999px' : '0'};
+              border-top-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
+              border-bottom-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
+              
+              /* Remove right border on last segment */
+              ${idx === currentSubMenus.length - 1 ? 'border-right:none;' : ''}
+              `
             "
-            :style="currentSubKey === sm.value
-              ? 'background:#606060; color:#fff; border-color:#101010; box-shadow:0 1px 3px rgba(0,0,0,.12);'
-              : 'background:#fff; color:#111827; border-color:#C0C0D0;'"
           >
             {{ sm.label }}
           </button>
         </div>
-
 
         <!-- Filters Row -->
         <div
