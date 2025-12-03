@@ -58,26 +58,23 @@ var IS_TEACHER = roles.some(r =>
   ["teacher", "admin"].includes(r)
 );
 
-
-var IS_TEACHER = roles.some(r =>
-  ["teacher", "admin"].includes(r)
-);
 var IS_DEPARTMENT_HEAD = roles(r =>
   ["Department Head", "AccountAdmin"].includes(r)
 );
 
-var IS_ME = false;
 var IS_ISD = roles(r =>
   ["Department Head", "AccountAdmin"].includes(r)
+);
+let currentUser = parseInt(ENV.current_user.id);
+var IS_ME = (
+  currentUser === 1893418 // Josh
+  || currentUser === 2210696 // Logan
 );
 
 var COURSE_HOURS;
 
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
-if (ENV.current_user_roles !== null) {
-  IS_TEACHER = (ENV.current_user_roles.includes("teacher") || ENV.current_user_roles.includes("admin"));
-}
 
 function getCourseCodeFromEnv() {
   let courseCode = '';
@@ -224,11 +221,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       document.head.appendChild(style);
     }
  
-    let currentUser = parseInt(ENV.current_user.id);
-    IS_ME = (
-      currentUser === 1893418 // Josh
-      || currentUser === 2210696 // Logan
-    );
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
