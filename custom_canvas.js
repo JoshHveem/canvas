@@ -58,12 +58,12 @@ var IS_TEACHER = roles.some(r =>
   ["teacher", "admin"].includes(r)
 );
 
-var IS_DEPARTMENT_HEAD = roles(r =>
+var IS_DEPARTMENT_HEAD = roles.some(r =>
   ["Department Head", "AccountAdmin"].includes(r)
 );
 
-var IS_ISD = roles(r =>
-  ["Department Head", "AccountAdmin"].includes(r)
+var IS_ISD = roles.some(r =>
+  ["AccountAdmin"].includes(r)
 );
 let currentUser = parseInt(ENV.current_user.id);
 var IS_ME = (
