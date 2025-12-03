@@ -282,9 +282,6 @@
       let checkValidDates = (this.enrollment.start_at != undefined && this.enrollment.end_at != undefined);
 
       // BTECH SPECIFIC
-      let checkDepartment = !this.disabledDepartments.includes(CURRENT_DEPARTMENT_ID);
-
-      // BTECH SPECIFIC
       let checkNumDays = (!this.enrollment.conditionalDisplay || (this.calcTimeVals()).days < 30);
 
       // BTECH SPECIFIC
