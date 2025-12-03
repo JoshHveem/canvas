@@ -44,10 +44,33 @@ if (rCheckInCourse.test(window.location.pathname)) {
 }
 var CURRENT_DEPARTMENT_ID = null;
 var IS_BLUEPRINT = null;
-var IS_TEACHER = (ENV?.current_user_roles ?? []).includes("teacher", "admin")
+const roles = [
+  ...(ENV?.current_user_roles ?? []),
+  ...(ENV?.current_user_types ?? []),
+  ...(ENV?.current_user_type ?? [])
+];
+
+var IS_DEPARTMENT_HEAD = roles.some(r =>
+  ["Department Head", "AccountAdmin"].includes(r)
+);
+
+var IS_TEACHER = roles.some(r =>
+  ["teacher", "admin"].includes(r)
+);
+
+
+var IS_TEACHER = roles.some(r =>
+  ["teacher", "admin"].includes(r)
+);
+var IS_DEPARTMENT_HEAD = roles(r =>
+  ["Department Head", "AccountAdmin"].includes(r)
+);
+
 var IS_ME = false;
-var IS_ISD = false;
-var IS_DEPARTMENT_HEAD = (ENV?.current_user_types ?? []).includes("Department Head", "AccountAdmin");
+var IS_ISD = roles(r =>
+  ["Department Head", "AccountAdmin"].includes(r)
+);
+
 var COURSE_HOURS;
 
 //Should start experimenting with branching in github
@@ -206,7 +229,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       currentUser === 1893418 // Josh
       || currentUser === 2210696 // Logan
     );
-    IS_ISD = (ISDIDS.includes(currentUser));
 
     await $.getScript("https://bridgetools.dev/canvas/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
