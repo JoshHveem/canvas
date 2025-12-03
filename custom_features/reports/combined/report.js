@@ -324,7 +324,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/occupations-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
+    // await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/coe-report.js");
 
     postLoad();
