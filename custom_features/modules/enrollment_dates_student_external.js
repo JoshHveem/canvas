@@ -292,7 +292,7 @@
 
       // Animate countdown to the end 
       this.count();
-      this.loadStyle();
+      loadStyle();
     },
 
     
