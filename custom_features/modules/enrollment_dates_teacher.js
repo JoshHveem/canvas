@@ -163,13 +163,6 @@
             >
               Reset
             </button>
-            <button
-              type="button"
-              class="btech-enrollment-view-all-dates"
-              style="cursor: pointer; margin-left: 0.5rem;"
-            >
-              Log 
-            </button>
           </div>
         </div>
       </td>
@@ -184,10 +177,6 @@
     $controlsCell.find(".btech-enrollment-reset").on("click", function () {
       $dateInput.val("");
       resetDate(enrollment);
-    });
-
-    $controlsCell.find(".btech-enrollment-view-all-dates").on("click", function () {
-      showAllDatesModal();
     });
 
     $dateInput.on("change", function () {
