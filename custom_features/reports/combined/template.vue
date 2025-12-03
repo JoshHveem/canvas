@@ -90,7 +90,6 @@
               border-top-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
               border-bottom-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
               
-              /* Remove right border on last segment */
               ${idx === currentSubMenus.length - 1 ? 'border-right:none;' : ''}
               `
             "
