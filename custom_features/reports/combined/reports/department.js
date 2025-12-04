@@ -1,8 +1,9 @@
 Vue.component('reports-department', {
   template: `
     <div>
+        {{subMenu}}
         <reports-department-instructors
-            v-if="subMenu == 'Instructors'"
+            v-if="subMenu.value == 'instructors'"
             :year="year"
             :statistics="statistics"
             :cpl="cpl"
