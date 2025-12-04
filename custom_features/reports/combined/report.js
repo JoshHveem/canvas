@@ -151,7 +151,7 @@
             {
               value: 'department',
               label: 'Department',
-              component: 'department-report',
+              component: 'reports-department',
               title: 'Department Report',
               subMenus: [
                 { value: 'instructors', label: 'Instructors' },
@@ -181,7 +181,7 @@
             {
               value: 'coe',
               label: 'COE',
-              component: 'coe-report',
+              component: 'department-coe',
               title: 'COE Evidence',
               subMenus: [
                 { value: 'overview', label: 'Overview' },
@@ -321,11 +321,12 @@
     // The instructor report wrapper now owns its data & methods:
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructor-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/occupations-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-report.js");
     // await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/coe-report.js");
 
     postLoad();
   }

@@ -1,36 +1,21 @@
-Vue.component('department-report', {
+Vue.component('reports-department', {
   template: `
     <div>
-      <!-- Could show a loading indicator if you like -->
-      <department-cpl
-        v-for="campus in cpl"
-        :cpl="campus"
-        :year="year"
-      />
-
-      <department-statistics
-        :statistics="statistics"
-        :year="year"
-      />
-
-      <department-instructor-metrics
-        :instructor-metrics="instructorMetrics"
-        :year="year"
-      />
-
-      <department-instructor-surveys
-        :surveys="instructorSurveys"
-        :year="year"
-      />
-      <department-course-surveys
-        :surveys="courseSurveys"
-        :year="year"
-      />
+        <reports-department-instructors
+            v-if="subMenu == 'Instructors'
+            :year="year"
+            :statistics="statistics"
+            :cpl="cpl"
+            :instructor-metrics="instructorMetrics"
+            :instructor-surveys="instructorSurveys"
+            :course-surveys="courseSurveys"
+        ></reports-department-instructors>
     </div>
   `,
   props: {
     year: { type: [Number, String], required: true },
     account: { type: [Number, String], required: true },
+    subMenu: { type: [Number, String], required: true },
     instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
   },
   data() {
