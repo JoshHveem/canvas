@@ -13,11 +13,8 @@ Vue.component('reports-department', {
         <reports-department-coe
             v-if="subMenu == 'coe'"
             :year="year"
-            :statistics="statistics"
             :cpl="cpl"
-            :instructor-metrics="instructorMetrics"
-            :instructor-surveys="instructorSurveys"
-            :course-surveys="courseSurveys"
+            :coe="coe"
         ></reports-department-instructors>
     </div>
   `,

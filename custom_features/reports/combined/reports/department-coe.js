@@ -21,7 +21,6 @@ Vue.component('reports-department-coe', {
   data() {
     return {
       loading: false,
-      department_metrics: {}
     }
   },
   async mounted() {
