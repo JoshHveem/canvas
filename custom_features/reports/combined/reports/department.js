@@ -1,9 +1,17 @@
 Vue.component('reports-department', {
   template: `
     <div>
-        {{subMenu}}
         <reports-department-instructors
             v-if="subMenu == 'instructors'"
+            :year="year"
+            :statistics="statistics"
+            :cpl="cpl"
+            :instructor-metrics="instructorMetrics"
+            :instructor-surveys="instructorSurveys"
+            :course-surveys="courseSurveys"
+        ></reports-department-instructors>
+        <reports-department-coe
+            v-if="subMenu == 'coe'"
             :year="year"
             :statistics="statistics"
             :cpl="cpl"
@@ -81,7 +89,14 @@ Vue.component('reports-department', {
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
-    }
+    },
+    coe() {
+      let list = this.department_metrics?.coe?? [];
+      if (!list.length) return [];
+      const yr = Number(this.year) || new Date().getFullYear();
+      list = (list.filter(d => Number(d.academic_year) === yr)) || []
+      return list;
+    },
   },
   watch: {
     year: 'loadDepartmentMetrics',
