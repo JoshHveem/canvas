@@ -118,7 +118,7 @@
     }
   });
 
-  const isDeptHead = !!window.IS_DEPARTMENT_HEAD || CURRENT_DEPARTMENT_ID == 3820;
+  const isDeptHead = !!window.IS_DEPARTMENT_HEAD || CURRENT_DEPARTMENT_ID == 3819;
 
   // for each row in the enrollments table, add controls
   $("tr.enrollment").each(function () {
