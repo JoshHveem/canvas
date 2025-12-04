@@ -143,6 +143,7 @@
     }
 
     let $controlsCell;
+    console.log(isDeptHead);
 
     if (!isDeptHead) {
       console.log("NOT DEPT HEAD");
