@@ -1,4 +1,4 @@
-Vue.component('department-report', {
+Vue.component('reports-department-instructors', {
   template: `
     <div>
       <!-- Could show a loading indicator if you like -->
