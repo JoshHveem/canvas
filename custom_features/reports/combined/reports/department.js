@@ -3,7 +3,7 @@ Vue.component('reports-department', {
     <div>
         {{subMenu}}
         <reports-department-instructors
-            v-if="subMenu.value == 'instructors'"
+            v-if="subMenu== 'instructors'"
             :year="year"
             :statistics="statistics"
             :cpl="cpl"
