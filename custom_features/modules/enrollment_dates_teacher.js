@@ -145,6 +145,7 @@
     let $controlsCell;
 
     if (!isDeptHead) {
+      console.log("NOT DEPT HEAD");
       // Non-department head: read-only display only
       $controlsCell = $(`
         <td class="btech-end-date-cell" style="vertical-align: top;">
