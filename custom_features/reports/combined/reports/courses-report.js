@@ -67,6 +67,19 @@ Vue.component('courses-report', {
           c => Number(c.credits ?? -1)
         ),
         new CoursesColumn(
+          'Suggested', 'Suggested Credits based on time to complet for students who got at least 80% of the way through this course.', '5rem', false, 'number',
+          c => c.suggested_credits !== null ? c.suggested_credits : 'n/a',
+          c => {
+            const v = Math.abs(c.suggested_credits - c.credits);
+            if (c.suggested_credits === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            return {
+              backgroundColor: (v >= 0.75) ? this.colors.red : (v >= 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
+              color: this.colors.white
+            };
+          },
+          c => Number(c.pct_last_active ?? -1) // sort on raw 0–1 value
+        ),
+        new CoursesColumn(
           'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
           c => c.num_students_jenzabar ?? 0,
           null,
@@ -97,19 +110,6 @@ Vue.component('courses-report', {
             };
           },
           c => Number(c.pct_dropped ?? -1) // sort on raw 0–1 value
-        ),
-        new CoursesColumn(
-          'Suggested', 'Suggested Credits based on time to complet for students who got at least 80% of the way through this course.', '4rem', false, 'number',
-          c => c.suggested_credits !== null ? c.suggested_credits : 'n/a',
-          c => {
-            const v = Math.abs(c.suggested_credits - c.credits);
-            if (c.suggested_credits === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
-            return {
-              backgroundColor: (v >= 0.75) ? this.colors.red : (v >= 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
-              color: this.colors.white
-            };
-          },
-          c => Number(c.pct_last_active ?? -1) // sort on raw 0–1 value
         ),
         new CoursesColumn(
           'Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
