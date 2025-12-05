@@ -7,13 +7,13 @@ Vue.component('reports-instructor', {
             :year="year"
             :instructors="normalizedInstructors"
             :instructor-id="instructorId"
-        ></reports-department-instructors>
+        ></reports-instructor-overview>
         <reports-instructor-surveys
             v-if="subMenu == 'surveys'"
             :year="year"
             :cpl="cpl"
             :coe="coe"
-        ></reports-department-instructors>
+        ></reports-instructor-surveys>
     </div>
   `,
   props: {
