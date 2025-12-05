@@ -18,13 +18,13 @@ Vue.component('reports-instructor-overview', {
     yearNum() { return Number(this.year) || new Date().getFullYear(); },
 
 
-    hasMany()   { return this.normalizedInstructors.length > 1; },
-    hasSingle() { return this.normalizedInstructors.length === 1; },
+    hasMany()   { return this.instructors.length > 1; },
+    hasSingle() { return this.instructors.length === 1; },
 
     // The detail record to show (selected or the only one)
     detailInstructor() {
       if (this.selected) return this.selected;
-      if (this.hasSingle) return this.normalizedInstructors[0];
+      if (this.hasSingle) return this.instructors[0];
       return null;
     },
 
@@ -86,7 +86,7 @@ Vue.component('reports-instructor-overview', {
       <!-- Overview list (only when multiple and nothing selected) -->
       <instructors-report
         v-if="!loading && hasMany && !selected"
-        :instructors="normalizedInstructors"
+        :instructors="instructors"
         :year="year"
         @select="onSelectInstructor"
       />

@@ -37,7 +37,7 @@ Vue.component('reports-instructor', {
     },
   },
   watch: {
-    // year: 'loadInstructorMetrics',
+    year: 'loadInstructorMetrics',
     account: 'loadInstructorMetrics'
   },
   async mounted() {
