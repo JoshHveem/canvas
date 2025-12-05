@@ -178,16 +178,6 @@
                 { value: 'surveys',  label: 'Surveys' },
               ]
             },
-            {
-              value: 'coe',
-              label: 'COE',
-              component: 'department-coe',
-              title: 'COE Evidence',
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-                { value: 'evidence', label: 'Evidence' },
-              ]
-            },
           ],
         }
       },
