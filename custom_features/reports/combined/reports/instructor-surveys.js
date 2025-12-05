@@ -1,7 +1,7 @@
 /* =========================
  * Instructor Report (root)
  * ========================= */
-Vue.component('instructor-report', {
+Vue.component('reports-instructor-surveys', {
   props: {
     year:         { type: [Number, String], required: true },
     account:      { type: [Number, String], required: true },
