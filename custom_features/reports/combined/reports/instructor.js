@@ -28,6 +28,7 @@ Vue.component('reports-instructor', {
     }
   },
   computed: {
+    yearNum() { return Number(this.year) || new Date().getFullYear(); },
     normalizedInstructors() {
         console.log(this.instructors);
         let instructors = (Array.isArray(this.instructors) ? this.instructors : [])
