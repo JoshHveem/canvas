@@ -45,12 +45,7 @@ Vue.component('reports-instructor-overview', {
       ].join(';');
     }
   },
-  watch: {
-    year: 'loadInstructorMetrics',
-    account: 'loadInstructorMetrics'
-  },
   async mounted() {
-    await this.loadInstructorMetrics();
   },
   methods: {
 
