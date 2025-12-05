@@ -141,7 +141,7 @@
             {
               value: 'instructor',
               label: 'Instructor',
-              component: 'instructor-report',
+              component: 'reports-instructor',
               title: 'Instructor Report',
               subMenus: [
                 { value: 'overview',     label: 'Overview' },
