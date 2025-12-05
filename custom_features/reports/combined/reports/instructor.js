@@ -11,8 +11,7 @@ Vue.component('reports-instructor', {
         <reports-instructor-surveys
             v-if="subMenu == 'surveys'"
             :year="year"
-            :cpl="cpl"
-            :coe="coe"
+            :instructors="normalizedInstructors"
         ></reports-instructor-surveys>
     </div>
   `,
@@ -30,10 +29,12 @@ Vue.component('reports-instructor', {
   },
   computed: {
     normalizedInstructors() {
-        return (Array.isArray(this.instructors) ? this.instructors : [])
+        let instructors = (Array.isArray(this.instructors) ? this.instructors : [])
         .map(i => this._forYear(i, this.yearNum))
         .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
         ;
+        console.log(instructors);
+        return instructors;
     },
   },
   watch: {
