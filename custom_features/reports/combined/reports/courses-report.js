@@ -67,7 +67,7 @@ Vue.component('courses-report', {
           c => Number(c.credits ?? -1)
         ),
         new CoursesColumn(
-          'Suggested', 'Suggested Credits based on time to complet for students who got at least 80% of the way through this course.', '5rem', false, 'number',
+          'Suggested', 'Suggested Credits based on time to complet for students who got at least 80% of the way through this course.', '6rem', false, 'number',
           c => c.suggested_credits !== null ? c.suggested_credits : 'n/a',
           c => {
             const v = Math.abs(c.suggested_credits - c.credits);
