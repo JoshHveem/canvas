@@ -103,7 +103,7 @@ Vue.component('courses-report', {
           c => c.suggested_credits !== null ? c.suggested_credits : 'n/a',
           c => {
             const v = Math.abs(c.suggested_credits - c.credits);
-            if (v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            if (v === 'n/a') return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
               backgroundColor: (v >= 0.75) ? this.colors.red : (v >= 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
               color: this.colors.white
