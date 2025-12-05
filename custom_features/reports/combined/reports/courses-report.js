@@ -73,7 +73,7 @@ Vue.component('courses-report', {
             const v = Math.abs(c.suggested_credits - c.credits);
             if (c.suggested_credits === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
             return {
-              backgroundColor: (v >= 0.75) ? this.colors.red : (v >= 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
+              backgroundColor: (v > 0.75) ? this.colors.red : (v > 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
               color: this.colors.white
             };
           },
