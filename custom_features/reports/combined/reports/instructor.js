@@ -24,27 +24,34 @@ Vue.component('reports-instructor', {
   data() {
     return {
       loading: false,
-      instructors: [] 
+      instructors: [],
+      normalizedInstructors: []
     }
   },
   computed: {
-    normalizedInstructors() {
-        let instructors = (Array.isArray(this.instructors) ? this.instructors : [])
-        .map(i => this._forYear(i, this.yearNum))
-        .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
-        ;
-        console.log(instructors);
-        return instructors;
-    },
   },
   watch: {
     year: 'loadInstructorMetrics',
-    account: 'loadInstructorMetrics'
+    account: 'loadInstructorMetrics',
+    instructors: 'setNormalizedInstructors'
   },
   async mounted() {
     await this.loadInstructorMetrics();
   },
   methods: {
+    setNormalizedInstructors() {
+        let instructors = (Array.isArray(this.instructors) ? this.instructors : [])
+        .map(i => this._forYear(i, this.yearNum))
+        .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
+        ;
+        console.log(instructors);
+        this.normalizedInstructors = instructors;
+        if (this.normalizedInstructors.length === 1) {
+          this.selected = this.normalizedInstructors[0];
+        }
+
+        return instructors;
+    },
       async loadInstructorMetrics() {
       try {
         this.loading = true;
@@ -67,9 +74,6 @@ Vue.component('reports-instructor', {
         console.log(this.instructors);
 
         // if exactly one, auto-select it
-        if (this.normalizedInstructors.length === 1) {
-          this.selected = this.normalizedInstructors[0];
-        }
       } catch (e) {
         console.error('Failed to load instructor metrics', e);
         this.instructors = [];
