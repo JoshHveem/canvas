@@ -36,7 +36,7 @@
 
                     <!-- EXPANDABLE SECTION -->
                     <details>
-                        <summary style="font-size: 0.75rem; cursor:pointer; font-weight:bold; padding:4px 0;">
+                        <summary style="font-size: 0.75rem; cursor:pointer; padding:4px 0;">
                             <i>Which removal method should I use?</i>
                         </summary>
                         <hr>
