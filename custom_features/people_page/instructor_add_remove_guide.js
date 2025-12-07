@@ -33,13 +33,13 @@
                         </tr>
                     </table>
 
-                    <hr>
 
                     <!-- EXPANDABLE SECTION -->
                     <details>
-                        <summary style="cursor:pointer; font-weight:bold; padding:4px 0;">
-                            Which removal method should I use?
+                        <summary style="font-size: 0.75rem; cursor:pointer; font-weight:bold; padding:4px 0;">
+                            <i>Which removal method should I use?</i>
                         </summary>
+                        <hr>
 
                         <table style="width:100%; border-collapse:collapse; text-align:left; margin-top:8px;">
                             <tr>
