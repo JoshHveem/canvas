@@ -7,6 +7,8 @@
             </div>
             <div class="ic-notification__content">
                 <div class="ic-notification__message">
+
+                    <!-- FIRST TABLE (Always visible) -->
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <tr>
                             <th style="padding:4px;"></th>
@@ -23,36 +25,46 @@
                             <td style="padding:4px;">✔️ Yes</td>
                         </tr>
                     </table>
+
                     <hr>
-                    <table style="width:100%; border-collapse:collapse; text-align:left;">
-                        <tr>
-                            <th style="padding:4px; width: 15rem;">Removal Method</th>
-                            <th style="padding:4px;">Appears on Transcript</th>
-                            <th style="padding:4px;">Appears in Gradebook</th>
-                            <th style="padding:4px;">Scenario</th>
-                        </tr>
 
-                        <tr>
-                            <td style="padding:4px;"><strong>Conclude</strong></td>
-                            <td style="padding:4px;">✔️ Yes</td>
-                            <td style="padding:4px;">✔️ Yes</td>
-                            <td style="padding:4px;">Student finished the course</td>
-                        </tr>
+                    <!-- EXPANDABLE SECTION -->
+                    <details>
+                        <summary style="cursor:pointer; font-weight:bold; padding:4px 0;">
+                            Which removal method should I use?
+                        </summary>
 
-                        <tr>
-                            <td style="padding:4px;"><strong>Deactivate</strong></td>
-                            <td style="padding:4px;">❌ No</td>
-                            <td style="padding:4px;">✔️ Yes</td>
-                            <td style="padding:4px;">Began but did not finish the course</td>
-                        </tr>
+                        <table style="width:100%; border-collapse:collapse; text-align:left; margin-top:8px;">
+                            <tr>
+                                <th style="padding:4px; width: 15rem;">Removal Method</th>
+                                <th style="padding:4px;">Appears on Transcript</th>
+                                <th style="padding:4px;">Appears in Gradebook</th>
+                                <th style="padding:4px;">Scenario</th>
+                            </tr>
 
-                        <tr>
-                            <td style="padding:4px;"><strong>Delete</strong></td>
-                            <td style="padding:4px;">❌ No</td>
-                            <td style="padding:4px;">❌ No</td>
-                            <td style="padding:4px;">Accidentally added to the wrong course</td>
-                        </tr>
-                    </table>
+                            <tr>
+                                <td style="padding:4px;"><strong>Conclude</strong></td>
+                                <td style="padding:4px;">✔️ Yes</td>
+                                <td style="padding:4px;">✔️ Yes</td>
+                                <td style="padding:4px;">Student finished the course</td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:4px;"><strong>Deactivate</strong></td>
+                                <td style="padding:4px;">❌ No</td>
+                                <td style="padding:4px;">✔️ Yes</td>
+                                <td style="padding:4px;">Began but did not finish the course</td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:4px;"><strong>Delete</strong></td>
+                                <td style="padding:4px;">❌ No</td>
+                                <td style="padding:4px;">❌ No</td>
+                                <td style="padding:4px;">Accidentally added to the wrong course</td>
+                            </tr>
+                        </table>
+                    </details>
+
                 </div>
             </div>
         </div>
