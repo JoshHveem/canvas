@@ -1,5 +1,12 @@
 (function() {
     $("#content").prepend(`
+        <style>
+            /* Hide the summary when the details element is open */
+            details[open] > summary {
+                display: none;
+            }
+        </style>
+
         <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
             <div class="ic-notification__icon" role="presentation">
                 <i class="icon-info"></i>
