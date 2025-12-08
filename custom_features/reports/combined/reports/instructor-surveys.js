@@ -210,7 +210,7 @@ Vue.component('reports-instructor-surveys', {
             height:6px;
             background:${bgTrack};
             border-radius:9999px;
-            overflow:wrap;
+            overflow:hidden;
           ">
             <div style="
               height:100%;
@@ -304,7 +304,7 @@ Vue.component('reports-instructor-surveys', {
         <div 
           v-for="col in visibleColumns" 
           :key="col.name"
-          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+          style="display:inline-block; white-space:nowrap;"
         >
           <span v-if="col.name === 'Name'">
             <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>{{ col.getContent(inst) }}</a>
