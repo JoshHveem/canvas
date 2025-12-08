@@ -143,7 +143,7 @@ Vue.component('reports-instructor-surveys', {
   },
 
   methods: {
-    makeLikertColumn(label, likertName, width = '5rem') {
+    makeLikertColumn(label, likertName, width = '6rem') {
       return new InstructorSurveysColumn(
         label,
         `Likert score for ${label}`,
