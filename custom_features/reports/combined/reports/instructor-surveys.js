@@ -1,7 +1,7 @@
 /* ===========================
  * Reusable column helper
  * =========================== */
-class InstructorColumn {
+class InstructorSurveysColumn {
   constructor(
     name,
     description,
@@ -98,19 +98,19 @@ Vue.component('reports-instructor-surveys', {
       sort_column: 'Name',
       sort_dir: 1,
       columns: [
-        new InstructorColumn(
+        new InstructorSurveysColumn(
           'Name', 'Instructor name', '1.6fr', 'string',
           i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
           null,
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
-        new InstructorColumn(
+        new InstructorSurveysColumn(
           '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
           i => i?.surveys?.num_surveys ?? 0,
           null,
           i => Number(i?.surveys?.num_surveys ?? 0)
         ),
-        new InstructorColumn(
+        new InstructorSurveysColumn(
           'AI Summary', 'Summary of all student free response feedback.', '12rem', 'string',
           i => i?.surveys?.summary ?? '',
           null,
