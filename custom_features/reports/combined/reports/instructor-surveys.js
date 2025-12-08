@@ -162,7 +162,7 @@ Vue.component('reports-instructor-surveys', {
           const score = this.getLikertScore(i, likertName);
           if (score == null) return '—';
           const n = Number(score);
-          band(n, 0.9, true)
+          return this.band(n, 0.9, true)
         },
         i => {
           const score = getLikertScore(i, likertName);
