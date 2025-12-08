@@ -36,7 +36,7 @@ class InstructorColumn {
 /* ===========================
  * Instructors Report (grid, like courses)
  * =========================== */
-Vue.component('instructors-report', {
+Vue.component('reports-instructor-surveys', {
   props: {
     instructors: { type: Array, required: true, default: () => [] },
     title: { type: String, default: 'Instructors' },
