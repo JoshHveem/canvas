@@ -165,7 +165,7 @@ Vue.component('reports-instructor-surveys', {
           return this.band(n, 0.9, true)
         },
         i => {
-          const score = getLikertScore(i, likertName);
+          const score = this.getLikertScore(i, likertName);
           const n = Number(score);
           return Number.isFinite(n) ? n : Number.NaN;
         }
