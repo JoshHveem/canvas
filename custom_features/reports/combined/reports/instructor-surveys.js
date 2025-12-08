@@ -157,6 +157,13 @@ Vue.component('reports-instructor-surveys', {
         }
       )
     },
+    getLikertScore(inst, likertName) {
+      const arr = inst?.surveys?.likerts;
+      if (!Array.isArray(arr)) return null;
+
+      const match = arr.find(item => item?.name === likertName);
+      return match?.score ?? null;
+    },
 
     renderBar(decimalVal) {
       const val = Number(decimalVal) || 0;
