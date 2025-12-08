@@ -106,6 +106,12 @@ Vue.component('reports-instructor-surveys', {
         ),
         this.makeLikertColumn('Availability', 'Availability'),
         this.makeLikertColumn('Clarity', 'Clarity'),
+        this.makeLikertColumn('Industry Focused', 'Industry Focused'),
+        this.makeLikertColumn('Respectful', 'Respectful'),
+        this.makeLikertColumn('Regular Progress Meetings', 'Regular Progress Meetings'),
+        this.makeLikertColumn('Timely Grading', 'Timely Grading'),
+        this.makeLikertColumn('Provided Feedback', 'Provided Feedback'),
+        this.makeLikertColumn('Organized', 'Organized'),
         new InstructorSurveysColumn(
           '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
           i => i?.surveys?.num_surveys ?? 0,
@@ -163,6 +169,24 @@ Vue.component('reports-instructor-surveys', {
 
       const match = arr.find(item => item?.name === likertName);
       return match?.score ?? null;
+    },
+
+    buildLikertColumnsFromInstructors(instructors) {
+      const nameSet = new Set();
+
+      (instructors || []).forEach(inst => {
+        const likerts = inst?.surveys?.likerts;
+        if (!Array.isArray(likerts)) return;
+
+        likerts.forEach(l => {
+          if (l?.name) {
+            nameSet.add(l.name);
+          }
+        });
+      });
+
+      const names = Array.from(nameSet).sort((a, b) => a.localeCompare(b));
+      return names.map(name => this.makeLikertColumn(name));
     },
 
     renderBar(decimalVal) {
