@@ -122,9 +122,9 @@ Vue.component('reports-instructor-surveys', {
         this.makeLikertColumn('Organized', 'Organized'),
         new InstructorSurveysColumn(
           'AI Summary', 'Summary of all student free response feedback.', '25rem', 'string',
-          i => i?.surveys?.summary ?? '',
+          i => i?.surveys?.summary_recommendations ?? '',
           null,
-          i => (i?.surveys?.summary ?? '').toUpperCase()
+          i => (i?.surveys?.summary_recommendations ?? '').toUpperCase()
         ),
       ]
     };
