@@ -97,6 +97,8 @@ Vue.component('reports-instructor-surveys', {
       colors,
       sort_column: 'Name',
       sort_dir: 1,
+      pct01,
+      band,
       columns: [
         new InstructorSurveysColumn(
           'Name', 'Instructor name', '1.6fr', 'string',
