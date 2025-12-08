@@ -210,7 +210,7 @@ Vue.component('reports-instructor-surveys', {
             height:6px;
             background:${bgTrack};
             border-radius:9999px;
-            overflow:hidden;
+            overflow:wrap;
           ">
             <div style="
               height:100%;
