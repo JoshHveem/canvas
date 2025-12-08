@@ -108,9 +108,9 @@ Vue.component('reports-instructor-surveys', {
         this.makeLikertColumn('Clarity', 'Clarity'),
         this.makeLikertColumn('Industry Focused', 'Industry Focused'),
         this.makeLikertColumn('Respectful', 'Respectful'),
-        this.makeLikertColumn('Regular Progress Meetings', 'Regular Progress Meetings'),
+        this.makeLikertColumn('Progress Meetings', 'Regular Progress Meetings'),
         this.makeLikertColumn('Timely Grading', 'Timely Grading'),
-        this.makeLikertColumn('Provided Feedback', 'Provided Feedback'),
+        this.makeLikertColumn('Feedback', 'Provided Feedback'),
         this.makeLikertColumn('Organized', 'Organized'),
         new InstructorSurveysColumn(
           '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
@@ -143,7 +143,7 @@ Vue.component('reports-instructor-surveys', {
   },
 
   methods: {
-    makeLikertColumn(label, likertName, width = '8rem') {
+    makeLikertColumn(label, likertName, width = '5rem') {
       return new InstructorSurveysColumn(
         label,
         `Likert score for ${label}`,
