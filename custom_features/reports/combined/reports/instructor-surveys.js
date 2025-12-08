@@ -106,6 +106,12 @@ Vue.component('reports-instructor-surveys', {
           null,
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
+        new InstructorSurveysColumn(
+          '# Surveys', 'Total number of surveys submitted for this instructor.', '5rem', 'number',
+          i => i?.surveys?.num_surveys ?? 0,
+          null,
+          i => Number(i?.surveys?.num_surveys ?? 0)
+        ),
         this.makeLikertColumn('Availability', 'Availability'),
         this.makeLikertColumn('Clarity', 'Clarity'),
         this.makeLikertColumn('Industry Focused', 'Industry Focused'),
@@ -114,12 +120,6 @@ Vue.component('reports-instructor-surveys', {
         this.makeLikertColumn('Timely Grading', 'Timely Grading'),
         this.makeLikertColumn('Feedback', 'Provided Feedback'),
         this.makeLikertColumn('Organized', 'Organized'),
-        new InstructorSurveysColumn(
-          '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
-          i => i?.surveys?.num_surveys ?? 0,
-          null,
-          i => Number(i?.surveys?.num_surveys ?? 0)
-        ),
         new InstructorSurveysColumn(
           'AI Summary', 'Summary of all student free response feedback.', '12rem', 'string',
           i => i?.surveys?.summary ?? '',
