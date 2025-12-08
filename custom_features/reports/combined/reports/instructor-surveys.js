@@ -104,8 +104,8 @@ Vue.component('reports-instructor-surveys', {
           null,
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
-        makeLikertColumn('Availability', 'Availability'),
-        makeLikertColumn('Clarity', 'Clarity'),
+        this.makeLikertColumn('Availability', 'Availability'),
+        this.makeLikertColumn('Clarity', 'Clarity'),
         new InstructorSurveysColumn(
           '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
           i => i?.surveys?.num_surveys ?? 0,
