@@ -121,7 +121,7 @@ Vue.component('reports-instructor-surveys', {
         this.makeLikertColumn('Feedback', 'Provided Feedback'),
         this.makeLikertColumn('Organized', 'Organized'),
         new InstructorSurveysColumn(
-          'AI Summary', 'Summary of all student free response feedback.', '12rem', 'string',
+          'AI Summary', 'Summary of all student free response feedback.', '25rem', 'string',
           i => i?.surveys?.summary ?? '',
           null,
           i => (i?.surveys?.summary ?? '').toUpperCase()
