@@ -304,7 +304,7 @@ Vue.component('reports-instructor-surveys', {
         <div 
           v-for="col in visibleColumns" 
           :key="col.name"
-          style="display:inline-block; white-space:nowrap;"
+          style="display:inline-block; text-overflow: clip; white-space: normal;"
         >
           <span v-if="col.name === 'Name'">
             <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>{{ col.getContent(inst) }}</a>
