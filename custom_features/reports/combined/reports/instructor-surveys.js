@@ -104,6 +104,8 @@ Vue.component('reports-instructor-surveys', {
           null,
           i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
         ),
+        makeLikertColumn('Availability', 'Availability'),
+        makeLikertColumn('Clarity', 'Clarity'),
         new InstructorSurveysColumn(
           '# Surveys', 'Total number of surveys submitted for this instructor.', '11rem', 'number',
           i => i?.surveys?.num_surveys ?? 0,
@@ -135,6 +137,27 @@ Vue.component('reports-instructor-surveys', {
   },
 
   methods: {
+    makeLikertColumn(label, likertName, width = '8rem') {
+      return new InstructorSurveysColumn(
+        label,
+        `Likert score for ${label}`,
+        width,
+        'number',
+        i => {
+          const score = getLikertScore(i, likertName);
+          if (score == null) return '—';
+          const n = Number(score);
+          return Number.isFinite(n) ? n.toFixed(2) : '—';
+        },
+        null,
+        i => {
+          const score = getLikertScore(i, likertName);
+          const n = Number(score);
+          return Number.isFinite(n) ? n : Number.NaN;
+        }
+      )
+    },
+
     renderBar(decimalVal) {
       const val = Number(decimalVal) || 0;
       const pct = Math.max(0, Math.min(100, val * 100));
