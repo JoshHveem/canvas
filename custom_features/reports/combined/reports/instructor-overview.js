@@ -15,7 +15,6 @@ Vue.component('reports-instructor-overview', {
     };
   },
   computed: {
-    yearNum() { return Number(this.year) || new Date().getFullYear(); },
 
 
     hasMany()   { return this.instructors.length > 1; },
@@ -79,7 +78,7 @@ Vue.component('reports-instructor-overview', {
       </div>
 
       <!-- Overview list (only when multiple and nothing selected) -->
-      <instructors-report
+      <reports-instructor-overview-list
         v-if="!loading && hasMany && !selected"
         :instructors="instructors"
         :year="year"
