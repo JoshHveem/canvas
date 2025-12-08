@@ -153,6 +153,7 @@ Vue.component('reports-instructor-surveys', {
           const score = this.getLikertScore(i, likertName);
           if (score == null) return '—';
           const n = Number(score);
+          return pct01(n);
           return Number.isFinite(n) ? n.toFixed(2) : '—';
         },
         null,
