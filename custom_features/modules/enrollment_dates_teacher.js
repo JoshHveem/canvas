@@ -118,7 +118,7 @@
     }
   });
 
-  const isDeptHead = (!!window.IS_DEPARTMENT_HEAD || ENV.ACCOUNT_ID == '3819' || ENV.ACCOUNT_ID == '3866');
+  const isDeptHead = (!!window.IS_DEPARTMENT_HEAD || ENV.ACCOUNT_ID == '3819' || ENV.ACCOUNT_ID == '3866' || ENV.ACCOUNT_ID == '3832'); // automation, welding, and electronics who are all using end dates for highschool. Remove once HS get end dates from jenzabar
 
   // for each row in the enrollments table, add controls
   $("tr.enrollment").each(function () {
