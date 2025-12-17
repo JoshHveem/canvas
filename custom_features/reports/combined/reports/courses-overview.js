@@ -137,21 +137,19 @@ Vue.component('reports-courses-overview', {
   },
 
   computed: {
-    visibleColumns() {
-      return this.columns.filter(c => c.visible);
-    },
     visibleRows() {
-      // filter by year and zero checks
       const yr = Number(this.year);
-      const rows = (this.courses || []).filter((c) => {
+      const rows = (this.courses || []).filter(c => {
         if (Number(c.year) !== yr) return false;
         if (this.filters.hide_zero_credits && !(Number(c.credits) > 0)) return false;
         if (this.filters.hide_zero_students && !(Number(c.num_students_credits) > 0)) return false;
         return true;
       });
-      // sort
-      return this.sortRows(rows);
-    }
+
+      // feed rows into table and return sorted
+      this.table.setRows(rows);
+      return this.table.getSortedRows();
+    } 
   },
 
   methods: {
