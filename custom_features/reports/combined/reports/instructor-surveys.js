@@ -150,16 +150,6 @@ Vue.component('reports-instructor-surveys', {
         i => Number(i?.surveys?.num_surveys ?? 0)
       ),
 
-      // Likerts
-      this.makeLikertColumn('Available', 'Availability'),
-      this.makeLikertColumn('Clarity', 'Clarity'),
-      this.makeLikertColumn('Relevance', 'Industry Focused'),
-      this.makeLikertColumn('Respect', 'Respectful'),
-      this.makeLikertColumn('Meeting', 'Regular Progress Meetings'),
-      this.makeLikertColumn('Grading', 'Timely Grading'),
-      this.makeLikertColumn('Feedback', 'Provided Feedback'),
-      this.makeLikertColumn('Organized', 'Organized'),
-
       // Recommendations (your example already used ReportColumn but had wrong args order)
       new window.ReportColumn(
         'Improve?',
@@ -297,7 +287,6 @@ Vue.component('reports-instructor-surveys', {
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
         <h4 class="btech-card-title" style="margin:0;">{{ title }}</h4>
         <div style="flex:1;"></div>
-        <span v-if="year" class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
         <span class="btech-pill" style="margin-left:8px; cursor:pointer;" @click="toggleSummaries">
           {{ showSummaries ? 'Hide Summaries' : 'Show Summaries' }}
         </span>
