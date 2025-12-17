@@ -109,7 +109,7 @@ Vue.component('reports-courses', {
         course.relevance  = this.calcLikert(course, 'Workplace Relevance');
         course.examples   = this.calcLikert(course, 'Examples');
         course.recommendable = this.calcLikert(course, 'Recommendable');
-        course.recommendations = course?.surveys?.has_recommendations ? 1 - course.surveys.has_recommendations : null;
+        course.recommendations = course?.surveys?.has_recommendations;
         course.survey_summary = course?.surveys?.summary;
         return course;
       });

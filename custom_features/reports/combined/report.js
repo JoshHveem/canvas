@@ -124,6 +124,15 @@
       return Number.isFinite(n) ? (n * 100).toFixed(1) + "%" : "n/a";
     }
 
+    bandBgInv(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      return {
+        backgroundColor: (n < 0.20) ? this.colors.red : (n < 0.50 ? this.colors.yellow : this.colors.green),
+        color: this.colors.white
+      };
+    }
+
     bandBg(v) {
       const n = Number(v);
       if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
