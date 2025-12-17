@@ -68,7 +68,7 @@ Vue.component('reports-courses-surveys', {
         ),
         new window.ReportColumn(
           'Summary', 'Summary of student free response recommendations.', '7rem', true, 'string',
-          c => this.table.pctText(c.survey_summary),
+          c => c.survey_summary,
           c => null,
           c => c.survey_summary
         ),
