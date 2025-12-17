@@ -91,7 +91,7 @@ Vue.component('reports-instructor-surveys', {
 
       return { backgroundColor: color, color: colors.white };
     };
-
+    console.log(this.instructors);
 
     return {
       colors,
