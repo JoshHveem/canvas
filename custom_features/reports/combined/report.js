@@ -136,7 +136,7 @@
 
   // expose globally for non-module usage
   window.ReportColumn = ReportColumn;
-  window.CoursesTable = ReportTable;
+  window.ReportTable = ReportTable;
 
   // accounts.mixin.js
   window.BtechAccountsMixin = {
