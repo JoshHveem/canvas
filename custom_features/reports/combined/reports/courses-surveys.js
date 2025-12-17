@@ -67,6 +67,12 @@ Vue.component('reports-courses-surveys', {
           c => Number(c.recommendable ?? -1)
         ),
         new window.ReportColumn(
+          'Has Recommendations', 'What percentage of free response questions had recommendations.', '7rem', true, 'number',
+          c => this.table.pctText(c.recommendations),
+          c => this.table.bandBg(c.recommendations),
+          c => Number(c.recommendable ?? -1)
+        ),
+        new window.ReportColumn(
           'Summary', 'Summary of student free response recommendations.', '25rem', true, 'string',
           c => c.survey_summary,
           c => null,
