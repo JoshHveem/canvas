@@ -70,7 +70,7 @@ Vue.component('reports-courses-surveys', {
           'Summary', 'Summary of student free response recommendations.', '7rem', true, 'string',
           c => c.survey_summary,
           c => null,
-          c => c.survey_summary
+          c => (c.survey_summary ?? '')
         ),
       ]);
   },
