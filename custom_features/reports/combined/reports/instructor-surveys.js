@@ -28,7 +28,14 @@ Vue.component('reports-instructor-surveys', {
       green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
     };
 
-    const table = new window.ReportTable({
+    const tableDefault = new window.ReportTable({
+      rows: [],
+      columns: [],
+      sort_column: "Name",
+      sort_dir: 1,
+      colors
+    });
+    const tableSummaries = new window.ReportTable({
       rows: [],
       columns: [],
       sort_column: "Name",
@@ -66,8 +73,10 @@ Vue.component('reports-instructor-surveys', {
 
     return {
       colors,
-      table,
+      tableDefault,
+      tableSummaries,
       tableTick: 0, // helps Vue 2 notice sort changes on class instances
+      showSummaries: false,
       pct01,
       band
     };
@@ -75,7 +84,58 @@ Vue.component('reports-instructor-surveys', {
 
   created() {
     // Build columns once. Anything that needs `this` can use arrow fns.
-    const cols = [
+    const colsDefault = [
+      new window.ReportColumn(
+        'Name', 'Instructor name', '1.6fr', false, 'string',
+        i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
+        null,
+        i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase()
+      ),
+
+      new window.ReportColumn(
+        'Subs', 'Total number of surveys submitted for this instructor.', '4rem', false, 'number',
+        i => i?.surveys?.num_surveys ?? 0,
+        null,
+        i => Number(i?.surveys?.num_surveys ?? 0)
+      ),
+
+      // Likerts
+      this.makeLikertColumn('Available', 'Availability'),
+      this.makeLikertColumn('Clarity', 'Clarity'),
+      this.makeLikertColumn('Relevance', 'Industry Focused'),
+      this.makeLikertColumn('Respect', 'Respectful'),
+      this.makeLikertColumn('Meeting', 'Regular Progress Meetings'),
+      this.makeLikertColumn('Grading', 'Timely Grading'),
+      this.makeLikertColumn('Feedback', 'Provided Feedback'),
+      this.makeLikertColumn('Organized', 'Organized'),
+
+      // Recommendations (your example already used ReportColumn but had wrong args order)
+      new window.ReportColumn(
+        'Improve?',
+        'What percentage of free response questions brought up areas to improve.',
+        '7rem',
+        true,          // average (not used, but keep consistent)
+        'number',
+        i => this.table.pctText(i?.surveys?.has_recommendations),
+        i => this.table.bandBgInv(i?.surveys?.has_recommendations),
+        i => Number(i?.surveys?.has_recommendations ?? NaN)
+      ),
+
+      new window.ReportColumn(
+        'Summary',
+        'Summary of free responses.',
+        '10rem',
+        false,
+        'string',
+        i => i?.surveys?.ai_summary ?? (i?.surveys?.summary_recommendations ?? ''),
+        null,
+        i => (i?.surveys?.ai_summary ?? (i?.surveys?.summary_recommendations ?? '')).toUpperCase()
+      ),
+    ];
+
+    this.tableDefault.setColumns(colsDefault);
+
+    const colsSummaries = [
       new window.ReportColumn(
         'Name', 'Instructor name', '1.6fr', false, 'string',
         i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
@@ -124,10 +184,14 @@ Vue.component('reports-instructor-surveys', {
       ),
     ];
 
-    this.table.setColumns(cols);
+    this.tableSummaries.setColumns(colsSummaries);
   },
 
   computed: {
+    table() {
+      void this.tableTick; // keeps Vue refreshing if needed
+      return this.showSummaries ? this.tableSummaries: this.tableDefault;
+    },
     visibleColumns() {
       // touch tableTick so Vue re-renders when sorting changes
       void this.tableTick;
@@ -154,6 +218,10 @@ Vue.component('reports-instructor-surveys', {
   },
 
   methods: {
+    toggleSummaries() {
+      this.showSummaries = !this.showSummaries;
+      this.tableTick++; // nudge
+    },
     makeLikertColumn(label, likertName, width = '5rem') {
       return new window.ReportColumn(
         label,
@@ -230,7 +298,9 @@ Vue.component('reports-instructor-surveys', {
         <h4 class="btech-card-title" style="margin:0;">{{ title }}</h4>
         <div style="flex:1;"></div>
         <span v-if="year" class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
-        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
+        <span class="btech-pill" style="margin-left:8px; cursor:pointer;" @click="toggleSummaries">
+          {{ showSummaries ? 'Hide Summaries' : 'Show Summaries' }}
+        </span>
       </div>
 
       <!-- Column headers -->
