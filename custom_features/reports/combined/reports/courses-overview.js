@@ -25,10 +25,7 @@ Vue.component('reports-courses-overview', {
         hide_zero_credits: true,
         hide_zero_students: true
       },
-      sort_column: 'Course Code',
-      sort_dir: 1,
-      
-
+      tableTick: 0
     };
   },
   created() {
@@ -111,26 +108,26 @@ Vue.component('reports-courses-overview', {
         ),
         new window.ReportColumn(
           'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
-          c => this.pctText(c.objectives),
-          c => this.bandBg(c.objectives),
+          c => this.table.pctText(c.objectives),
+          c => this.table.bandBg(c.objectives),
           c => Number(c.objectives ?? -1) // raw 0–1
         ),
         new window.ReportColumn(
           'Relevance', 'Content relevant to career.', '6rem', true, 'number',
-          c => this.pctText(c.relevance),
-          c => this.bandBg(c.relevance),
+          c => this.table.pctText(c.relevance),
+          c => this.table.bandBg(c.relevance),
           c => Number(c.relevance ?? -1)
         ),
         new window.ReportColumn(
           'Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
-          c => this.pctText(c.examples),
-          c => this.bandBg(c.examples),
+          c => this.table.pctText(c.examples),
+          c => this.table.bandBg(c.examples),
           c => Number(c.examples ?? -1)
         ),
         new window.ReportColumn(
           'Recommend', 'Would recommend this course.', '7rem', true, 'number',
-          c => this.pctText(c.recommendable),
-          c => this.bandBg(c.recommendable),
+          c => this.table.pctText(c.recommendable),
+          c => this.table.bandBg(c.recommendable),
           c => Number(c.recommendable ?? -1)
         ),
       ]);
@@ -154,7 +151,7 @@ Vue.component('reports-courses-overview', {
 
   methods: {
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); }
+    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; }
   },
 
   template: `
