@@ -9,7 +9,7 @@ Vue.component('reports-courses-overview', {
 
   data() {
     const colors = (window.bridgetools?.colors) || { red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308', green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff' };
-    const table = new window.CoursesTable({
+    const table = new window.ReportTable({
       rows: [],
       columns: [],     // set in mounted
       sort_column: "Course Code",
@@ -33,25 +33,25 @@ Vue.component('reports-courses-overview', {
   },
   created() {
     this.table.setColumns([
-        new CoursesColumn(
+        new window.ReportColumn(
           'Name', 'The name of the course.', '20rem', false, 'string',
           c => this.anonymous ? 'COURSE NAME ' + (c.course_id || '') : (c.name ?? ''),
           null,
           c => (c.name ?? '')
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Course Code', 'The course code for the course.', '6rem', false, 'string',
           c => this.anonymous ? 'AAAA 0000' : (c.course_code ?? ''),
           null,
           c => (c.course_code ?? '')
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0,
           null,
           c => Number(c.credits ?? -1)
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Suggested', 'Suggested Credits based on time to complete for students who got at least 80% of the way through this course.', '6rem', false, 'number',
           c => c.suggested_credits !== null ? c.suggested_credits : 'n/a',
           c => {
@@ -64,13 +64,13 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.pct_last_active ?? -1) // sort on raw 0–1 value
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
           c => c.num_students_jenzabar ?? 0,
           null,
           c => Number(c.num_students_jenzabar ?? -1)
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
           c => c.pct_need_extension !== null ? (c.pct_need_extension * 100).toFixed(1) + '%' : 'n/a',
           c => {
@@ -83,7 +83,7 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.pct_need_extension ?? -1) // sort on raw 0–1 value
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Drop', 'Percent of students who dropped.', '4rem', false, 'number',
           c => c.pct_dropped !== null ? (c.pct_dropped * 100).toFixed(1) + '%' : 'n/a',
           c => {
@@ -96,7 +96,7 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.pct_dropped ?? -1) // sort on raw 0–1 value
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Grades', 'Avg student grade (%) based on submitted work.', '5rem', true, 'number',
           c => Number.isFinite(Number(c.average_score)) ? Number(c.average_score).toFixed(1) + '%' : 'n/a',
           c => {
@@ -109,25 +109,25 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.average_score ?? -1)
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
           c => this.pctText(c.objectives),
           c => this.bandBg(c.objectives),
           c => Number(c.objectives ?? -1) // raw 0–1
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Relevance', 'Content relevant to career.', '6rem', true, 'number',
           c => this.pctText(c.relevance),
           c => this.bandBg(c.relevance),
           c => Number(c.relevance ?? -1)
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
           c => this.pctText(c.examples),
           c => this.bandBg(c.examples),
           c => Number(c.examples ?? -1)
         ),
-        new CoursesColumn(
+        new window.ReportColumn(
           'Recommend', 'Would recommend this course.', '7rem', true, 'number',
           c => this.pctText(c.recommendable),
           c => this.bandBg(c.recommendable),
