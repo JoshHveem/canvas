@@ -84,7 +84,7 @@ Vue.component('reports-instructor-surveys', {
       ),
 
       new window.ReportColumn(
-        '# Surveys', 'Total number of surveys submitted for this instructor.', '5rem', false, 'number',
+        'Subs', 'Total number of surveys submitted for this instructor.', '3rem', false, 'number',
         i => i?.surveys?.num_surveys ?? 0,
         null,
         i => Number(i?.surveys?.num_surveys ?? 0)
