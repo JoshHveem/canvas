@@ -1,4 +1,143 @@
 (async function () {
+  // courses-table.js
+
+  class ReportColumn {
+    constructor(
+      name, description, width, average, sort_type,
+      getContent = (row) => row?.name ?? '',
+      style_formula = null,
+      sort_val_func = null
+    ) {
+      this.name = name;
+      this.description = description;
+      this.width = width;
+      this.average = average;
+      this.sort_type = sort_type;     // "string" | "number"
+      this.sort_state = 0;            // -1 | 0 | 1
+      this.visible = true;
+
+      this.getContent = getContent;
+      this.style_formula = style_formula;
+      this.sort_val_func = sort_val_func;
+    }
+
+    get_style(row) {
+      return this.style_formula ? this.style_formula(row) : {};
+    }
+
+    getSortValue(row) {
+      if (typeof this.sort_val_func === "function") return this.sort_val_func(row);
+
+      const raw = this.getContent(row);
+      if (this.sort_type === "number") {
+        const n = Number(String(raw ?? "").replace("%", "").trim());
+        return Number.isFinite(n) ? n : NaN;
+      }
+      return ("" + (raw ?? "")).toUpperCase();
+    }
+  }
+
+  class ReportTable {
+    constructor({
+      rows = [],
+      columns = [],
+      sort_column = null,
+      sort_dir = 1,
+      colors = null
+    } = {}) {
+      this.rows = rows;
+      this.columns = columns;
+
+      this.sort_column = sort_column || (columns[0]?.name ?? "");
+      this.sort_dir = sort_dir;
+
+      this.colors = colors || {
+        red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
+        green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
+      };
+    }
+
+    setRows(rows) {
+      this.rows = rows || [];
+    }
+
+    setColumns(columns) {
+      this.columns = columns || [];
+      if (!this.sort_column && this.columns[0]) this.sort_column = this.columns[0].name;
+    }
+
+    getVisibleColumns() {
+      return (this.columns || []).filter(c => c.visible);
+    }
+
+    getColumnsWidthsString() {
+      return (this.getVisibleColumns()).map(c => c.width).join(" ");
+    }
+
+    setSortColumn(name) {
+      if (this.sort_column === name) this.sort_dir *= -1;
+      else { this.sort_column = name; this.sort_dir = 1; }
+
+      (this.columns || []).forEach(c => c.sort_state = (c.name === name ? this.sort_dir : 0));
+    }
+
+    sortRows(rows) {
+      const col = (this.columns || []).find(c => c.name === this.sort_column);
+      const sortType = col ? col.sort_type : "string";
+      const dir = this.sort_dir || 1;
+
+      const toStringKey = v => ("" + (v ?? "")).toUpperCase();
+
+      return (rows || []).slice().sort((a, b) => {
+        let av = col?.getSortValue ? col.getSortValue(a) : undefined;
+        let bv = col?.getSortValue ? col.getSortValue(b) : undefined;
+
+        if (sortType === "string") {
+          av = toStringKey(av);
+          bv = toStringKey(bv);
+        } else {
+          av = Number(av);
+          bv = Number(bv);
+        }
+
+        const aNaN = Number.isNaN(av);
+        const bNaN = Number.isNaN(bv);
+
+        let comp;
+        if (aNaN && bNaN) comp = 0;
+        else if (aNaN) comp = 1;
+        else if (bNaN) comp = -1;
+        else comp = av > bv ? 1 : (av < bv ? -1 : 0);
+
+        return comp * dir;
+      });
+    }
+
+    // Convenience: if you want the class to “own” sorting
+    getSortedRows() {
+      return this.sortRows(this.rows);
+    }
+
+    // Shared formatting helpers (optional)
+    pctText(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? (n * 100).toFixed(1) + "%" : "n/a";
+    }
+
+    bandBg(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      return {
+        backgroundColor: (n < 0.80) ? this.colors.red : (n < 0.90 ? this.colors.yellow : this.colors.green),
+        color: this.colors.white
+      };
+    }
+  }
+
+  // expose globally for non-module usage
+  window.ReportColumn = ReportColumn;
+  window.CoursesTable = ReportTable;
+
   // accounts.mixin.js
   window.BtechAccountsMixin = {
     data() {
@@ -171,7 +310,7 @@
             {
               value: 'courses',
               label: 'Courses',
-              component: 'courses-report',
+              component: 'reports-courses',
               title: 'Courses Report',
               subMenus: [
                 { value: 'overview', label: 'Overview' },
@@ -317,7 +456,9 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/occupations-report.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-report.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-overview.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-surveys.js");
     // await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
 
     postLoad();
