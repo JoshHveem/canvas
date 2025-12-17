@@ -1,41 +1,3 @@
-/* ===========================
- * Reusable column helper
- * =========================== */
-class InstructorSurveysColumn {
-  constructor(
-    name,
-    description,
-    width,
-    sort_type,                             // 'string' | 'number'
-    getContent = (inst) => '',
-    style_formula = null,
-    getSortValue = null
-  ) {
-    this.name = name;
-    this.description = description;
-    this.width = width;
-    this.sort_type = sort_type;
-    this.sort_state = 0;
-    this.visible = true;
-    this.getContent = getContent;
-    this.style_formula = style_formula;
-    this.getSortValueFn = getSortValue;
-  }
-  get_style(i) { return this.style_formula ? this.style_formula(i) : {}; }
-  getSortValue(i) {
-    if (typeof this.getSortValueFn === 'function') return this.getSortValueFn(i);
-    const raw = this.getContent(i);
-    if (this.sort_type === 'number') {
-      const n = Number(String(raw ?? '').replace('%','').trim());
-      return Number.isFinite(n) ? n : Number.NaN;
-    }
-    return String(raw ?? '').toUpperCase();
-  }
-}
-
-/* ===========================
- * Instructors Report (grid, like courses)
- * =========================== */
 Vue.component('reports-instructor-surveys', {
   props: {
     instructors: { type: Array, required: true, default: () => [] },
@@ -44,8 +6,8 @@ Vue.component('reports-instructor-surveys', {
     filters: {
       type: Object,
       default: () => ({
-        year_only: true,        // show only rows for prop:year
-        div_code: null          // e.g. 'GEN' (optional)
+        year_only: true,
+        div_code: null
       })
     },
     goals: {
@@ -55,35 +17,45 @@ Vue.component('reports-instructor-surveys', {
         grade_days_lt: 2,
         comments_gte: 1,
         reply_days_lt: 2,
-        rubric_pct_gte: .90 // target 100%
+        rubric_pct_gte: .90
       })
     }
   },
 
   data() {
-    const colors = (window.bridgetools?.colors);
+    const colors = window.bridgetools?.colors || {
+      red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
+      green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
+    };
 
+    const table = new window.ReportTable({
+      rows: [],
+      columns: [],
+      sort_column: "Name",
+      sort_dir: 1,
+      colors
+    });
+
+    // formatting helpers (component-level because they use goals/tolerances)
     const pct01 = (v) => {
       const n = Number(v);
       return Number.isFinite(n) ? (n * 100).toFixed(0) + '%' : '—';
     };
+
     const band = (n, goal, goodIfGte = false) => {
       const v = Number(n);
       if (!Number.isFinite(v)) return { backgroundColor: colors.gray, color: colors.black };
 
-      // Tolerances — adjust as needed
-      const warn1 = 0.9;  // 90%
-      const warn2 = 0.75; // 75%
+      const warn1 = 0.9;
+      const warn2 = 0.75;
 
       let color = colors.red;
 
       if (goodIfGte) {
-        // Higher is better
         if (v >= goal) color = colors.green;
         else if (v >= goal * warn1) color = colors.yellow;
         else if (v >= goal * warn2) color = colors.orange;
       } else {
-        // Lower is better
         if (v < goal) color = colors.green;
         else if (v < goal / warn1) color = colors.yellow;
         else if (v < goal / warn2) color = colors.orange;
@@ -94,180 +66,161 @@ Vue.component('reports-instructor-surveys', {
 
     return {
       colors,
-      sort_column: 'Name',
-      sort_dir: 1,
+      table,
+      tableTick: 0, // helps Vue 2 notice sort changes on class instances
       pct01,
-      band,
-      columns: [
-        new InstructorSurveysColumn(
-          'Name', 'Instructor name', '1.6fr', 'string',
-          i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
-          null,
-          i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase() // sort Last, First
-        ),
-        new InstructorSurveysColumn(
-          '# Surveys', 'Total number of surveys submitted for this instructor.', '5rem', 'number',
-          i => i?.surveys?.num_surveys ?? 0,
-          null,
-          i => Number(i?.surveys?.num_surveys ?? 0)
-        ),
-        this.makeLikertColumn('Availability', 'Availability'),
-        this.makeLikertColumn('Clarity', 'Clarity'),
-        this.makeLikertColumn('Industry Focused', 'Industry Focused'),
-        this.makeLikertColumn('Respectful', 'Respectful'),
-        this.makeLikertColumn('Progress Meetings', 'Regular Progress Meetings'),
-        this.makeLikertColumn('Timely Grading', 'Timely Grading'),
-        this.makeLikertColumn('Feedback', 'Provided Feedback'),
-        this.makeLikertColumn('Organized', 'Organized'),
-        new InstructorSurveysColumn(
-          'AI Summary', 'Summary of all student free response feedback.', '25rem', 'string',
-          i => i?.surveys?.summary_recommendations ?? '',
-          null,
-          i => (i?.surveys?.summary_recommendations ?? '').toUpperCase()
-        ),
-      ]
+      band
     };
   },
 
+  created() {
+    // Build columns once. Anything that needs `this` can use arrow fns.
+    const cols = [
+      new window.ReportColumn(
+        'Name', 'Instructor name', '1.6fr', false, 'string',
+        i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
+        null,
+        i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase()
+      ),
+
+      new window.ReportColumn(
+        '# Surveys', 'Total number of surveys submitted for this instructor.', '5rem', false, 'number',
+        i => i?.surveys?.num_surveys ?? 0,
+        null,
+        i => Number(i?.surveys?.num_surveys ?? 0)
+      ),
+
+      // Likerts
+      this.makeLikertColumn('Availability', 'Availability'),
+      this.makeLikertColumn('Clarity', 'Clarity'),
+      this.makeLikertColumn('Industry Focused', 'Industry Focused'),
+      this.makeLikertColumn('Respectful', 'Respectful'),
+      this.makeLikertColumn('Progress Meetings', 'Regular Progress Meetings'),
+      this.makeLikertColumn('Timely Grading', 'Timely Grading'),
+      this.makeLikertColumn('Feedback', 'Provided Feedback'),
+      this.makeLikertColumn('Organized', 'Organized'),
+
+      // Recommendations (your example already used ReportColumn but had wrong args order)
+      new window.ReportColumn(
+        'Recommendations',
+        'What percentage of free response questions provided recommendations.',
+        '7rem',
+        true,          // average (not used, but keep consistent)
+        'number',
+        i => this.table.pctText(i?.surveys?.has_recommendations),
+        i => this.table.bandBgInv(i?.surveys?.has_recommendations),
+        i => Number(i?.surveys?.has_recommendations ?? NaN)
+      ),
+
+      new window.ReportColumn(
+        'AI Summary',
+        'AI summary of free responses.',
+        '25rem',
+        false,
+        'string',
+        i => i?.surveys?.ai_summary ?? (i?.surveys?.summary_recommendations ?? ''),
+        null,
+        i => (i?.surveys?.ai_summary ?? (i?.surveys?.summary_recommendations ?? '')).toUpperCase()
+      ),
+    ];
+
+    this.table.setColumns(cols);
+  },
+
   computed: {
-    visibleColumns() { return this.columns.filter(c => c.visible); },
+    visibleColumns() {
+      // touch tableTick so Vue re-renders when sorting changes
+      void this.tableTick;
+      return this.table.getVisibleColumns();
+    },
+
     visibleRows() {
+      void this.tableTick;
+
       let rows = Array.isArray(this.instructors) ? this.instructors.slice() : [];
+
       if (this.filters.year_only && this.year != null) {
         rows = rows.filter(r => String(r?.academic_year ?? '') === String(this.year));
       }
       if (this.filters.div_code) {
         rows = rows.filter(r => String(r?.div_code ?? '') === String(this.filters.div_code));
       }
+
       rows = rows.filter(r => Number(r?.surveys?.num_surveys ?? 0) > 0);
-      console.log(rows);
-      return this.sortRows(rows);
+
+      this.table.setRows(rows);
+      return this.table.getSortedRows();
     }
   },
 
   methods: {
     makeLikertColumn(label, likertName, width = '6rem') {
-      return new InstructorSurveysColumn(
+      return new window.ReportColumn(
         label,
         `Likert score for ${label}`,
         width,
+        true,
         'number',
         i => {
           const score = this.getLikertScore(i, likertName);
           if (score == null) return '—';
-          const n = Number(score);
-          return this.pct01(n ?? 0);
-          return Number.isFinite(n) ? n.toFixed(2) : '—';
+          return this.pct01(score);
         },
         i => {
           const score = this.getLikertScore(i, likertName);
-          if (score == null) return '—';
-          const n = Number(score);
-          return this.band(n, 0.9, true)
+          if (score == null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+          return this.band(score, 0.9, true);
         },
         i => {
           const score = this.getLikertScore(i, likertName);
           const n = Number(score);
           return Number.isFinite(n) ? n : Number.NaN;
         }
-      )
+      );
     },
+
     getLikertScore(inst, likertName) {
       const arr = inst?.surveys?.likerts ?? [];
       if (!Array.isArray(arr)) return null;
-
       const match = arr.find(item => item?.name === likertName);
       return match?.score ?? null;
-    },
-
-    buildLikertColumnsFromInstructors(instructors) {
-      const nameSet = new Set();
-
-      (instructors || []).forEach(inst => {
-        const likerts = inst?.surveys?.likerts;
-        if (!Array.isArray(likerts)) return;
-
-        likerts.forEach(l => {
-          if (l?.name) {
-            nameSet.add(l.name);
-          }
-        });
-      });
-
-      const names = Array.from(nameSet).sort((a, b) => a.localeCompare(b));
-      return names.map(name => this.makeLikertColumn(name));
-    },
-
-    renderBar(decimalVal) {
-      const val = Number(decimalVal) || 0;
-      const pct = Math.max(0, Math.min(100, val * 100));
-      const bgTrack = '#E5E7EB';
-      const bgFill  = this.colors.indigo || '#6366F1';
-
-      return `
-        <div style="
-          width: 90%;
-          display:flex;
-          align-items:center;
-          gap:6px;
-        ">
-          <div style="
-            flex:1;
-            height:6px;
-            background:${bgTrack};
-            border-radius:9999px;
-            overflow:hidden;
-          ">
-            <div style="
-              height:100%;
-              width:${pct}%;
-              background:${bgFill};
-              transition:width .3s;
-            "></div>
-          </div>
-        </div>
-      `;
     },
 
     onSelect(inst) {
       this.$emit('select', inst);
     },
-    getColumnsWidthsString() { return this.columns.map(c => c.width).join(' '); },
+
+    getColumnsWidthsString() {
+      return this.table.getColumnsWidthsString();
+    },
+
     setSortColumn(name) {
-      if (this.sort_column === name) this.sort_dir *= -1;
-      else { this.sort_column = name; this.sort_dir = 1; }
-      this.columns.forEach(c => c.sort_state = (c.name === name ? this.sort_dir : 0));
+      this.table.setSortColumn(name);
+      this.tableTick++; // nudge Vue 2 to repaint
     },
-    sortRows(rows) {
-      const header = this.sort_column;
-      const dir = this.sort_dir;
-      const col = this.columns.find(c => c.name === header);
-      const sortType = col ? col.sort_type : 'string';
-      const toKey = v => String(v ?? '').toUpperCase();
 
-      return rows.sort((a, b) => {
-        let av = col?.getSortValue(a);
-        let bv = col?.getSortValue(b);
-
-        if (sortType === 'number') {
-          av = Number(av); bv = Number(bv);
-        } else {
-          av = toKey(av); bv = toKey(bv);
-        }
-
-        const aNaN = Number.isNaN(av), bNaN = Number.isNaN(bv);
-        let comp = 0;
-        if (aNaN && bNaN) comp = 0;
-        else if (aNaN) comp = 1;
-        else if (bNaN) comp = -1;
-        else comp = av > bv ? 1 : (av < bv ? -1 : 0);
-
-        return comp * dir;
-      });
+    headerRowStyle() {
+      return {
+        display: 'grid',
+        alignItems: 'center',
+        fontSize: '.75rem',
+        userSelect: 'none',
+        gridTemplateColumns: this.getColumnsWidthsString(),
+        padding: '.25rem .5rem'
+      };
     },
-    // light wrappers to mimic your courses header/pills
-    headerRowStyle() { return { display:'grid', alignItems:'center', fontSize:'.75rem', userSelect:'none', gridTemplateColumns:this.getColumnsWidthsString(), padding:'.25rem .5rem' }; },
-    rowStyle(i) { return { display:'grid', alignItems:'center', fontSize:'.75rem', lineHeight:'1.5rem', gridTemplateColumns:this.getColumnsWidthsString(), padding:'.25rem .5rem', backgroundColor:(i%2)?'#FFFFFF':'#F8F8F8' }; },
+
+    rowStyle(i) {
+      return {
+        display: 'grid',
+        alignItems: 'center',
+        fontSize: '.75rem',
+        lineHeight: '1.5rem',
+        gridTemplateColumns: this.getColumnsWidthsString(),
+        padding: '.25rem .5rem',
+        backgroundColor: (i % 2) ? '#FFFFFF' : '#F8F8F8'
+      };
+    }
   },
 
   template: `
@@ -282,9 +235,13 @@ Vue.component('reports-instructor-surveys', {
 
       <!-- Column headers -->
       <div :style="headerRowStyle()">
-        <div v-for="col in visibleColumns" :key="col.name" :title="col.description"
-             style="display:inline-block; grid-template-columns:auto 1rem; cursor:pointer;"
-             @click="setSortColumn(col.name)">
+        <div
+          v-for="col in visibleColumns"
+          :key="col.name"
+          :title="col.description"
+          style="display:inline-block; cursor:pointer;"
+          @click="setSortColumn(col.name)"
+        >
           <span><b>{{ col.name }}</b></span>
           <span style="margin-left:.25rem;">
             <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
@@ -300,23 +257,30 @@ Vue.component('reports-instructor-surveys', {
       </div>
 
       <!-- Rows -->
-      <div 
-        v-for="(inst, i) in visibleRows" 
-        :key="(inst.canvas_user_id || 'u') + '-' + i" 
+      <div
+        v-for="(inst, i) in visibleRows"
+        :key="(inst.canvas_user_id || 'u') + '-' + i"
         :style="rowStyle(i)"
         style="cursor:pointer;"
         @click="onSelect(inst)"
-        >
-        <div 
-          v-for="col in visibleColumns" 
+      >
+        <div
+          v-for="col in visibleColumns"
           :key="col.name"
           style="display:inline-block; text-overflow: clip; white-space: normal;"
         >
           <span v-if="col.name === 'Name'">
-            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>{{ col.getContent(inst) }}</a>
+            <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>
+              {{ col.getContent(inst) }}
+            </a>
           </span>
-          <span v-else :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(inst)"
-                v-html="col.getContent(inst)"></span>
+
+          <span
+            v-else
+            :class="col.style_formula ? 'btech-pill-text' : ''"
+            :style="col.get_style(inst)"
+            v-html="col.getContent(inst)"
+          ></span>
         </div>
       </div>
     </div>
