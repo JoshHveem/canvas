@@ -8,7 +8,7 @@ Vue.component('reports-courses-overview', {
   },
 
   data() {
-    const colors = (window.bridgetools?.colors) || { red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308', green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff' },
+    const colors = (window.bridgetools?.colors) || { red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308', green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff' };
     const table = new window.CoursesTable({
       rows: [],
       columns: [],     // set in mounted
