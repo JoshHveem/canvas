@@ -102,7 +102,6 @@ Vue.component('reports-courses', {
   methods: {
         processCourses(courses) {
       return courses.map(course => {
-        console.log(course.surveys);
         course.students = course.num_students_credits;
         course.grades = course.average_score;
         course.objectives = this.calcLikert(course, 'Objectives');
@@ -147,7 +146,6 @@ Vue.component('reports-courses', {
           resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
           this.courses.push(...this.processCourses(resp?.courses || []));
         } while ((resp?.courses || []).length === limit);
-        console.log(this.courses);
       } finally {
         this.loading = false;
       }
