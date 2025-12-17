@@ -91,11 +91,11 @@ Vue.component('reports-instructor-surveys', {
       ),
 
       // Likerts
-      this.makeLikertColumn('Availability', 'Availability'),
+      this.makeLikertColumn('Available', 'Availability'),
       this.makeLikertColumn('Clarity', 'Clarity'),
-      this.makeLikertColumn('Industry Focused', 'Industry Focused'),
-      this.makeLikertColumn('Respectful', 'Respectful'),
-      this.makeLikertColumn('Progress Meetings', 'Regular Progress Meetings'),
+      this.makeLikertColumn('Relevance', 'Industry Focused'),
+      this.makeLikertColumn('Respect', 'Respectful'),
+      this.makeLikertColumn('Prog. Meet', 'Regular Progress Meetings'),
       this.makeLikertColumn('Timely Grading', 'Timely Grading'),
       this.makeLikertColumn('Feedback', 'Provided Feedback'),
       this.makeLikertColumn('Organized', 'Organized'),
