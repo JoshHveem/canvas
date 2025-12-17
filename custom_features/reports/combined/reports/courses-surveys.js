@@ -146,7 +146,9 @@ Vue.component('reports-courses-surveys', {
       <div
         v-for="col in table.getVisibleColumns()"
         :key="col.name"
-        style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+        :style="col.name === 'Summary'
+            ? 'white-space:normal; overflow:visible; text-overflow:clip; line-height:1.2rem;'
+            : 'display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'"
       >
         <span v-if="col.name === 'Name'">
           <a :href="\`/courses/\${course.course_id}\`" target="_blank">
