@@ -102,8 +102,8 @@ Vue.component('reports-instructor-surveys', {
 
       // Recommendations (your example already used ReportColumn but had wrong args order)
       new window.ReportColumn(
-        'Recommendations',
-        'What percentage of free response questions provided recommendations.',
+        'Improve?',
+        'What percentage of free response questions brought up areas to improve.',
         '7rem',
         true,          // average (not used, but keep consistent)
         'number',
