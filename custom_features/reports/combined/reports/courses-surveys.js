@@ -43,6 +43,12 @@ Vue.component('reports-courses-surveys', {
           c => (c.course_code ?? '')
         ),
         new window.ReportColumn(
+          'Submissions', 'Number of submissions available for this course.', '7rem', false, 'number',
+          c => c?.surveys?.num_surveys ?? 0,
+          null,
+          c => Number(c?.surveys?.num_surveys ?? -1)
+        ),
+        new window.ReportColumn(
           'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
           c => this.table.pctText(c.objectives),
           c => this.table.bandBg(c.objectives),
