@@ -27,7 +27,8 @@ Vue.component('reports-courses', {
   data() {
     return {
       loading: false,
-      department_metrics: {}
+      department_metrics: {},
+      courses: []
     }
   },
   computed: {
