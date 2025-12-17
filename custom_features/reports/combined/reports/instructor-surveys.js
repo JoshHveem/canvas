@@ -208,6 +208,23 @@ Vue.component('reports-instructor-surveys', {
   },
 
   methods: {
+    cellStyle(col) {
+      // Default view: keep table compact (no wrapping, ellipsis)
+      const base = {
+        display: 'inline-block',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        verticalAlign: 'top'
+      };
+
+      if (this.showSummaries) {
+        // Summary mode: allow wrapping (especially for AI Summary)
+        return Object.assign({}, base, { whiteSpace: 'normal' });
+      }
+
+      // Default mode: do NOT wrap
+      return Object.assign({}, base, { whiteSpace: 'nowrap' });
+    },
     toggleSummaries() {
       this.showSummaries = !this.showSummaries;
       this.tableTick++; // nudge
@@ -323,11 +340,9 @@ Vue.component('reports-instructor-surveys', {
         style="cursor:pointer;"
         @click="onSelect(inst)"
       >
-        <div
-          v-for="col in visibleColumns"
-          :key="col.name"
-          style="display:inline-block; text-overflow: clip; white-space: normal;"
-        >
+      <div v-for="col in visibleColumns"
+        :key="col.name"
+        :style="cellStyle(col)">
           <span v-if="col.name === 'Name'">
             <a :href="'/users/' + (inst.canvas_user_id || '')" target="_blank" @click.stop>
               {{ col.getContent(inst) }}
