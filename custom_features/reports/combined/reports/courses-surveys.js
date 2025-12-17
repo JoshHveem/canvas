@@ -124,7 +124,7 @@ Vue.component('reports-courses-surveys', {
           c => Number(c.recommendations ?? -1)
         ),
         new window.ReportColumn(
-          'Summary', 'Summary of student free response recommendations.', '40rem', true, 'string',
+          'Summary', 'Summary of student free response recommendations.', '35rem', true, 'string',
           c => c.survey_summary,
           c => null,
           c => (c.survey_summary ?? '')

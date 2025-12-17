@@ -122,7 +122,7 @@ Vue.component('reports-instructor-surveys', {
       ),
 
       new window.ReportColumn(
-        'Summary',
+        'Summary - Condensed',
         'Summary of free responses.',
         '10rem',
         false,
@@ -163,9 +163,9 @@ Vue.component('reports-instructor-surveys', {
       ),
 
       new window.ReportColumn(
-        'AI Summary',
-        'AI summary of free responses.',
-        '25rem',
+        'Summary',
+        'Summary of free responses.',
+        '35rem',
         false,
         'string',
         i => i?.surveys?.ai_summary ?? (i?.surveys?.summary_recommendations ?? ''),
