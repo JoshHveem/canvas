@@ -43,7 +43,7 @@ Vue.component('reports-courses-overview', {
           c => (c.course_code ?? '')
         ),
         new window.ReportColumn(
-          'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
+          'Students', 'Students counted for credits/week calc.', '7rem', false, 'number',
           c => c.num_students_jenzabar ?? 0,
           null,
           c => Number(c.num_students_jenzabar ?? -1)
