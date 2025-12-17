@@ -140,7 +140,7 @@ Vue.component('reports-instructor-surveys', {
         rows = rows.filter(r => String(r?.div_code ?? '') === String(this.filters.div_code));
       }
       rows = rows.filter(r => Number(r?.surveys?.num_surveys ?? 0) > 0);
-      console.log(r.surveys);
+      console.log(rows);
       return this.sortRows(rows);
     }
   },
