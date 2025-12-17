@@ -43,6 +43,12 @@ Vue.component('reports-courses-overview', {
           c => (c.course_code ?? '')
         ),
         new window.ReportColumn(
+          'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
+          c => c.num_students_jenzabar ?? 0,
+          null,
+          c => Number(c.num_students_jenzabar ?? -1)
+        ),
+        new window.ReportColumn(
           'Crdts', 'The credits value of the course.', '4rem', false, 'number',
           c => Math.round(c.credits) || 0,
           null,
@@ -60,12 +66,6 @@ Vue.component('reports-courses-overview', {
             };
           },
           c => Number(c.pct_last_active ?? -1) // sort on raw 0–1 value
-        ),
-        new window.ReportColumn(
-          'Students', 'Students counted for credits/week calc.', '5rem', false, 'number',
-          c => c.num_students_jenzabar ?? 0,
-          null,
-          c => Number(c.num_students_jenzabar ?? -1)
         ),
         new window.ReportColumn(
           'Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
