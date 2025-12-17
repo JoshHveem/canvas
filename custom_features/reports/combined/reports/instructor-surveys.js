@@ -269,9 +269,10 @@ Vue.component('reports-instructor-surveys', {
       return this.table.getColumnsWidthsString();
     },
 
-    setSortColumn(name) {
-      this.table.setSortColumn(name);
-      this.tableTick++; // nudge Vue 2 to repaint
+    setSortColumn(name) { 
+      this.tableDefault.setSortColumn(name); 
+      this.tableSummaries.setSortColumn(name); 
+      this.tableTick++; 
     },
 
     headerRowStyle() {
