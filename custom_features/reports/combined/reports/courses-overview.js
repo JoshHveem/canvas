@@ -106,30 +106,6 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.average_score ?? -1)
         ),
-        new window.ReportColumn(
-          'Objectives', 'Course content matched objectives.', '6.5rem', true, 'number',
-          c => this.table.pctText(c.objectives),
-          c => this.table.bandBg(c.objectives),
-          c => Number(c.objectives ?? -1) // raw 0–1
-        ),
-        new window.ReportColumn(
-          'Relevance', 'Content relevant to career.', '6rem', true, 'number',
-          c => this.table.pctText(c.relevance),
-          c => this.table.bandBg(c.relevance),
-          c => Number(c.relevance ?? -1)
-        ),
-        new window.ReportColumn(
-          'Examples', 'Course contained sufficient examples.', '6rem', true, 'number',
-          c => this.table.pctText(c.examples),
-          c => this.table.bandBg(c.examples),
-          c => Number(c.examples ?? -1)
-        ),
-        new window.ReportColumn(
-          'Recommend', 'Would recommend this course.', '7rem', true, 'number',
-          c => this.table.pctText(c.recommendable),
-          c => this.table.bandBg(c.recommendable),
-          c => Number(c.recommendable ?? -1)
-        ),
       ]);
   },
 

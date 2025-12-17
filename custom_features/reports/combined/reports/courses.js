@@ -102,6 +102,7 @@ Vue.component('reports-courses', {
   methods: {
         processCourses(courses) {
       return courses.map(course => {
+        console.log(course.surveys);
         course.students = course.num_students_credits;
         course.grades = course.average_score;
         course.objectives = this.calcLikert(course, 'Objectives');
@@ -109,6 +110,7 @@ Vue.component('reports-courses', {
         course.examples   = this.calcLikert(course, 'Examples');
         course.recommendable = this.calcLikert(course, 'Recommendable');
         course.recommendations = course?.surveys?.has_recommendations;
+        course.survey_summary = course?.surveys?.summary;
         return course;
       });
     },
