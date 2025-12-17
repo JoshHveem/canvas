@@ -86,7 +86,7 @@ Vue.component('reports-instructor-surveys', {
     // Build columns once. Anything that needs `this` can use arrow fns.
     const colsDefault = [
       new window.ReportColumn(
-        'Name', 'Instructor name', '1.6fr', false, 'string',
+        'Name', 'Instructor name', '20rem', false, 'string',
         i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
         null,
         i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase()
@@ -137,7 +137,7 @@ Vue.component('reports-instructor-surveys', {
 
     const colsSummaries = [
       new window.ReportColumn(
-        'Name', 'Instructor name', '1.6fr', false, 'string',
+        'Name', 'Instructor name', '20rem', false, 'string',
         i => ((i?.first_name || '') + ' ' + (i?.last_name || '')).trim() || `User ${i?.canvas_user_id || ''}`,
         null,
         i => ((i?.last_name || '') + ' ' + (i?.first_name || '')).toUpperCase()
