@@ -9,7 +9,14 @@ Vue.component('reports-courses-surveys', {
 
   data() {
     const colors = (window.bridgetools?.colors) || { red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308', green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff' };
-    const table = new window.ReportTable({
+    const tableDefault = new window.ReportTable({
+      rows: [],
+      columns: [],     // set in mounted
+      sort_column: "Course Code",
+      sort_dir: 1,
+      colors
+    });
+    const tableSummaries = new window.ReportTable({
       rows: [],
       columns: [],     // set in mounted
       sort_column: "Course Code",
@@ -18,8 +25,10 @@ Vue.component('reports-courses-surveys', {
     });
     return {
       colors: colors,
-      table: table,
+      tableDefault: tableDefault,
+      tableSummaries: tableSummaries,
       loading: false,
+      showSummaries: false,
       // Filters that existed in the standalone, kept simple here:
       filters: {
         hide_zero_credits: true,
@@ -29,7 +38,7 @@ Vue.component('reports-courses-surveys', {
     };
   },
   created() {
-    this.table.setColumns([
+    this.tableDefault.setColumns([
         new window.ReportColumn(
           'Name', 'The name of the course.', '20rem', false, 'string',
           c => this.anonymous ? 'COURSE NAME ' + (c.course_id || '') : (c.name ?? ''),
@@ -81,7 +90,41 @@ Vue.component('reports-courses-surveys', {
           c => Number(c.recommendations ?? -1)
         ),
         new window.ReportColumn(
-          'Summary', 'Summary of student free response recommendations.', '25rem', true, 'string',
+          'Summary - Condensed', 'Summary of student free response recommendations.', '10rem', true, 'string',
+          c => c.survey_summary,
+          c => null,
+          c => (c.survey_summary ?? '')
+        ),
+      ]);
+    this.tableSummaries.setColumns([
+        new window.ReportColumn(
+          'Name', 'The name of the course.', '20rem', false, 'string',
+          c => this.anonymous ? 'COURSE NAME ' + (c.course_id || '') : (c.name ?? ''),
+          null,
+          c => (c.name ?? '')
+        ),
+        new window.ReportColumn(
+          'Course Code', 'The course code for the course.', '6rem', false, 'string',
+          c => this.anonymous ? 'AAAA 0000' : (c.course_code ?? ''),
+          null,
+          c => (c.course_code ?? '')
+        ),
+        new window.ReportColumn(
+          'Subs', 'Number of submissions available for this course.', '4rem', false, 'number',
+          c => c?.surveys?.num_surveys ?? 0,
+          null,
+          c => Number(c?.surveys?.num_surveys ?? -1)
+        ),
+        new window.ReportColumn(
+          'Improve?',
+          'What percentage of free response questions brought up areas to improve.',
+          '7rem', true, 'number',
+          c => this.table.pctText(c.recommendations),
+          c => this.table.bandBgInv(c.recommendations),
+          c => Number(c.recommendations ?? -1)
+        ),
+        new window.ReportColumn(
+          'Summary', 'Summary of student free response recommendations.', '50rem', true, 'string',
           c => c.survey_summary,
           c => null,
           c => (c.survey_summary ?? '')
@@ -90,6 +133,10 @@ Vue.component('reports-courses-surveys', {
   },
 
   computed: {
+    table() {
+      void this.tableTick; // keeps Vue refreshing if needed
+      return this.showSummaries ? this.tableWithSummary : this.tableCompact;
+    },
     visibleRows() {
       const yr = Number(this.year);
       const rows = (this.courses || []).filter(c => {
@@ -106,8 +153,16 @@ Vue.component('reports-courses-surveys', {
   },
 
   methods: {
+    toggleSummaries() {
+      this.showSummaries = !this.showSummaries;
+      this.tableTick++; // nudge
+    },
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; }
+    setSortColumn(name) { 
+      this.tableDefault.setSortColumn(name); 
+      this.tableSummaries.setSortColumn(name); 
+      this.tableTick++; 
+    }
   },
 
   template: `
@@ -116,7 +171,9 @@ Vue.component('reports-courses-surveys', {
     <div class="btech-row" style="align-items:center; margin-bottom:8px;">
       <h4 class="btech-card-title" style="margin:0;">Courses</h4>
       <div style="flex:1;"></div>
-      <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
+      <span class="btech-pill" style="margin-left:8px; cursor:pointer;" @click="toggleSummaries">
+        {{ showSummaries ? 'Hide Summaries' : 'Show Summaries' }}
+      </span>
     </div>
 
     <!-- Column headers -->
