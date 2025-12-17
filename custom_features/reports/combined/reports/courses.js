@@ -7,12 +7,12 @@ Vue.component('reports-courses', {
             v-if="subMenu == 'overview'"
             :year="year"
             :courses="courses"
-        ></reports-department-instructors>
+        ></reports-courses-overview>
         <reports-courses-surveys
             v-if="subMenu == 'surveys'"
             :year="year"
             :courses="courses"
-        ></reports-department-instructors>
+        ></reports-courses-surveys>
     </div>
   `,
   props: {
