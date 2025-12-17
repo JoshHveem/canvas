@@ -43,7 +43,7 @@ Vue.component('reports-courses-surveys', {
           c => (c.course_code ?? '')
         ),
         new window.ReportColumn(
-          'Subs', 'Number of submissions available for this course.', '3rem', false, 'number',
+          'Subs', 'Number of submissions available for this course.', '4rem', false, 'number',
           c => c?.surveys?.num_surveys ?? 0,
           null,
           c => Number(c?.surveys?.num_surveys ?? -1)

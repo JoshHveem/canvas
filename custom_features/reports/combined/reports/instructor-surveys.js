@@ -84,7 +84,7 @@ Vue.component('reports-instructor-surveys', {
       ),
 
       new window.ReportColumn(
-        'Subs', 'Total number of surveys submitted for this instructor.', '3rem', false, 'number',
+        'Subs', 'Total number of surveys submitted for this instructor.', '4rem', false, 'number',
         i => i?.surveys?.num_surveys ?? 0,
         null,
         i => Number(i?.surveys?.num_surveys ?? 0)
@@ -95,8 +95,8 @@ Vue.component('reports-instructor-surveys', {
       this.makeLikertColumn('Clarity', 'Clarity'),
       this.makeLikertColumn('Relevance', 'Industry Focused'),
       this.makeLikertColumn('Respect', 'Respectful'),
-      this.makeLikertColumn('Prog. Meet', 'Regular Progress Meetings'),
-      this.makeLikertColumn('Timely Grading', 'Timely Grading'),
+      this.makeLikertColumn('Meeting', 'Regular Progress Meetings'),
+      this.makeLikertColumn('Grading', 'Timely Grading'),
       this.makeLikertColumn('Feedback', 'Provided Feedback'),
       this.makeLikertColumn('Organized', 'Organized'),
 
