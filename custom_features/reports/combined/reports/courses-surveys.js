@@ -75,7 +75,7 @@ Vue.component('reports-courses-surveys', {
         new window.ReportColumn(
           'Feedback', 'What percentage of free response questions had feedback.', '7rem', true, 'number',
           c => this.table.pctText(c.recommendations),
-          c => this.table.bandBg(c.recommendations),
+          c => this.table.bandBgInv(c.recommendations),
           c => Number(c.recommendations ?? -1)
         ),
         new window.ReportColumn(
