@@ -135,7 +135,7 @@ Vue.component('reports-courses-surveys', {
   computed: {
     table() {
       void this.tableTick; // keeps Vue refreshing if needed
-      return this.showSummaries ? this.tableWithSummary : this.tableCompact;
+      return this.showSummaries ? this.tableSummaries: this.tableDefault;
     },
     visibleRows() {
       const yr = Number(this.year);
@@ -157,7 +157,9 @@ Vue.component('reports-courses-surveys', {
       this.showSummaries = !this.showSummaries;
       this.tableTick++; // nudge
     },
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
+    getColumnsWidthsString() { 
+      return this.table.getColumnsWidthsString(); 
+    },
     setSortColumn(name) { 
       this.tableDefault.setSortColumn(name); 
       this.tableSummaries.setSortColumn(name); 
