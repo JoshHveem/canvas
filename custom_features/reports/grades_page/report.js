@@ -465,21 +465,36 @@
         },
         async loadEnrollments(courseId) {
           let enrollments = [];
-          
+  
           let courseData = await this.graphqlEnrollments(courseId);
           let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
-          let recentSubmissionsData = await this.graphqlRecentSubmissionsPeriod(courseId);
-          console.log(recentSubmissionsData);
+
+          // { [userId]: { submittedAt, user{_id}, ... } }
+          let recentSubmissionsByUser = await this.graphqlRecentSubmissionsPeriod(courseId);
+
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
           let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
+
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
+
             let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : null;
             let startAt = enrollmentData.startAt ?? enrollmentData.createdAt;
             startAt = startAt ? Date.parse(startAt) : null;
+
             let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
             let daysInCourse = this.calcDaysBetweenDates(startAt);
-            if (!this.section_names.includes(enrollmentData.section.name)) this.section_names.push(enrollmentData.section.name);
+
+            if (!this.section_names.includes(enrollmentData.section.name)) {
+              this.section_names.push(enrollmentData.section.name);
+            }
+
+            const userId = enrollmentData.user._id;
+
+            // pull the newest submission for this user (within lookback window)
+            const newestSub = recentSubmissionsByUser?.[userId] || null;
+            const newestSubmittedAt = newestSub?.submittedAt ? Date.parse(newestSub.submittedAt) : null;
+
             let enrollment = {
               course_name: courseData.name,
               course_id: courseData._id,
@@ -494,14 +509,16 @@
               days_in_course: daysInCourse,
               days_left: daysLeft,
               user_name: enrollmentData.user.name,
-              user_id: enrollmentData.user._id,
+              user_id: userId,
               ungraded: 0,
-              oldest_sub: new Date(),
-              oldest_sub_name: ''
+
+              // NOTE: this now stores the *most recent* submission date (rename later if you want)
+              oldest_sub: newestSubmittedAt,   // number (ms) or null
+              oldest_sub_name: ''              // keep for now
             };
+
             enrollment = this.processEnrollment(enrollment);
             enrollments.push(enrollment);
-
           }
           for (let s = 0; s < ungradedSubmissions.length; s++) {
             let submissionData = ungradedSubmissions[s];
