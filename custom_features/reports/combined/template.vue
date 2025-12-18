@@ -163,7 +163,7 @@
             >
               <option value="">All</option>
               <option
-                v-for="c in coursesRaw"
+                v-for="c in sortedCoursesRaw"
                 :key="c.id || c.course_id || c.canvas_course_id"
                 :value="'' + (c.id || c.course_id || c.canvas_course_id)"
               >

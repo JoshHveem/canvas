@@ -465,6 +465,14 @@
       },
 
       computed: {
+        sortedCoursesRaw() {
+          return (this.coursesRaw || []).slice().sort((a, b) => {
+            const ac = (a.course_code || '').toUpperCase();
+            const bc = (b.course_code || '').toUpperCase();
+            return ac.localeCompare(bc, undefined, { numeric: true });
+          });
+        },
+
         currentReportMeta() {
           const fallback = this.reportTypes[0];
           return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
