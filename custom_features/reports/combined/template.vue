@@ -167,7 +167,7 @@
                 :key="c.id || c.course_id || c.canvas_course_id"
                 :value="'' + (c.id || c.course_id || c.canvas_course_id)"
               >
-                {{ c.name || c.course_name || ('Course ' + (c.id || c.course_id || c.canvas_course_id)) }}
+                {{ (c.course_code + ' - ' + c.name) }}
               </option>
             </select>
           </div>
