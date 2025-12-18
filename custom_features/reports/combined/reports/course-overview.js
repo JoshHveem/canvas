@@ -33,6 +33,7 @@ Vue.component('reports-course-overview', {
       </div>
 
       <div v-else>
+        <course-metadata-card :course="course"></course-metadata-card>
         <div class="btech-grid-3" style="margin-bottom:12px;">
           <course-kpi-students :course="course"></course-kpi-students>
           <course-kpi-extensions :course="course"></course-kpi-extensions>
@@ -40,8 +41,6 @@ Vue.component('reports-course-overview', {
         </div>
 
         <course-metrics-surveys :surveys="course.surveys" :year="year"></course-metrics-surveys>
-
-        <course-metadata-card :course="course"></course-metadata-card>
       </div>
     </div>
   </div>
