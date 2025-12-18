@@ -231,20 +231,34 @@
               student => {
                 const lookback = student.lookback_days ?? 14;
 
-                // no submission found within lookback window
-                if (!student.last_sub) return `>${lookback} Days`;
+                // Have a last submission (within lookback window)
+                if (student.last_sub) {
+                  let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
+                  if (days < 0) days = 0;
+                  return `${days} Days`;
+                }
 
-                let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
-                if (days < 0) days = 0;
-                return days + ' Days';
+                // No submission found within lookback window:
+                // Show >lookback unless the enrollment is newer than the window
+                const created = student.created_at ? new Date(student.created_at) : null;
+                const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : (lookback + 1);
+
+                if (daysEnrolled <= lookback) return `≤${lookback} Days`;
+                return `>${lookback} Days`;
               },
               student => {
                 const lookback = student.lookback_days ?? 14;
 
-                // treat “none in window” as “older than lookback”
-                let days = !student.last_sub
-                  ? (lookback + 1)
-                  : this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
+                let days;
+                if (student.last_sub) {
+                  days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
+                } else {
+                  const created = student.created_at ? new Date(student.created_at) : null;
+                  const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : (lookback + 1);
+
+                  // style: new enrollment w/ no submissions shouldn't be "worse than lookback"
+                  days = (daysEnrolled <= lookback) ? lookback : (lookback + 1);
+                }
 
                 if (days < 0) days = 0;
 
@@ -254,6 +268,7 @@
                 };
               }
             ),
+ 
 
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
             // progress ends up with its own special call out because it does the bar graph thing
@@ -534,9 +549,10 @@
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
                 enrollments[e].ungraded += 1;
                 let submittedAt = Date.parse(submissionData.submittedAt);
-                if (submittedAt < enrollments[e].last_sub) {
+                if (!enrollments[e].last_sub || submittedAt > enrollments[e].last_sub) {
                   enrollments[e].last_sub = submittedAt;
                 }
+
               }
             }
           }
