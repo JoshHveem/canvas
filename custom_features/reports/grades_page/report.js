@@ -231,48 +231,50 @@
               student => {
                 const lookback = student.lookback_days ?? 14;
 
-                // Have a last submission (within lookback window)
+                // No submissions at all
+                if (student.progress <= 0) return 'n/a';
+
+                // Have a submission (within lookback window)
                 if (student.last_sub) {
                   let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
                   if (days < 0) days = 0;
                   return `${days} Days`;
                 }
 
-                // No submission found within lookback window:
-                // If enrollment is new enough, that implies 0 submissions so far -> n/a
-                const progress = student.progress;
-                const created = student.created_at ? new Date(student.created_at) : null;
-                const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : null;
-
-                if (progress <= 0) return 'n/a';
+                // Has submissions, but none within lookback window
                 return `>${lookback} Days`;
               },
               student => {
                 const lookback = student.lookback_days ?? 14;
 
-                // Styling:
-                // - If n/a (new enrollment w/ no submissions): gray
-                // - If >lookback (older enrollment w/ no recent submissions): red
-                // - Else: green/yellow/red based on days
-                if (!student.last_sub) {
-                  const created = student.created_at ? new Date(student.created_at) : null;
-                  const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : null;
+                // No submissions at all → neutral
+                if (student.progress <= 0) {
+                  return {
+                    'background-color': this.colors.gray,
+                    'color': this.colors.black
+                  };
+                }
 
-                  if (daysEnrolled !== null && daysEnrolled <= lookback) {
-                    return { 'background-color': this.colors.gray, 'color': this.colors.black };
-                  }
-                  return { 'background-color': this.colors.red, 'color': this.colors.white };
+                // Has submissions, but none in lookback window → bad
+                if (!student.last_sub) {
+                  return {
+                    'background-color': this.colors.red,
+                    'color': this.colors.white
+                  };
                 }
 
                 let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
                 if (days < 0) days = 0;
 
                 return {
-                  'background-color': (days > 3) ? this.colors.red : (days > 1 ? this.colors.yellow : this.colors.green),
+                  'background-color': (days > 3)
+                    ? this.colors.red
+                    : (days > 1 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
                 };
               }
             ),
+ 
 
  
 
