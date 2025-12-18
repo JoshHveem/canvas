@@ -1,18 +1,18 @@
 Vue.component('reports-instructors', {
   template: `
     <div>
-        <reports-instructor-overview
+        <reports-instructors-overview
             v-if="subMenu == 'overview'"
             :account="account"
             :year="year"
             :instructors="normalizedInstructors"
             :instructor-id="instructorId"
-        ></reports-instructor-overview>
-        <reports-instructor-surveys
+        ></reports-instructors-overview>
+        <reports-instructors-surveys
             v-if="subMenu == 'surveys'"
             :year="year"
             :instructors="normalizedInstructors"
-        ></reports-instructor-surveys>
+        ></reports-instructors-surveys>
     </div>
   `,
   props: {
