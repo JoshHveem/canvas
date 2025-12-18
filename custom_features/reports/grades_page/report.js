@@ -343,69 +343,62 @@
           date = new Date(Date.parse(date));
           return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         },
+        
         async graphqlRecentSubmissionsPeriod(courseId, {
-  lookbackDays = 7,
-  pageSize = 100,
-  maxPages = 5,
-} = {}) {
+          lookbackDays = 14,
+          pageSize = 100,
+          maxPages = 5,
+        } = {}) {
 
-  const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+          const submittedSince = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
 
-  let after = null;
-  let all = [];
-  let courseMeta = null;   // <-- keep course info here
+          let after = null;
+          const newestByUserId = {}; // { [userId]: submissionNode }
 
-  for (let page = 0; page < maxPages; page++) {
-    const afterPart = after ? `, after: "${after}"` : "";
+          for (let page = 0; page < maxPages; page++) {
+            const afterPart = after ? `, after: "${after}"` : "";
 
-    const queryString = `{
-      course(id: "${courseId}") {
-        _id
-        courseCode
-        name
-        submissionsConnection(
-          first: ${pageSize}
-          ${afterPart}
-          filter: { submittedSince: "2025-12-11T00:00:00Z" }
-        ) {
-          nodes {
-            submittedAt
-            enrollmentsConnection { nodes { _id } }
+            const queryString = `{
+              course(id: "${courseId}") {
+                submissionsConnection(
+                  first: ${pageSize}
+                  ${afterPart}
+                  filter: { submittedSince: "${submittedSince}" }
+                ) {
+                  nodes {
+                    submittedAt
+                    user { _id }     # <-- this is the key you want
+                    # optional: include more fields if you want them in the value
+                    # assignment { _id name }
+                    # attempt
+                    # grade
+                  }
+                  pageInfo { endCursor hasNextPage }
+                }
+              }
+            }`;
+
+            const res = await $.post("/api/graphql", { query: queryString });
+            const conn = res?.data?.course?.submissionsConnection;
+            if (!conn) break;
+
+            for (const sub of (conn.nodes || [])) {
+              const userId = sub?.user?._id;
+              const submittedAt = sub?.submittedAt;
+              if (!userId || !submittedAt) continue;
+
+              const prev = newestByUserId[userId];
+              if (!prev || new Date(submittedAt) > new Date(prev.submittedAt)) {
+                newestByUserId[userId] = sub;
+              }
+            }
+
+            if (!conn.pageInfo?.hasNextPage) break;
+            after = conn.pageInfo.endCursor;
           }
-          pageInfo { endCursor hasNextPage }
-        }
-      }
-    }`;
 
-    const res = await $.post("/api/graphql", { query: queryString });
-    const course = res?.data?.course;
-    const conn = course?.submissionsConnection;
-
-    if (!courseMeta && course) {
-      courseMeta = { _id: course._id, courseCode: course.courseCode, name: course.name };
-    }
-
-    if (!conn) break;
-
-    all.push(...(conn.nodes || []));
-
-    const oldest = conn.nodes?.[conn.nodes.length - 1]?.submittedAt;
-    if (oldest && new Date(oldest) < cutoff) break;
-
-    if (!conn.pageInfo?.hasNextPage) break;
-    after = conn.pageInfo.endCursor;
-  }
-
-  const recent = all
-    .filter(s => s.submittedAt && new Date(s.submittedAt) >= cutoff)
-    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
-  return {
-    course: courseMeta || { _id: String(courseId), courseCode: "", name: "" },
-    cutoffISO: cutoff.toISOString(),
-    submissions: recent,
-  };
-},
+          return newestByUserId;
+        },
 
 
         // does not currently handle pagination
@@ -431,6 +424,7 @@
           let res = await $.post("/api/graphql", { query: queryString });
           return res.data.course;
         },
+
         async graphqlEnrollments(courseId) {
           let queryString = 
           `{
