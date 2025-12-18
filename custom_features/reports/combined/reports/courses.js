@@ -3,20 +3,27 @@
 Vue.component('reports-courses', {
   template: `
     <div>
-        <reports-course-overview
+        <reports-courses-overview
             v-if="subMenu == 'overview'"
             :year="year"
-            :course="selectedCourse"
-        ></reports-course-overview>
+            :courses="courses"
+        ></reports-courses-overview>
+        <reports-courses-surveys
+            v-if="subMenu == 'surveys'"
+            :year="year"
+            :courses="courses"
+        ></reports-courses-surveys>
     </div>
   `,
   props: {
     year: { type: [Number, String], required: true },
     account: { type: [Number, String], required: true },
     subMenu: { type: [Number, String], required: true },
-    coursesRaw: { type: Array, default: () => [] },
-    selectedCourseId: { type: [Number, String], default: '' },
 
+    // NEW: raw courses provided by top-level ReportData loader
+    coursesRaw: { type: Array, default: () => [] },
+
+    // Optional: top-level shared loading flags (if you passed it)
     sharedLoading: { type: Object, default: () => ({}) }
   },
 

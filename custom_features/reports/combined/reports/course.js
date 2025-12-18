@@ -1,6 +1,4 @@
 // course.js (single-course container)
-// NOTE: consider registering this as 'reports-course' (not 'reports-courses')
-// to avoid clobbering your multi-course component.
 Vue.component('reports-course', {
   template: `
     <div>
