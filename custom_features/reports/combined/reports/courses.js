@@ -1,118 +1,141 @@
-// course.js (single-course container)
-Vue.component('reports-course', {
+// courses.js
+// container module for combined reports Courses menu
+Vue.component('reports-courses', {
   template: `
     <div>
-      <reports-course-overview
-        v-if="subMenu == 'overview'"
-        :year="year"
-        :course="selectedCourse"
-        :loading="loading"
-      ></reports-course-overview>
+        <reports-course-overview
+            v-if="subMenu == 'overview'"
+            :year="year"
+            :course="selectedCourse"
+        ></reports-course-overview>
     </div>
   `,
-
   props: {
     year: { type: [Number, String], required: true },
     account: { type: [Number, String], required: true },
     subMenu: { type: [Number, String], required: true },
-
     coursesRaw: { type: Array, default: () => [] },
     selectedCourseId: { type: [Number, String], default: '' },
 
     sharedLoading: { type: Object, default: () => ({}) }
   },
 
+  watch: {
+    // account/year change will cause parent to refresh coursesRaw;
+    // we only need to re-process when the raw input changes or the year changes.
+    coursesRaw: {
+      immediate: true,
+      handler: 'applyCoursesRaw'
+    },
+    year: 'applyCoursesRaw',
+  },
+
   data() {
     return {
+      // You can either keep your local loading, or mirror the parent's.
+      // Here we just mirror so existing templates can show loading state if needed.
       loading: false,
+
+      department_metrics: {},
       courses: []
-    };
+    }
   },
 
   computed: {
     yearNum() { return Number(this.year) || new Date().getFullYear(); },
 
+    // If you want to key UI spinners off parent loader:
     sharedCoursesLoading() {
       return !!(this.sharedLoading && this.sharedLoading.courses);
     },
 
-    // Normalize the selected id into a comparable string
-    selectedCourseIdStr() {
-      const v = this.selectedCourseId;
-      return (v == null) ? '' : String(v);
+    statistics() {
+      let list = this.department_metrics?.statistics ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
-
-    // ✅ This is the main point: always derive selectedCourse from processed list
-    selectedCourse() {
-      const id = this.selectedCourseIdStr;
-      if (!id) return null;
-
-      const pickId = (c) => String(c?.id ?? c?.course_id ?? c?.canvas_course_id ?? '');
-      return this.courses.find(c => pickId(c) === id) || null;
-    }
-  },
-
-  watch: {
-    // Reprocess whenever raw changes (account/year refreshes upstream)
-    coursesRaw: {
-      immediate: true,
-      handler() {
-        this.applyCoursesRaw();
-        this.ensureValidSelection();
-      }
+    occupations() {
+      let list = this.department_metrics?.occupations ?? [];
+      if (!list.length) return [];
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
     },
-
-    // If your processing depends on year, re-run it
-    year() {
-      this.applyCoursesRaw();
-      this.ensureValidSelection();
+    cpl() {
+      let list = this.department_metrics?.cpl ?? [];
+      if (!list.length) return [];
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
     },
-
-    // If user changes the selector, ensure it exists
-    selectedCourseId() {
-      this.ensureValidSelection();
+    instructorMetrics() {
+      let list = this.department_metrics?.instructor_metrics ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
-
-    // Mirror parent loading state
-    sharedCoursesLoading(val) {
-      this.loading = !!val;
-    }
+    courseSurveys() {
+      let list = this.department_metrics?.course_surveys ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    instructorSurveys() {
+      let list = this.department_metrics?.instructor_surveys ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    interactions() {
+      let list = this.department_metrics?.interactions ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    grading() {
+      let list = this.department_metrics?.grading ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    supportHours() {
+      let list = this.department_metrics?.support_hours ?? [];
+      if (!list.length) return {};
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
+    },
+    coe() {
+      let list = this.department_metrics?.coe ?? [];
+      if (!list.length) return [];
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
+    },
   },
 
   mounted() {
-    this.loading = this.sharedCoursesLoading;
+    // No more API loading here; parent owns it.
+    // Keep mounted in case you later add report-specific loads.
     this.applyCoursesRaw();
-    this.ensureValidSelection();
   },
 
   methods: {
     applyCoursesRaw() {
+      // Mirror parent loading state if you want a local flag
       this.loading = this.sharedCoursesLoading;
 
       const raw = Array.isArray(this.coursesRaw) ? this.coursesRaw : [];
+
+      // IMPORTANT: don't mutate props in-place (coursesRaw). Make a shallow copy.
+      // If you need deeper safety, do a deeper clone, but this is usually enough.
       const cloned = raw.map(c => Object.assign({}, c));
+
+      // Process + normalize to what your overview/surveys expect.
+      // (Your old code processed after fetch; now we do it here.)
       this.courses = this.processCourses(cloned);
-    },
-
-    ensureValidSelection() {
-      // If nothing selected, don't force a selection here.
-      // (Parent can auto-select when there is only one option, if you want.)
-      const id = this.selectedCourseIdStr;
-      if (!id) return;
-
-      const exists = this.selectedCourse != null;
-      if (!exists) {
-        // We cannot mutate parent's settings here (prop down).
-        // So we just no-op; parent should clear invalid selections.
-        // But we *can* emit an event if you want the parent to clear it.
-        // this.$emit('invalid-course', id);
-
-        console.warn('[reports-course] selectedCourseId not found in coursesRaw:', id);
-      }
     },
 
     processCourses(courses) {
       return (courses || []).map(course => {
+        // preserve original fields and add derived ones
         const out = course;
 
         out.students = out.num_students_credits;
@@ -128,9 +151,15 @@ Vue.component('reports-course', {
       });
     },
 
+    // Optional helpers if any child tiles use them directly:
+    dateToString(date) {
+      date = new Date(Date.parse(date));
+      return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+    },
+
     calcLikert(course, name) {
       const score = (course?.surveys?.likerts ?? []).filter(l => l.name == name)?.[0]?.score;
       return score ?? null;
     }
-  }
+  },
 });
