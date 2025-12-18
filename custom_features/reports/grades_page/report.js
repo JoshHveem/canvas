@@ -366,7 +366,7 @@
         submissionsConnection(
           first: ${pageSize}
           ${afterPart}
-          filter: { states: [submitted, ungraded, pending_review] }
+          filter: { submittedSince: "2025-12-11T00:00:00Z" }
         ) {
           nodes {
             submittedAt
