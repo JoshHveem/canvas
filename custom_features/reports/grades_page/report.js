@@ -343,6 +343,80 @@
           date = new Date(Date.parse(date));
           return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         },
+        async graphqlRecentSubmissionsPeriod(courseId, {
+          lookbackDays = 7,     // “most recent period” = last N days
+          pageSize = 100,       // how many to fetch per page
+          maxPages = 5,         // safety limit
+        } = {}) {
+
+          const states = "[submitted, ungraded, pending_review]";
+          const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+
+          let after = null;
+          let all = [];
+
+          for (let page = 0; page < maxPages; page++) {
+            // NOTE: Canvas supports Relay pagination (first/after). :contentReference[oaicite:1]{index=1}
+            // If your instance supports ordering, try adding:
+            //   orderBy: { field: submittedAt, direction: desc }
+            // But the exact enum names vary by schema, so keep it optional.
+            const afterPart = after ? `, after: "${after}"` : "";
+
+            const queryString = `{
+              course(id: "${courseId}") {
+                _id
+                courseCode
+                name
+                submissionsConnection(
+                  first: ${pageSize}
+                  ${afterPart}
+                  filter: { states: ${states} }
+                ) {
+                  nodes {
+                    submittedAt
+                    enrollmentsConnection { nodes { _id } }
+                  }
+                  pageInfo {
+                    endCursor
+                    hasNextPage
+                  }
+                }
+              }
+            }`;
+
+            const res = await $.post("/api/graphql", { query: queryString });
+            const conn = res?.data?.course?.submissionsConnection;
+
+            if (!conn) break;
+
+            all.push(...(conn.nodes || []));
+
+            // If the oldest item in this page is already before the cutoff,
+            // we can stop early (since we’re pulling “recent-ish” pages).
+            const oldest = conn.nodes?.[conn.nodes.length - 1]?.submittedAt;
+            if (oldest && new Date(oldest) < cutoff) break;
+
+            if (!conn.pageInfo?.hasNextPage) break;
+            after = conn.pageInfo.endCursor;
+          }
+
+          // Final “most recent period” filter
+          const recent = all.filter(s => s.submittedAt && new Date(s.submittedAt) >= cutoff);
+
+          // Optional: newest-first in case the server didn’t sort
+          recent.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+          return {
+            course: {
+              _id: res?.data?.course?._id,
+              courseCode: res?.data?.course?.courseCode,
+              name: res?.data?.course?.name,
+            },
+            cutoffISO: cutoff.toISOString(),
+            submissions: recent,
+          };
+        },
+
         // does not currently handle pagination
         async graphqlUngradedSubmissions(courseId) {
           let queryString = 
@@ -409,7 +483,8 @@
           
           let courseData = await this.graphqlEnrollments(courseId);
           let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
-          // let recentSubmissionsData = await this.graphqlRecentSubmissions(courseId);
+          let recentSubmissionsData = await this.graphqlRecentSubmissionsPeriod(courseId);
+          console.log(recentSubmissionsData);
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
           let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
           for (let e = 0; e < enrollmentsData.length; e++) {
