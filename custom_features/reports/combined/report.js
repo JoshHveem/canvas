@@ -133,6 +133,68 @@
       };
     }
   }
+  function _numStudents(c) {
+    // treat any of these as “students”
+    const v =
+      c?.num_students_jenzabar ??
+      c?.students ??
+      c?.num_students_credits ??
+      0;
+    return Number(v || 0);
+  }
+
+  function _ts(v) {
+    const t = Date.parse(v || '');
+    return Number.isFinite(t) ? t : -Infinity;
+  }
+
+  function _lastUpdateTs(c) {
+    // choose best available update timestamp
+    return Math.max(
+      _ts(c?.last_update),
+      _ts(c?.lastUpdate),
+      _ts(c?.surveys?.last_update),
+      _ts(c?.suggestions?.last_update)
+    );
+  }
+
+  function dedupeCoursesByCourseCode(courses) {
+    const list = Array.isArray(courses) ? courses : [];
+    const groups = new Map();
+
+    // group by normalized course_code; if missing, fall back to a stable unique-ish key
+    for (const c of list) {
+      const code = String(c?.course_code || '').trim().toUpperCase();
+      const key = code || `__NO_CODE__::${c?.canvas_course_id || c?.course_id || c?.id || c?._id || Math.random()}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(c);
+    }
+
+    const out = [];
+    for (const [key, group] of groups.entries()) {
+      if (group.length === 1) {
+        out.push(group[0]);
+        continue;
+      }
+
+      // rule 1: prefer students > 0
+      const withStudents = group.filter(c => _numStudents(c) > 0);
+
+      if (withStudents.length) {
+        // if multiple with students > 0, take the newest update among those
+        withStudents.sort((a, b) => _lastUpdateTs(b) - _lastUpdateTs(a));
+        out.push(withStudents[0]);
+        continue;
+      }
+
+      // rule 2: all students are 0 -> newest last_update wins
+      group.sort((a, b) => _lastUpdateTs(b) - _lastUpdateTs(a));
+      out.push(group[0]);
+    }
+
+    return out;
+  }
+
 
   window.ReportColumn = ReportColumn;
   window.ReportTable = ReportTable;
@@ -591,7 +653,9 @@
           try {
             this.sharedLoading.courses = true;
             const raw = await window.ReportData.getCoursesRaw({ account, year });
-            this.coursesRaw = Array.isArray(raw) ? raw : [];
+            const arr = Array.isArray(raw) ? raw : [];
+            this.coursesRaw = dedupeCoursesByCourseCode(arr);
+
 
             // Optional: clear invalid selected course
             const cur = this.settings?.filters?.course;
