@@ -496,7 +496,6 @@
           if (saved && menus.some(m => m.value === saved)) return saved;
           return menus[0].value;
         },
-
         currentReportProps() {
           const base = {
             year: this.settings.filters.year,
@@ -511,8 +510,20 @@
 
           if (ds.length) base.sharedLoading = this.sharedLoading;
 
+          // NEW: pass selected ids only when selector is enabled
+          const sel = this.currentSelectors || [];
+
+          if (sel.includes('instructor')) {
+            base.selectedInstructorId = this.settings?.filters?.instructor || '';
+          }
+
+          if (sel.includes('course')) {
+            base.selectedCourseId = this.settings?.filters?.course || '';
+          }
+
           return base;
         },
+
       },
  
 
@@ -623,6 +634,8 @@
 
           // Ensure known keys exist to avoid Vue reactivity gotchas
           if (!merged.filters.year) merged.filters.year = String(new Date().getFullYear());
+          if (merged.filters.instructor == null) merged.filters.instructor = '';
+          if (merged.filters.course == null) merged.filters.course = '';
 
           return merged;
         },
