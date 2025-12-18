@@ -240,10 +240,11 @@
 
                 // No submission found within lookback window:
                 // If enrollment is new enough, that implies 0 submissions so far -> n/a
+                const progress = student.progress;
                 const created = student.created_at ? new Date(student.created_at) : null;
                 const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : null;
 
-                if (daysEnrolled !== null && daysEnrolled <= lookback) return 'n/a';
+                if (progress <= 0) return 'n/a';
                 return `>${lookback} Days`;
               },
               student => {
