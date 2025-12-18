@@ -5,9 +5,11 @@ Vue.component('reports-course', {
       <reports-course-overview
         v-if="subMenu == 'overview'"
         :year="year"
+        :account="account"
         :course="selectedCourse"
         :loading="loading"
       ></reports-course-overview>
+ 
     </div>
   `,
 
