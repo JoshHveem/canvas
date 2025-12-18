@@ -47,7 +47,7 @@ Vue.component('reports-instructors', {
     await this.loadInstructorMetrics();
   },
   methods: {
-      async loadInstructorMetrics() {
+    async loadInstructorMetrics() {
       try {
         this.loading = true;
         this.selected = null; // reset selection on reload

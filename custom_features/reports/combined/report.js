@@ -1,6 +1,8 @@
+// report.js
 (async function () {
-  // courses-table.js
-
+  /********************************************************************
+   * ReportColumn + ReportTable (unchanged)
+   ********************************************************************/
   class ReportColumn {
     constructor(
       name, description, width, average, sort_type,
@@ -52,32 +54,25 @@
       this.sort_dir = sort_dir;
 
       this.colors = colors || {
-        red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
-        green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
+        red: '#b20b0f', orange: '#f59e0b', yellow: '#eab308',
+        green: '#16a34a', gray: '#e5e7eb', black: '#111827', white: '#fff'
       };
     }
 
-    setRows(rows) {
-      this.rows = rows || [];
-    }
+    setRows(rows) { this.rows = rows || []; }
 
     setColumns(columns) {
       this.columns = columns || [];
       if (!this.sort_column && this.columns[0]) this.sort_column = this.columns[0].name;
     }
 
-    getVisibleColumns() {
-      return (this.columns || []).filter(c => c.visible);
-    }
+    getVisibleColumns() { return (this.columns || []).filter(c => c.visible); }
 
-    getColumnsWidthsString() {
-      return (this.getVisibleColumns()).map(c => c.width).join(" ");
-    }
+    getColumnsWidthsString() { return (this.getVisibleColumns()).map(c => c.width).join(" "); }
 
     setSortColumn(name) {
       if (this.sort_column === name) this.sort_dir *= -1;
       else { this.sort_column = name; this.sort_dir = 1; }
-
       (this.columns || []).forEach(c => c.sort_state = (c.name === name ? this.sort_dir : 0));
     }
 
@@ -113,23 +108,18 @@
       });
     }
 
-    // Convenience: if you want the class to “own” sorting
-    getSortedRows() {
-      return this.sortRows(this.rows);
-    }
+    getSortedRows() { return this.sortRows(this.rows); }
 
-    // Shared formatting helpers (optional)
     pctText(v) {
       const n = Number(v);
       return Number.isFinite(n) ? (n * 100).toFixed(1) + "%" : "n/a";
     }
 
-    // used for things where lower are actually better
     bandBgInv(v) {
       const n = Number(v);
       if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
       return {
-        backgroundColor: (n < 0.25) ? this.colors.green: (n < 0.50 ? this.colors.yellow : this.colors.red),
+        backgroundColor: (n < 0.25) ? this.colors.green : (n < 0.50 ? this.colors.yellow : this.colors.red),
         color: this.colors.white
       };
     }
@@ -144,26 +134,130 @@
     }
   }
 
-  // expose globally for non-module usage
   window.ReportColumn = ReportColumn;
   window.ReportTable = ReportTable;
 
-  // accounts.mixin.js
+  /********************************************************************
+   * Shared Data Cache (NEW)
+   * - Lazy-load only when needed by current report selectors
+   * - Cache results + dedupe in-flight requests
+   * - Cache Canvas user lookups to avoid N calls across reports
+   ********************************************************************/
+  (function () {
+    const TTL_MS = 5 * 60 * 1000; // 5 minutes
+    const cache = new Map();      // key -> { ts, promise, value }
+    const userCache = new Map();  // canvasId -> { ts, promise, value }
+
+    const now = () => Date.now();
+    const fresh = (e) => e && (now() - e.ts) < TTL_MS;
+
+    async function cached(map, key, fn) {
+      const e = map.get(key);
+      if (e && fresh(e)) return e.value ?? e.promise;
+
+      const promise = (async () => {
+        const value = await fn();
+        map.set(key, { ts: now(), value, promise: null });
+        return value;
+      })();
+
+      map.set(key, { ts: now(), value: null, promise });
+      return promise;
+    }
+
+    async function getCanvasUser(canvasId) {
+      if (!canvasId) return null;
+      const key = String(canvasId);
+      return cached(userCache, key, async () => {
+        try {
+          const resp = await canvasGet(`/api/v1/users/${key}`);
+          const u = Array.isArray(resp) ? resp[0] : resp;
+          return u || null;
+        } catch (e) {
+          return null;
+        }
+      });
+    }
+
+    async function getInstructorsRaw({ account }) {
+      const key = `instructorsRaw::acct=${account}`;
+      return cached(cache, key, async () => {
+        const url = `https://reports.bridgetools.dev/api/instructors?dept_head_account_ids[]=${account}`;
+        const resp = await bridgetools.req(url);
+        const incoming = resp?.data || [];
+
+        // Enrich names from Canvas (cached)
+        for (let i = 0; i < incoming.length; i++) {
+          const u = await getCanvasUser(incoming[i].canvas_id);
+          if (u) {
+            incoming[i].first_name = u.first_name || incoming[i].first_name;
+            incoming[i].last_name  = u.last_name  || incoming[i].last_name;
+          }
+        }
+        return incoming;
+      });
+    }
+
+    async function getCoursesRaw({ account, year }) {
+      const y = Number(year) || new Date().getFullYear();
+      const key = `coursesRaw::acct=${account}::year=${y}`;
+      return cached(cache, key, async () => {
+        const limit = 50;
+
+        // "My Courses" (account==0)
+        if (Number(account) === 0) {
+          const courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
+          const ids = (courses || []).map(c => c.id);
+
+          const out = [];
+          for (let i = 0; i < ids.length; i += limit) {
+            const chunk = ids.slice(i, i + limit);
+            let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}`;
+            chunk.forEach(id => { url += `&course_ids[]=${id}`; });
+            const data = await bridgetools.req(url);
+            out.push(...(data?.courses || []));
+          }
+          return out;
+        }
+
+        // By account/year (department)
+        let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}&excludes[]=content_items&year=${y}&account_id=${account}`;
+        let resp = {};
+        const out = [];
+        do {
+          resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
+          out.push(...(resp?.courses || []));
+        } while ((resp?.courses || []).length === limit);
+
+        return out;
+      });
+    }
+
+    window.ReportData = {
+      getCanvasUser,
+      getInstructorsRaw,
+      getCoursesRaw,
+      invalidate(prefix = "") {
+        for (const k of cache.keys()) if (String(k).startsWith(prefix)) cache.delete(k);
+      }
+    };
+  })();
+
+  /********************************************************************
+   * accounts.mixin.js (unchanged, but available)
+   ********************************************************************/
   window.BtechAccountsMixin = {
     data() {
       return {
-        accounts: [
-          { name: 'My Courses', id: '' + 0 }
-        ],
+        accounts: [{ name: 'My Courses', id: '' + 0 }],
         accountsLoading: false
-      }
+      };
     },
     methods: {
       async loadAccounts() {
         try {
           this.accountsLoading = true;
 
-          // Pull root accounts
           let accountsData = await canvasGet('/api/v1/accounts');
 
           // If college-level admin, pull sub-accounts of 3
@@ -175,7 +269,6 @@
             }
           }
 
-          // Filter to children of 3
           const accounts = [];
           for (let a = 0; a < accountsData.length; a++) {
             const account = accountsData[a];
@@ -185,7 +278,6 @@
           }
 
           accounts.sort((a, b) => a.name.localeCompare(b.name));
-          // Keep "My Courses" at the front and append the rest
           this.accounts.splice(1, this.accounts.length - 1, ...accounts);
         } finally {
           this.accountsLoading = false;
@@ -194,6 +286,9 @@
     }
   };
 
+  /********************************************************************
+   * Button / Mount helpers (unchanged)
+   ********************************************************************/
   function createButton() {
     const btn = $('<a class="Button" id="canvas-instructor-report-vue-gen">Reports</a>');
     const wrapper = $('<div style="position: relative; display: block;"></div>');
@@ -237,6 +332,7 @@
 
     new Vue({
       el: '#canvas-instructor-report-vue',
+
       mounted: async function () {
         this.loading = true;
 
@@ -247,7 +343,6 @@
         // Load accounts (generic)
         let accountsData = await canvasGet('/api/v1/accounts');
         let accounts = [];
-        // If college-level admin, pull subaccounts
         for (let a = 0; a < accountsData.length; a++) {
           let account = accountsData[a];
           if (account.id == 3) {
@@ -258,18 +353,22 @@
         for (let a = 0; a < accountsData.length; a++) {
           let account = accountsData[a];
           if (account.parent_account_id == 3) {
-            accounts.push({ name: account.name, id: '' + account.id })
+            accounts.push({ name: account.name, id: '' + account.id });
           }
         }
         accounts.sort((a, b) => a.name.localeCompare(b.name));
         this.accounts.push(...accounts);
 
         this.loading = false;
+
+        // NEW: after initial load, fetch shared datasets only if needed
+        await this.ensureSharedData();
       },
 
       data: function () {
         return {
           colors: bridgetools.colors,
+
           settings: {
             anonymous: false,
             account: 0,
@@ -278,30 +377,29 @@
             sort_dir: 1,
             filters: { year: '2025' }
           },
+
           accounts: [{ name: 'My Courses', id: '' + 0 }],
           loading: false,
+
+          // NEW: shared datasets for top-level selectors + reuse across reports
+          instructorsRaw: [],
+          coursesRaw: [],
+          sharedLoading: { instructors: false, courses: false },
+
           menu: '',
           section_names: ['All'],
           section_filter: 'All',
           end_date_filter: true,
           hide_missing_end_date: true,
           hide_past_end_date: false,
+
           reportTypes: [
-            {
-              value: 'instructors',
-              label: 'Instructors',
-              component: 'reports-instructors',
-              title: 'Instructors Report',
-              subMenus: [
-                { value: 'overview',     label: 'Overview' },
-                { value: 'surveys',      label: 'Surveys' },
-              ]
-            },
             {
               value: 'department',
               label: 'Department',
               component: 'reports-department',
               title: 'Department Report',
+              selectors: [],
               subMenus: [
                 { value: 'instructors', label: 'Instructors' },
                 { value: 'courses',     label: 'Courses' },
@@ -313,8 +411,20 @@
               label: 'Occupations',
               component: 'occupations-report',
               title: 'Occupations Report',
+              selectors: [],
               subMenus: [
                 { value: 'overview', label: 'Overview' },
+              ]
+            },
+            {
+              value: 'instructors',
+              label: 'Instructors',
+              component: 'reports-instructors',
+              title: 'Instructors Report',
+              selectors: ['instructor'],
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
+                { value: 'surveys',  label: 'Surveys' },
               ]
             },
             {
@@ -322,13 +432,24 @@
               label: 'Courses',
               component: 'reports-courses',
               title: 'Courses Report',
+              selectors: ['course'],
               subMenus: [
                 { value: 'overview', label: 'Overview' },
                 { value: 'surveys',  label: 'Surveys' },
               ]
             },
+            {
+              value: 'course',
+              label: 'Course',
+              component: 'reports-course',
+              title: 'Course Report',
+              selectors: ['course'],
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
+              ]
+            },
           ],
-        }
+        };
       },
 
       computed: {
@@ -337,13 +458,17 @@
           return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
         },
 
-        // All submenus for the current report type (or empty)
+        currentSelectors() {
+          const rt = this.currentReportMeta || {};
+          // tolerate older typo "selector"
+          return rt.selectors || rt.selector || [];
+        },
+
         currentSubMenus() {
           const rt = this.currentReportMeta;
           return rt && rt.subMenus ? rt.subMenus : [];
         },
 
-        // Which submenu key is selected for this report type
         currentSubKey() {
           const menus = this.currentSubMenus;
           if (!menus.length) return null;
@@ -352,37 +477,108 @@
           const type = this.settings.reportType;
           const saved = map[type];
 
-          if (saved && menus.some(m => m.value === saved)) {
-            return saved;
-          }
-          // default to first submenu if nothing saved/valid
+          if (saved && menus.some(m => m.value === saved)) return saved;
           return menus[0].value;
         },
 
         currentReportProps() {
-          const base = {
+          return {
             year: this.settings.filters.year,
             account: this.settings.account,
             instructorId: ENV.current_user_id,
-            // NEW: pass selected subMenu down to child component
-            subMenu: this.currentSubKey
+            subMenu: this.currentSubKey,
+
+            // NEW: pass raw shared datasets down (optional, but enables reuse)
+            instructorsRaw: this.instructorsRaw,
+            coursesRaw: this.coursesRaw,
+
+            // optional loading flags if child wants them
+            sharedLoading: this.sharedLoading,
           };
-          return base;
         },
       },
 
+      watch: {
+        'settings.reportType': 'ensureSharedData',
+        'settings.account': 'ensureSharedData',
+        'settings.filters.year': 'ensureSharedData',
+      },
 
       methods: {
         onReportChange() {
           this.saveSettings(this.settings);
+          // ensure shared data needed for the new report is loaded
+          this.ensureSharedData();
+        },
+
+        async ensureSharedData() {
+          // Don’t do anything until settings exist
+          const sel = this.currentSelectors || [];
+          const account = this.settings.account;
+          const year = this.settings.filters.year;
+
+          // Load only what's needed by current report
+          if (sel.includes('instructor')) {
+            await this.loadInstructorsRaw(account);
+          } else {
+            this.instructorsRaw = [];
+            // optional: clear filter if not needed
+            // this.$delete(this.settings.filters, 'instructor');
+          }
+
+          if (sel.includes('course')) {
+            await this.loadCoursesRaw(account, year);
+          } else {
+            this.coursesRaw = [];
+            // optional: clear filter if not needed
+            // this.$delete(this.settings.filters, 'course');
+          }
+        },
+
+        async loadInstructorsRaw(account) {
+          try {
+            this.sharedLoading.instructors = true;
+            const raw = await window.ReportData.getInstructorsRaw({ account });
+            this.instructorsRaw = Array.isArray(raw) ? raw : [];
+
+            // Optional: if selected instructor no longer exists, clear it
+            const cur = this.settings?.filters?.instructor;
+            if (cur && !this.instructorsRaw.some(i => String(i.canvas_id) === String(cur) || String(i.canvas_user_id) === String(cur))) {
+              this.$set(this.settings.filters, 'instructor', '');
+              this.saveSettings(this.settings);
+            }
+          } catch (e) {
+            console.error('Failed to load instructorsRaw', e);
+            this.instructorsRaw = [];
+          } finally {
+            this.sharedLoading.instructors = false;
+          }
+        },
+
+        async loadCoursesRaw(account, year) {
+          try {
+            this.sharedLoading.courses = true;
+            const raw = await window.ReportData.getCoursesRaw({ account, year });
+            this.coursesRaw = Array.isArray(raw) ? raw : [];
+
+            // Optional: clear invalid selected course
+            const cur = this.settings?.filters?.course;
+            if (cur && !this.coursesRaw.some(c => String(c.id) === String(cur) || String(c.canvas_course_id) === String(cur) || String(c.course_id) === String(cur))) {
+              this.$set(this.settings.filters, 'course', '');
+              this.saveSettings(this.settings);
+            }
+          } catch (e) {
+            console.error('Failed to load coursesRaw', e);
+            this.coursesRaw = [];
+          } finally {
+            this.sharedLoading.courses = false;
+          }
         },
 
         setSubMenu(value) {
-          // ensure object exists (defensive)
           if (!this.settings.subMenuByType) {
             this.$set(this.settings, 'subMenuByType', {});
           }
-          // Vue 2: use $set so reactivity works with dynamic keys
           this.$set(this.settings.subMenuByType, this.settings.reportType, value);
           this.saveSettings(this.settings);
         },
@@ -402,7 +598,6 @@
           if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
           else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
 
-          // NEW: restore subMenuByType if it exists
           merged.subMenuByType = saved.subMenuByType || fallback.subMenuByType || {};
 
           if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
@@ -412,6 +607,10 @@
             else if (val === "false") merged.filters[key] = false;
           }
           merged.filters.section = 'All';
+
+          // Ensure known keys exist to avoid Vue reactivity gotchas
+          if (!merged.filters.year) merged.filters.year = String(new Date().getFullYear());
+
           return merged;
         },
 
@@ -423,7 +622,7 @@
 
         close() { $(this.$el).hide(); }
       }
-    })
+    });
   }
 
   function loadCSS(url) {
@@ -457,7 +656,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/menu.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
 
-    // The instructor report wrapper now owns its data & methods:
+    // Reports
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-surveys.js");
