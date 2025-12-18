@@ -133,6 +133,44 @@
               >{{ year }}</option>
             </select>
           </div>
+
+          <!-- Instructor selector (only when enabled) -->
+          <div v-if="currentSelectors.includes('instructor')" style="display:inline-block; min-width:220px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Instructor</label>
+            <select
+              v-model="settings.filters.instructor"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option value="">All</option>
+              <option
+                v-for="i in instructorsRaw"
+                :key="i.canvas_id"
+                :value="'' + i.canvas_id"
+              >
+                {{ (i.last_name || '') + ', ' + (i.first_name || '') }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Course selector (only when enabled) -->
+          <div v-if="currentSelectors.includes('course')" style="display:inline-block; min-width:240px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Course</label>
+            <select
+              v-model="settings.filters.course"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option value="">All</option>
+              <option
+                v-for="c in coursesRaw"
+                :key="c.id || c.course_id || c.canvas_course_id"
+                :value="'' + (c.id || c.course_id || c.canvas_course_id)"
+              >
+                {{ c.name || c.course_name || ('Course ' + (c.id || c.course_id || c.canvas_course_id)) }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <!-- Dynamic report body -->

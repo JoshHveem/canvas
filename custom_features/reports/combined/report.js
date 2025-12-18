@@ -421,10 +421,21 @@
               label: 'Instructors',
               component: 'reports-instructors',
               title: 'Instructors Report',
-              selectors: ['instructor'],
+              datasets: ['instructors'],
               subMenus: [
                 { value: 'overview', label: 'Overview' },
                 { value: 'surveys',  label: 'Surveys' },
+              ]
+            },
+            {
+              value: 'instructor',
+              label: 'Instructor',
+              component: 'reports-instructor',
+              title: 'Instructor Report',
+              selectors: ['instructor'],
+              datasets: ['instructors'],
+              subMenus: [
+                { value: 'overview', label: 'Overview' },
               ]
             },
             {
@@ -432,7 +443,7 @@
               label: 'Courses',
               component: 'reports-courses',
               title: 'Courses Report',
-              selectors: ['course'],
+              datasets: ['courses'],
               subMenus: [
                 { value: 'overview', label: 'Overview' },
                 { value: 'surveys',  label: 'Surveys' },
@@ -444,6 +455,7 @@
               component: 'reports-course',
               title: 'Course Report',
               selectors: ['course'],
+              datasets: ['courses'],
               subMenus: [
                 { value: 'overview', label: 'Overview' },
               ]
@@ -453,6 +465,35 @@
       },
 
       computed: {
+        currentDatasets() {
+          const rt = this.currentReportMeta || {};
+          return rt.datasets || [];
+        },
+        currentSelectors() {
+          const rt = this.currentReportMeta || {};
+          return rt.selectors || [];
+        },
+
+        currentReportProps() {
+          const base = {
+            year: this.settings.filters.year,
+            account: this.settings.account,
+            instructorId: ENV.current_user_id,
+            subMenu: this.currentSubKey
+          };
+
+          const ds = this.currentDatasets || [];
+          if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
+          if (ds.includes('courses'))     base.coursesRaw     = this.coursesRaw;
+
+          // if any dataset is in play, children can use this for spinners
+          if (ds.length) base.sharedLoading = this.sharedLoading;
+
+          // optional: pass selectors list down if you want children to know
+          // base.enabledSelectors = this.currentSelectors;
+
+          return base;
+        },
         currentReportMeta() {
           const fallback = this.reportTypes[0];
           return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
@@ -479,22 +520,6 @@
 
           if (saved && menus.some(m => m.value === saved)) return saved;
           return menus[0].value;
-        },
-
-        currentReportProps() {
-          return {
-            year: this.settings.filters.year,
-            account: this.settings.account,
-            instructorId: ENV.current_user_id,
-            subMenu: this.currentSubKey,
-
-            // NEW: pass raw shared datasets down (optional, but enables reuse)
-            instructorsRaw: this.instructorsRaw,
-            coursesRaw: this.coursesRaw,
-
-            // optional loading flags if child wants them
-            sharedLoading: this.sharedLoading,
-          };
         },
       },
 
