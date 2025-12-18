@@ -288,10 +288,10 @@
           hide_past_end_date: false,
           reportTypes: [
             {
-              value: 'instructor',
-              label: 'Instructor',
-              component: 'reports-instructor',
-              title: 'Instructor Report',
+              value: 'instructors',
+              label: 'Instructors',
+              component: 'reports-instructors',
+              title: 'Instructors Report',
               subMenus: [
                 { value: 'overview',     label: 'Overview' },
                 { value: 'surveys',      label: 'Surveys' },
@@ -458,9 +458,9 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
 
     // The instructor report wrapper now owns its data & methods:
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructor.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructor-overview.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructor-surveys.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-overview.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");

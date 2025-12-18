@@ -1,4 +1,4 @@
-Vue.component('reports-instructor-surveys', {
+Vue.component('reports-instructors-surveys', {
   props: {
     instructors: { type: Array, required: true, default: () => [] },
     title: { type: String, default: 'Instructors' },

@@ -1,4 +1,4 @@
-Vue.component('reports-instructor', {
+Vue.component('reports-instructors', {
   template: `
     <div>
         <reports-instructor-overview
