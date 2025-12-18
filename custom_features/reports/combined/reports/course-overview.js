@@ -251,7 +251,6 @@ Vue.component('course-metadata-card', {
         <div class="btech-muted" style="margin-top:4px;">Surveys: {{ fmtSurveyLast }}</div>
       </div>
     </div>
-    {{course}}
   </div>
   `
 });
