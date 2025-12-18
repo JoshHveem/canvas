@@ -465,44 +465,19 @@
       },
 
       computed: {
-        currentDatasets() {
-          const rt = this.currentReportMeta || {};
-          return rt.datasets || [];
-        },
-        currentSelectors() {
-          const rt = this.currentReportMeta || {};
-          return rt.selectors || [];
-        },
-
-        currentReportProps() {
-          const base = {
-            year: this.settings.filters.year,
-            account: this.settings.account,
-            instructorId: ENV.current_user_id,
-            subMenu: this.currentSubKey
-          };
-
-          const ds = this.currentDatasets || [];
-          if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
-          if (ds.includes('courses'))     base.coursesRaw     = this.coursesRaw;
-
-          // if any dataset is in play, children can use this for spinners
-          if (ds.length) base.sharedLoading = this.sharedLoading;
-
-          // optional: pass selectors list down if you want children to know
-          // base.enabledSelectors = this.currentSelectors;
-
-          return base;
-        },
         currentReportMeta() {
           const fallback = this.reportTypes[0];
           return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
         },
 
+        currentDatasets() {
+          const rt = this.currentReportMeta || {};
+          return rt.datasets || [];
+        },
+
         currentSelectors() {
           const rt = this.currentReportMeta || {};
-          // tolerate older typo "selector"
-          return rt.selectors || rt.selector || [];
+          return rt.selectors || rt.selector || []; // tolerate legacy
         },
 
         currentSubMenus() {
@@ -521,7 +496,25 @@
           if (saved && menus.some(m => m.value === saved)) return saved;
           return menus[0].value;
         },
+
+        currentReportProps() {
+          const base = {
+            year: this.settings.filters.year,
+            account: this.settings.account,
+            instructorId: ENV.current_user_id,
+            subMenu: this.currentSubKey
+          };
+
+          const ds = this.currentDatasets || [];
+          if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
+          if (ds.includes('courses'))     base.coursesRaw = this.coursesRaw;
+
+          if (ds.length) base.sharedLoading = this.sharedLoading;
+
+          return base;
+        },
       },
+ 
 
       watch: {
         'settings.reportType': 'ensureSharedData',
@@ -537,28 +530,23 @@
         },
 
         async ensureSharedData() {
-          // Don’t do anything until settings exist
-          const sel = this.currentSelectors || [];
+          const ds = this.currentDatasets || [];
           const account = this.settings.account;
           const year = this.settings.filters.year;
 
-          // Load only what's needed by current report
-          if (sel.includes('instructor')) {
+          if (ds.includes('instructors')) {
             await this.loadInstructorsRaw(account);
           } else {
             this.instructorsRaw = [];
-            // optional: clear filter if not needed
-            // this.$delete(this.settings.filters, 'instructor');
           }
 
-          if (sel.includes('course')) {
+          if (ds.includes('courses')) {
             await this.loadCoursesRaw(account, year);
           } else {
             this.coursesRaw = [];
-            // optional: clear filter if not needed
-            // this.$delete(this.settings.filters, 'course');
           }
         },
+
 
         async loadInstructorsRaw(account) {
           try {
