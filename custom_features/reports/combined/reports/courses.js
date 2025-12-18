@@ -19,136 +19,143 @@ Vue.component('reports-courses', {
     year: { type: [Number, String], required: true },
     account: { type: [Number, String], required: true },
     subMenu: { type: [Number, String], required: true },
+
+    // NEW: raw courses provided by top-level ReportData loader
+    coursesRaw: { type: Array, default: () => [] },
+
+    // Optional: top-level shared loading flags (if you passed it)
+    sharedLoading: { type: Object, default: () => ({}) }
   },
+
   watch: {
-    year:    'loadCourses',
-    account: 'loadCourses'
+    // account/year change will cause parent to refresh coursesRaw;
+    // we only need to re-process when the raw input changes or the year changes.
+    coursesRaw: {
+      immediate: true,
+      handler: 'applyCoursesRaw'
+    },
+    year: 'applyCoursesRaw',
   },
+
   data() {
     return {
+      // You can either keep your local loading, or mirror the parent's.
+      // Here we just mirror so existing templates can show loading state if needed.
       loading: false,
+
       department_metrics: {},
       courses: []
     }
   },
+
   computed: {
+    yearNum() { return Number(this.year) || new Date().getFullYear(); },
+
+    // If you want to key UI spinners off parent loader:
+    sharedCoursesLoading() {
+      return !!(this.sharedLoading && this.sharedLoading.courses);
+    },
+
     statistics() {
-      let list = this.department_metrics?.statistics?? [];
+      let list = this.department_metrics?.statistics ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     occupations() {
-      let list = this.department_metrics?.occupations?? [];
+      let list = this.department_metrics?.occupations ?? [];
       if (!list.length) return [];
-      const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
     },
     cpl() {
       let list = this.department_metrics?.cpl ?? [];
       if (!list.length) return [];
-      const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
     },
     instructorMetrics() {
       let list = this.department_metrics?.instructor_metrics ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     courseSurveys() {
       let list = this.department_metrics?.course_surveys ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     instructorSurveys() {
       let list = this.department_metrics?.instructor_surveys ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     interactions() {
       let list = this.department_metrics?.interactions ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     grading() {
       let list = this.department_metrics?.grading ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     supportHours() {
       let list = this.department_metrics?.support_hours ?? [];
       if (!list.length) return {};
-      const yr = Number(this.year) || new Date().getFullYear();
+      const yr = this.yearNum;
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
     coe() {
-      let list = this.department_metrics?.coe?? [];
+      let list = this.department_metrics?.coe ?? [];
       if (!list.length) return [];
-      const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      const yr = this.yearNum;
+      return (list.filter(d => Number(d.academic_year) === yr)) || [];
     },
   },
-  async mounted() {
-    await this.loadCourses();
+
+  mounted() {
+    // No more API loading here; parent owns it.
+    // Keep mounted in case you later add report-specific loads.
+    this.applyCoursesRaw();
   },
+
   methods: {
-        processCourses(courses) {
-      return courses.map(course => {
-        course.students = course.num_students_credits;
-        course.grades = course.average_score;
-        course.objectives = this.calcLikert(course, 'Objectives');
-        course.relevance  = this.calcLikert(course, 'Workplace Relevance');
-        course.examples   = this.calcLikert(course, 'Examples');
-        course.recommendable = this.calcLikert(course, 'Recommendable');
-        course.recommendations = course?.surveys?.has_recommendations;
-        course.survey_summary = course?.surveys?.summary;
-        return course;
+    applyCoursesRaw() {
+      // Mirror parent loading state if you want a local flag
+      this.loading = this.sharedCoursesLoading;
+
+      const raw = Array.isArray(this.coursesRaw) ? this.coursesRaw : [];
+
+      // IMPORTANT: don't mutate props in-place (coursesRaw). Make a shallow copy.
+      // If you need deeper safety, do a deeper clone, but this is usually enough.
+      const cloned = raw.map(c => Object.assign({}, c));
+
+      // Process + normalize to what your overview/surveys expect.
+      // (Your old code processed after fetch; now we do it here.)
+      this.courses = this.processCourses(cloned);
+    },
+
+    processCourses(courses) {
+      return (courses || []).map(course => {
+        // preserve original fields and add derived ones
+        const out = course;
+
+        out.students = out.num_students_credits;
+        out.grades = out.average_score;
+        out.objectives = this.calcLikert(out, 'Objectives');
+        out.relevance  = this.calcLikert(out, 'Workplace Relevance');
+        out.examples   = this.calcLikert(out, 'Examples');
+        out.recommendable = this.calcLikert(out, 'Recommendable');
+        out.recommendations = out?.surveys?.has_recommendations;
+        out.survey_summary = out?.surveys?.summary;
+
+        return out;
       });
-    },
-
-    // ---- API
-    async getMyCourses() {
-      const courses = await canvasGet('/api/v1/courses?enrollment_type=teacher&enrollment_state=active&state[]=available&include[]=term');
-      const ids = courses.map(c => c.id);
-      const out = [];
-      const limit = 50;
-      for (let i = 0; i < ids.length; i += limit) {
-        const chunk = ids.slice(i, i + limit);
-        let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}`;
-        chunk.forEach(id => { url += `&course_ids[]=${id}`; });
-        const data = await bridgetools.req(url);
-        out.push(...(this.processCourses(data.courses || [])));
-      }
-      return out;
-    },
-
-    async loadCourses() {
-      try {
-        this.loading = true;
-        this.courses = [];
-        const limit = 50;
-        if (Number(this.account) === 0) {
-          this.courses = await this.getMyCourses();
-          return;
-        }
-        // by account (department)
-        let url = `https://reports.bridgetools.dev/api/reviews/courses?limit=${limit}&excludes[]=content_items&year=${this.year}&account_id=${this.account}`;
-        let resp = {};
-        do {
-          resp = await bridgetools.req(url + (resp?.next_id ? `&last_id=${resp.next_id}` : ''));
-          this.courses.push(...this.processCourses(resp?.courses || []));
-        } while ((resp?.courses || []).length === limit);
-      } finally {
-        this.loading = false;
-      }
     },
 
     // Optional helpers if any child tiles use them directly:
@@ -156,6 +163,7 @@ Vue.component('reports-courses', {
       date = new Date(Date.parse(date));
       return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
     },
+
     calcLikert(course, name) {
       const score = (course?.surveys?.likerts ?? []).filter(l => l.name == name)?.[0]?.score;
       return score ?? null;
