@@ -227,27 +227,34 @@
                 }
               }
             ),
-            new Column('Oldest Sub', '', '5rem', true, 'number',
+            new Column('Last Sub', '', '5rem', true, 'number',
               student => {
-                let days = 0;
-                if (student.oldest_sub) {
-                  days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
-                  if (days < 0) days = 0;
-                }
+                const lookback = student.lookback_days ?? 14;
+
+                // no submission found within lookback window
+                if (!student.last_sub) return `>${lookback} Days`;
+
+                let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
+                if (days < 0) days = 0;
                 return days + ' Days';
               },
               student => {
-                let days = 0;
-                if (student.oldest_sub) {
-                  days = this.calcDaysBetweenDates(student.oldest_sub, new Date());
-                  if (days < 0) days = 0;
-                }
+                const lookback = student.lookback_days ?? 14;
+
+                // treat “none in window” as “older than lookback”
+                let days = !student.last_sub
+                  ? (lookback + 1)
+                  : this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
+
+                if (days < 0) days = 0;
+
                 return {
                   'background-color': (days > 3) ? this.colors.red : (days > 1 ? this.colors.yellow : this.colors.green),
                   'color': this.colors.white,
-                }
+                };
               }
             ),
+
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
             // progress ends up with its own special call out because it does the bar graph thing
             new Column('Progress', 'This is an estimate of the student\'s progress baed on the cirterion selected above.', '10rem', true, 'number'),
@@ -465,12 +472,12 @@
         },
         async loadEnrollments(courseId) {
           let enrollments = [];
-  
+          const lookbackDays = 14;
           let courseData = await this.graphqlEnrollments(courseId);
           let ungradedSubmissionsData = await this.graphqlUngradedSubmissions(courseId);
 
           // { [userId]: { submittedAt, user{_id}, ... } }
-          let recentSubmissionsByUser = await this.graphqlRecentSubmissionsPeriod(courseId);
+          let recentSubmissionsByUser = await this.graphqlRecentSubmissionsPeriod(courseId, { lookbackDays });
 
           let enrollmentsData = courseData.enrollmentsConnection.nodes;
           let ungradedSubmissions = ungradedSubmissionsData.submissionsConnection.nodes;
@@ -513,8 +520,9 @@
               ungraded: 0,
 
               // NOTE: this now stores the *most recent* submission date (rename later if you want)
-              oldest_sub: newestSubmittedAt,   // number (ms) or null
-              oldest_sub_name: ''              // keep for now
+              lookback_days: lookbackDays,
+              last_sub: newestSubmittedAt,   // number (ms) or null
+              last_sub_name: ''              // keep for now
             };
 
             enrollment = this.processEnrollment(enrollment);
@@ -526,8 +534,8 @@
               if (enrollments[e].enrollment_id == submissionData.enrollmentsConnection.nodes[0]._id) {
                 enrollments[e].ungraded += 1;
                 let submittedAt = Date.parse(submissionData.submittedAt);
-                if (submittedAt < enrollments[e].oldest_sub) {
-                  enrollments[e].oldest_sub = submittedAt;
+                if (submittedAt < enrollments[e].last_sub) {
+                  enrollments[e].last_sub = submittedAt;
                 }
               }
             }
