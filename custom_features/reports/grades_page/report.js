@@ -239,27 +239,31 @@
                 }
 
                 // No submission found within lookback window:
-                // Show >lookback unless the enrollment is newer than the window
+                // If enrollment is new enough, that implies 0 submissions so far -> n/a
                 const created = student.created_at ? new Date(student.created_at) : null;
-                const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : (lookback + 1);
+                const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : null;
 
-                if (daysEnrolled <= lookback) return `≤${lookback} Days`;
+                if (daysEnrolled !== null && daysEnrolled <= lookback) return 'n/a';
                 return `>${lookback} Days`;
               },
               student => {
                 const lookback = student.lookback_days ?? 14;
 
-                let days;
-                if (student.last_sub) {
-                  days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
-                } else {
+                // Styling:
+                // - If n/a (new enrollment w/ no submissions): gray
+                // - If >lookback (older enrollment w/ no recent submissions): red
+                // - Else: green/yellow/red based on days
+                if (!student.last_sub) {
                   const created = student.created_at ? new Date(student.created_at) : null;
-                  const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : (lookback + 1);
+                  const daysEnrolled = created ? this.calcDaysBetweenDates(created, new Date()) : null;
 
-                  // style: new enrollment w/ no submissions shouldn't be "worse than lookback"
-                  days = (daysEnrolled <= lookback) ? lookback : (lookback + 1);
+                  if (daysEnrolled !== null && daysEnrolled <= lookback) {
+                    return { 'background-color': this.colors.gray, 'color': this.colors.black };
+                  }
+                  return { 'background-color': this.colors.red, 'color': this.colors.white };
                 }
 
+                let days = this.calcDaysBetweenDates(new Date(student.last_sub), new Date());
                 if (days < 0) days = 0;
 
                 return {
@@ -268,6 +272,7 @@
                 };
               }
             ),
+
  
 
             // new Column('Last Submit', 'The number of days since the student\'s last submission.', '4rem', true, 'number'),
