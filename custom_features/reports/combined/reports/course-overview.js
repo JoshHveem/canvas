@@ -211,12 +211,23 @@ Vue.component('course-metadata-card', {
   },
   methods: {
     formatDate(v) {
-      if (!v) return '—';
-      const d = new Date(Date.parse(v));
-      if (Number.isNaN(d.getTime())) return '—';
-      return d.toLocaleString();
+      // treat null/undefined/empty/"0"/0 as missing
+      if (v == null) return '—';
+      if (v === 0 || v === '0') return '—';
+      if (typeof v === 'string' && v.trim() === '') return '—';
+
+      // allow unix seconds or ms too, if that ever happens
+      if (typeof v === 'number') {
+        const ms = v < 2e10 ? v * 1000 : v; // seconds -> ms
+        const d = new Date(ms);
+        return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+      }
+
+      const d = new Date(v); // handles ISO strings well
+      return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
     }
   },
+
   template: `
   <div class="btech-card btech-theme" style="margin-top:12px;">
     <div class="btech-row" style="margin-bottom:10px;">
@@ -240,6 +251,7 @@ Vue.component('course-metadata-card', {
         <div class="btech-muted" style="margin-top:4px;">Surveys: {{ fmtSurveyLast }}</div>
       </div>
     </div>
+    {{course}}
   </div>
   `
 });
