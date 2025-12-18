@@ -265,6 +265,33 @@
               })
             ),
 
+            // Grading promptness: oldest ungraded
+            new Column(
+              'Oldest Ungraded',
+              'Age of the oldest ungraded submission (grading backlog).',
+              '7.5rem',
+              true,
+              'number',
+              (student) => {
+                if (!student.ungraded || student.ungraded <= 0 || !student.oldest_ungraded_at) return '0 Days';
+                let days = this.calcDaysBetweenDates(new Date(student.oldest_ungraded_at), new Date());
+                if (days < 0) days = 0;
+                return `${days} Days`;
+              },
+              (student) => {
+                if (!student.ungraded || student.ungraded <= 0 || !student.oldest_ungraded_at) {
+                  return { 'background-color': this.colors.green, color: this.colors.white };
+                }
+                let days = this.calcDaysBetweenDates(new Date(student.oldest_ungraded_at), new Date());
+                if (days < 0) days = 0;
+
+                return {
+                  'background-color': days > 3 ? this.colors.red : days > 1 ? this.colors.yellow : this.colors.green,
+                  color: this.colors.white,
+                };
+              }
+            ),
+
             // Student activity: last submission (newest)
             new Column(
               'Last Sub',
@@ -300,33 +327,6 @@
                 }
 
                 let days = this.calcDaysBetweenDates(new Date(student.last_submitted_at), new Date());
-                if (days < 0) days = 0;
-
-                return {
-                  'background-color': days > 3 ? this.colors.red : days > 1 ? this.colors.yellow : this.colors.green,
-                  color: this.colors.white,
-                };
-              }
-            ),
-
-            // Grading promptness: oldest ungraded
-            new Column(
-              'Oldest Ungraded',
-              'Age of the oldest ungraded submission (grading backlog).',
-              '7rem',
-              true,
-              'number',
-              (student) => {
-                if (!student.ungraded || student.ungraded <= 0 || !student.oldest_ungraded_at) return '0 Days';
-                let days = this.calcDaysBetweenDates(new Date(student.oldest_ungraded_at), new Date());
-                if (days < 0) days = 0;
-                return `${days} Days`;
-              },
-              (student) => {
-                if (!student.ungraded || student.ungraded <= 0 || !student.oldest_ungraded_at) {
-                  return { 'background-color': this.colors.green, color: this.colors.white };
-                }
-                let days = this.calcDaysBetweenDates(new Date(student.oldest_ungraded_at), new Date());
                 if (days < 0) days = 0;
 
                 return {
