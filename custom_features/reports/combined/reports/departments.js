@@ -58,6 +58,7 @@ Vue.component('reports-departments', {
       const yr = this.yearNum;
       const depts = Array.isArray(this.departments) ? this.departments : [];
       this.departmentsClean = depts.map(d => this.cleanDeptForYear(d, yr));
+      console.log(this.departmentsClean);
     },
 
     // -------------------------------
