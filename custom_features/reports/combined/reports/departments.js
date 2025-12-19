@@ -73,6 +73,7 @@ Vue.component('reports-departments', {
     rebuildDepartments() {
       const depts = Array.isArray(this.departments) ? this.departments : [];
       this.departmentsClean = depts.map(d => this.buildDeptRow(d));
+      console.log(this.departmentsClean);
     },
 
     // ---------- Core: take one dept and attach year-filtered metrics ----------
