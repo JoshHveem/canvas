@@ -1,4 +1,4 @@
-Vue.component('reports-department', {
+Vue.component('reports-departments', {
   template: `
     <div>
       <departments-overview
@@ -41,6 +41,7 @@ Vue.component('reports-department', {
   },
 
   async mounted() {
+    console.log('load departments');
     await this.loadDepartmentMetrics();
   },
 
