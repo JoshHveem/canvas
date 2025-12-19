@@ -11,7 +11,6 @@ Vue.component('reports-departments', {
 
   props: {
     year: { type: [Number, String], required: true },
-    departments: { type: Array, required: true },
     subMenu: { type: [Number, String], required: true },
     instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
   },
@@ -20,7 +19,8 @@ Vue.component('reports-departments', {
     return {
       loading: false,
       department_metrics: {},
-      departmentsClean: []
+      departmentsClean: [],
+      departments: []
     };
   },
 
@@ -51,11 +51,11 @@ Vue.component('reports-departments', {
         this.loading = true;
         const url = `https://reports.bridgetools.dev/api/departments/full`;
         const resp = await bridgetools.req(url);
-        this.department_metrics = resp?.data || [];
-        console.log(this.department_metrics);
+        this.departments = resp?.data || [];
+        console.log(this.departments);
       } catch (e) {
         console.warn('Failed to load department metrics', e);
-        this.department_metrics = {};
+        this.departments = {};
       } finally {
         this.loading = false;
         this.rebuildDepartments(); // ensure we build once after load
