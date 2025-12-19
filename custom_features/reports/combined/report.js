@@ -428,6 +428,84 @@
       },
 
       data: function () {
+        let reports = [
+          {
+            value: 'departments',
+            label: 'Departments',
+            component: 'reports-departments',
+            title: 'Departments Report',
+            selectors: [],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+            ]
+          },
+          {
+            value: 'department',
+            label: 'Department',
+            component: 'reports-department',
+            title: 'Department Report',
+            selectors: [],
+            subMenus: [
+              { value: 'instructors', label: 'Instructors' },
+              { value: 'courses',     label: 'Courses' },
+              { value: 'coe',         label: 'COE' },
+            ]
+          },
+          {
+            value: 'occupations',
+            label: 'Occupations',
+            component: 'occupations-report',
+            title: 'Occupations Report',
+            selectors: [],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+            ]
+          },
+          {
+            value: 'instructors',
+            label: 'Instructors',
+            component: 'reports-instructors',
+            title: 'Instructors Report',
+            datasets: ['instructors'],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+              { value: 'surveys',  label: 'Surveys' },
+            ]
+          },
+          {
+            value: 'instructor',
+            label: 'Instructor',
+            component: 'reports-instructor',
+            title: 'Instructor Report',
+            selectors: ['instructor'],
+            datasets: ['instructors'],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+            ]
+          },
+          {
+            value: 'courses',
+            label: 'Courses',
+            component: 'reports-courses',
+            title: 'Courses Report',
+            datasets: ['courses'],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+              { value: 'surveys',  label: 'Surveys' },
+            ]
+          },
+          {
+            value: 'course',
+            label: 'Course',
+            component: 'reports-course',
+            title: 'Course Report',
+            selectors: ['course'],
+            datasets: ['courses'],
+            subMenus: [
+              { value: 'overview', label: 'Overview' },
+            ]
+          },
+        ]
         return {
           colors: bridgetools.colors,
 
@@ -455,74 +533,7 @@
           hide_missing_end_date: true,
           hide_past_end_date: false,
 
-          reportTypes: [
-            {
-              value: 'department',
-              label: 'Department',
-              component: 'reports-department',
-              title: 'Department Report',
-              selectors: [],
-              subMenus: [
-                { value: 'instructors', label: 'Instructors' },
-                { value: 'courses',     label: 'Courses' },
-                { value: 'coe',         label: 'COE' },
-              ]
-            },
-            {
-              value: 'occupations',
-              label: 'Occupations',
-              component: 'occupations-report',
-              title: 'Occupations Report',
-              selectors: [],
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-              ]
-            },
-            {
-              value: 'instructors',
-              label: 'Instructors',
-              component: 'reports-instructors',
-              title: 'Instructors Report',
-              datasets: ['instructors'],
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-                { value: 'surveys',  label: 'Surveys' },
-              ]
-            },
-            {
-              value: 'instructor',
-              label: 'Instructor',
-              component: 'reports-instructor',
-              title: 'Instructor Report',
-              selectors: ['instructor'],
-              datasets: ['instructors'],
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-              ]
-            },
-            {
-              value: 'courses',
-              label: 'Courses',
-              component: 'reports-courses',
-              title: 'Courses Report',
-              datasets: ['courses'],
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-                { value: 'surveys',  label: 'Surveys' },
-              ]
-            },
-            {
-              value: 'course',
-              label: 'Course',
-              component: 'reports-course',
-              title: 'Course Report',
-              selectors: ['course'],
-              datasets: ['courses'],
-              subMenus: [
-                { value: 'overview', label: 'Overview' },
-              ]
-            },
-          ],
+          reportTypes: reports,
         };
       },
 
