@@ -51,8 +51,7 @@ Vue.component('reports-departments', {
         this.loading = true;
         const url = `https://reports.bridgetools.dev/api/departments/full`;
         const resp = await bridgetools.req(url);
-        console.log(resp);
-        this.department_metrics = resp || {};
+        this.department_metrics = resp?.data || [];
       } catch (e) {
         console.warn('Failed to load department metrics', e);
         this.department_metrics = {};
