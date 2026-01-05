@@ -138,6 +138,9 @@ Vue.component('reports-courses-overview', {
       <div style="flex:1;"></div>
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
     </div>
+    <div class="btech-row" style="align-items:center; margin-bottom:8px;">
+      <span>*Suggested credits will be significantly lower than expected if students enroll in multiple concurrent courses, usually the suggested credits will be the actual suggested credits divided by the number of concurrent courses. e.g. a student concurrently enrolled in 2 courses worth 2 credits will have a suggested credits of 1 credit per course.</span>
+    </div>
 
     <!-- Column headers -->
     <div
