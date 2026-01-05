@@ -65,7 +65,7 @@ Vue.component('reports-courses-overview', {
               color: this.colors.white
             };
           },
-          c => Number(c.pct_last_active ?? -1) // sort on raw 0–1 value
+          c => Number(Math.abs(c.suggested_credits - c.credits) ?? -1) // sort on raw 0–1 value
         ),
         new window.ReportColumn(
           'Extn', 'Percent of students requiring an extension.', '4rem', false, 'number',
@@ -106,6 +106,19 @@ Vue.component('reports-courses-overview', {
           },
           c => Number(c.average_score ?? -1)
         ),
+        new window.ReportColumn(
+          'Days to Submit', 'Median number of days before a student submits their first assignment.', '6rem', false, 'number',
+          c => c.days_to_submit !== null ? c.days_to_submit: 'n/a',
+          c => {
+            const v = Math.abs(c.days_to_submit);
+            if (c.days_to_submit === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+            return {
+              backgroundColor: (v > 0.75) ? this.colors.red : (v > 0.5 ? this.colors.orange: (v > 0.25 ? this.colors.yellow : this.colors.green)),
+              color: this.colors.white
+            };
+          },
+          c => Number(c.days_to_submit ?? -1) // sort on raw 0–1 value
+        ),
       ]);
   },
 
@@ -139,7 +152,7 @@ Vue.component('reports-courses-overview', {
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
     </div>
     <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <span style="font-size: 0.75rem;">*Suggested credits will be significantly lower than expected if students enroll in multiple concurrent courses, usually the suggested credits will be the actual suggested credits divided by the number of concurrent courses. e.g. a student concurrently enrolled in 2 courses worth 2 credits will have a suggested credits of 1 credit per course.</span>
+      <span style="font-size: 0.75rem;">*Suggested credits will be significantly lower than expected if students enroll in multiple concurrent courses, usually the suggested credits will be the actual suggested credits divided by the number of concurrent courses. e.g. a student concurrently enrolled in 2 courses worth 2 credits will have a suggested credits of 1 credit per course. We are exploring ways to account for this in the suggested credit estimate.</span>
     </div>
 
     <!-- Column headers -->
