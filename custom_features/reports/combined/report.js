@@ -429,16 +429,16 @@
 
       data: function () {
         let reports = [
-          {
-            value: 'departments',
-            label: 'Departments',
-            component: 'reports-departments',
-            title: 'Departments Report',
-            selectors: [],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
-            ]
-          },
+          // {
+          //   value: 'departments',
+          //   label: 'Departments',
+          //   component: 'reports-departments',
+          //   title: 'Departments Report',
+          //   selectors: [],
+          //   subMenus: [
+          //     { value: 'overview', label: 'Overview' },
+          //   ]
+          // },
           {
             value: 'department',
             label: 'Department',
