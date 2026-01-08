@@ -168,7 +168,17 @@
         })
       }
     },
-    computed: {},
+    computed: {
+      estimatedCreditsEnrolled() {
+        const start = this.parseDate(this.submissionDatesStart);
+        const end   = this.parseDate(this.submissionDatesEnd);
+
+        if (!start || !end || end <= start) return 0;
+
+        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
+        return Number(((end - start) / msInFiveWeeks).toFixed(2));
+      }
+    },
     data() {
       return {
         selectedTermId: '',
@@ -182,7 +192,6 @@
         includedAssignments: {},
         courseTotalPoints: {},
         courseAssignmentGroups: {},
-        estimatedCreditsEnrolled: 0,
         estimatedCreditsRequired: 0,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
@@ -504,9 +513,6 @@
         this.submissionDatesEnd   = this.dateToHTMLDate(term.exit_date);
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        this.estimatedCreditsEnrolled = Number(
-          ((new Date(term.exit_date) - new Date(term.entry_date)) / msInFiveWeeks).toFixed(2)
-        );
 
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
