@@ -176,7 +176,7 @@
         if (!start || !end || end <= start) return 0;
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        return Math.round(Number((end - start) / msInFiveWeeks) * 4) / 4;
+        return Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
       },
       weightedGradeForTerm() {
         let totalWeightedGrade = 0;
