@@ -55,7 +55,7 @@
                 <td><b>Weighted Final Grade</b>
                 </td>
                 <td>
-                  {{weightedFinalGradeForTerm()}}%
+                  {{weightedFinalGradeForTerm}}%
                   <div style='float: right;'>
                     <i style='cursor: pointer;' v-if='showGradeDetails' class='icon-minimize'
                       @click='showGradeDetails = false;' title='Hide additional information.'></i>
@@ -68,7 +68,7 @@
               <tr height="10px"></tr>
               <tr v-if='showGradeDetails'>
                 <td><b>Weighted Grade To Date</b></td>
-                <td>{{weightedGradeForTerm()}}%</td>
+                <td>{{weightedGradeForTerm}}%</td>
               </tr>
               <tr v-if='showGradeDetails'>
                 <td><b>Credits Completed</b></td>
