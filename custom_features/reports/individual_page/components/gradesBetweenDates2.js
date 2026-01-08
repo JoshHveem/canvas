@@ -17,9 +17,28 @@
               <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}}</option>
             </select>
             <span>Start Date:</span>
-            <input type="date" v-model="submissionDatesStart" @change='getIncludedAssignmentsBetweenDates()'>
+            <input type="date" v-model="submissionDatesStart" @change="getIncludedAssignmentsBetweenDates()">
+
             <span>End Date:</span>
-            <input type="date" v-model="submissionDatesEnd" @change='getIncludedAssignmentsBetweenDates()'>
+            <input type="date" v-model="submissionDatesEnd" @change="getIncludedAssignmentsBetweenDates()">
+
+            <button
+              v-if="termDatesDirty"
+              :disabled="savingTermDates"
+              @click="saveTermDates"
+            >
+              {{ savingTermDates ? "Saving..." : "Save date changes" }}
+            </button>
+
+
+            <button
+              v-if="termDatesDirty"
+              @click="revertTermDates"
+              style="margin-left: 0.25rem;"
+            >
+              Cancel
+            </button>
+
           </div>
           <table class='btech-report-table' border='1'>
             <thead border='1'>
@@ -240,10 +259,22 @@
 
         const output = Number(grade.toFixed(2));
         return isNaN(output) ? 0 : output;
-      }
+      },
+      termDatesDirty() {
+        return (
+          !!this.selectedTerm?._id &&
+          this.submissionDatesStart !== this.savedSubmissionDatesStart ||
+          this.submissionDatesEnd !== this.savedSubmissionDatesEnd
+        );
+      },
+
     },
     data() {
       return {
+        savedSubmissionDatesStart: undefined,
+        savedSubmissionDatesEnd: undefined,
+        savingTermDates: false,
+
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -572,14 +603,60 @@
         if (!term) return;
 
         this.selectedTerm = term;
-        this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
-        this.submissionDatesEnd   = this.dateToHTMLDate(term.exit_date);
 
-        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
+        const start = this.dateToHTMLDate(term.entry_date);
+        const end   = this.dateToHTMLDate(term.exit_date);
+
+        // working values used by the report
+        this.submissionDatesStart = start;
+        this.submissionDatesEnd   = end;
+
+        // saved baseline used to detect dirty state
+        this.savedSubmissionDatesStart = start;
+        this.savedSubmissionDatesEnd   = end;
 
         this.getIncludedAssignmentsBetweenDates();
-        this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
+        this.drawSubmissionsGraph(new Date(term.entry_date), new Date(term.exit_date));
       },
+      async saveTermDates() {
+        const termId = this.selectedTerm?._id;
+        if (!termId) return;
+
+        this.savingTermDates = true;
+
+        try {
+          await bridgetools.req(
+            `https://reports.bridgetools.dev/api2/hs_terms/${termId}/dates?requester_id=${ENV.current_user_id}`,
+            {
+              entry_date: this.submissionDatesStart,
+              exit_date: this.submissionDatesEnd,
+            },
+            "POST"
+          );
+
+          // update saved baseline so dirty flag turns off
+          this.savedSubmissionDatesStart = this.submissionDatesStart;
+          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+
+          // update selectedTerm so dropdown reflects new values
+          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
+          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
+
+        } catch (err) {
+          console.error("Failed saving term dates:", err);
+          alert("Failed to save term date changes.");
+        } finally {
+          this.savingTermDates = false;
+        }
+      },
+
+      revertTermDates() {
+        this.submissionDatesStart = this.savedSubmissionDatesStart;
+        this.submissionDatesEnd = this.savedSubmissionDatesEnd;
+        this.getIncludedAssignmentsBetweenDates();
+      },
+
+
       sumProgressBetweenDates() {
         let sum = 0;
         this.courses.forEach(course => sum += this.progressBetweenDates[course.id]);
