@@ -52,10 +52,10 @@
             </tbody>
             <tfoot border='1'>
               <tr>
-                <td><b>Weighted Final Grade</b>
+                <td><b>Grade to Date</b>
                 </td>
                 <td>
-                  {{weightedFinalGradeForTerm}}%
+                  {{weightedGradeForTerm}}%
                   <div style='float: right;'>
                     <i style='cursor: pointer;' v-if='showGradeDetails' class='icon-minimize'
                       @click='showGradeDetails = false;' title='Hide additional information.'></i>
@@ -66,9 +66,9 @@
                 </td>
               </tr>
               <tr height="10px"></tr>
-              <tr v-if='showGradeDetails'>
-                <td><b>Weighted Grade To Date</b></td>
-                <td>{{weightedGradeForTerm}}%</td>
+              <tr>
+                <td><b>Final Grade (based on enrolled)</b></td>
+                <td>{{weightedFinalGradeForTerm}}%</td>
               </tr>
               <tr>
                 <td><b>Credits Completed</b></td>
@@ -79,7 +79,7 @@
                 <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
               <tr>
-                <td><b>Estimated Credits Required</b></td>
+                <td><b>Credits Required to Date</b></td>
                 <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
                 </td>
               </tr>
@@ -179,6 +179,23 @@
         return Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
       },
       weightedGradeForTerm() {
+        const requiredCredits = this.estimatedCreditsRequired;
+        const creditsCompleted = this.sumCreditsCompleted();
+
+        let grade = this.unweightedGrade;
+
+        if (
+          creditsCompleted < requiredCredits &&
+          requiredCredits !== 0 &&
+          creditsCompleted !== 0
+        ) {
+          grade *= creditsCompleted / requiredCredits;
+        }
+
+        const output = Number(grade.toFixed(2));
+        return isNaN(output) ? 0 : output;
+      },
+      unweightedGrade() {
         let totalWeightedGrade = 0;
 
         const totalCreditsCompleted = this.sumCreditsCompleted();
@@ -206,11 +223,12 @@
         return isNaN(output) ? 0 : output;
       },
 
+      //
       weightedFinalGradeForTerm() {
-        const requiredCredits = this.estimatedCreditsRequired;
+        const requiredCredits = this.estimatedCreditsEnrolled;
         const creditsCompleted = this.sumCreditsCompleted();
 
-        let grade = this.weightedGradeForTerm; // ✅ computed ref (no parentheses)
+        let grade = this.unweightedGrade;
 
         if (
           creditsCompleted < requiredCredits &&
