@@ -92,6 +92,7 @@
             :user="user"
             :degree="currentDegree"
             :settings="settings"
+            :colors="colors"
             :tree="tree"
           ></student-courses-report-2>
         </div>

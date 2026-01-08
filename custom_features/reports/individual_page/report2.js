@@ -65,7 +65,7 @@
           let user = await this.loadUser(this.userId);
           this.user = user;
         } catch(err) {
-          console.log(err);
+          console.error(err);
           this.user = {};
         }
         this.loadingProgress += 10;
@@ -246,15 +246,12 @@
             this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api2/students/${userId}?requester_id=${ENV.current_user_id}`
             );
-            console.log(this.bridgetoolsUser);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
-            console.log(this.canvasUser);
 
           } catch (err) {
-            console.log(err);
+            console.error(err);
             return {};
           }
-          console.log(user);
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
@@ -327,7 +324,6 @@
   
 
   try {
-    console.log(SOURCE_URL);
     await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
@@ -356,7 +352,7 @@
     */
     postLoad();
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
   function loadCSS(url) {
     var style = document.createElement('link'),

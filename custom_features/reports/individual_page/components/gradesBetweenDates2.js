@@ -350,7 +350,6 @@
 
     methods: {
       btnStyle(kind = "primary", disabled = false) {
-        console.log(this.colors);
         const blue = this.colors?.blue || "#1a73e8";
         const darkGray = this.colors?.darkGray || "#333";
 
