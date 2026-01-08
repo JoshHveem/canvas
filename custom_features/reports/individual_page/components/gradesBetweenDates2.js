@@ -25,19 +25,25 @@
             <button
               v-if="termDatesDirty"
               :disabled="savingTermDates"
+              :style="btnStyle('primary', savingTermDates)"
               @click="saveTermDates"
+              @mouseover="$event.target.style.filter='brightness(0.92)'"
+              @mouseout="$event.target.style.filter='none'"
             >
-              {{ savingTermDates ? "Saving..." : "Save date changes" }}
+              {{ savingTermDates ? "Saving..." : "Save" }}
             </button>
-
 
             <button
               v-if="termDatesDirty"
+              :disabled="savingTermDates"
+              :style="btnStyle('secondary', savingTermDates)"
               @click="revertTermDates"
-              style="margin-left: 0.25rem;"
+              @mouseover="$event.target.style.filter='brightness(0.92)'"
+              @mouseout="$event.target.style.filter='none'"
             >
               Cancel
             </button>
+
 
           </div>
           <table class='btech-report-table' border='1'>
@@ -343,6 +349,32 @@
 
 
     methods: {
+      btnStyle(kind = "primary", disabled = false) {
+        const blue = this.colors?.blue || "#1a73e8";
+        const darkGray = this.colors?.darkGray || "#333";
+
+        const bg =
+          kind === "primary" ? blue :
+          kind === "secondary" ? darkGray :
+          "#000";
+
+        return {
+          background: bg,
+          color: "#fff",
+          border: "none",
+          borderRadius: "10px",
+          padding: "4px 10px",
+          marginLeft: kind === "primary" ? "0.5rem" : "0.25rem",
+          fontSize: "0.85rem",
+          fontWeight: "600",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? "0.55" : "1",
+          transition: "filter 0.15s ease, opacity 0.15s ease",
+          lineHeight: "1.2",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.15)"
+        };
+      },
+
       // Example: Drawing a Bar Chart for Submissions
 
       drawSubmissionsGraph: function (startDate, endDate) {
