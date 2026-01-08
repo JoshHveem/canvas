@@ -102,6 +102,7 @@
             :enrollments="enrollmentData"
             :user-id="userId"
             :terms="user.hs_terms"
+            :colors="colors"
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
         </div>
