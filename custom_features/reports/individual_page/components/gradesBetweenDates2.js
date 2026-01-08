@@ -46,6 +46,76 @@
 
 
           </div>
+          <div v-if="showBulkUpdateModal" style="
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          ">
+            <div style="
+              background: white;
+              padding: 1rem;
+              border-radius: 14px;
+              width: 500px;
+              max-height: 80vh;
+              overflow-y: auto;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            ">
+              <h3 style="margin-top:0;">Update term dates for all students?</h3>
+
+              <div v-if="bulkUpdateStep === 'confirm'">
+                <p style="margin-bottom: 1rem;">
+                  Would you like to update the term dates for <b>all students</b> in section
+                  <b>{{selectedTerm.section_code}}</b> ({{selectedTerm.academic_year}})?
+                </p>
+
+                <button :style="btnStyle('primary')" @click="loadBulkUpdateList">
+                  Yes, choose students
+                </button>
+
+                <button :style="btnStyle('secondary')" @click="confirmSingleUpdate">
+                  No
+                </button>
+ 
+              </div>
+
+              <div v-if="bulkUpdateStep === 'select'">
+                <p><b>Select students to update:</b></p>
+
+                <div v-if="bulkLoading">Loading students…</div>
+
+                <div v-else>
+                  <div style="margin-bottom: 0.75rem;">
+                    <button :style="btnStyle('secondary')" @click="selectAllBulk(true)">Select All</button>
+                    <button :style="btnStyle('secondary')" @click="selectAllBulk(false)">Select None</button>
+                  </div>
+
+                  <div v-for="t in bulkTermsToUpdate" :key="t._id" style="margin-bottom: 0.35rem;">
+                    <label style="display:flex; gap:0.5rem; align-items:center;">
+                      <input type="checkbox" :value="t._id" v-model="bulkSelectedTermIds">
+                      <span>
+                        {{t.student?.hs_name || t.student?.sis_id || t.student?.canvas_id || "Unknown Student"}}
+                      </span>
+                    </label>
+                  </div>
+
+                  <div style="margin-top: 1rem;">
+                    <button :style="btnStyle('primary')" :disabled="bulkSaving" @click="confirmBulkUpdate">
+                      {{bulkSaving ? "Saving..." : "Confirm Update"}}
+                    </button>
+                    <button :style="btnStyle('secondary')" :disabled="bulkSaving" @click="closeBulkModal">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <table class='btech-report-table' border='1'>
             <thead border='1'>
               <tr>
@@ -281,6 +351,14 @@
         savedSubmissionDatesEnd: undefined,
         savingTermDates: false,
 
+        showBulkUpdateModal: false,
+        bulkUpdateStep: "confirm", // "confirm" or "select"
+        bulkTermsToUpdate: [],     // list of terms from server
+        bulkSelectedTermIds: [],   // checked terms
+        bulkLoading: false,
+        bulkSaving: false,
+
+
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -349,6 +427,140 @@
 
 
     methods: {
+      async confirmSingleUpdate() {
+        const termId = this.selectedTerm?._id;
+        if (!termId) return;
+
+        this.savingTermDates = true;
+
+        try {
+          await bridgetools.req(
+            `https://reports.bridgetools.dev/api2/hs_terms/${termId}/dates?requester_id=${ENV.current_user_id}`,
+            {
+              entry_date: this.submissionDatesStart,
+              exit_date: this.submissionDatesEnd,
+            },
+            "POST"
+          );
+
+          // update saved baseline so dirty flag turns off
+          this.savedSubmissionDatesStart = this.submissionDatesStart;
+          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+
+          // update selectedTerm so dropdown reflects new values
+          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
+          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
+
+          this.closeBulkModal();
+        } catch (err) {
+          console.error("Failed saving term dates:", err);
+          alert("Failed to save term date changes.");
+        } finally {
+          this.savingTermDates = false;
+        }
+      },
+
+      closeBulkModal() {
+        this.showBulkUpdateModal = false;
+        this.bulkUpdateStep = "confirm";
+        this.bulkTermsToUpdate = [];
+        this.bulkSelectedTermIds = [];
+      },
+
+      selectAllBulk(on = true) {
+        this.bulkSelectedTermIds = on
+          ? this.bulkTermsToUpdate.map(t => t._id)
+          : [];
+      },
+
+      async loadBulkUpdateList() {
+        try {
+          this.bulkUpdateStep = "select";
+          this.bulkLoading = true;
+
+          const section = this.selectedTerm.section_code;
+          const year = this.selectedTerm.academic_year;
+
+          const terms = await bridgetools.req(
+            `https://reports.bridgetools.dev/api2/hs_terms/by_section/${section}/${year}?requester_id=${ENV.current_user_id}`,
+            {},
+            "GET"
+          );
+
+          this.bulkTermsToUpdate = terms || [];
+          const currentTermId = this.selectedTerm?._id;
+
+          this.bulkSelectedTermIds = this.bulkTermsToUpdate.map(t => t._id);
+
+          if (currentTermId && !this.bulkSelectedTermIds.includes(currentTermId)) {
+            this.bulkSelectedTermIds.push(currentTermId);
+          }
+
+        } catch (err) {
+          console.error(err);
+          alert("Failed loading students for bulk update.");
+          this.closeBulkModal();
+        } finally {
+          this.bulkLoading = false;
+        }
+      },
+      async confirmBulkUpdate() {
+        try {
+          this.bulkSaving = true;
+
+          await bridgetools.req(
+            `https://reports.bridgetools.dev/api2/hs_terms/bulk_update_dates?requester_id=${ENV.current_user_id}`,
+            {
+              termIds: this.bulkSelectedTermIds,
+              entry_date: this.submissionDatesStart,
+              exit_date: this.submissionDatesEnd
+            },
+            "POST"
+          );
+
+          // update baseline so dirty flag turns off
+          this.savedSubmissionDatesStart = this.submissionDatesStart;
+          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+
+          // update selectedTerm so dropdown reflects new values
+          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
+          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
+
+          this.closeBulkModal();
+          alert("Bulk update complete.");
+        } catch (err) {
+          console.error(err);
+          alert("Failed bulk updating students.");
+        } finally {
+          this.bulkSaving = false;
+        }
+      },
+
+
+      async confirmBulkUpdate() {
+        try {
+          this.bulkSaving = true;
+
+          await bridgetools.req(
+            `https://reports.bridgetools.dev/api2/hs_terms/bulk_update_dates?requester_id=${ENV.current_user_id}`,
+            {
+              termIds: this.bulkSelectedTermIds,
+              entry_date: this.submissionDatesStart,
+              exit_date: this.submissionDatesEnd
+            },
+            "POST"
+          );
+
+          this.closeBulkModal();
+          alert("Bulk update complete.");
+        } catch (err) {
+          console.error(err);
+          alert("Failed bulk updating students.");
+        } finally {
+          this.bulkSaving = false;
+        }
+      },
+
       btnStyle(kind = "primary", disabled = false) {
         const blue = this.colors?.blue || "#1a73e8";
         const darkGray = this.colors?.darkGray || "#333";
@@ -654,33 +866,14 @@
         const termId = this.selectedTerm?._id;
         if (!termId) return;
 
-        this.savingTermDates = true;
+        // show modal immediately
+        this.showBulkUpdateModal = true;
+        this.bulkUpdateStep = "confirm";
 
-        try {
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api2/hs_terms/${termId}/dates?requester_id=${ENV.current_user_id}`,
-            {
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd,
-            },
-            "POST"
-          );
-
-          // update saved baseline so dirty flag turns off
-          this.savedSubmissionDatesStart = this.submissionDatesStart;
-          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
-
-          // update selectedTerm so dropdown reflects new values
-          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
-          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
-
-        } catch (err) {
-          console.error("Failed saving term dates:", err);
-          alert("Failed to save term date changes.");
-        } finally {
-          this.savingTermDates = false;
-        }
+        // ensure the current term is always included in bulk option later
+        this.bulkSelectedTermIds = [termId];
       },
+ 
 
       revertTermDates() {
         this.submissionDatesStart = this.savedSubmissionDatesStart;
