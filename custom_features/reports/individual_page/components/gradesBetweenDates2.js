@@ -70,11 +70,11 @@
                 <td><b>Weighted Grade To Date</b></td>
                 <td>{{weightedGradeForTerm}}%</td>
               </tr>
-              <tr v-if='showGradeDetails'>
+              <tr>
                 <td><b>Credits Completed</b></td>
                 <td>{{sumCreditsCompleted()}}</td>
               </tr>
-              <tr v-if='showGradeDetails'>
+              <tr>
                 <td><b>Credits Enrolled</b></td>
                 <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
@@ -176,7 +176,7 @@
         if (!start || !end || end <= start) return 0;
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        return Number(((end - start) / msInFiveWeeks).toFixed(2));
+        return Math.floor(Number(((end - start) / msInFiveWeeks).toFixed(2)));
       },
       weightedGradeForTerm() {
         let totalWeightedGrade = 0;
@@ -792,7 +792,7 @@
         this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
         //this value can be edited by the instructor
-        let estimatedCreditsRequired = Math.floor(this.estimatedCreditsEnrolled * midtermPercentCompleted);
+        let estimatedCreditsRequired = this.estimatedCreditsEnrolled * midtermPercentCompleted;
         if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
         this.estimatedCreditsRequired = estimatedCreditsRequired;
       },
