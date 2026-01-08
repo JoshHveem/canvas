@@ -177,6 +177,51 @@
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
         return Number(((end - start) / msInFiveWeeks).toFixed(2));
+      },
+      weightedGradeForTerm() {
+        let totalWeightedGrade = 0;
+
+        const totalCreditsCompleted = this.sumCreditsCompleted();
+        const totalProgress = this.sumProgressBetweenDates();
+
+        for (let c in this.courses) {
+          const course = this.courses[c];
+          const progress = this.progressBetweenDates[course.course_id];
+          const grade = this.gradesBetweenDates[course.course_id];
+
+          if (progress !== undefined && grade !== undefined && grade !== "N/A") {
+            if (totalCreditsCompleted === 0) {
+              const weightedGrade = grade * (progress / totalProgress);
+              totalWeightedGrade += weightedGrade;
+            } else {
+              const creditsCompleted = this.getCreditsCompleted(course);
+              let weightedGrade = grade;
+              weightedGrade *= (creditsCompleted / totalCreditsCompleted);
+              totalWeightedGrade += weightedGrade;
+            }
+          }
+        }
+
+        const output = parseFloat(totalWeightedGrade.toFixed(2));
+        return isNaN(output) ? 0 : output;
+      },
+
+      weightedFinalGradeForTerm() {
+        const requiredCredits = this.estimatedCreditsRequired;
+        const creditsCompleted = this.sumCreditsCompleted();
+
+        let grade = this.weightedGradeForTerm; // ✅ computed ref (no parentheses)
+
+        if (
+          creditsCompleted < requiredCredits &&
+          requiredCredits !== 0 &&
+          creditsCompleted !== 0
+        ) {
+          grade *= creditsCompleted / requiredCredits;
+        }
+
+        const output = Number(grade.toFixed(2));
+        return isNaN(output) ? 0 : output;
       }
     },
     data() {
@@ -533,44 +578,6 @@
           }
         })
         return parseFloat(sum.toFixed(2)) ?? 0;
-      },
-
-      weightedGradeForTerm() {
-        let totalWeightedGrade = 0;
-        let totalCreditsCompleted = this.sumCreditsCompleted();
-        let totalProgress = this.sumProgressBetweenDates();
-        for (let c in this.courses) {
-          let course = this.courses[c];
-          let progress = this.progressBetweenDates[course.course_id];
-          let grade = this.gradesBetweenDates[course.course_id];
-          if (progress !== undefined && grade !== undefined && grade != "N/A") {
-            if (totalCreditsCompleted === 0) {
-              let weightedGrade = grade * (progress / totalProgress);
-              totalWeightedGrade += weightedGrade;
-            } else {
-              let creditsCompleted = this.getCreditsCompleted(course);
-              let weightedGrade = grade;
-              //have some check to not = 0 if total credits completed is 0
-              weightedGrade *= (creditsCompleted / totalCreditsCompleted);
-              totalWeightedGrade += weightedGrade;
-            }
-          }
-        }
-        let output = parseFloat(totalWeightedGrade.toFixed(2));
-        if (isNaN(output)) return 0;
-        return output;
-      },
-
-      weightedFinalGradeForTerm() {
-        let requiredCredits = this.estimatedCreditsRequired;
-        let creditsCompleted = this.sumCreditsCompleted();
-        let grade = this.weightedGradeForTerm();
-        if ((creditsCompleted < requiredCredits) && (requiredCredits !== 0 && creditsCompleted !== 0)) {
-          grade *= (creditsCompleted / requiredCredits);
-        }
-        let output = grade.toFixed(2);
-        if (isNaN(output)) return 0;
-        return output;
       },
 
       parseDate(dateString) {
