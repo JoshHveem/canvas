@@ -259,6 +259,25 @@
         return incoming;
       });
     }
+    async function getStudentsRaw({ account }) {
+      const key = `instructorsRaw::acct=${account}`;
+      return cached(cache, key, async () => {
+        const url = `https://reports.bridgetools.dev/api2/students?dept=${account}`;
+        const resp = await bridgetools.req(url);
+        console.log(resp);
+        const incoming = resp?.data || [];
+
+        // Enrich names from Canvas (cached)
+        for (let i = 0; i < incoming.length; i++) {
+          const u = await getCanvasUser(incoming[i].canvas_id);
+          if (u) {
+            incoming[i].first_name = u.first_name || incoming[i].first_name;
+            incoming[i].last_name  = u.last_name  || incoming[i].last_name;
+          }
+        }
+        return incoming;
+      });
+    },
 
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
@@ -299,6 +318,7 @@
       getCanvasUser,
       getInstructorsRaw,
       getCoursesRaw,
+      getStudentsRaw,
       invalidate(prefix = "") {
         for (const k of cache.keys()) if (String(k).startsWith(prefix)) cache.delete(k);
       }
@@ -524,7 +544,7 @@
           // NEW: shared datasets for top-level selectors + reuse across reports
           instructorsRaw: [],
           coursesRaw: [],
-          sharedLoading: { instructors: false, courses: false },
+          sharedLoading: { instructors: false, courses: false, students: false },
 
           menu: '',
           section_names: ['All'],
@@ -636,6 +656,13 @@
             await this.loadCoursesRaw(account, year);
           } else {
             this.coursesRaw = [];
+          }
+        },
+
+        async loadStudentsRaw(account) {
+          try {
+            this.sharedLoading.students = true;
+            const raw = await window.ReportData.getStudentsRaw({ account })
           }
         },
 
