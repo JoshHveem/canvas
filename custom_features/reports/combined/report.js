@@ -277,7 +277,7 @@
         }
         return incoming;
       });
-    },
+    }
 
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
