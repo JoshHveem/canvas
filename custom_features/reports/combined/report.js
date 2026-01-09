@@ -663,6 +663,8 @@
           try {
             this.sharedLoading.students = true;
             const raw = await window.ReportData.getStudentsRaw({ account })
+          } catch (e) {
+            console.error(e);
           }
         },
 
