@@ -262,7 +262,7 @@
     async function getStudentsRaw({ account }) {
       const key = `instructorsRaw::acct=${account}`;
       return cached(cache, key, async () => {
-        const url = `https://reports.bridgetools.dev/api/v2/students?dept=${account}`;
+        const url = `https://reports.bridgetools.dev/api/v2/students?account_id=${account}`;
         const resp = await bridgetools.req(url);
         console.log(resp);
         const incoming = resp?.data || [];
