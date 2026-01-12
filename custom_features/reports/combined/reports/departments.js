@@ -2,10 +2,20 @@ Vue.component('reports-departments', {
   template: `
     <div>
       <departments-overview
+        v-if="subMenu == 'overview'"
+        :year="year"
+        :departments="departmentsClean"
+        :tags="allSurveyTags"
+        :loading="loading"
+      ></departments-overview>
+      <departments-course-surveys
+        v-if="subMenu == 'course-surveys'"
         :year="year"
         :departments="departmentsClean"
         :loading="loading"
-      ></departments-overview>
+        :tags="tags"
+      ></departments-course-surveys>
+
     </div>
   `,
 
@@ -19,7 +29,8 @@ Vue.component('reports-departments', {
     return {
       loading: false,
       departments: [],
-      departmentsClean: []
+      departmentsClean: [],
+      allSurveyTags: []
     };
   },
 
@@ -58,8 +69,14 @@ Vue.component('reports-departments', {
       const yr = this.yearNum;
       const depts = Array.isArray(this.departments) ? this.departments : [];
       this.departmentsClean = depts.map(d => this.cleanDeptForYear(d, yr));
+
+      // global unique tag list for the selected year
+      this.allSurveyTags = this.collectAllSurveyTags(this.departmentsClean);
+
       console.log(this.departmentsClean);
+      console.log('ALL TAGS:', this.allSurveyTags);
     },
+
 
     // -------------------------------
     // Core: EXACTLY your computed logic,
@@ -71,7 +88,13 @@ Vue.component('reports-departments', {
       // single-object-per-year arrays → pick first match or {}
       out.statistics          = this.pickYearOne(dept?.statistics, yr);
       out.instructor_metrics  = this.pickYearOne(dept?.instructor_metrics, yr);
-      out.course_surveys      = this.pickYearOne(dept?.course_surveys, yr);
+      out.course_surveys = this.pickYearOne(dept?.course_surveys, yr);
+
+      // build tag lookup for reports
+      const tagsArr = out.course_surveys?.tags;
+      out.course_surveys = out.course_surveys || {};
+      out.course_surveys.tags_by_name = this.indexTagsByName(tagsArr);
+
       out.instructor_surveys  = this.pickYearOne(dept?.instructor_surveys, yr);
       out.interactions        = this.pickYearOne(dept?.interactions, yr);
       out.grading             = this.pickYearOne(dept?.grading, yr);
@@ -100,6 +123,30 @@ Vue.component('reports-departments', {
       if (!rows.length) return [];
       const y = Number(yr);
       return rows.filter(d => Number(d?.academic_year) === y) || [];
-    }
+    },
+    indexTagsByName(tagsArr) {
+      const arr = Array.isArray(tagsArr) ? tagsArr : [];
+      const out = {};
+      for (const t of arr) {
+        const name = (t && typeof t.tag === 'string') ? t.tag : null;
+        if (!name) continue;
+        out[name] = t; // last one wins if duplicates
+      }
+      return out;
+    },
+
+    collectAllSurveyTags(cleanDepts) {
+      const set = new Set();
+      for (const d of (Array.isArray(cleanDepts) ? cleanDepts : [])) {
+        const tags = d?.course_surveys?.tags;
+        if (!Array.isArray(tags)) continue;
+        for (const t of tags) {
+          if (t && typeof t.tag === 'string' && t.tag) set.add(t.tag);
+        }
+      }
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+
+
   }
 });

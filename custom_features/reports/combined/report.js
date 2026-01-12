@@ -457,6 +457,7 @@
             selectors: [],
             subMenus: [
               { value: 'overview', label: 'Overview' },
+              { value: 'course-surveys', label: 'Course Surveys' },
             ]
           },
           {

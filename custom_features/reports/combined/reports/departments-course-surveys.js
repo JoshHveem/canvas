@@ -1,12 +1,14 @@
-// departments-overview.js
-Vue.component('departments-overview', {
+// departments-course-surveys.js
+Vue.component('departments-course-surveys', {
   props: {
-    account:   { type: [Number, String], required: false, default: '' }, // keep for parity (not used yet)
+    account:   { type: [Number, String], required: false, default: '' },
     year:      { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
     departments: { type: Array, required: true },
     loading:   { type: Boolean, default: false },
-    tags: { type: Array, required: false, default: [] }
+
+    // list of tag names, e.g. ["N/A", "Communication", ...]
+    tags: { type: Array, required: false, default: () => [] }
   },
 
   data() {
@@ -26,125 +28,95 @@ Vue.component('departments-overview', {
     return {
       colors,
       table,
-      tableTick: 0,
-      filters: {
-        // you can add dept-level filters later
-      }
+      tableTick: 0
     };
   },
 
   created() {
-    this.table.setColumns([
-      new window.ReportColumn(
-        'Department', 'Department name.', '16rem', false, 'string',
-        d => this.anonymous ? 'DEPARTMENT' : (d?.name ?? ''),
-        null,
-        d => (d?.name ?? '')
-      ),
+    // Base columns (only course_surveys-related)
+    this.setColumns();
+  },
 
-      // --- Course Surveys ---
-      new window.ReportColumn(
-        'Course Surveys', 'Number of course survey responses.', '7rem', false, 'number',
-        d => Number(d?.course_surveys?.num_surveys ?? 0),
-        null,
-        d => Number(d?.course_surveys?.num_surveys ?? -1)
-      ),
-      new window.ReportColumn(
-        'Course Recs', 'Share of course surveys with recommendations.', '7rem', false, 'number',
-        d => this.pctText(d?.course_surveys?.has_recommendations),
-        d => this.pctPillStyle(d?.course_surveys?.has_recommendations),
-        d => Number(d?.course_surveys?.has_recommendations ?? -1)
-      ),
-
-      // --- Instructor Metrics ---
-      new window.ReportColumn(
-        'Asgn/Day', 'Assignments per day.', '6rem', false, 'number',
-        d => this.numOrNA(d?.instructor_metrics?.assignments_per_day, 2),
-        null,
-        d => Number(d?.instructor_metrics?.assignments_per_day ?? -1)
-      ),
-      new window.ReportColumn(
-        'Days to Grade', 'Median days to return a grade.', '7rem', false, 'number',
-        d => this.numOrNA(d?.instructor_metrics?.days_to_grade, 1),
-        d => this.bandDaysToGrade(d?.instructor_metrics?.days_to_grade),
-        d => Number(d?.instructor_metrics?.days_to_grade ?? -1)
-      ),
-      new window.ReportColumn(
-        'FT Stud/Day', 'Full-time students per day.', '7rem', false, 'number',
-        d => this.numOrNA(d?.instructor_metrics?.full_time_students_per_day, 2),
-        null,
-        d => Number(d?.instructor_metrics?.full_time_students_per_day ?? -1)
-      ),
-      new window.ReportColumn(
-        'Rubric %', 'Share graded with a rubric.', '6rem', false, 'number',
-        d => this.pctText(d?.instructor_metrics?.graded_with_rubric),
-        d => this.pctPillStyle(d?.instructor_metrics?.graded_with_rubric),
-        d => Number(d?.instructor_metrics?.graded_with_rubric ?? -1)
-      ),
-      new window.ReportColumn(
-        '# Instructors', 'Number of instructors in department.', '6rem', false, 'number',
-        d => Number(d?.instructor_metrics?.num_instructors ?? 0),
-        null,
-        d => Number(d?.instructor_metrics?.num_instructors ?? -1)
-      ),
-
-      // --- Instructor Surveys ---
-      new window.ReportColumn(
-        'Instr Surveys', 'Number of instructor survey responses.', '7rem', false, 'number',
-        d => Number(d?.instructor_surveys?.num_surveys ?? 0),
-        null,
-        d => Number(d?.instructor_surveys?.num_surveys ?? -1)
-      ),
-      new window.ReportColumn(
-        'Instr Recs', 'Share of instructor surveys with recommendations.', '7rem', false, 'number',
-        d => this.pctText(d?.instructor_surveys?.has_recommendations),
-        d => this.pctPillStyle(d?.instructor_surveys?.has_recommendations),
-        d => Number(d?.instructor_surveys?.has_recommendations ?? -1)
-      ),
-
-      // --- Outcomes / Statistics ---
-      new window.ReportColumn(
-        'CS Certs', 'CS certificates (year).', '6rem', false, 'number',
-        d => Number(d?.statistics?.cs_certificates ?? 0),
-        null,
-        d => Number(d?.statistics?.cs_certificates ?? -1)
-      ),
-      new window.ReportColumn(
-        'HS Certs', 'HS certificates (year).', '6rem', false, 'number',
-        d => Number(d?.statistics?.hs_certificates ?? 0),
-        null,
-        d => Number(d?.statistics?.hs_certificates ?? -1)
-      ),
-      new window.ReportColumn(
-        'Placed', 'Students placed (year).', '6rem', false, 'number',
-        d => Number(d?.statistics?.placed ?? 0),
-        null,
-        d => Number(d?.statistics?.placed ?? -1)
-      ),
-    ]);
+  watch: {
+    tags: {
+      handler() { this.setColumns(); },
+      deep: true
+    }
   },
 
   computed: {
     visibleRows() {
-      // NOTE: departmentsClean should already be year-sliced (course_surveys, instructor_metrics, etc)
       const rows = Array.isArray(this.departments) ? this.departments : [];
-
-      // feed rows into table and return sorted
       this.table.setRows(rows);
       return this.table.getSortedRows();
     }
   },
 
   methods: {
+    // ---------- column setup ----------
+    setColumns() {
+      const cols = [];
+
+      cols.push(new window.ReportColumn(
+        'Department', 'Department name.', '16rem', false, 'string',
+        d => this.anonymous ? 'DEPARTMENT' : (d?.name ?? ''),
+        null,
+        d => (d?.name ?? '')
+      ));
+
+      cols.push(new window.ReportColumn(
+        'Course Surveys', 'Number of course survey responses.', '7rem', false, 'number',
+        d => Number(d?.course_surveys?.num_surveys ?? 0),
+        null,
+        d => Number(d?.course_surveys?.num_surveys ?? -1)
+      ));
+
+      cols.push(new window.ReportColumn(
+        'Course Recs', 'Share of course surveys with recommendations.', '7rem', false, 'number',
+        d => this.pctText(d?.course_surveys?.has_recommendations),
+        d => this.pctPillStyle(d?.course_surveys?.has_recommendations),
+        d => Number(d?.course_surveys?.has_recommendations ?? -1)
+      ));
+
+      // Dynamic tag columns (one per tag in props.tags)
+      const tagNames = (Array.isArray(this.tags) ? this.tags : [])
+        .filter(t => typeof t === 'string' && t.trim().length)
+        .map(t => t.trim());
+
+      for (const tagName of tagNames) {
+        // keep column names short-ish; tooltip has full tag
+        const colName = tagName;
+
+        cols.push(new window.ReportColumn(
+          colName,
+          `Pct of submissions tagged "${tagName}".`,
+          '7rem',
+          false,
+          'number',
+          d => {
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            return this.pctText(v);
+          },
+          d => {
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            return this.pctPillStyle(v);
+          },
+          d => {
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            return Number.isFinite(Number(v)) ? Number(v) : -1;
+          }
+        ));
+      }
+
+      this.table.setColumns(cols);
+      this.tableTick++;
+    },
+
+    // ---------- ReportTable passthrough ----------
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
     // ---------- formatting helpers ----------
-    numOrNA(v, decimals = 2) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n.toFixed(decimals) : 'n/a';
-    },
-
     pctText(v) {
       const n = Number(v);
       if (!Number.isFinite(n)) return 'n/a';
@@ -155,21 +127,9 @@ Vue.component('departments-overview', {
       const n = Number(v);
       if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
-      // Basic bands: <80 red, <90 yellow, else green
       const pct = n * 100;
       return {
         backgroundColor: (pct < 80) ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-
-    bandDaysToGrade(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-      // Goal: <2 days (green), 2–3 (yellow), >3 (red)
-      return {
-        backgroundColor: (n < 2) ? this.colors.green : (n < 3 ? this.colors.yellow : this.colors.red),
         color: this.colors.white
       };
     }
@@ -179,10 +139,11 @@ Vue.component('departments-overview', {
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <!-- Header -->
     <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;">Departments</h4>
+      <h4 class="btech-card-title" style="margin:0;">Departments — Course Surveys</h4>
       <div style="flex:1;"></div>
       <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
+      <span class="btech-pill" style="margin-left:8px;">Tags: {{ (tags || []).length }}</span>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
