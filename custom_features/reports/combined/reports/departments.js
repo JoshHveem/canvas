@@ -6,14 +6,12 @@ Vue.component('reports-departments', {
         :year="year"
         :departments="departmentsClean"
         :tags="allSurveyTags"
-        :loading="loading"
       ></departments-overview>
 
       <departments-course-surveys
         v-if="subMenu == 'course-surveys'"
         :year="year"
         :departments="departmentsClean"
-        :loading="loading"
         :allCourseTags="allCourseTags"
         :selectedCourseTags="selectedCourseTags"
       ></departments-course-surveys>
@@ -33,7 +31,6 @@ Vue.component('reports-departments', {
 
   data() {
     return {
-      loading: false,
       departmentsClean: [],
       allSurveyTags: []
     };
