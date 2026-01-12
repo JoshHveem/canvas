@@ -416,6 +416,10 @@
       el: '#canvas-instructor-report-vue',
 
       mounted: async function () {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') this.courseTagsOpen = false;
+        });
+
         this.loading = true;
 
         // Load saved settings (generic)
@@ -559,10 +563,28 @@
           hide_past_end_date: false,
 
           reportTypes: reports,
+          courseTagsOpen: false,
+          courseTagsSearch: '',
+
         };
       },
 
       computed: {
+        courseTagsLabel() {
+          const sel = this.settings?.filters?.course_tags;
+          const n = Array.isArray(sel) ? sel.length : 0;
+          if (!n) return 'All (no filter)';
+          if (n === 1) return sel[0];
+          return `${n} selected`;
+        },
+
+        filteredCourseTags() {
+          const all = Array.isArray(this.allCourseTags) ? this.allCourseTags : [];
+          const q = String(this.courseTagsSearch || '').trim().toLowerCase();
+          if (!q) return all;
+          return all.filter(t => String(t).toLowerCase().includes(q));
+        },
+
         sortedCoursesRaw() {
           return (this.coursesRaw || []).slice().sort((a, b) => {
             const ac = (a.course_code || '').toUpperCase();
@@ -831,6 +853,19 @@
             data: { settings: settings }
           });
         },
+
+        toggleCourseTags() {
+          this.courseTagsOpen = !this.courseTagsOpen;
+          if (this.courseTagsOpen) {
+            this.courseTagsSearch = '';
+          }
+        },
+
+        clearCourseTags() {
+          this.$set(this.settings.filters, 'course_tags', []);
+          this.saveSettings(this.settings);
+        },
+
 
         close() { $(this.$el).hide(); }
       }
