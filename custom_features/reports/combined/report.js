@@ -9,7 +9,7 @@
       getContent = (row) => row?.name ?? '',
       style_formula = null,
       sort_val_func = null,
-      getToolTip = null 
+      get_tooltip_func = null 
     ) {
       this.name = name;
       this.description = description;
@@ -22,16 +22,16 @@
       this.getContent = getContent;
       this.style_formula = style_formula;
       this.sort_val_func = sort_val_func;
-      this.getTooltip = getTooltip ?? getContent;
+      this.get_tooltip_func = get_tooltip_func?? getContent;
     }
 
     get_style(row) {
       return this.style_formula ? this.style_formula(row) : {};
     }
 
-    get_tooltip(row) {
-      if (typeof this.getTooltip === "function") {
-        const t = this.getTooltip(row);
+    getTooltip(row) {
+      if (typeof this.get_tooltip_func === "function") {
+        const t = this.get_tooltip_func(row);
         return (t === null || t === undefined) ? "" : String(t);
       }
       // nice default: show description if provided
