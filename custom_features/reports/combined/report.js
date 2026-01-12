@@ -744,18 +744,29 @@
 
     const total = Number(cs?.num_surveys ?? 0);
 
-    // tags may exist as an array (cs.tags)
+    // 1) Ensure tags_by_name exists if we have tags[]
+    if ((!cs.tags_by_name || typeof cs.tags_by_name !== "object") && Array.isArray(cs.tags)) {
+      cs.tags_by_name = cs.tags.reduce((acc, t) => {
+        const tagName = String(t?.tag ?? "").trim();
+        if (!tagName) return acc;
+        acc[tagName] = t;   // point to same object if possible
+        return acc;
+      }, {});
+    }
+
+    // 2) Recompute pct for tags[] (if present)
     if (Array.isArray(cs.tags)) {
       for (const t of cs.tags) {
-        const cnt = Number(t?.tag_count ?? 0);
+        const cnt = Number(t?.tag_count ?? t?.count_of_submissions ?? 0);
         t.pct_of_submissions = (total > 0) ? (cnt / total) : 0;
       }
     }
 
-    // tags may also exist as a lookup (cs.tags_by_name)
+    // 3) Recompute pct for tags_by_name (if present)
     if (cs.tags_by_name && typeof cs.tags_by_name === "object") {
       for (const [tagName, info] of Object.entries(cs.tags_by_name)) {
         const cnt = Number(info?.tag_count ?? info?.count_of_submissions ?? 0);
+
         if (info && typeof info === "object") {
           info.pct_of_submissions = (total > 0) ? (cnt / total) : 0;
         } else {
@@ -768,20 +779,15 @@
       }
     }
 
-    // Optional: if you want tags_by_name guaranteed even when only cs.tags exists
-    if ((!cs.tags_by_name || typeof cs.tags_by_name !== "object") && Array.isArray(cs.tags)) {
-      cs.tags_by_name = cs.tags.reduce((acc, t) => {
-        const tagName = String(t?.tag ?? "").trim();
-        if (!tagName) return acc;
-        acc[tagName] = t;
-        return acc;
-      }, {});
+    // 4) Optional: if tags[] is missing but tags_by_name exists, create tags[]
+    // This keeps your extractCourseTagsFromDepartments working.
+    if (!Array.isArray(cs.tags) && cs.tags_by_name && typeof cs.tags_by_name === "object") {
+      cs.tags = Object.values(cs.tags_by_name);
     }
   }
 
   return list;
 },
-
 
         extractCourseTagsFromDepartments(depts) {
           const set = new Set();
