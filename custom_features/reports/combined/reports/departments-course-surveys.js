@@ -111,6 +111,12 @@ Vue.component('departments-course-surveys', {
           d => {
             const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
             return Number.isFinite(Number(v)) ? Number(v) : -1;
+          },
+          d => {
+            const info = d?.course_surveys?.tags_by_name?.[tagName] ?? {};
+            const cnt = info.count_of_submissions ?? 0;
+            const total = d?.course_surveys?.num_surveys ?? 0;
+            return `${cnt} of ${total} submissions tagged "${tagName}"`;
           }
         ));
       }
