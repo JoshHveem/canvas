@@ -456,6 +456,7 @@
             component: 'reports-departments',
             title: 'Departments Report',
             selectors: ['course_tags'],
+            datasets: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
               { value: 'course-surveys', label: 'Course Surveys' },
