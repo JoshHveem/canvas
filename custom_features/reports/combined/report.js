@@ -721,7 +721,7 @@
             const resp = await bridgetools.req(url);
             const depts = Array.isArray(resp?.data) ? resp.data : [];
 
-            this.normalizeCourseSurveyTagPcts(this.departmentsRaw);
+            this.normalizeCourseSurveyTagPcts(depts);
             this.departmentsRaw = depts;
             // build tag list anytime departments refresh
             this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
