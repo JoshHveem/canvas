@@ -8,7 +8,8 @@ Vue.component('departments-course-surveys', {
     loading:   { type: Boolean, default: false },
 
     // list of tag names, e.g. ["N/A", "Communication", ...]
-    tags: { type: Array, required: false, default: () => [] }
+    allCourseTags: { type: Array, default: () => [] },
+    selectedCourseTags: { type: Array, default: () => [] },
   },
 
   data() {
@@ -38,10 +39,8 @@ Vue.component('departments-course-surveys', {
   },
 
   watch: {
-    tags: {
-      handler() { this.setColumns(); },
-      deep: true
-    }
+    allCourseTags: { handler() { this.setColumns(); }, deep: true },
+    selectedCourseTags: { handler() { this.setColumns(); }, deep: true },
   },
 
   computed: {
@@ -79,9 +78,17 @@ Vue.component('departments-course-surveys', {
       ));
 
       // Dynamic tag columns (one per tag in props.tags)
-      const tagNames = (Array.isArray(this.tags) ? this.tags : [])
+      const chosen =
+        (Array.isArray(this.selectedCourseTags) && this.selectedCourseTags.length)
+          ? this.selectedCourseTags
+          : (Array.isArray(this.allCourseTags) && this.allCourseTags.length)
+            ? this.allCourseTags
+            : (Array.isArray(this.tags) ? this.tags : []); // legacy fallback
+
+      const tagNames = chosen
         .filter(t => typeof t === 'string' && t.trim().length)
         .map(t => t.trim());
+
 
       for (const tagName of tagNames) {
         // keep column names short-ish; tooltip has full tag
@@ -143,7 +150,10 @@ Vue.component('departments-course-surveys', {
       <div style="flex:1;"></div>
       <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Tags: {{ (tags || []).length }}</span>
+      <span class="btech-pill" style="margin-left:8px;">
+        Tags: {{ (selectedCourseTags && selectedCourseTags.length) ? selectedCourseTags.length : (allCourseTags || tags || []).length }}
+      </span>
+
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">

@@ -14,8 +14,10 @@ Vue.component('reports-departments', {
         :year="year"
         :departments="departmentsClean"
         :loading="loading"
-        :tags="allSurveyTags"
+        :allCourseTags="allCourseTags"
+        :selectedCourseTags="selectedCourseTags"
       ></departments-course-surveys>
+ 
     </div>
   `,
 
