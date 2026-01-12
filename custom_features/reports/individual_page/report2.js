@@ -244,7 +244,7 @@
           let user = {};
           try {
             this.bridgetoolsUser = await bridgetools.req(
-              `https://reports.bridgetools.dev/api/v2/students/${userId}?requester_id=${ENV.current_user_id}`
+              `https://reports.bridgetools.dev/api/v2/students/${userId}`
             );
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
