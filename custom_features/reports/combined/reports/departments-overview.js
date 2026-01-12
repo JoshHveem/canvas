@@ -74,20 +74,6 @@ Vue.component('departments-overview', {
         d => Number(d?.instructor_metrics?.num_instructors ?? -1)
       ),
 
-      // --- Instructor Surveys ---
-      new window.ReportColumn(
-        'Instr Surveys', 'Number of instructor survey responses.', '7rem', false, 'number',
-        d => Number(d?.instructor_surveys?.num_surveys ?? 0),
-        null,
-        d => Number(d?.instructor_surveys?.num_surveys ?? -1)
-      ),
-      new window.ReportColumn(
-        'Instr Recs', 'Share of instructor surveys with recommendations.', '7rem', false, 'number',
-        d => this.pctText(d?.instructor_surveys?.has_recommendations),
-        d => this.pctPillStyle(d?.instructor_surveys?.has_recommendations),
-        d => Number(d?.instructor_surveys?.has_recommendations ?? -1)
-      ),
-
       // --- Outcomes / Statistics ---
       new window.ReportColumn(
         'CS Certs', 'CS certificates (year).', '6rem', false, 'number',
@@ -106,6 +92,12 @@ Vue.component('departments-overview', {
         d => Number(d?.statistics?.placed ?? 0),
         null,
         d => Number(d?.statistics?.placed ?? -1)
+      ),
+      new window.ReportColumn(
+        'Accessibility', 'UDOIT Accessibility score.', '6rem', false, 'number',
+        d => Number(d?.statistics?.accessibility_score ?? 0),
+        null,
+        d => Number(d?.statistics?.accessibility_score ?? -1)
       ),
     ]);
   },
