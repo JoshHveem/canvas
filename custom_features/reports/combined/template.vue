@@ -309,25 +309,6 @@
 
         </div>
 
-        <!-- click-away overlay -->
-        <div
-  v-if="courseTagsOpen"
-  @click.stop
-  :style="`
-    position:fixed;
-    left:${courseTagsPopupStyle.left};
-    top:${courseTagsPopupStyle.top};
-    width:${courseTagsPopupStyle.width};
-    z-index:9999;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,.12);
-    padding:8px;
-    ${courseTagsPopupStyle.openAbove ? 'transform: translateY(-100%);' : ''}
-  `"
-></div>
-
         <!-- Dynamic report body -->
         <keep-alive>
           <component :is="currentReportMeta.component" v-bind="currentReportProps" />
