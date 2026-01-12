@@ -147,7 +147,7 @@ Vue.component('departments-course-surveys', {
 
       const pct = n * 100;
       return {
-        backgroundColor: (pct > 25) ? this.colors.red : (pct > 15 ? this.colors.orange : (pct > 5 ? this.colors.yellow : this.colors.green)),
+        backgroundColor: (pct > 25) ? this.colors.red : (pct > 15 ? this.colors.orange : (pct > 5 ? this.colors.yellow : (pct > 0 ? this.colors.yellowGreen : this.colors.green))),
         color: this.colors.white
       };
     }
