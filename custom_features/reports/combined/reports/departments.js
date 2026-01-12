@@ -13,7 +13,7 @@ Vue.component('reports-departments', {
         :year="year"
         :departments="departmentsClean"
         :loading="loading"
-        :tags="tags"
+        :tags="allSurveyTags"
       ></departments-course-surveys>
 
     </div>
