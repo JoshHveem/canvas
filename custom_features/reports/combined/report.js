@@ -535,6 +535,7 @@
         ]
         return {
           colors: bridgetools.colors,
+          courseTagsPopupStyle: { left:'0px', top:'0px', width:'240px' },
 
           settings: {
             anonymous: false,
@@ -855,11 +856,35 @@
         },
 
         toggleCourseTags() {
-          this.courseTagsOpen = !this.courseTagsOpen;
-          if (this.courseTagsOpen) {
-            this.courseTagsSearch = '';
-          }
-        },
+  this.courseTagsOpen = !this.courseTagsOpen;
+
+  if (this.courseTagsOpen) {
+    this.courseTagsSearch = '';
+
+    this.$nextTick(() => {
+      const btn = this.$refs.courseTagsBtn;
+      if (!btn) return;
+
+      const r = btn.getBoundingClientRect();
+      const panelW = Math.max(r.width, 240);
+      const gap = 6;
+
+      // default: open below
+      let top = r.bottom + gap;
+
+      // if not enough room below, open above
+      const panelH = 260; // approx (search + list + buttons)
+      const spaceBelow = window.innerHeight - r.bottom;
+      if (spaceBelow < panelH && r.top > panelH) {
+        top = r.top - gap; // we'll use translateY(-100%) on the panel
+        this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: true };
+      } else {
+        this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: false };
+      }
+    });
+  }
+},
+
 
         clearCourseTags() {
           this.$set(this.settings.filters, 'course_tags', []);
