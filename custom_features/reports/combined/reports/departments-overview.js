@@ -95,8 +95,8 @@ Vue.component('departments-overview', {
       ),
       new window.ReportColumn(
         'Accessibility', 'UDOIT Accessibility score.', '6rem', false, 'number',
-        d => Number(d?.statistics?.accessibility_score ?? 0),
-        null,
+        d => this.pctText(d?.statistics?.accessibility_score),
+        d => this.pctPillStyle(d?.statistics?.accessibility_score),
         d => Number(d?.statistics?.accessibility_score ?? -1)
       ),
     ]);
