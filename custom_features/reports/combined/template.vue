@@ -173,6 +173,32 @@
           </div>
         </div>
 
+        <div v-if="currentSelectors.includes('course_tags')" class="btech-card" style="padding:8px; margin-top:8px;">
+          <div style="font-weight:600; margin-bottom:6px;">Course Tags</div>
+
+          <div v-if="!allCourseTags || !allCourseTags.length" class="btech-muted">
+            No tags available.
+          </div>
+
+          <div v-else style="max-height:180px; overflow:auto; border:1px solid #e5e7eb; padding:6px; border-radius:6px;">
+            <label v-for="t in allCourseTags" :key="t" style="display:block; font-size:.8rem;">
+              <input type="checkbox"
+                :value="t"
+                v-model="settings.filters.course_tags"
+                @change="saveSettings(settings)"
+              />
+              {{ t }}
+            </label>
+          </div>
+
+          <div style="margin-top:6px;">
+            <a href="#" @click.prevent="$set(settings.filters,'course_tags',[]); saveSettings(settings)">
+              Clear
+            </a>
+          </div>
+        </div>
+
+
         <!-- Dynamic report body -->
         <keep-alive>
           <component :is="currentReportMeta.component" v-bind="currentReportProps" />

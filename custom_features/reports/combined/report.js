@@ -448,13 +448,14 @@
       },
 
       data: function () {
+
         let reports = [
           {
             value: 'departments',
             label: 'Departments',
             component: 'reports-departments',
             title: 'Departments Report',
-            selectors: [],
+            selectors: ['course_tags'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
               { value: 'course-surveys', label: 'Course Surveys' },
@@ -536,7 +537,7 @@
             reportType: 'instructor',
             subMenuByType: {},
             sort_dir: 1,
-            filters: { year: '2025' }
+            filters: { year: '2025', course_tags: [] }
           },
 
           accounts: [{ name: 'My Courses', id: '' + 0 }],
@@ -545,10 +546,12 @@
           // NEW: shared datasets for top-level selectors + reuse across reports
           instructorsRaw: [],
           coursesRaw: [],
-          sharedLoading: { instructors: false, courses: false, students: false },
+          departmentsRaw: [],
+          sharedLoading: { departments: false, instructors: false, courses: false, students: false },
 
           menu: '',
           section_names: ['All'],
+          allCourseTags: [],
           section_filter: 'All',
           end_date_filter: true,
           hide_missing_end_date: true,
@@ -623,6 +626,12 @@
             base.selectedCourseId = this.settings?.filters?.course || '';
           }
 
+          if (sel.includes('course_tags')) {
+            base.allCourseTags = this.allCourseTags;
+            base.selectedCourseTags = this.settings?.filters?.course_tags || [];
+          }
+
+
           return base;
         },
 
@@ -658,7 +667,68 @@
           } else {
             this.coursesRaw = [];
           }
+
+          if (ds.includes('departments')) {
+            await this.loadDepartmentsRaw();
+          } else {
+            this.departmentsRaw = [];
+            this.allCourseTags = [];
+          }
+
         },
+
+        async loadDepartmentsRaw() {
+          try {
+            this.sharedLoading.departments = true;
+            const url = `https://reports.bridgetools.dev/api/departments/full`;
+            const resp = await bridgetools.req(url);
+            const depts = Array.isArray(resp?.data) ? resp.data : [];
+            this.departmentsRaw = depts;
+
+            // build tag list anytime departments refresh
+            this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
+            this.pruneInvalidSelectedCourseTags();
+          } catch (e) {
+            console.warn('Failed to load departments', e);
+            this.departmentsRaw = [];
+            this.allCourseTags = [];
+          } finally {
+            this.sharedLoading.departments = false;
+          }
+        },
+
+        extractCourseTagsFromDepartments(depts) {
+          const set = new Set();
+          for (const d of (Array.isArray(depts) ? depts : [])) {
+            // tags might be on each year row or already bubbled up; scan broadly
+            const courseSurveys = d?.course_surveys;
+            const rows = Array.isArray(courseSurveys) ? courseSurveys : [courseSurveys].filter(Boolean);
+
+            for (const r of rows) {
+              const tags = r?.tags;
+              if (!Array.isArray(tags)) continue;
+              for (const t of tags) {
+                if (t && typeof t.tag === 'string' && t.tag.trim()) set.add(t.tag.trim());
+              }
+            }
+          }
+          return Array.from(set).sort((a,b)=>a.localeCompare(b));
+        },
+
+        pruneInvalidSelectedCourseTags() {
+          const selected = this.settings?.filters?.course_tags;
+          if (!Array.isArray(selected) || !selected.length) return;
+
+          const allowed = new Set(this.allCourseTags || []);
+          const next = selected.filter(t => allowed.has(t));
+
+          if (next.length !== selected.length) {
+            this.$set(this.settings.filters, 'course_tags', next);
+            this.saveSettings(this.settings);
+          }
+        },
+
+
 
         async loadStudentsRaw(account) {
           try {

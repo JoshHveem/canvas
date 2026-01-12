@@ -22,13 +22,16 @@ Vue.component('reports-departments', {
   props: {
     year: { type: [Number, String], required: true },
     subMenu: { type: [Number, String], required: true },
-    instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
+    instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) },
+    allCourseTags: { type: Array, default: () => [] },
+    selectedCourseTags: { type: Array, default: () => [] },
+    departmentsRaw: { type: Array, default: () => [] }
+
   },
 
   data() {
     return {
       loading: false,
-      departments: [],
       departmentsClean: [],
       allSurveyTags: []
     };
@@ -44,27 +47,10 @@ Vue.component('reports-departments', {
   },
 
   async mounted() {
-    await this.loadDepartmentMetrics();
+    await this.rebuildDepartments();
   },
 
   methods: {
-    async loadDepartmentMetrics() {
-      try {
-        this.loading = true;
-        const url = `https://reports.bridgetools.dev/api/departments/full`;
-        const resp = await bridgetools.req(url);
-
-        // expects array in resp.data (as you said)
-        this.departments = Array.isArray(resp?.data) ? resp.data : [];
-      } catch (e) {
-        console.warn('Failed to load department metrics', e);
-        this.departments = [];
-      } finally {
-        this.loading = false;
-        this.rebuildDepartments();
-      }
-    },
-
     rebuildDepartments() {
       const yr = this.yearNum;
       const depts = Array.isArray(this.departments) ? this.departments : [];
