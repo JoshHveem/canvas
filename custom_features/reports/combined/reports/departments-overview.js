@@ -42,20 +42,6 @@ Vue.component('departments-overview', {
         d => (d?.name ?? '')
       ),
 
-      // --- Course Surveys ---
-      new window.ReportColumn(
-        'Course Surveys', 'Number of course survey responses.', '7rem', false, 'number',
-        d => Number(d?.course_surveys?.num_surveys ?? 0),
-        null,
-        d => Number(d?.course_surveys?.num_surveys ?? -1)
-      ),
-      new window.ReportColumn(
-        'Course Recs', 'Share of course surveys with recommendations.', '7rem', false, 'number',
-        d => this.pctText(d?.course_surveys?.has_recommendations),
-        d => this.pctPillStyle(d?.course_surveys?.has_recommendations),
-        d => Number(d?.course_surveys?.has_recommendations ?? -1)
-      ),
-
       // --- Instructor Metrics ---
       new window.ReportColumn(
         'Asgn/Day', 'Assignments per day.', '6rem', false, 'number',
