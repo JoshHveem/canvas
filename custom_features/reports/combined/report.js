@@ -720,9 +720,9 @@
             const url = `https://reports.bridgetools.dev/api/departments/full`;
             const resp = await bridgetools.req(url);
             const depts = Array.isArray(resp?.data) ? resp.data : [];
-            this.departmentsRaw = depts;
 
             this.normalizeCourseSurveyTagPcts(this.departmentsRaw);
+            this.departmentsRaw = depts;
             // build tag list anytime departments refresh
             this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
             this.pruneInvalidSelectedCourseTags();
