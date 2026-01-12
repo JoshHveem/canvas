@@ -114,7 +114,6 @@ Vue.component('departments-course-surveys', {
           },
           d => {
             const info = d?.course_surveys?.tags_by_name?.[tagName] ?? {};
-            console.log(info);
             const cnt = info.tag_count ?? 0;
             let total = 0;
             if (info?.pct_of_submissions > 0) total = Math.round(info?.tag_count / info?.pct_of_submissions);
