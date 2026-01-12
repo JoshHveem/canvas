@@ -613,6 +613,8 @@
           const ds = this.currentDatasets || [];
           if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
           if (ds.includes('courses'))     base.coursesRaw = this.coursesRaw;
+          if (ds.includes('departments')) base.departmentsRaw = this.departmentsRaw;
+
 
           if (ds.length) base.sharedLoading = this.sharedLoading;
 
