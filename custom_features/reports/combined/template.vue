@@ -170,41 +170,7 @@
           </div>
 
           <!-- Course Tags (compact dropdown) -->
-          <div
-            v-if="currentSelectors.includes('course_tags')"
-            style="display:inline-block; min-width:240px; position:relative;"
-          >
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-              Course Tags
-            </label>
-
-            <!-- Trigger -->
-            <button
-              type="button"
-              @click="toggleCourseTags()"
-              style="
-                width:100%;
-                text-align:left;
-                padding:6px 8px;
-                border:1px solid #d1d5db;
-                border-radius:6px;
-                background:#fff;
-                cursor:pointer;
-                display:flex;
-                align-items:center;
-                gap:8px;
-              "
-            >
-              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                {{ courseTagsLabel }}
-              </span>
-              <span class="btech-pill" style="font-size:11px;">
-                {{ (settings.filters.course_tags || []).length }}
-              </span>
-              <span aria-hidden="true" style="font-size:10px;">▾</span>
-            </button>
-
-            <!-- Course Tags (compact dropdown) -->
+           <!-- Course Tags (compact dropdown) -->
 <div
   v-if="currentSelectors.includes('course_tags')"
   style="display:inline-block; min-width:240px; position:relative; vertical-align:top;"
@@ -339,7 +305,7 @@
     </div>
   </div>
 </div>
- 
+
         </div>
 
         <!-- click-away overlay -->
