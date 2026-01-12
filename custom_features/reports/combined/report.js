@@ -856,35 +856,43 @@
         },
 
         toggleCourseTags() {
-  this.courseTagsOpen = !this.courseTagsOpen;
+          this.courseTagsOpen = !this.courseTagsOpen;
 
-  if (this.courseTagsOpen) {
-    this.courseTagsSearch = '';
+          if (this.courseTagsOpen) {
+            this.courseTagsSearch = '';
 
-    this.$nextTick(() => {
-      const btn = this.$refs.courseTagsBtn;
-      if (!btn) return;
+            this.$nextTick(() => {
+              const btn = this.$refs.courseTagsBtn;
+              if (btn) {
+                const r = btn.getBoundingClientRect();
+                const panelW = Math.max(r.width, 240);
+                const gap = 6;
 
-      const r = btn.getBoundingClientRect();
-      const panelW = Math.max(r.width, 240);
-      const gap = 6;
+                let top = r.bottom + gap;
+                const panelH = 260;
+                const spaceBelow = window.innerHeight - r.bottom;
 
-      // default: open below
-      let top = r.bottom + gap;
+                if (spaceBelow < panelH && r.top > panelH) {
+                  top = r.top - gap;
+                  this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: true };
+                } else {
+                  this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: false };
+                }
+              }
 
-      // if not enough room below, open above
-      const panelH = 260; // approx (search + list + buttons)
-      const spaceBelow = window.innerHeight - r.bottom;
-      if (spaceBelow < panelH && r.top > panelH) {
-        top = r.top - gap; // we'll use translateY(-100%) on the panel
-        this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: true };
-      } else {
-        this.courseTagsPopupStyle = { left: `${r.left}px`, top: `${top}px`, width: `${panelW}px`, openAbove: false };
-      }
-    });
-  }
-},
-
+              // ✅ Focus so mousewheel/keyboard immediately apply to the selector
+              const input = this.$refs.courseTagsSearchInput;
+              if (input && typeof input.focus === 'function') {
+                input.focus();
+                input.select && input.select();
+              } else {
+                // fallback: focus scroll container
+                const sc = this.$refs.courseTagsScroll;
+                if (sc && typeof sc.focus === 'function') sc.focus();
+              }
+            });
+          }
+        },
 
         clearCourseTags() {
           this.$set(this.settings.filters, 'course_tags', []);
