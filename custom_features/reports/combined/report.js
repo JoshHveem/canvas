@@ -880,7 +880,6 @@
                 }
               }
 
-              // ✅ Focus so mousewheel/keyboard immediately apply to the selector
               const input = this.$refs.courseTagsSearchInput;
               if (input && typeof input.focus === 'function') {
                 input.focus();

@@ -99,7 +99,7 @@
         <!-- Filters Row -->
         <div
           class="btech-row"
-          style="align-items:flex-end; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
+          style="align-items:flex-start; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
         >
           <!-- Account -->
           <div style="display:inline-block; min-width:200px;">
@@ -289,7 +289,7 @@
       </label>
     </div>
 
-    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+    <div style="display:flex; justify-content:flex-start; gap:8px; margin-top:8px;">
       <button
         type="button"
         @click="courseTagsOpen = false"
