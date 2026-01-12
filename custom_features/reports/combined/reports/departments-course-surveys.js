@@ -106,7 +106,7 @@ Vue.component('departments-course-surveys', {
           },
           d => {
             const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
-            return this.pctPillStyle(v);
+            return this.pctTagsPillStyle(v);
           },
           d => {
             const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
@@ -137,6 +137,17 @@ Vue.component('departments-course-surveys', {
       const pct = n * 100;
       return {
         backgroundColor: (pct < 80) ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
+        color: this.colors.white
+      };
+    },
+
+    pctTagsPillStyle(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      const pct = n * 100;
+      return {
+        backgroundColor: (pct > 25) ? this.colors.red : (pct > 15 ? this.colors.orange : (pct > 5 ? this.colors.yellow : this.colors.green)),
         color: this.colors.white
       };
     }
