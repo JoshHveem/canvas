@@ -8,7 +8,8 @@
       name, description, width, average, sort_type,
       getContent = (row) => row?.name ?? '',
       style_formula = null,
-      sort_val_func = null
+      sort_val_func = null,
+      getToolTip = null 
     ) {
       this.name = name;
       this.description = description;
@@ -21,10 +22,20 @@
       this.getContent = getContent;
       this.style_formula = style_formula;
       this.sort_val_func = sort_val_func;
+      this.getTooltip = getTooltip ?? getContent;
     }
 
     get_style(row) {
       return this.style_formula ? this.style_formula(row) : {};
+    }
+
+    get_tooltip(row) {
+      if (typeof this.getTooltip === "function") {
+        const t = this.getTooltip(row);
+        return (t === null || t === undefined) ? "" : String(t);
+      }
+      // nice default: show description if provided
+      return this.description ? String(this.description) : "";
     }
 
     getSortValue(row) {

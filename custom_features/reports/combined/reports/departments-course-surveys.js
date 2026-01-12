@@ -221,6 +221,7 @@ Vue.component('departments-course-surveys', {
           style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
         >
           <span
+            :title="col.getTooltip(dept) || ''"
             :class="col.style_formula ? 'btech-pill-text' : ''"
             :style="col.get_style(dept)"
             v-html="col.getContent(dept)"
