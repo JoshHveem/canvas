@@ -43,7 +43,7 @@ Vue.component('reports-departments', {
 
   watch: {
     year: 'rebuildDepartments',
-    departments: 'rebuildDepartments'
+    departmentsRaw: 'rebuildDepartments'
   },
 
   async mounted() {
@@ -53,7 +53,7 @@ Vue.component('reports-departments', {
   methods: {
     rebuildDepartments() {
       const yr = this.yearNum;
-      const depts = Array.isArray(this.departments) ? this.departments : [];
+      const depts = Array.isArray(this.departmentsRaw) ? this.departmentsRaw : [];
       this.departmentsClean = depts.map(d => this.cleanDeptForYear(d, yr));
 
       // global unique tag list for the selected year
