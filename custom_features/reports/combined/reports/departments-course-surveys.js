@@ -149,10 +149,10 @@ Vue.component('departments-course-surveys', {
 
       const pct = n * 100;
 
-      if (pct > 50) return { backgroundColor: this.colors.darkRed, color: this.colors.white };
-      if (pct > 25) return { backgroundColor: this.colors.red, color: this.colors.white };
-      if (pct > 15) return { backgroundColor: this.colors.orange, color: this.colors.white };
-      if (pct > 5)  return { backgroundColor: this.colors.yellow, color: this.colors.white };
+      if (pct >= 50) return { backgroundColor: this.colors.darkRed, color: this.colors.white };
+      if (pct >= 25) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (pct >= 15) return { backgroundColor: this.colors.orange, color: this.colors.white };
+      if (pct >= 5)  return { backgroundColor: this.colors.yellow, color: this.colors.white };
       if (pct > 0)  return { backgroundColor: this.colors.yellowGreen, color: this.colors.white };
 
       return { backgroundColor: this.colors.green, color: this.colors.white };
