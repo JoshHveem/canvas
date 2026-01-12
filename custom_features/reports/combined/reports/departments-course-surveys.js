@@ -114,6 +114,7 @@ Vue.component('departments-course-surveys', {
           },
           d => {
             const info = d?.course_surveys?.tags_by_name?.[tagName] ?? {};
+            console.log(info);
             const cnt = info.count_of_submissions ?? 0;
             const total = d?.course_surveys?.num_surveys ?? 0;
             return `${cnt} of ${total} submissions tagged "${tagName}"`;
