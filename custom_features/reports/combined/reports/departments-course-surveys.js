@@ -101,15 +101,15 @@ Vue.component('departments-course-surveys', {
           false,
           'number',
           d => {
-            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
             return this.pctText(v);
           },
           d => {
-            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
             return this.pctPillStyle(v);
           },
           d => {
-            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions;
+            const v = d?.course_surveys?.tags_by_name?.[tagName]?.pct_of_submissions ?? 0;
             return Number.isFinite(Number(v)) ? Number(v) : -1;
           }
         ));
