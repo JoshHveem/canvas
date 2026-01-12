@@ -204,105 +204,142 @@
               <span aria-hidden="true" style="font-size:10px;">▾</span>
             </button>
 
-            <!-- Popup panel (appears ABOVE the control) -->
-            <div
-              v-if="courseTagsOpen"
-              @click.stop
-              style="
-                position:absolute;
-                left:0;
-                right:0;
-                bottom:calc(100% + 6px);
-                z-index:9999;
-                background:#fff;
-                border:1px solid #e5e7eb;
-                border-radius:8px;
-                box-shadow:0 8px 24px rgba(0,0,0,.12);
-                padding:8px;
-              "
-            >
-              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                <input
-                  v-model="courseTagsSearch"
-                  type="text"
-                  placeholder="Search tags…"
-                  style="
-                    flex:1;
-                    padding:6px 8px;
-                    border:1px solid #d1d5db;
-                    border-radius:6px;
-                    font-size:12px;
-                  "
-                />
-                <button
-                  type="button"
-                  @click="clearCourseTags()"
-                  style="
-                    padding:6px 8px;
-                    border:1px solid #d1d5db;
-                    border-radius:6px;
-                    background:#fff;
-                    cursor:pointer;
-                    font-size:12px;
-                    white-space:nowrap;
-                  "
-                >
-                  Clear
-                </button>
-              </div>
+            <!-- Course Tags (compact dropdown) -->
+<div
+  v-if="currentSelectors.includes('course_tags')"
+  style="display:inline-block; min-width:240px; position:relative; vertical-align:top;"
+>
+  <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+    Course Tags
+  </label>
 
-              <div
-                v-if="!allCourseTags || !allCourseTags.length"
-                class="btech-muted"
-                style="padding:6px 2px;"
-              >
-                No tags available.
-              </div>
+  <!-- Trigger -->
+  <button
+    type="button"
+    @click="toggleCourseTags()"
+    style="
+      width:100%;
+      text-align:left;
+      padding:6px 8px;
+      border:1px solid #d1d5db;
+      border-radius:6px;
+      background:#fff;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      height:34px; /* match select height */
+    "
+  >
+    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+      {{ courseTagsLabel }}
+    </span>
+    <span class="btech-pill" style="font-size:11px;">
+      {{ (settings.filters.course_tags || []).length }}
+    </span>
+    <span aria-hidden="true" style="font-size:10px;">▾</span>
+  </button>
 
-              <div
-                v-else
-                style="
-                  max-height:180px;
-                  overflow:auto;
-                  border:1px solid #f1f5f9;
-                  border-radius:6px;
-                  padding:6px;
-                "
-              >
-                <label
-                  v-for="t in filteredCourseTags"
-                  :key="t"
-                  style="display:flex; gap:8px; align-items:center; font-size:12px; padding:3px 2px;"
-                >
-                  <input
-                    type="checkbox"
-                    :value="t"
-                    v-model="settings.filters.course_tags"
-                    @change="saveSettings(settings)"
-                  />
-                  <span style="flex:1;">{{ t }}</span>
-                </label>
-              </div>
+  <!-- Popup panel (opens BELOW) -->
+  <div
+    v-if="courseTagsOpen"
+    @click.stop
+    style="
+      position:absolute;
+      left:0;
+      right:0;
+      top:calc(100% + 6px); /* open BELOW so it doesn't clip at top */
+      z-index:9999;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      box-shadow:0 8px 24px rgba(0,0,0,.12);
+      padding:8px;
+    "
+  >
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <input
+        v-model="courseTagsSearch"
+        type="text"
+        placeholder="Search tags…"
+        style="
+          flex:1;
+          padding:6px 8px;
+          border:1px solid #d1d5db;
+          border-radius:6px;
+          font-size:12px;
+        "
+      />
+      <button
+        type="button"
+        @click="clearCourseTags()"
+        style="
+          padding:6px 8px;
+          border:1px solid #d1d5db;
+          border-radius:6px;
+          background:#fff;
+          cursor:pointer;
+          font-size:12px;
+          white-space:nowrap;
+        "
+      >
+        Clear
+      </button>
+    </div>
 
-              <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-                <button
-                  type="button"
-                  @click="courseTagsOpen = false"
-                  style="
-                    padding:6px 10px;
-                    border-radius:6px;
-                    border:1px solid #111827;
-                    background:#111827;
-                    color:#fff;
-                    cursor:pointer;
-                    font-size:12px;
-                  "
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
+    <div
+      v-if="!allCourseTags || !allCourseTags.length"
+      class="btech-muted"
+      style="padding:6px 2px;"
+    >
+      No tags available.
+    </div>
+
+    <div
+      v-else
+      style="
+        max-height:180px;
+        overflow:auto;
+        border:1px solid #f1f5f9;
+        border-radius:6px;
+        padding:6px;
+      "
+    >
+      <label
+        v-for="t in filteredCourseTags"
+        :key="t"
+        style="display:flex; gap:8px; align-items:center; font-size:12px; padding:3px 2px;"
+      >
+        <input
+          type="checkbox"
+          :value="t"
+          v-model="settings.filters.course_tags"
+          @change="saveSettings(settings)"
+        />
+        <span style="flex:1;">{{ t }}</span>
+      </label>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+      <button
+        type="button"
+        @click="courseTagsOpen = false"
+        style="
+          padding:6px 10px;
+          border-radius:6px;
+          border:1px solid #111827;
+          background:#111827;
+          color:#fff;
+          cursor:pointer;
+          font-size:12px;
+        "
+      >
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+ 
         </div>
 
         <!-- click-away overlay -->
