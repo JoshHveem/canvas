@@ -226,6 +226,7 @@
   >
     <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
       <input
+        ref="courseTagsSearchInput"
         v-model="courseTagsSearch"
         type="text"
         placeholder="Search tags…"
@@ -264,6 +265,7 @@
 
     <div
       v-else
+      ref="courseTagsScroll"
       style="
         max-height:180px;
         overflow:auto;
