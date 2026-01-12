@@ -722,6 +722,7 @@
             const depts = Array.isArray(resp?.data) ? resp.data : [];
             this.departmentsRaw = depts;
 
+            this.normalizeCourseSurveyTagPcts(this.departmentsRaw);
             // build tag list anytime departments refresh
             this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
             this.pruneInvalidSelectedCourseTags();
@@ -733,6 +734,54 @@
             this.sharedLoading.departments = false;
           }
         },
+
+        normalizeCourseSurveyTagPcts(depts) {
+  const list = Array.isArray(depts) ? depts : [];
+
+  for (const d of list) {
+    const cs = d?.course_surveys;
+    if (!cs) continue;
+
+    const total = Number(cs?.num_surveys ?? 0);
+
+    // tags may exist as an array (cs.tags)
+    if (Array.isArray(cs.tags)) {
+      for (const t of cs.tags) {
+        const cnt = Number(t?.tag_count ?? 0);
+        t.pct_of_submissions = (total > 0) ? (cnt / total) : 0;
+      }
+    }
+
+    // tags may also exist as a lookup (cs.tags_by_name)
+    if (cs.tags_by_name && typeof cs.tags_by_name === "object") {
+      for (const [tagName, info] of Object.entries(cs.tags_by_name)) {
+        const cnt = Number(info?.tag_count ?? info?.count_of_submissions ?? 0);
+        if (info && typeof info === "object") {
+          info.pct_of_submissions = (total > 0) ? (cnt / total) : 0;
+        } else {
+          cs.tags_by_name[tagName] = {
+            tag: tagName,
+            tag_count: cnt,
+            pct_of_submissions: (total > 0) ? (cnt / total) : 0
+          };
+        }
+      }
+    }
+
+    // Optional: if you want tags_by_name guaranteed even when only cs.tags exists
+    if ((!cs.tags_by_name || typeof cs.tags_by_name !== "object") && Array.isArray(cs.tags)) {
+      cs.tags_by_name = cs.tags.reduce((acc, t) => {
+        const tagName = String(t?.tag ?? "").trim();
+        if (!tagName) return acc;
+        acc[tagName] = t;
+        return acc;
+      }, {});
+    }
+  }
+
+  return list;
+},
+
 
         extractCourseTagsFromDepartments(depts) {
           const set = new Set();
