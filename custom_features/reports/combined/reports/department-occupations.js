@@ -1,4 +1,4 @@
-Vue.component('reports-department-ocupations', {
+Vue.component('reports-department-occupations', {
   template: `
     <div>
       <department-cpl-placement
