@@ -143,11 +143,16 @@
                 </td>
                 <td>{{getCreditsCompleted(course)}}</td>
               </tr>
+              <tr>
+                <td colspan="2"></td>
+                <td colspan="2"><b>Credits Completed</b></td>
+                <td>{{sumCreditsCompleted()}}</td>
+              </tr>
               <tr height="10px"></tr>
             </tbody>
             <tfoot border='1'>
               <tr>
-                <td><b>Grade to Date</b>
+                <td><b>Grade (to Date)</b>
                 </td>
                 <td>
                   {{weightedGradeForTerm}}%
@@ -159,25 +164,17 @@
                       title='Click here for more details about how this grade was calculated.'></i>
                   </div>
                 </td>
-              </tr>
-              <tr height="10px"></tr>
-              <tr>
-                <td><b>Final Grade (based on enrolled)</b></td>
-                <td>{{weightedFinalGradeForTerm}}%</td>
-              </tr>
-              <tr>
-                <td><b>Credits Completed</b></td>
-                <td>{{sumCreditsCompleted()}}</td>
-              </tr>
-              <tr>
-                <td><b>Credits Enrolled</b></td>
-                <td>{{estimatedCreditsEnrolled}}</td>
-              </tr>
-              <tr>
-                <td><b>Credits Required to Date</b></td>
+                <td colspan="2"><b>Credits Required (to Date)</b></td>
                 <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
                 </td>
               </tr>
+              <tr>
+                <td><b>Grade (Term)*</b></td>
+                <td>{{weightedFinalGradeForTerm}}%</td>
+                <td colspan="2"><b>Credits Required (Term)</b></td>
+                <td>{{estimatedCreditsEnrolled}}</td>
+              </tr>
+              <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
             </tfoot>
           </table>
           <div id = "submissionGraph"></div>

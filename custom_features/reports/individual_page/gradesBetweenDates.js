@@ -61,6 +61,12 @@
                 </td>
                 <td>{{getHoursCompleted(course)}}</td>
               </tr>
+              <tr style="border-top: 2px solid #000;">
+                <td colspan="2"></td>
+                <td colspan="2"><b>Credits Completed</b></td>
+                <td><b>{{ sumHoursCompleted() }}</b></td>
+              </tr>
+
               <tr height="10px"></tr>
             </tbody>
             <tfoot border='1'>
