@@ -11,6 +11,10 @@ Vue.component('reports-department', {
         :course-surveys="courseSurveys"
       ></reports-department-instructors>
 
+      <reports-department-courses
+        v-if="subMenu == 'courses'"
+      >Coming Soon</reports-department-courses>
+
       <reports-department-coe
         v-if="subMenu == 'coe'"
         :year="year"
