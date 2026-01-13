@@ -490,6 +490,7 @@
             datasets: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
+              { value: 'instructors', label: 'Instructors' },
               { value: 'course-surveys', label: 'Course Surveys' },
             ]
           },
