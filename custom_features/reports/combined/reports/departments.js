@@ -57,6 +57,7 @@ Vue.component('reports-departments', {
       const depts = Array.isArray(this.departmentsRaw) ? this.departmentsRaw : [];
 
       this.departmentsClean = depts.map(d => this.cleanDeptForYear(d, yr));
+      console.log(this.departmentsClean);
 
       // global unique tag list for the selected year
       this.allSurveyTags = this.collectAllSurveyTags(this.departmentsClean);
