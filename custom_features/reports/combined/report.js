@@ -498,6 +498,7 @@
             label: 'Department',
             component: 'reports-department',
             title: 'Department Report',
+            datasets: ['departments'],
             selectors: [],
             subMenus: [
               { value: 'instructors', label: 'Instructors' },

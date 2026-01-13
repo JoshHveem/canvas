@@ -1,125 +1,141 @@
 Vue.component('reports-department', {
   template: `
     <div>
-        <reports-department-instructors
-            v-if="subMenu == 'instructors'"
-            :year="year"
-            :statistics="statistics"
-            :cpl="cpl"
-            :instructor-metrics="instructorMetrics"
-            :instructor-surveys="instructorSurveys"
-            :course-surveys="courseSurveys"
-        ></reports-department-instructors>
-        <reports-department-coe
-            v-if="subMenu == 'coe'"
-            :year="year"
-            :cpl="cpl"
-            :coe="coe"
-        ></reports-department-instructors>
+      <reports-department-instructors
+        v-if="subMenu == 'instructors'"
+        :year="year"
+        :statistics="statistics"
+        :cpl="cpl"
+        :instructor-metrics="instructorMetrics"
+        :instructor-surveys="instructorSurveys"
+        :course-surveys="courseSurveys"
+      ></reports-department-instructors>
+
+      <reports-department-coe
+        v-if="subMenu == 'coe'"
+        :year="year"
+        :cpl="cpl"
+        :coe="coe"
+      ></reports-department-coe>
     </div>
   `,
   props: {
     year: { type: [Number, String], required: true },
-    account: { type: [Number, String], required: true },
+    account: { type: [Number, String], required: true }, // dept id
     subMenu: { type: [Number, String], required: true },
-    instructorId: { type: [Number, String], default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null) }
-  },
-  data() {
-    return {
-      loading: false,
-      department_metrics: {}
+    // ✅ NEW: cached departments array from parent
+    departmentsRaw: { type: Array, default: () => [] },
+
+    instructorId: {
+      type: [Number, String],
+      default: () => (typeof ENV !== 'undefined' ? ENV.current_user_id : null)
     }
   },
+
+  data() {
+    return {
+      // keep if you want to show a spinner until departmentsRaw arrives
+      loading: false,
+    };
+  },
+
   computed: {
+    // ✅ single source of truth: pull the one department from cached list
+    department_metrics() {
+      const list = Array.isArray(this.departmentsRaw) ? this.departmentsRaw : [];
+      const deptId = Number(this.account);
+
+      // departments/full returns either {dept: Number} or maybe dept is a string—handle both
+      const dep =
+        list.find(d => Number(d?.dept) === deptId) ||
+        list.find(d => String(d?.dept) === String(this.account));
+
+      return dep || {};
+    },
+
     statistics() {
-      let list = this.department_metrics?.statistics?? [];
+      let list = this.department_metrics?.statistics ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     occupations() {
-      let list = this.department_metrics?.occupations?? [];
+      let list = this.department_metrics?.occupations ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      return list.filter(d => Number(d.academic_year) === yr) || [];
     },
+
     cpl() {
       let list = this.department_metrics?.cpl ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      return list.filter(d => Number(d.academic_year) === yr) || [];
     },
+
     instructorMetrics() {
       let list = this.department_metrics?.instructor_metrics ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     courseSurveys() {
       let list = this.department_metrics?.course_surveys ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     instructorSurveys() {
       let list = this.department_metrics?.instructor_surveys ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     interactions() {
       let list = this.department_metrics?.interactions ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     grading() {
       let list = this.department_metrics?.grading ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     supportHours() {
       let list = this.department_metrics?.support_hours ?? [];
       if (!list.length) return {};
       const yr = Number(this.year) || new Date().getFullYear();
       return (list.filter(d => Number(d.academic_year) === yr)[0]) || {};
     },
+
     coe() {
-      let list = this.department_metrics?.coe?? [];
+      let list = this.department_metrics?.coe ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
-      list = (list.filter(d => Number(d.academic_year) === yr)) || []
-      return list;
+      return list.filter(d => Number(d.academic_year) === yr) || [];
     },
   },
-  watch: {
-    year: 'loadDepartmentMetrics',
-    account: 'loadDepartmentMetrics'
-  },
-  async mounted() {
-    await this.loadDepartmentMetrics();
-  },
-  methods: {
-    async loadDepartmentMetrics() {
-      try {
-        this.loading = true;
-        const url = `https://reports.bridgetools.dev/api/departments/${this.account}/full?type=dept`;
-        const resp = await bridgetools.req(url);
-        console.log(resp);
-        this.department_metrics = resp || {};
-        // console.log('Instructor metrics', resp);
-      } catch (e) {
-        console.warn('Failed to load instructor metrics', e);
-        this.department_metrics = {};
-      } finally {
-        this.loading = false;
-      }
-    },
 
-    // Optional helpers if any child tiles use them directly:
+  watch: {
+    // no fetch needed; computed reacts automatically.
+    // if you still want a loading flag:
+    departmentsRaw: {
+      immediate: true,
+      handler(v) {
+        this.loading = !Array.isArray(v) || v.length === 0;
+      }
+    }
+  },
+
+  methods: {
     dateToString(date) {
       date = new Date(Date.parse(date));
       return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
