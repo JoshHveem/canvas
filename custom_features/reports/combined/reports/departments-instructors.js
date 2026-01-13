@@ -63,19 +63,19 @@ Vue.component('departments-instructors', {
       ),
       new window.ReportColumn(
         'Days to Respond', 'Median days to respond to student messages.', '7rem', false, 'number',
-        d => Number(d?.instructor_metrics?.days_to_respond ?? 0),
+        d => Math.round(Number(d?.instructor_metrics?.days_to_respond ?? 0) * 100) / 100,
         null,
         d => Number(d?.instructor_metrics?.days_to_respond ?? -1)
       ),
       new window.ReportColumn(
         'Sub Comments', 'Avg # instructor comments per submission.', '7rem', false, 'number',
-        d => Number(d?.instructor_metrics?.comments_per_submission_graded ?? 0),
+        d => Math.round(Number(d?.instructor_metrics?.comments_per_submission_graded ?? 0) * 100) / 100,
         null,
         d => Number(d?.instructor_metrics?.comments_per_submission_graded ?? -1)
       ),
       new window.ReportColumn(
         'Attempts', 'Average attempts students need to pass an assignment.', '6rem', false, 'number',
-        d => Number(d?.instructor_metrics?.average_attempts ?? 0),
+        d => Math.round(Number(d?.instructor_metrics?.average_attempts ?? 0) * 100) / 100,
         null,
         d => Number(d?.instructor_metrics?.average_attempts ?? -1)
       ),
