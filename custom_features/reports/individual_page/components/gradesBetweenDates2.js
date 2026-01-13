@@ -164,20 +164,15 @@
                       title='Click here for more details about how this grade was calculated.'></i>
                   </div>
                 </td>
+                <td colspan="2"><b>Credits Required to Date</b></td>
+                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
+                </td>
               </tr>
-              <tr height="10px"></tr>
               <tr>
                 <td><b>Final Grade (based on enrolled)</b></td>
                 <td>{{weightedFinalGradeForTerm}}%</td>
-              </tr>
-              <tr>
-                <td><b>Credits Enrolled</b></td>
+                <td colspan="2"><b>Credits Enrolled</b></td>
                 <td>{{estimatedCreditsEnrolled}}</td>
-              </tr>
-              <tr>
-                <td><b>Credits Required to Date</b></td>
-                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
-                </td>
               </tr>
             </tfoot>
           </table>
