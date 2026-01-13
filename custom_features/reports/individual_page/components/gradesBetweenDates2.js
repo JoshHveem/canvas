@@ -143,6 +143,11 @@
                 </td>
                 <td>{{getCreditsCompleted(course)}}</td>
               </tr>
+              <tr>
+                <td colspan="2"></td>
+                <td colspan="2"><b>Credits Completed</b></td>
+                <td>{{sumCreditsCompleted()}}</td>
+              </tr>
               <tr height="10px"></tr>
             </tbody>
             <tfoot border='1'>
@@ -164,10 +169,6 @@
               <tr>
                 <td><b>Final Grade (based on enrolled)</b></td>
                 <td>{{weightedFinalGradeForTerm}}%</td>
-              </tr>
-              <tr>
-                <td><b>Credits Completed</b></td>
-                <td>{{sumCreditsCompleted()}}</td>
               </tr>
               <tr>
                 <td><b>Credits Enrolled</b></td>

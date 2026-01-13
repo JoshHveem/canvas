@@ -56,7 +56,7 @@ Vue.component('departments-overview', {
         d => Number(d?.instructor_metrics?.days_to_grade ?? -1)
       ),
       new window.ReportColumn(
-        'FT Stud/Day', 'Full-time students per day.', '7rem', false, 'number',
+        'Stud/Day', 'Estimated students per day (or equivalent) based on credits worth of progress earned / day.', '7rem', false, 'number',
         d => this.numOrNA(d?.instructor_metrics?.full_time_students_per_day, 2),
         null,
         d => Number(d?.instructor_metrics?.full_time_students_per_day ?? -1)
