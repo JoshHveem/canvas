@@ -174,7 +174,7 @@
                 <td colspan="2"><b>Credits Required (Term)</b></td>
                 <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
-              <tr><span style="font-size: 0.75rem;">*Grade (Final) is what the student's grade will be at the end of the term if they submit nothing else.</span></tr>
+              <tr><span style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else.</span></tr>
             </tfoot>
           </table>
           <div id = "submissionGraph"></div>
