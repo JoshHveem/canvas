@@ -32,13 +32,13 @@ Vue.component('reports-department', {
         :course-surveys="courseSurveys"
       ></reports-department-courses>
 
-      <reports-department-occupation
-        v-if="subMenu == 'occupation'"
+      <reports-department-occupations
+        v-if="subMenu == 'occupations'"
         :year="year"
         :cpl="cpl"
         :occupations="occupations"
         :statistics="statistics"
-      ></reports-department-occupation>
+      ></reports-department-occupations>
 
       <reports-department-coe
         v-if="subMenu == 'coe'"
