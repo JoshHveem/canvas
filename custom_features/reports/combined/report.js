@@ -289,6 +289,21 @@
       });
     }
 
+    async function getDepartmentsRaw() {
+      const key = `departmentsRaw::all`;
+      return cached(cache, key, async () => {
+        const url = `https://reports.bridgetools.dev/api/departments/full`;
+        const resp = await bridgetools.req(url);
+
+        // backend returns { meta, data }
+        const payload = resp?.data;
+        const depts = Array.isArray(payload?.data) ? payload.data
+                    : Array.isArray(payload) ? payload
+                    : [];
+        return depts;
+      });
+    }
+
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
       const key = `coursesRaw::acct=${account}::year=${y}`;
@@ -328,6 +343,7 @@
       getCanvasUser,
       getInstructorsRaw,
       getCoursesRaw,
+      getDepartmentsRaw,
       getStudentsRaw,
       invalidate(prefix = "") {
         for (const k of cache.keys()) if (String(k).startsWith(prefix)) cache.delete(k);
@@ -459,6 +475,7 @@
 
         // NEW: after initial load, fetch shared datasets only if needed
         await this.ensureSharedData();
+        await this.loadDepartmentsRaw();
       },
 
       data: function () {
@@ -705,10 +722,7 @@
           }
 
           if (ds.includes('departments')) {
-            await this.loadDepartmentsRaw();
-          } else {
-            this.departmentsRaw = [];
-            this.allCourseTags = [];
+            await this.loadDepartmentsRaw(account, year);
           }
 
         },
@@ -716,14 +730,13 @@
         async loadDepartmentsRaw() {
           try {
             this.sharedLoading.departments = true;
-            const url = `https://reports.bridgetools.dev/api/departments/full`;
-            const resp = await bridgetools.req(url);
-            const depts = Array.isArray(resp?.data) ? resp.data : [];
+
+            const raw = await window.ReportData.getDepartmentsRaw();
+            const depts = Array.isArray(raw) ? raw : [];
 
             this.normalizeCourseSurveyTagPcts(depts);
             this.departmentsRaw = depts;
-            console.log(this.departmentsRaw);
-            // build tag list anytime departments refresh
+
             this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
             this.pruneInvalidSelectedCourseTags();
           } catch (e) {
@@ -735,59 +748,61 @@
           }
         },
 
+
+
         normalizeCourseSurveyTagPcts(depts) {
-  const list = Array.isArray(depts) ? depts : [];
+          const list = Array.isArray(depts) ? depts : [];
 
-  for (const d of list) {
-    const years = Array.isArray(d?.course_surveys) ? d.course_surveys : [];
-    for (const cs of years) {
-      if (!cs) continue;
+          for (const d of list) {
+            const years = Array.isArray(d?.course_surveys) ? d.course_surveys : [];
+            for (const cs of years) {
+              if (!cs) continue;
 
-      const total = Number(cs.num_surveys ?? 0);
+              const total = Number(cs.num_surveys ?? 0);
 
-      // ensure tags_by_name exists and points to the SAME tag objects where possible
-      if ((!cs.tags_by_name || typeof cs.tags_by_name !== "object") && Array.isArray(cs.tags)) {
-        cs.tags_by_name = cs.tags.reduce((acc, t) => {
-          const name = String(t?.tag ?? "").trim();
-          if (!name) return acc;
-          acc[name] = t; // same reference
-          return acc;
-        }, {});
-      }
+              // ensure tags_by_name exists and points to the SAME tag objects where possible
+              if ((!cs.tags_by_name || typeof cs.tags_by_name !== "object") && Array.isArray(cs.tags)) {
+                cs.tags_by_name = cs.tags.reduce((acc, t) => {
+                  const name = String(t?.tag ?? "").trim();
+                  if (!name) return acc;
+                  acc[name] = t; // same reference
+                  return acc;
+                }, {});
+              }
 
-      // recompute pct on tags[]
-      if (Array.isArray(cs.tags)) {
-        for (const t of cs.tags) {
-          const cnt = Number(t?.tag_count ?? t?.count_of_submissions ?? 0);
-          t.pct_of_submissions = total > 0 ? (cnt / total) : 0;
-        }
-      }
+              // recompute pct on tags[]
+              if (Array.isArray(cs.tags)) {
+                for (const t of cs.tags) {
+                  const cnt = Number(t?.tag_count ?? t?.count_of_submissions ?? 0);
+                  t.pct_of_submissions = total > 0 ? (cnt / total) : 0;
+                }
+              }
 
-      // recompute pct on tags_by_name (and create entries if needed)
-      if (cs.tags_by_name && typeof cs.tags_by_name === "object") {
-        for (const [tagName, info] of Object.entries(cs.tags_by_name)) {
-          const cnt = Number(info?.tag_count ?? info?.count_of_submissions ?? 0);
-          if (info && typeof info === "object") {
-            info.pct_of_submissions = total > 0 ? (cnt / total) : 0;
-          } else {
-            cs.tags_by_name[tagName] = {
-              tag: tagName,
-              tag_count: cnt,
-              pct_of_submissions: total > 0 ? (cnt / total) : 0
-            };
+              // recompute pct on tags_by_name (and create entries if needed)
+              if (cs.tags_by_name && typeof cs.tags_by_name === "object") {
+                for (const [tagName, info] of Object.entries(cs.tags_by_name)) {
+                  const cnt = Number(info?.tag_count ?? info?.count_of_submissions ?? 0);
+                  if (info && typeof info === "object") {
+                    info.pct_of_submissions = total > 0 ? (cnt / total) : 0;
+                  } else {
+                    cs.tags_by_name[tagName] = {
+                      tag: tagName,
+                      tag_count: cnt,
+                      pct_of_submissions: total > 0 ? (cnt / total) : 0
+                    };
+                  }
+                }
+              }
+
+              // keep tags[] present if only tags_by_name exists
+              if (!Array.isArray(cs.tags) && cs.tags_by_name && typeof cs.tags_by_name === "object") {
+                cs.tags = Object.values(cs.tags_by_name);
+              }
+            }
           }
-        }
-      }
 
-      // keep tags[] present if only tags_by_name exists
-      if (!Array.isArray(cs.tags) && cs.tags_by_name && typeof cs.tags_by_name === "object") {
-        cs.tags = Object.values(cs.tags_by_name);
-      }
-    }
-  }
-
-  return list;
-},
+          return list;
+        },
 
         extractCourseTagsFromDepartments(depts) {
           const set = new Set();
