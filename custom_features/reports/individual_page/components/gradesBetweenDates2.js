@@ -174,7 +174,7 @@
                 <td colspan="2"><b>Credits Required (Term)</b></td>
                 <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
-              <tr><span style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</span></tr>
+              <tr><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></tr>
             </tfoot>
           </table>
           <div id = "submissionGraph"></div>
