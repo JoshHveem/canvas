@@ -1,5 +1,5 @@
 // departments-overview.js
-Vue.component('departments-overview', {
+Vue.component('departments-instructors', {
   props: {
     account:   { type: [Number, String], required: false, default: '' }, // keep for parity (not used yet)
     year:      { type: [Number, String], required: true },
