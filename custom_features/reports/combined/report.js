@@ -509,16 +509,6 @@
             ]
           },
           {
-            value: 'occupations',
-            label: 'Occupations',
-            component: 'occupations-report',
-            title: 'Occupations Report',
-            selectors: [],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
-            ]
-          },
-          {
             value: 'instructors',
             label: 'Instructors',
             component: 'reports-instructors',
