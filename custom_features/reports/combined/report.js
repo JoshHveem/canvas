@@ -722,6 +722,7 @@
 
             this.normalizeCourseSurveyTagPcts(depts);
             this.departmentsRaw = depts;
+            console.log(this.departmentsRaw);
             // build tag list anytime departments refresh
             this.allCourseTags = this.extractCourseTagsFromDepartments(depts);
             this.pruneInvalidSelectedCourseTags();

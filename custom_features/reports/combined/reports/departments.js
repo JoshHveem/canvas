@@ -60,10 +60,6 @@ Vue.component('reports-departments', {
 
       // global unique tag list for the selected year
       this.allSurveyTags = this.collectAllSurveyTags(this.departmentsClean);
-
-      console.log('departmentsRaw len:', depts.length);
-      console.log('departmentsClean len:', this.departmentsClean.length);
-      console.log('ALL TAGS:', this.allSurveyTags);
     },
 
     cleanDeptForYear(dept, yr) {
