@@ -70,12 +70,12 @@ Vue.component('departments-course-surveys', {
         d => Number(d?.course_surveys?.num_surveys ?? -1)
       ));
 
-      cols.push(new window.ReportColumn(
-        'Course Recs', 'Share of course surveys with recommendations.', '7rem', false, 'number',
-        d => this.pctText(d?.course_surveys?.has_recommendations),
-        d => this.pctPillStyle(d?.course_surveys?.has_recommendations),
-        d => Number(d?.course_surveys?.has_recommendations ?? -1)
-      ));
+      // cols.push(new window.ReportColumn(
+      //   'Course Recs', 'Share of course surveys with recommendations.', '7rem', false, 'number',
+      //   d => this.pctText(d?.course_surveys?.has_recommendations),
+      //   d => this.pctPillStyle(d?.course_surveys?.has_recommendations),
+      //   d => Number(d?.course_surveys?.has_recommendations ?? -1)
+      // ));
 
       // Dynamic tag columns (one per tag in props.tags)
       const chosen =
