@@ -65,7 +65,7 @@ Vue.component('reports-departments', {
     cleanDeptForYear(dept, yr) {
       const out = Object.assign({}, dept);
 
-      out.canvas              = this.pickYearOne(dept?.canvas_all, yr);
+      out.canvas              = this.pickYearOne(dept?.canvas, yr);
       out.statistics          = this.pickYearOne(dept?.statistics, yr);
       out.instructor_metrics  = this.pickYearOne(dept?.instructor_metrics, yr);
       out.course_surveys      = this.pickYearOne(dept?.course_surveys, yr);
