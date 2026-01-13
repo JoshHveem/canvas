@@ -152,7 +152,7 @@
             </tbody>
             <tfoot border='1'>
               <tr>
-                <td><b>Grade to Date</b>
+                <td><b>Grade (to Date)</b>
                 </td>
                 <td>
                   {{weightedGradeForTerm}}%
@@ -164,16 +164,17 @@
                       title='Click here for more details about how this grade was calculated.'></i>
                   </div>
                 </td>
-                <td colspan="2"><b>Credits Required to Date</b></td>
+                <td colspan="2"><b>Credits Required (to Date)</b></td>
                 <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
                 </td>
               </tr>
               <tr>
-                <td><b>Final Grade (based on enrolled)</b></td>
+                <td><b>Grade (Term)*</b></td>
                 <td>{{weightedFinalGradeForTerm}}%</td>
-                <td colspan="2"><b>Credits Enrolled</b></td>
+                <td colspan="2"><b>Credits Required (Term)</b></td>
                 <td>{{estimatedCreditsEnrolled}}</td>
               </tr>
+              <tr><span style="font-size: 0.75rem;">*Grade (Final) is what the student's grade will be at the end of the term if they submit nothing else.</span></tr>
             </tfoot>
           </table>
           <div id = "submissionGraph"></div>
