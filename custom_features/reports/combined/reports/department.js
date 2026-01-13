@@ -1,3 +1,4 @@
+//reports/combined/reports/departments.js
 Vue.component('reports-department', {
   template: `
     <div>
@@ -30,6 +31,14 @@ Vue.component('reports-department', {
         :instructor-surveys="instructorSurveys"
         :course-surveys="courseSurveys"
       ></reports-department-courses>
+
+      <reports-department-occupation
+        v-if="subMenu == 'occupation'"
+        :year="year"
+        :cpl="cpl"
+        :occupations="occupations"
+        :statistics="statistics"
+      ></reports-department-occupation>
 
       <reports-department-coe
         v-if="subMenu == 'coe'"

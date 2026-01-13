@@ -504,6 +504,7 @@
               { value: 'overview', label: 'Overview' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
+              { value: 'occupations',         label: 'Occupations' },
               { value: 'coe',         label: 'COE' },
             ]
           },
