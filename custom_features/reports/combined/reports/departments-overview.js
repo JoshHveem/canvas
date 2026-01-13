@@ -62,12 +62,6 @@ Vue.component('departments-overview', {
         d => Number(d?.instructor_metrics?.full_time_students_per_day ?? -1)
       ),
       new window.ReportColumn(
-        'Rubric %', 'Share graded with a rubric.', '6rem', false, 'number',
-        d => this.pctText(d?.instructor_metrics?.graded_with_rubric),
-        d => this.pctPillStyle(d?.instructor_metrics?.graded_with_rubric),
-        d => Number(d?.instructor_metrics?.graded_with_rubric ?? -1)
-      ),
-      new window.ReportColumn(
         '# Instructors', 'Number of instructors in department.', '6rem', false, 'number',
         d => Number(d?.instructor_metrics?.num_instructors ?? 0),
         null,
@@ -94,10 +88,22 @@ Vue.component('departments-overview', {
         d => Number(d?.statistics?.placed ?? -1)
       ),
       new window.ReportColumn(
+        'Rubric Use in Grading', 'Share graded with a rubric.', '6rem', false, 'number',
+        d => this.pctText(d?.instructor_metrics?.graded_with_rubric),
+        d => this.pctPillStyle(d?.instructor_metrics?.graded_with_rubric),
+        d => Number(d?.instructor_metrics?.graded_with_rubric ?? -1)
+      ),
+      new window.ReportColumn(
+        'Assn w/ Rubrics', 'Share of assignments with a rubric.', '6rem', false, 'number',
+        d => this.pctText(d?.canvas?.perc_has_rubric),
+        d => this.pctPillStyle(d?.canvas?.perc_has_rubric),
+        d => Number(d?.canvas?.perc_has_rubric ?? -1)
+      ),
+      new window.ReportColumn(
         'Accessibility', 'UDOIT Accessibility score.', '6rem', false, 'number',
-        d => this.pctText(d?.statistics?.accessibility_score),
-        d => this.pctPillStyle(d?.statistics?.accessibility_score),
-        d => Number(d?.statistics?.accessibility_score ?? -1)
+        d => this.pctText(d?.canvas?.accessibility_score),
+        d => this.pctPillStyle(d?.canvas?.accessibility_score),
+        d => Number(d?.canvas?.accessibility_score ?? -1)
       ),
     ]);
   },
