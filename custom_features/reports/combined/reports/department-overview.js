@@ -1,13 +1,24 @@
-Vue.component('reports-department-instructors', {
+Vue.component('reports-department-overview', {
   template: `
     <div>
-      <department-instructor-metrics
-        :instructor-metrics="instructorMetrics"
+      <!-- Could show a loading indicator if you like -->
+      <department-cpl
+        v-for="campus in cpl"
+        :cpl="campus"
+        :year="year"
+      />
+
+      <department-statistics
+        :statistics="statistics"
         :year="year"
       />
 
       <department-instructor-surveys
         :surveys="instructorSurveys"
+        :year="year"
+      />
+      <department-course-surveys
+        :surveys="courseSurveys"
         :year="year"
       />
     </div>
