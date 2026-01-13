@@ -97,7 +97,7 @@ Vue.component('departments-course-surveys', {
         cols.push(new window.ReportColumn(
           colName,
           `Pct of submissions tagged "${tagName}".`,
-          '7rem',
+          '10rem',
           false,
           'number',
           d => {
