@@ -1,6 +1,16 @@
 Vue.component('reports-department', {
   template: `
     <div>
+      <reports-department-overview
+        v-if="subMenu == 'overview'"
+        :year="year"
+        :statistics="statistics"
+        :cpl="cpl"
+        :instructor-metrics="instructorMetrics"
+        :instructor-surveys="instructorSurveys"
+        :course-surveys="courseSurveys"
+      ></reports-department-overview>
+
       <reports-department-instructors
         v-if="subMenu == 'instructors'"
         :year="year"
