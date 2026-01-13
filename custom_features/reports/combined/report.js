@@ -1030,6 +1030,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/occupations-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-overview.js");

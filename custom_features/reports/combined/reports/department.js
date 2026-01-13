@@ -23,7 +23,13 @@ Vue.component('reports-department', {
 
       <reports-department-courses
         v-if="subMenu == 'courses'"
-      >Coming Soon</reports-department-courses>
+        :year="year"
+        :statistics="statistics"
+        :cpl="cpl"
+        :instructor-metrics="instructorMetrics"
+        :instructor-surveys="instructorSurveys"
+        :course-surveys="courseSurveys"
+      ></reports-department-courses>
 
       <reports-department-coe
         v-if="subMenu == 'coe'"
