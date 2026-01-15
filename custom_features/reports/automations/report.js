@@ -4,9 +4,7 @@
    * Script loader helpers
    ********************************************************************/
   async function loadScriptOnce(url) {
-    // Prevent double-loading if user navigates / reopens
     if (document.querySelector(`script[src="${url}"]`)) return;
-
     await $.getScript(url);
   }
 
@@ -14,54 +12,28 @@
    * Ensure dependencies (ORDER MATTERS)
    ********************************************************************/
   try {
-    // Vue (if not already globally loaded)
     if (!window.Vue) {
-      await loadScriptOnce(
-        "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"
-      );
+      await loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
 
-    // Shared core (utils + template mounting)
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js"
-    );
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/columns.js");
 
-    // Report-specific logic
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js"
-    );
-
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/columns.js"
-    );
-    // D3 (pick a version you’ve used; v7 shown)
     await loadScriptOnce("https://d3js.org/d3.v7.min.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js");
 
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/TableShell.js"
-    );
-
-    // chart renderer
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"
-    );
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsTableView.js"
-    );
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsGraphView.js"
-    );
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsFlaggedView.js"
-    );
-
+    // Components
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsTableView.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsGraphView.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsFlaggedView.js");
   } catch (e) {
     console.error("Failed to load automations report dependencies", e);
     return;
   }
 
   /********************************************************************
-   * Sanity checks (fail fast, readable errors)
+   * Sanity checks
    ********************************************************************/
   const RC = window.ReportCore;
   const RA = window.ReportAutomations;
@@ -78,14 +50,21 @@
     console.error("Automations columns not loaded.");
     return;
   }
+  if (!RA?.columns?.buildGraphColumns) {
+    console.error("Automations graph columns not loaded (buildGraphColumns missing).");
+    return;
+  }
+  if (!RA?.columns?.buildFlaggedColumns) {
+    console.error("Automations flagged columns not loaded (buildFlaggedColumns missing).");
+    return;
+  }
 
   /********************************************************************
-   * Config (kept here, as requested)
+   * Config
    ********************************************************************/
   const API_BASE = "https://reports.bridgetools.dev";
   const API_URL = `${API_BASE}/api/automations`;
-  const TEMPLATE_URL =
-    "https://bridgetools.dev/canvas/custom_features/reports/automations/template.vue";
+  const TEMPLATE_URL = "https://bridgetools.dev/canvas/custom_features/reports/automations/template.vue";
   const DEFAULT_RUNS_LIMIT = 200;
 
   const U = RC.util;
@@ -107,10 +86,6 @@
    ********************************************************************/
   new Vue({
     el: rootEl,
-    watch: {
-      viewMode() { this.$nextTick(this.renderAllCharts); },
-      visibleRows() { if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts); }
-    },
 
     components: {
       AutomationsTableView: RA.components.AutomationsTableView,
@@ -118,6 +93,14 @@
       AutomationsFlaggedView: RA.components.AutomationsFlaggedView,
     },
 
+    watch: {
+      viewMode() {
+        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
+      },
+      graphRows() {
+        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
+      },
+    },
 
     data() {
       const colors = window.bridgetools?.colors || {
@@ -130,18 +113,17 @@
         white: "#fff",
       };
 
-      const table = new ReportTable({
-        rows: [],
-        columns: [],
-        sort_column: "Status",
-        sort_dir: 1,
-        colors,
-      });
+      // One ReportTable per view (same renderer, different columns + sorting state)
+      const tableTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
+      const graphTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
+      const flaggedTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
 
       return {
         colors,
-        table,
-        tableTick: 0,
+
+        tableTable,
+        graphTable,
+        flaggedTable,
 
         loading: false,
         error: "",
@@ -153,56 +135,49 @@
           status: "All",
           hideHealthy: false,
         },
-        viewMode: "table", // "table" | "graph"
+
+        viewMode: "table", // "table" | "graph" | "flagged"
       };
     },
 
     async created() {
-      // Columns come from columns.js
-      this.table.setColumns(RA.columns.buildColumns(this));
+      // attach columns for each view
+      this.tableTable.setColumns(RA.columns.buildColumns(this));
+      this.graphTable.setColumns(RA.columns.buildGraphColumns(this));
+      this.flaggedTable.setColumns(RA.columns.buildFlaggedColumns(this));
+
       await this.load();
     },
 
     computed: {
       ownerOptions() {
         const rows = Array.isArray(this.rows) ? this.rows : [];
-
-        // Build a stable key so duplicate names don’t collide.
-        // Prefer email; fall back to name.
-        const seen = new Map(); // key -> { key, label, name, email }
+        const seen = new Map();
 
         for (const r of rows) {
           const email = U.safeStr(r?.owner_email).trim();
           const name = U.safeStr(r?.owner_name).trim();
-
           const key = email || name;
           if (!key) continue;
 
-          const label = email && name ? `${name} (${email})`
-                      : name ? name
-                      : email;
+          const label = email && name ? `${name} (${email})` : (name || email);
 
-          if (!seen.has(key)) {
-            seen.set(key, { key, label, name, email });
-          }
+          if (!seen.has(key)) seen.set(key, { key, label, name, email });
         }
 
-        // Sort nicely by name then email
         const opts = Array.from(seen.values()).sort((a, b) => {
           const an = (a.name || a.email || "").toLowerCase();
           const bn = (b.name || b.email || "").toLowerCase();
           if (an < bn) return -1;
           if (an > bn) return 1;
-          const ae = (a.email || "").toLowerCase();
-          const be = (b.email || "").toLowerCase();
-          return ae.localeCompare(be);
+          return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
         });
 
-        // Include "All"
         return [{ key: "", label: "All owners" }, ...opts];
       },
 
-      visibleRows() {
+      // One shared filtering pipeline, no sorting here.
+      filteredRows() {
         let rows = Array.isArray(this.rows) ? this.rows : [];
 
         const q = String(this.filters.q || "").trim().toLowerCase();
@@ -226,11 +201,9 @@
           rows = rows.filter((r) => {
             const email = U.safeStr(r?.owner_email).trim();
             const name = U.safeStr(r?.owner_name).trim();
-            const key = email || name;
-            return key === ownerKey;
+            return (email || name) === ownerKey;
           });
         }
-
 
         const status = this.filters.status;
         if (status && status !== "All") {
@@ -238,17 +211,32 @@
         }
 
         if (this.filters.hideHealthy) {
-          rows = rows.filter(
-            (r) => U.safeStr(r?._metrics?.status) !== "Healthy"
-          );
+          rows = rows.filter((r) => U.safeStr(r?._metrics?.status) !== "Healthy");
         }
 
-        this.table.setRows(rows);
-        return this.table.getSortedRows();
+        return rows;
+      },
+
+      // Sorted rows per view (each view maintains its own sort state)
+      tableRows() {
+        this.tableTable.setRows(this.filteredRows);
+        return this.tableTable.getSortedRows();
+      },
+
+      graphRows() {
+        this.graphTable.setRows(this.filteredRows);
+        return this.graphTable.getSortedRows();
+      },
+
+      flaggedRows() {
+        // later you’ll filter down to flagged-only; for now same base list
+        this.flaggedTable.setRows(this.filteredRows);
+        return this.flaggedTable.getSortedRows();
       },
 
       summary() {
-        return (this.visibleRows || []).reduce((acc, r) => {
+        // summary should match what user sees; use filtered rows
+        return (this.filteredRows || []).reduce((acc, r) => {
           const s = U.safeStr(r?._metrics?.status) || "Unknown";
           acc[s] = (acc[s] || 0) + 1;
           return acc;
@@ -257,27 +245,28 @@
     },
 
     methods: {
+      // Generic helpers used by all “table-like” view components
+      getColumnsWidthsString(table) {
+        return table.getColumnsWidthsString();
+      },
+
+      setSortColumn(table, name) {
+        table.setSortColumn(name);
+        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
+      },
+
       renderAllCharts() {
         if (this.viewMode !== "graph") return;
 
-        const gv = this.$refs.graphView;
-        if (!gv) return;
-
-        const rows = this.visibleRows || [];
+        // Graph columns should have emitted <div id="chart_<automation_id>"></div>
+        const rows = this.graphRows || [];
         for (const r of rows) {
           const id = r?.automation_id;
-          const el = gv.$refs[`chart_${id}`];
-          const node = Array.isArray(el) ? el[0] : el;
+          if (!id && id !== 0) continue;
+
+          const node = document.getElementById(`chart_${id}`);
           if (node) RA.charts.renderRuns30(node, r, this.colors, U);
         }
-      },
-
-      getColumnsWidthsString() {
-        return this.table.getColumnsWidthsString();
-      },
-      setSortColumn(name) {
-        this.table.setSortColumn(name);
-        this.tableTick++;
       },
 
       // --- styles (unchanged) ---

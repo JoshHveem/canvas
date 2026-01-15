@@ -1,11 +1,16 @@
 (function () {
   const RA = (window.ReportAutomations = window.ReportAutomations || {});
-  const U = window.ReportCore?.util;
-
   RA.columns = RA.columns || {};
 
+  function util() {
+    const U = window.ReportCore?.util;
+    if (!U) throw new Error("ReportCore.util not loaded yet");
+    return U;
+  }
+
   RA.columns.buildColumns = function buildColumns(vm) {
-    // vm is the Vue instance (`this`) so we can call vm.statusStyle etc.
+    const U = util();
+
     return [
       new ReportColumn(
         "Status",
@@ -20,24 +25,22 @@
 
       new ReportColumn(
         "ID",
-        "Name",
-        "2rem",
+        "Automation ID",
+        "3rem",
         false,
         "string",
-        (r) =>
-          `${r?.automation_id}`,
+        (r) => `${r?.automation_id ?? ""}`,
         null,
         (r) => r?.automation_id
       ),
 
       new ReportColumn(
         "Automation",
-        "Name",
+        "Automation name",
         "18rem",
         false,
         "string",
-        (r) =>
-          `${U.safeStr(r?.name)}`,
+        (r) => `${U.safeStr(r?.name)}`,
         null,
         (r) => U.safeStr(r?.name)
       ),
@@ -48,7 +51,7 @@
         "24rem",
         false,
         "string",
-        (r) => `<p>${r?.description}</p>`,
+        (r) => `<p style="margin:0;">${U.safeStr(r?.description)}</p>`,
         () => ({
           whiteSpace: "normal",
           wordBreak: "break-word",
@@ -61,13 +64,15 @@
       new ReportColumn(
         "Owner",
         "Owner name/email",
-        "8rem",
+        "10rem",
         false,
         "string",
         (r) => {
           const nm = U.safeStr(r?.owner_name);
           const em = U.safeStr(r?.owner_email);
-          return em ? `${nm}<br><span class="btech-muted">${em}</span>` : nm;
+          return em
+            ? `${nm}<br><span class="btech-muted">${em}</span>`
+            : nm;
         },
         null,
         (r) => `${U.safeStr(r?.owner_name)} ${U.safeStr(r?.owner_email)}`
@@ -75,7 +80,7 @@
 
       new ReportColumn(
         "Last Run",
-        "Most recent run time + success/fail",
+        "Most recent run time",
         "14rem",
         false,
         "number",
@@ -112,7 +117,119 @@
         null,
         (r) => Number(r?._metrics?.avg_duration_ms ?? NaN)
       ),
+    ];
+  };
 
+  RA.columns.buildGraphColumns = function buildGraphColumns(vm) {
+    const U = util();
+
+    return [
+      new ReportColumn(
+        "Status",
+        "Health status computed from recent runs.",
+        "5rem",
+        false,
+        "string",
+        (r) => U.safeStr(r?._metrics?.status),
+        (r) => vm.statusStyle(r?._metrics?.status),
+        (r) => U.safeStr(r?._metrics?.status)
+      ),
+
+      new ReportColumn(
+        "ID",
+        "Automation ID",
+        "3rem",
+        false,
+        "string",
+        (r) => `${r?.automation_id ?? ""}`,
+        null,
+        (r) => r?.automation_id
+      ),
+
+      new ReportColumn(
+        "Automation",
+        "Automation name",
+        "18rem",
+        false,
+        "string",
+        (r) => `${U.safeStr(r?.name)}`,
+        null,
+        (r) => U.safeStr(r?.name)
+      ),
+
+      // The "Graph" cell is just a container; report.js will render into it by id
+      new ReportColumn(
+        "Graph",
+        "Runs chart (30 days)",
+        "1fr",
+        false,
+        "string",
+        (r) => {
+          const id = r?.automation_id ?? "";
+          return `<div id="chart_${id}" style="min-width:260px;"></div>`;
+        },
+        () => ({
+          whiteSpace: "normal",
+          overflow: "visible",
+        }),
+        () => 0
+      ),
+    ];
+  };
+
+  RA.columns.buildFlaggedColumns = function buildFlaggedColumns(vm) {
+    const U = util();
+
+    return [
+      new ReportColumn(
+        "Status",
+        "Health status computed from recent runs.",
+        "5rem",
+        false,
+        "string",
+        (r) => U.safeStr(r?._metrics?.status),
+        (r) => vm.statusStyle(r?._metrics?.status),
+        (r) => U.safeStr(r?._metrics?.status)
+      ),
+
+      new ReportColumn(
+        "ID",
+        "Automation ID",
+        "3rem",
+        false,
+        "string",
+        (r) => `${r?.automation_id ?? ""}`,
+        null,
+        (r) => r?.automation_id
+      ),
+
+      new ReportColumn(
+        "Automation",
+        "Automation name",
+        "18rem",
+        false,
+        "string",
+        (r) => `${U.safeStr(r?.name)}`,
+        null,
+        (r) => U.safeStr(r?.name)
+      ),
+
+      new ReportColumn(
+        "Flags",
+        "Which checks triggered (placeholder)",
+        "1fr",
+        false,
+        "string",
+        (r) => {
+          // Placeholder for now; later you’ll format actual flags from r._metrics
+          return `<span class="btech-muted" style="font-size:12px;">(flags coming soon)</span>`;
+        },
+        () => ({
+          whiteSpace: "normal",
+          overflowWrap: "anywhere",
+        }),
+        (r) => 0
+      ),
     ];
   };
 })();
