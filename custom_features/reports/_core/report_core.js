@@ -19,13 +19,13 @@
     }
 
     function parseTs(v) {
+        console.log(v);
       const t = Date.parse(v || "");
       return Number.isFinite(t) ? t : NaN;
     }
 
     function fmtDateTime(v) {
       const t = parseTs(v);
-      console.log(t);
       if (!Number.isFinite(t)) return "n/a";
       return new Date(t).toLocaleString();
     }
