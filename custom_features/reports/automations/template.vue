@@ -67,6 +67,7 @@
           :colors="colors"
           :filters="filters"
           :util="U"
+          :shared="shared"
         />
       </div>
     </div>

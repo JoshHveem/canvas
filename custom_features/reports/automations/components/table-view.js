@@ -24,7 +24,7 @@
         false,
         "string",
         (r) => U.safeStr(r?._metrics?.status),
-        (r) => vm.statusStyle(r?._metrics?.status),
+        (r) => vm.shared.styles.statusStyle(r?._metrics?.status),
         (r) => U.safeStr(r?._metrics?.status)
       ),
 
@@ -125,6 +125,7 @@
   RA.components.AutomationsTableView = {
     name: "AutomationsTableView",
     props: {
+      shared: { type: Object, required: true },
       automations: { type: Array, required: true }, // raw-but-processed by metrics.js
       filters: { type: Object, required: true },    // shared filters object from report.js
       colors: { type: Object, required: true },     // shared palette
@@ -197,16 +198,6 @@
 
       setSortColumn(name) {
         this.table.setSortColumn(name);
-      },
-
-      // styles live here (view owns it)
-      statusStyle(status) {
-        const s = U.safeStr(status);
-        if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
-        if (s === "Flagged") return { backgroundColor: this.colors.yellow, color: this.colors.white };
-        if (s === "Error") return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (s === "No Runs") return { backgroundColor: this.colors.gray, color: this.colors.black };
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
       },
 
       daysSinceStyle(days) {

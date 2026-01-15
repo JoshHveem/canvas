@@ -199,6 +199,7 @@
     name: "AutomationsFlaggedView",
 
     props: {
+      shared: { type: Object, required: true },
       automations: { type: Array, required: true }, // unused, but kept for consistent signature
       runs: { type: Array, required: true },        // ✅ this is the input for this view
       colors: { type: Object, required: true },

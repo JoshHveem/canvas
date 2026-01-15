@@ -156,6 +156,10 @@
         U,
         colors,
 
+        shared: {
+          styles: {}, // assigned in created() so `this` exists
+          fmt: {},    // optional helpers that depend on U
+        },
         loading: false,
         error: "",
 
@@ -184,8 +188,44 @@
     },
 
     async created() {
+      // Shared formatting helpers
+      this.shared.fmt = {
+        fmtDateTime: (t) => (t ? this.U.fmtDateTime(t) : "n/a"),
+        parseTs: (t) => this.U.parseTs(t),
+        msToPretty: (ms) => this.U.msToPretty(ms),
+        safeStr: (v) => this.U.safeStr(v),
+      };
+
+      // Shared style helpers (centralize “what does healthy look like?”)
+      this.shared.styles = {
+        statusStyle: (status) => {
+          const s = this.U.safeStr(status);
+          if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
+          if (s === "Flagged") return { backgroundColor: this.colors.yellow, color: this.colors.white };
+          if (s === "Error")   return { backgroundColor: this.colors.red, color: this.colors.white };
+          if (s === "No Runs") return { backgroundColor: this.colors.gray, color: this.colors.black };
+          return { backgroundColor: this.colors.gray, color: this.colors.black };
+        },
+
+        lastRunStyle: (automationRow) => {
+          const ok = automationRow?._metrics?.last_run_success;
+          if (ok === true)  return { backgroundColor: this.colors.green, color: this.colors.white };
+          if (ok === false) return { backgroundColor: this.colors.red, color: this.colors.white };
+          return { backgroundColor: this.colors.gray, color: this.colors.black };
+        },
+
+        daysSinceStyle: (days) => {
+          const d = Number(days);
+          if (!Number.isFinite(d)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+          if (d >= 7) return { backgroundColor: this.colors.red, color: this.colors.white };
+          if (d >= 3) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+          return { backgroundColor: this.colors.green, color: this.colors.white };
+        },
+      };
+
       await this.load();
     },
+
 
     methods: {
       async load() {

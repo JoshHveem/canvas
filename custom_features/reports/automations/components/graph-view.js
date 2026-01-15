@@ -13,7 +13,7 @@
         false,
         "string",
         (r) => U.safeStr(r?._metrics?.status),
-        (r) => vm.statusStyle(r?._metrics?.status),
+        (r) => vm.shared.styles.statusStyle(r?._metrics?.status),
         (r) => U.safeStr(r?._metrics?.status)
       ),
 
@@ -103,6 +103,7 @@
 
     // ✅ contract from template.vue
     props: {
+      shared: { type: Object, required: true },
       automations: { type: Array, required: true },
       runs: { type: Array, required: true }, // unused here; kept for consistency
       colors: { type: Object, required: true },
@@ -143,21 +144,6 @@
     },
 
     methods: {
-      // --- local styles (do not rely on parent) ---
-      statusStyle(status) {
-        const U = this.util;
-        const s = U.safeStr(status);
-        if (s === "Healthy")
-          return { backgroundColor: this.colors.green, color: this.colors.white };
-        if (s === "Flagged")
-          return { backgroundColor: this.colors.yellow, color: this.colors.white };
-        if (s === "Error")
-          return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (s === "No Runs")
-          return { backgroundColor: this.colors.gray, color: this.colors.black };
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      },
-
       getColumnsWidthsString() {
         return this.table.getColumnsWidthsString();
       },
