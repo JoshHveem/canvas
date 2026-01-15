@@ -243,6 +243,7 @@
           const processed = autos.map(RA.metrics.computeAutomationMetrics);
 
           this.automations = processed;
+          console.log(this.automations);
           this.runs = flattenRuns(processed);
           console.log(this.runs);
         } catch (e) {
