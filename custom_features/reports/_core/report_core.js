@@ -30,7 +30,9 @@
       // e.g. "\"2026-01-14T...Z\"" or "'2026-01-14T...Z'"
       s = s.replace(/^["']+/, "").replace(/["']+$/, "");
 
+      console.log(s);
       const t = Date.parse(s);
+      console.log(t);
       return Number.isFinite(t) ? t : NaN;
     }
 
