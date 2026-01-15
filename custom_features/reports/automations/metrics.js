@@ -75,13 +75,13 @@
       failsSinceNonError >= 3 ||
       (Number.isFinite(daysSinceLast) && daysSinceLast >= 7)
     ) {
-      status = "Needs Attention";
+      status = "Error";
     } else if (
       lastRunStatus === "Flagged" ||                 // <--- NEW: flags matter
       failsSinceNonError >= 1 ||
       (Number.isFinite(daysSinceLast) && daysSinceLast >= 3)
     ) {
-      status = "Watch";
+      status = "Flagged";
     } else {
       status = "Healthy";
     }
