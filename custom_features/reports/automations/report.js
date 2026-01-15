@@ -57,10 +57,6 @@
     console.error("Automations columns not loaded.");
     return;
   }
-  if (!window.ReportTable || !window.ReportColumn) {
-    console.error("ReportTable / ReportColumn globals missing.");
-    return;
-  }
 
   /********************************************************************
    * Config (kept here, as requested)
