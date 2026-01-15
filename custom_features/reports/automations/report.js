@@ -34,6 +34,13 @@
     await loadScriptOnce(
       "https://bridgetools.dev/canvas/custom_features/reports/automations/columns.js"
     );
+    // D3 (pick a version you’ve used; v7 shown)
+    await loadScriptOnce("https://d3js.org/d3.v7.min.js");
+
+    // chart renderer
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"
+    );
   } catch (e) {
     console.error("Failed to load automations report dependencies", e);
     return;
@@ -86,6 +93,10 @@
    ********************************************************************/
   new Vue({
     el: rootEl,
+    watch: {
+      viewMode() { this.$nextTick(this.renderAllCharts); },
+      visibleRows() { if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts); }
+    },
 
     data() {
       const colors = window.bridgetools?.colors || {
@@ -121,6 +132,7 @@
           status: "All",
           hideHealthy: false,
         },
+        viewMode: "table", // "table" | "graph"
       };
     },
 
@@ -184,6 +196,17 @@
     },
 
     methods: {
+      renderAllCharts() {
+        if (this.viewMode !== "graph") return;
+        const rows = this.visibleRows || [];
+        for (const r of rows) {
+          const id = r?.automation_id;
+          const el = this.$refs[`chart_${id}`];
+          // Vue refs in v-for can be arrays; normalize
+          const node = Array.isArray(el) ? el[0] : el;
+          if (node) RA.charts.renderRuns30(node, r, this.colors, U);
+        }
+      },
       getColumnsWidthsString() {
         return this.table.getColumnsWidthsString();
       },
