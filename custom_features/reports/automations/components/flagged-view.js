@@ -267,21 +267,19 @@
             'background-color': (i % 2) ? 'white' : '#F8F8F8'
           }"
         >
-        <div
-          v-for="col in table.getVisibleColumns()"
-          :key="col.name"
-          :title="col.getTooltip(row)"
-          :style="Object.assign(
-            { display:'inline-block', overflow:'hidden', textOverflow:'ellipsis' },
-            col.get_style(row) || {}
-          )"
-        >
+          <div
+            v-for="col in table.getVisibleColumns()"
+            :key="col.name"
+            :title="col.getTooltip(row)"
+            style="display:inline-block; overflow:hidden; textOverflow:ellipsis; white-space:nowrap;"
+          >
             <span
               :class="col.style_formula ? 'btech-pill-text' : ''"
               :style="col.get_style(row)"
               v-html="col.getContent(row)"
             ></span>
           </div>
+      
         </div>
       </div>
     `,
