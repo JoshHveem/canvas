@@ -25,6 +25,7 @@
 
     function fmtDateTime(v) {
       const t = parseTs(v);
+      console.log(t);
       if (!Number.isFinite(t)) return "n/a";
       return new Date(t).toLocaleString();
     }
