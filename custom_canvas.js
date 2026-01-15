@@ -344,6 +344,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("quizzes/question_bank_sorter", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/);
       feature("sort_assignment_groups", /assignments$/)
       feature('reports/accreditation-2', /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
+      feature('reports/automations', /^\/automations$/);
 
       if (IS_BLUEPRINT) feature("page_formatting/prep_parts_list_for_sharing", /^\/courses\/[0-9]+\/pages\/parts-list-master/);
       if (IS_BLUEPRINT) feature('blueprint_association_links'); // need to add in regex filter
