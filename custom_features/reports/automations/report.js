@@ -3,6 +3,7 @@
 (async function () {
   const _loaded = new Set();
   $("#content").empty();
+  document.title = "Automations";
 
   async function loadScriptOnce(url) {
     if (_loaded.has(url)) return;
