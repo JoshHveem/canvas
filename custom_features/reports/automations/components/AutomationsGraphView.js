@@ -1,8 +1,8 @@
 (function () {
-  window.ReportAutomations = window.ReportAutomations || {};
-  window.ReportAutomations.components = window.ReportAutomations.components || {};
+  const RA = (window.ReportAutomations = window.ReportAutomations || {});
+  RA.components = RA.components || {};
 
-  window.ReportAutomations.components.AutomationsGraphView = {
+  RA.components.AutomationsGraphView = {
     name: "AutomationsGraphView",
     props: {
       table: { type: Object, required: true },
@@ -10,14 +10,19 @@
       getColumnsWidthsString: { type: Function, required: true },
       setSortColumn: { type: Function, required: true },
     },
+
+    // IMPORTANT: register AutomationsTableView so Vue knows what it is
+    components: {
+      AutomationsTableView: RA.components.AutomationsTableView,
+    },
+
     template: `
-      <automations-table-view
+      <AutomationsTableView
         :table="table"
         :rows="rows"
         :get-columns-widths-string="getColumnsWidthsString"
         :set-sort-column="setSortColumn"
-      ></automations-table-view>
+      />
     `,
-    // reuse AutomationsTableView template by registering it globally in report.js components
   };
 })();
