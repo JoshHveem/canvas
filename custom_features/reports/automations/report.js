@@ -18,29 +18,16 @@
         "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"
       );
     }
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js");
+    await loadScriptOnce("https://d3js.org/d3.v7.min.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js");
 
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js"
-    );
-
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js"
-    );
-
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"
-    );
 
     // Views (each view owns its own columns/rows/table/filtering)
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/table-view.js"
-    );
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/graph-view.js"
-    );
-    await loadScriptOnce(
-      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/flagged-view.js"
-    );
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/table-view.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/graph-view.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/flagged-view.js");
 
     // If graph-view needs d3/charts, load those here too (safe even if graph-view is stubbed)
     // Uncomment when graph-view starts rendering charts.
