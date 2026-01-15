@@ -41,6 +41,16 @@
     await loadScriptOnce(
       "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"
     );
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsTableView.js"
+    );
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsGraphView.js"
+    );
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsFlaggedView.js"
+    );
+
   } catch (e) {
     console.error("Failed to load automations report dependencies", e);
     return;
