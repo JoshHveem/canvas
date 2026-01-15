@@ -55,7 +55,6 @@
         </text>
       </svg>`
     )
-  }
     createSideMenuButton(
       'Automations',
       'https://btech.instructore.com/automations',
