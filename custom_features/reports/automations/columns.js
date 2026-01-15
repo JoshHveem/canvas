@@ -84,21 +84,6 @@
       ),
 
       new ReportColumn(
-        "Last Success",
-        "Most recent run time + success/fail",
-        "14rem",
-        false,
-        "number",
-        (r) => {
-          const t = r?._metrics?.last_success_time;
-          if (!t) return "n/a";
-          return `${U.fmtDateTime(t)}`;
-        },
-        (r) => vm.lastRunStyle(r),
-        (r) => U.parseTs(r?._metrics?.last_success_time)
-      ),
-
-      new ReportColumn(
         "Days Since",
         "Days since last run",
         "6rem",
