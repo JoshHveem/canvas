@@ -7,50 +7,91 @@
     <div v-if="loading" class="btech-muted">Loading…</div>
     <div v-else>
         <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-            <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-                <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
-                <div style="flex:1;"></div>
+            <!-- Header / Actions -->
+<div class="btech-row" style="align-items:center; gap:10px; margin-bottom:12px;">
+  <div>
+    <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
+    <div class="btech-muted" style="font-size:12px; margin-top:2px;">
+      Monitor runs, errors, and ownership at a glance
+    </div>
+  </div>
 
-                <button class="Button" @click="load()" :disabled="loading" style="margin-left:8px;">
-                {{ loading ? "Refreshing..." : "Refresh" }}
-                </button>
-            </div>
+  <div style="flex:1;"></div>
 
-            <div class="btech-row" style="gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px;">
-                <div style="min-width:240px;">
-                <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Search</label>
-                <select v-model="filters.owner">
-                    <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
-                        {{ o.label }}
-                    </option>
-                </select>
+  <button class="Button"
+          @click="viewMode = (viewMode==='table' ? 'graph' : 'table')"
+          style="margin-left:8px;">
+    {{ viewMode === 'table' ? 'Graph view' : 'Table view' }}
+  </button>
 
+  <button class="Button"
+          @click="load()"
+          :disabled="loading">
+    {{ loading ? "Refreshing..." : "Refresh" }}
+  </button>
+</div>
 
-                <div style="min-width:220px;">
-                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Owner</label>
-                    <input v-model="filters.owner" type="text"
-                        placeholder="email or name..."
-                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;" />
-                </div>
+<!-- Filters -->
+<div class="btech-card btech-theme" style="padding:10px; margin-bottom:12px; background:#fafafa;">
+  <div class="btech-row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <!-- Search -->
+    <div style="min-width:240px; flex:1;">
+      <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+        Search
+      </label>
+      <input
+        v-model="filters.search"
+        type="text"
+        placeholder="name, id, status..."
+        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+      />
+    </div>
 
-                <div style="min-width:160px;">
-                <label style="display:flex; gap:8px; align-items:center; font-size:12px; margin-left:6px;">
-                <input type="checkbox" v-model="filters.hideHealthy" />
-                Hide Healthy
-                </label>
+    <!-- Owner dropdown -->
+    <div style="min-width:220px;">
+      <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+        Owner
+      </label>
+      <select
+        v-model="filters.owner"
+        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+      >
+        <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
+          {{ o.label }}
+        </option>
+      </select>
+    </div>
 
-                <button class="Button" @click="viewMode = (viewMode==='table' ? 'graph' : 'table')">
-                    {{ viewMode === 'table' ? 'Graph view' : 'Table view' }}
-                </button>
+    <!-- Toggles -->
+    <div style="min-width:200px;">
+      <label style="display:flex; gap:8px; align-items:center; font-size:12px;">
+        <input type="checkbox" v-model="filters.hideHealthy" />
+        Hide healthy
+      </label>
+      <label style="display:flex; gap:8px; align-items:center; font-size:12px; margin-top:6px;">
+        <input type="checkbox" v-model="filters.onlyMine" />
+        Only my automations
+      </label>
+    </div>
 
+    <div style="flex:1;"></div>
 
-                <div style="flex:1;"></div>
+    <!-- Quick actions -->
+    <button class="Button" @click="resetFilters()" style="margin-left:auto;">
+      Reset filters
+    </button>
+  </div>
+</div>
 
-                <span class="btech-pill">Healthy: {{ summary["Healthy"] || 0 }}</span>
-                <span class="btech-pill">Flagged: {{ summary["Flagged"] || 0 }}</span>
-                <span class="btech-pill">Error: {{ summary["Error"] || 0 }}</span>
-                <span class="btech-pill">No Runs: {{ summary["No Runs"] || 0 }}</span>
-            </div>
+<!-- Summary pills -->
+<div class="btech-row" style="gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+  <span class="btech-pill">Healthy: {{ summary["Healthy"] || 0 }}</span>
+  <span class="btech-pill">Flagged: {{ summary["Flagged"] || 0 }}</span>
+  <span class="btech-pill">Error: {{ summary["Error"] || 0 }}</span>
+  <span class="btech-pill">No Runs: {{ summary["No Runs"] || 0 }}</span>
+</div>
+
+            
 
             <div v-if="error" class="btech-muted" style="padding:8px; color:#b20b0f;">
                 {{ error }}
