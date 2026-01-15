@@ -67,6 +67,22 @@
       ),
 
       new ReportColumn(
+        "Frequency",
+        "How frequently should this automation be running?",
+        "24rem",
+        false,
+        "string",
+        (r) => `<p style="margin:0;">${U.safeStr(r?.frequency)}</p>`,
+        () => ({
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+          lineHeight: "1.25",
+        }),
+        (r) => U.safeStr(r?.frequency)
+      ),
+
+      new ReportColumn(
         "Owner",
         "Owner name/email",
         "10rem",
