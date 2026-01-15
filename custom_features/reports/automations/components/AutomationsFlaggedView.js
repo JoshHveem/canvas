@@ -1,8 +1,8 @@
 (function () {
-  window.ReportAutomations = window.ReportAutomations || {};
-  window.ReportAutomations.components = window.ReportAutomations.components || {};
+  const RA = (window.ReportAutomations = window.ReportAutomations || {});
+  RA.components = RA.components || {};
 
-  window.ReportAutomations.components.AutomationsFlaggedView = {
+  RA.components.AutomationsFlaggedView = {
     name: "AutomationsFlaggedView",
     props: {
       table: { type: Object, required: true },
@@ -10,18 +10,24 @@
       getColumnsWidthsString: { type: Function, required: true },
       setSortColumn: { type: Function, required: true },
     },
+
+    // ✅ make AutomationsTableView available here
+    components: {
+      AutomationsTableView: RA.components.AutomationsTableView,
+    },
+
     template: `
       <div>
         <div class="btech-muted" style="font-size:12px; margin-bottom:8px;">
           (Placeholder) Later: show only flagged and list which checks triggered.
         </div>
 
-        <automations-table-view
+        <AutomationsTableView
           :table="table"
           :rows="rows"
           :get-columns-widths-string="getColumnsWidthsString"
           :set-sort-column="setSortColumn"
-        ></automations-table-view>
+        />
       </div>
     `,
   };
