@@ -107,13 +107,10 @@
 
   function flattenRuns(processedAutomations) {
     const out = [];
-    console.log(processedAutomations);
     for (const a of processedAutomations || []) {
       const runs =
+        a?._runs_sorted ||
         a?.runs ||
-        a?.recent_runs ||
-        a?.automation_runs ||
-        a?.recentRuns ||
         [];
 
       for (const run of runs || []) {
