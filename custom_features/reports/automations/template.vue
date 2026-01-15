@@ -33,58 +33,50 @@
 
             <!-- Filters -->
             <div class="btech-card btech-theme" style="padding:10px; margin-bottom:12px; background:#fafafa;">
-            <div class="btech-row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
-                <!-- Search -->
-                <div style="min-width:240px; flex:1;">
-                <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-                    Search
-                </label>
-                <input
-                    v-model="filters.search"
-                    type="text"
-                    placeholder="name, id, status..."
-                    style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-                />
+                <div class="btech-row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                    <!-- Search -->
+                    <div style="min-width:240px; flex:1;">
+                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+                        Search
+                    </label>
+                    <input
+                        v-model="filters.search"
+                        type="text"
+                        placeholder="name, id, status..."
+                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+                    />
+                    </div>
+
+                    <!-- Owner dropdown -->
+                    <div style="min-width:220px;">
+                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+                        Owner
+                    </label>
+                    <select
+                        v-model="filters.owner"
+                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+                    >
+                        <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
+                        {{ o.label }}
+                        </option>
+                    </select>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div style="min-width:200px;">
+                    <label style="display:flex; gap:8px; align-items:center; font-size:12px;">
+                        <input type="checkbox" v-model="filters.hideHealthy" />
+                        Hide healthy
+                    </label>
+                    </div>
+
+                    <div style="flex:1;"></div>
+
+                    <!-- Quick actions -->
+                    <button class="Button" @click="resetFilters()" style="margin-left:auto;">
+                    Reset filters
+                    </button>
                 </div>
-
-                <!-- Owner dropdown -->
-                <div style="min-width:220px;">
-                <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-                    Owner
-                </label>
-                <select
-                    v-model="filters.owner"
-                    style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-                >
-                    <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
-                    {{ o.label }}
-                    </option>
-                </select>
-                </div>
-
-                <!-- Toggles -->
-                <div style="min-width:200px;">
-                <label style="display:flex; gap:8px; align-items:center; font-size:12px;">
-                    <input type="checkbox" v-model="filters.hideHealthy" />
-                    Hide healthy
-                </label>
-                </div>
-
-                <div style="flex:1;"></div>
-
-                <!-- Quick actions -->
-                <button class="Button" @click="resetFilters()" style="margin-left:auto;">
-                Reset filters
-                </button>
-            </div>
-            </div>
-
-            <!-- Summary pills -->
-            <div class="btech-row" style="gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-            <span class="btech-pill">Healthy: {{ summary["Healthy"] || 0 }}</span>
-            <span class="btech-pill">Flagged: {{ summary["Flagged"] || 0 }}</span>
-            <span class="btech-pill">Error: {{ summary["Error"] || 0 }}</span>
-            <span class="btech-pill">No Runs: {{ summary["No Runs"] || 0 }}</span>
             </div>
 
             
