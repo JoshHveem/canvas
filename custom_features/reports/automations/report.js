@@ -143,6 +143,44 @@
     },
 
     computed: {
+      ownerOptions() {
+        const rows = Array.isArray(this.rows) ? this.rows : [];
+
+        // Build a stable key so duplicate names don’t collide.
+        // Prefer email; fall back to name.
+        const seen = new Map(); // key -> { key, label, name, email }
+
+        for (const r of rows) {
+          const email = U.safeStr(r?.owner_email).trim();
+          const name = U.safeStr(r?.owner_name).trim();
+
+          const key = email || name;
+          if (!key) continue;
+
+          const label = email && name ? `${name} (${email})`
+                      : name ? name
+                      : email;
+
+          if (!seen.has(key)) {
+            seen.set(key, { key, label, name, email });
+          }
+        }
+
+        // Sort nicely by name then email
+        const opts = Array.from(seen.values()).sort((a, b) => {
+          const an = (a.name || a.email || "").toLowerCase();
+          const bn = (b.name || b.email || "").toLowerCase();
+          if (an < bn) return -1;
+          if (an > bn) return 1;
+          const ae = (a.email || "").toLowerCase();
+          const be = (b.email || "").toLowerCase();
+          return ae.localeCompare(be);
+        });
+
+        // Include "All"
+        return [{ key: "", label: "All owners" }, ...opts];
+      },
+
       visibleRows() {
         let rows = Array.isArray(this.rows) ? this.rows : [];
 
@@ -162,14 +200,16 @@
           });
         }
 
-        const owner = String(this.filters.owner || "").trim().toLowerCase();
-        if (owner) {
-          rows = rows.filter(
-            (r) =>
-              U.safeStr(r?.owner_email).toLowerCase().includes(owner) ||
-              U.safeStr(r?.owner_name).toLowerCase().includes(owner)
-          );
+        const ownerKey = U.safeStr(this.filters.owner).trim();
+        if (ownerKey) {
+          rows = rows.filter((r) => {
+            const email = U.safeStr(r?.owner_email).trim();
+            const name = U.safeStr(r?.owner_name).trim();
+            const key = email || name;
+            return key === ownerKey;
+          });
         }
+
 
         const status = this.filters.status;
         if (status && status !== "All") {

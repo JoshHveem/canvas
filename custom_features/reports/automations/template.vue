@@ -19,10 +19,12 @@
             <div class="btech-row" style="gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px;">
                 <div style="min-width:240px;">
                 <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Search</label>
-                <input v-model="filters.q" type="text"
-                    placeholder="name, owner, description..."
-                    style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;" />
-                </div>
+                <select v-model="filters.owner">
+                    <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
+                        {{ o.label }}
+                    </option>
+                </select>
+
 
                 <div style="min-width:220px;">
                 <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Owner</label>
