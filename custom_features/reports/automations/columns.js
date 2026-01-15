@@ -49,7 +49,12 @@
         false,
         "string",
         (r) => U.safeStr(r?.description),
-        null,
+        () => ({
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+          lineHeight: "1.25",
+        }),
         (r) => U.safeStr(r?.description)
       ),
 
