@@ -19,9 +19,18 @@
     }
 
     function parseTs(v) {
-        console.log(v);
-      const t = Date.parse(v || "");
-      console.log(t);
+      if (v === null || v === undefined) return NaN;
+
+      let s = String(v);
+
+      // Trim whitespace + odd spaces
+      s = s.trim().replace(/\u00A0/g, ""); // NBSP
+
+      // If it's wrapped in quotes, remove them
+      // e.g. "\"2026-01-14T...Z\"" or "'2026-01-14T...Z'"
+      s = s.replace(/^["']+/, "").replace(/["']+$/, "");
+
+      const t = Date.parse(s);
       return Number.isFinite(t) ? t : NaN;
     }
 

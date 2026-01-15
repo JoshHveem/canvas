@@ -56,7 +56,8 @@
         (r) => {
           const t = r?._metrics?.last_success_time;
           const ok = r?._metrics?.last_run_success;
-          console.log(r?._metrics?.last_success_time);
+          console.log("raw:", t, "json:", JSON.stringify(t), "parse:", Date.parse(String(t).trim()));
+
           if (!t) return "n/a";
           const label = ok === true ? "success" : ok === false ? "FAIL" : "n/a";
           return `${U.fmtDateTime(t)}<br><span class="btech-muted">${label}</span>`;
