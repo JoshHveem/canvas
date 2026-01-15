@@ -108,6 +108,13 @@
       visibleRows() { if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts); }
     },
 
+    components: {
+      AutomationsTableView: RA.components.AutomationsTableView,
+      AutomationsGraphView: RA.components.AutomationsGraphView,
+      AutomationsFlaggedView: RA.components.AutomationsFlaggedView,
+    },
+
+
     data() {
       const colors = window.bridgetools?.colors || {
         red: "#b20b0f",
