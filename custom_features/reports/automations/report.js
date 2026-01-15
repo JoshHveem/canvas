@@ -238,6 +238,7 @@
           )}`;
           const payload = await this.U.httpGetJson(url);
           const autos = extractAutomations(payload);
+          console.log(autos);
 
           // ✅ ONLY processing here: attach _metrics
           const processed = autos.map(RA.metrics.computeAutomationMetrics);
