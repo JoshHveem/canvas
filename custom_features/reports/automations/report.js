@@ -37,6 +37,10 @@
     // D3 (pick a version you’ve used; v7 shown)
     await loadScriptOnce("https://d3js.org/d3.v7.min.js");
 
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/components/TableShell.js"
+    );
+
     // chart renderer
     await loadScriptOnce(
       "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"

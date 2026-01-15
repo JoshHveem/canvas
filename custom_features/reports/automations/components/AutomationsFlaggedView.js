@@ -4,50 +4,50 @@
 
   window.ReportAutomations.components.AutomationsFlaggedView = {
     name: "AutomationsFlaggedView",
+    components: {
+      TableShell: window.ReportAutomations.components.TableShell,
+    },
     props: {
       visibleRows: { type: Array, required: true },
       statusStyle: { type: Function, required: true },
     },
+    computed: {
+      columns() {
+        return [
+          { key: "status", label: "Status", width: "6rem" },
+          { key: "automation_id", label: "ID", width: "4rem" },
+          { key: "name", label: "Name", width: "1fr" },
+          { key: "flags", label: "Flags", width: "18rem" },
+        ];
+      },
+    },
     template: `
-      <div class="btech-card btech-theme" style="padding:12px; background:#fafafa;">
-        <div class="btech-row" style="align-items:center; gap:10px; margin-bottom:8px;">
-          <h4 class="btech-card-title" style="margin:0;">Flagged Runs</h4>
-          <div class="btech-muted" style="font-size:12px;">
-            Shows flagged automations and which checks were triggered
-          </div>
+      <div>
+        <div class="btech-muted" style="font-size:12px; margin-bottom:8px;">
+          (Placeholder) Later: filter to flagged only and list which checks triggered.
         </div>
 
-        <div class="btech-muted" style="font-size:12px; margin-bottom:10px;">
-          (Placeholder) Later: show only flagged, list flag reasons, and show recent flagged timestamps.
-        </div>
-
-        <div style="border-top:1px solid #eee;">
-          <div
-            v-for="(row, i) in visibleRows"
-            :key="row.automation_id || i"
-            style="display:flex; gap:12px; align-items:center; padding:8px 6px; border-bottom:1px solid #eee;"
-          >
-            <div style="width:5rem;">
+        <table-shell :rows="visibleRows" :columns="columns">
+          <template #cell="{ row, col }">
+            <template v-if="col.key === 'status'">
               <span class="btech-pill-text" :style="statusStyle(row?._metrics?.status)">
                 {{ row?._metrics?.status }}
               </span>
-            </div>
+            </template>
 
-            <div style="width:3.5rem; font-family:monospace;">
-              {{ row.automation_id }}
-            </div>
+            <template v-else-if="col.key === 'automation_id'">
+              <span style="font-family:monospace;">{{ row.automation_id }}</span>
+            </template>
 
-            <div style="flex:1; min-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <template v-else-if="col.key === 'name'">
               {{ row.name }}
-            </div>
+            </template>
 
-            <div style="min-width:260px;">
-              <span class="btech-muted" style="font-size:12px;">
-                flags: (to be implemented)
-              </span>
-            </div>
-          </div>
-        </div>
+            <template v-else-if="col.key === 'flags'">
+              <span class="btech-muted" style="font-size:12px;">(to be implemented)</span>
+            </template>
+          </template>
+        </table-shell>
       </div>
     `,
   };

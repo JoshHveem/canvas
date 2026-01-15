@@ -4,36 +4,46 @@
 
   window.ReportAutomations.components.AutomationsGraphView = {
     name: "AutomationsGraphView",
+    components: {
+      TableShell: window.ReportAutomations.components.TableShell,
+    },
     props: {
       visibleRows: { type: Array, required: true },
       statusStyle: { type: Function, required: true },
     },
+    computed: {
+      columns() {
+        // graph is a single long column
+        return [
+          { key: "status", label: "Status", width: "6rem" },
+          { key: "automation_id", label: "ID", width: "4rem" },
+          { key: "name", label: "Name", width: "18rem" },
+          { key: "graph", label: "Runs (30d)", width: "1fr" }, // long column
+        ];
+      },
+    },
     template: `
-      <div>
-        <div
-          v-for="row in visibleRows"
-          :key="row.automation_id"
-          style="display:flex; gap:10px; align-items:center; padding:6px 8px; border-bottom:1px solid #eee;"
-        >
-          <div style="width:5rem;">
+      <table-shell :rows="visibleRows" :columns="columns">
+        <template #cell="{ row, col }">
+          <template v-if="col.key === 'status'">
             <span class="btech-pill-text" :style="statusStyle(row?._metrics?.status)">
               {{ row?._metrics?.status }}
             </span>
-          </div>
+          </template>
 
-          <div style="width:3rem; font-family:monospace;">
-            {{ row.automation_id }}
-          </div>
+          <template v-else-if="col.key === 'automation_id'">
+            <span style="font-family:monospace;">{{ row.automation_id }}</span>
+          </template>
 
-          <div style="width:18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          <template v-else-if="col.key === 'name'">
             {{ row.name }}
-          </div>
+          </template>
 
-          <div style="flex:1; min-width:260px;">
+          <template v-else-if="col.key === 'graph'">
             <div :ref="'chart_' + row.automation_id"></div>
-          </div>
-        </div>
-      </div>
+          </template>
+        </template>
+      </table-shell>
     `,
   };
 })();
