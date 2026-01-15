@@ -21,6 +21,7 @@
     function parseTs(v) {
         console.log(v);
       const t = Date.parse(v || "");
+      console.log(t);
       return Number.isFinite(t) ? t : NaN;
     }
 
