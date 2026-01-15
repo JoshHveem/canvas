@@ -88,6 +88,7 @@
 
                 <automations-graph-view
                     v-show="viewMode === 'graph'"
+                    ref="graphView"
                     :visible-rows="visibleRows"
                     :status-style="statusStyle"
                 ></automations-graph-view>

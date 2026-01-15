@@ -255,15 +255,19 @@
     methods: {
       renderAllCharts() {
         if (this.viewMode !== "graph") return;
+
+        const gv = this.$refs.graphView;
+        if (!gv) return;
+
         const rows = this.visibleRows || [];
         for (const r of rows) {
           const id = r?.automation_id;
-          const el = this.$refs[`chart_${id}`];
-          // Vue refs in v-for can be arrays; normalize
+          const el = gv.$refs[`chart_${id}`];
           const node = Array.isArray(el) ? el[0] : el;
           if (node) RA.charts.renderRuns30(node, r, this.colors, U);
         }
       },
+
       getColumnsWidthsString() {
         return this.table.getColumnsWidthsString();
       },
