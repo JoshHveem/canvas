@@ -278,18 +278,21 @@
         <div
           v-for="(row, i) in visibleRows"
           :key="(row._run && (row._run.id || row._run.run_id)) || (row.automation_id + '_' + i)"
-          style="padding:.25rem .5rem; display:grid; align-items:flex-start; font-size:.75rem; line-height:1.35rem;"
+          style="padding:.25rem .5rem; display:grid; align-items: center; font-size:.75rem; line-height:1.35rem;"
           :style="{
             'grid-template-columns': getColumnsWidthsString(),
             'background-color': (i % 2) ? 'white' : '#F8F8F8'
           }"
         >
-          <div
-            v-for="col in table.getVisibleColumns()"
-            :key="col.name"
-            style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
-            :title="col.getTooltip(row)"
-          >
+        <div
+          v-for="col in table.getVisibleColumns()"
+          :key="col.name"
+          :title="col.getTooltip(row)"
+          :style="Object.assign(
+            { display:'inline-block', overflow:'hidden', textOverflow:'ellipsis' },
+            col.get_style(row) || {}
+          )"
+        >
             <span
               :class="col.style_formula ? 'btech-pill-text' : ''"
               :style="col.get_style(row)"
