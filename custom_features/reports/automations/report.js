@@ -1,193 +1,93 @@
 // reports/automations/report.js
 (async function () {
   /********************************************************************
-   * Config
+   * Script loader helpers
    ********************************************************************/
-  const API_BASE = "https://reports.bridgetools.dev";
-  const API_URL = `${API_BASE}/api/automations`; // supports ?runs_limit=...
-  const TEMPLATE_URL =
-    "https://bridgetools.dev/canvas/custom_features/reports/automations/template.vue";
+  async function loadScriptOnce(url) {
+    // Prevent double-loading if user navigates / reopens
+    if (document.querySelector(`script[src="${url}"]`)) return;
 
-  const DEFAULT_RUNS_LIMIT = 200;
-
-  /********************************************************************
-   * Template loader
-   ********************************************************************/
-  function stripVueTemplate(vueFileText) {
-    return String(vueFileText || "")
-      .replace(/^[\s\S]*?<template>/i, "")
-      .replace(/<\/template>[\s\S]*$/i, "")
-      .trim();
-  }
-
-  async function loadTemplateHtml() {
-    let vueText = "";
-    await $.get(
-      TEMPLATE_URL,
-      null,
-      function (txt) {
-        vueText = txt;
-      },
-      "text"
-    );
-    return stripVueTemplate(vueText);
+    await $.getScript(url);
   }
 
   /********************************************************************
-   * Mount helpers
+   * Ensure dependencies (ORDER MATTERS)
    ********************************************************************/
-  async function mountIntoContentWithTemplate() {
-    const content = document.querySelector("#content");
-    if (!content) {
-      console.error("Expected #content on page, but it was not found.");
-      return null;
-    }
-
-    const templateHtml = await loadTemplateHtml();
-
-    content.innerHTML = "";
-    const host = document.createElement("div");
-    host.id = "automations-report-host";
-    host.innerHTML = templateHtml;
-    content.appendChild(host);
-
-    const root = host.querySelector("#automations-report-root");
-    if (!root) {
-      console.error(
-        "template.vue must contain an element with id='automations-report-root'"
+  try {
+    // Vue (if not already globally loaded)
+    if (!window.Vue) {
+      await loadScriptOnce(
+        "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"
       );
-      return null;
     }
 
-    return root;
-  }
+    // Shared core (utils + template mounting)
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js"
+    );
 
-  /********************************************************************
-   * Generic helpers
-   ********************************************************************/
-  function safeStr(v) {
-    return v === null || v === undefined ? "" : String(v);
-  }
+    // Report-specific logic
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js"
+    );
 
-  function msToPretty(ms) {
-    const n = Number(ms);
-    if (!Number.isFinite(n) || n < 0) return "n/a";
-    if (n < 1000) return `${Math.round(n)} ms`;
-    const s = n / 1000;
-    if (s < 60) return `${s.toFixed(1)} s`;
-    const m = s / 60;
-    if (m < 60) return `${m.toFixed(1)} min`;
-    const h = m / 60;
-    return `${h.toFixed(1)} hr`;
-  }
-
-  function parseTs(v) {
-    const t = Date.parse(v || "");
-    return Number.isFinite(t) ? t : NaN;
-  }
-
-  function fmtDateTime(v) {
-    const t = parseTs(v);
-    if (!Number.isFinite(t)) return "n/a";
-    return new Date(t).toLocaleString();
-  }
-
-  function daysAgo(v) {
-    const t = parseTs(v);
-    if (!Number.isFinite(t)) return NaN;
-    return (Date.now() - t) / (1000 * 60 * 60 * 24);
-  }
-
-  async function httpGetJson(url) {
-    // Prefer bridgetools.req if available (your ecosystem)
-    if (window.bridgetools?.req) {
-      const resp = await window.bridgetools.req(url);
-      return resp?.data ?? resp;
-    }
-
-    const resp = await fetch(url, { credentials: "include" });
-    if (!resp.ok) throw new Error(`GET failed: ${resp.status}`);
-    return await resp.json();
-  }
-
-  /********************************************************************
-   * Metrics (client-side)
-   ********************************************************************/
-  function computeAutomationMetrics(a) {
-    const runs = Array.isArray(a?.runs) ? a.runs.slice() : [];
-
-    runs.sort((x, y) => parseTs(y?.run_time) - parseTs(x?.run_time));
-
-    const lastRun = runs[0] || null;
-    const lastRunTime = lastRun?.run_time ?? null;
-    const lastSuccess = runs.find((r) => r && r.success === true) || null;
-    const lastSuccessTime = lastSuccess?.run_time ?? null;
-
-    let failsSinceSuccess = 0;
-    for (const r of runs) {
-      if (!r) continue;
-      if (r.success === true) break;
-      if (r.success === false) failsSinceSuccess += 1;
-    }
-
-    const total = runs.length;
-    const successes = runs.filter((r) => r?.success === true).length;
-    const successRate = total ? successes / total : NaN;
-
-    const durations = runs
-      .map((r) => Number(r?.duration_ms))
-      .filter((n) => Number.isFinite(n) && n >= 0);
-    const avgDuration = durations.length
-      ? durations.reduce((s, n) => s + n, 0) / durations.length
-      : NaN;
-
-    const daysSinceLast = lastRunTime ? daysAgo(lastRunTime) : NaN;
-
-    let status = "Unknown";
-    if (!lastRun) status = "No Runs";
-    else if (
-      lastRun.success === false ||
-      failsSinceSuccess >= 3 ||
-      (Number.isFinite(daysSinceLast) && daysSinceLast >= 7)
-    )
-      status = "Needs Attention";
-    else if (
-      failsSinceSuccess >= 1 ||
-      (Number.isFinite(daysSinceLast) && daysSinceLast >= 3)
-    )
-      status = "Watch";
-    else status = "Healthy";
-
-    return {
-      ...a,
-      _runs_sorted: runs,
-      _metrics: {
-        total_runs: total,
-        successes,
-        success_rate: successRate,
-        avg_duration_ms: avgDuration,
-        last_run_time: lastRunTime,
-        last_run_success: lastRun ? Boolean(lastRun.success) : null,
-        last_success_time: lastSuccessTime,
-        fails_since_success: failsSinceSuccess,
-        days_since_last_run: daysSinceLast,
-        status,
-      },
-    };
-  }
-
-  /********************************************************************
-   * Boot
-   ********************************************************************/
-  if (!window.Vue) {
-    console.error("Vue not found. Load vue.2.6.12.js before this report.");
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/columns.js"
+    );
+  } catch (e) {
+    console.error("Failed to load automations report dependencies", e);
     return;
   }
 
-  const rootEl = await mountIntoContentWithTemplate();
+  /********************************************************************
+   * Sanity checks (fail fast, readable errors)
+   ********************************************************************/
+  const RC = window.ReportCore;
+  const RA = window.ReportAutomations;
+
+  if (!RC?.util || !RC?.ui) {
+    console.error("ReportCore not initialized correctly.");
+    return;
+  }
+  if (!RA?.metrics?.computeAutomationMetrics) {
+    console.error("Automations metrics not loaded.");
+    return;
+  }
+  if (!RA?.columns?.buildColumns) {
+    console.error("Automations columns not loaded.");
+    return;
+  }
+  if (!window.ReportTable || !window.ReportColumn) {
+    console.error("ReportTable / ReportColumn globals missing.");
+    return;
+  }
+
+  /********************************************************************
+   * Config (kept here, as requested)
+   ********************************************************************/
+  const API_BASE = "https://reports.bridgetools.dev";
+  const API_URL = `${API_BASE}/api/automations`;
+  const TEMPLATE_URL =
+    "https://bridgetools.dev/canvas/custom_features/reports/automations/template.vue";
+  const DEFAULT_RUNS_LIMIT = 200;
+
+  const U = RC.util;
+
+  /********************************************************************
+   * Mount template
+   ********************************************************************/
+  const rootEl = await RC.ui.mountIntoContentWithTemplate({
+    templateUrl: TEMPLATE_URL,
+    hostId: "automations-report-host",
+    rootId: "automations-report-root",
+    contentSelector: "#content",
+  });
+
   if (!rootEl) return;
 
-  // ✅ Root Vue instance uses the DOM template already inserted from template.vue
+  /********************************************************************
+   * Vue app
+   ********************************************************************/
   new Vue({
     el: rootEl,
 
@@ -229,137 +129,8 @@
     },
 
     async created() {
-      this.table.setColumns([
-        new ReportColumn(
-          "Status",
-          "Health status computed from recent runs.",
-          "10rem",
-          false,
-          "string",
-          (r) => safeStr(r?._metrics?.status),
-          (r) => this.statusStyle(r?._metrics?.status),
-          (r) => safeStr(r?._metrics?.status)
-        ),
-
-        new ReportColumn(
-          "Automation",
-          "Name (automation_id)",
-          "18rem",
-          false,
-          "string",
-          (r) =>
-            `${safeStr(r?.name)} <span class="btech-muted">(#${safeStr(
-              r?.automation_id
-            )})</span>`,
-          null,
-          (r) => safeStr(r?.name)
-        ),
-
-        new ReportColumn(
-          "Owner",
-          "Owner name/email",
-          "16rem",
-          false,
-          "string",
-          (r) => {
-            const nm = safeStr(r?.owner_name);
-            const em = safeStr(r?.owner_email);
-            return em ? `${nm}<br><span class="btech-muted">${em}</span>` : nm;
-          },
-          null,
-          (r) => `${safeStr(r?.owner_name)} ${safeStr(r?.owner_email)}`
-        ),
-
-        new ReportColumn(
-          "Last Run",
-          "Most recent run time + success/fail",
-          "14rem",
-          false,
-          "number",
-          (r) => {
-            const t = r?._metrics?.last_run_time;
-            const ok = r?._metrics?.last_run_success;
-            if (!t) return "n/a";
-            const label = ok === true ? "success" : ok === false ? "FAIL" : "n/a";
-            return `${fmtDateTime(t)}<br><span class="btech-muted">${label}</span>`;
-          },
-          (r) => this.lastRunStyle(r),
-          (r) => parseTs(r?._metrics?.last_run_time)
-        ),
-
-        new ReportColumn(
-          "Days Since",
-          "Days since last run",
-          "7rem",
-          false,
-          "number",
-          (r) => {
-            const d = r?._metrics?.days_since_last_run;
-            return Number.isFinite(d) ? d.toFixed(1) : "n/a";
-          },
-          (r) => this.daysSinceStyle(r?._metrics?.days_since_last_run),
-          (r) => Number(r?._metrics?.days_since_last_run)
-        ),
-
-        new ReportColumn(
-          "Fail Streak",
-          "Consecutive failures since last success",
-          "8rem",
-          false,
-          "number",
-          (r) => Number(r?._metrics?.fails_since_success ?? 0),
-          (r) => this.failStreakStyle(r?._metrics?.fails_since_success),
-          (r) => Number(r?._metrics?.fails_since_success ?? 0)
-        ),
-
-        new ReportColumn(
-          "Runs",
-          "Total runs in window",
-          "5rem",
-          false,
-          "number",
-          (r) => Number(r?._metrics?.total_runs ?? 0),
-          null,
-          (r) => Number(r?._metrics?.total_runs ?? 0)
-        ),
-
-        new ReportColumn(
-          "Success %",
-          "Success rate over window",
-          "7rem",
-          false,
-          "number",
-          (r) => {
-            const p = r?._metrics?.success_rate;
-            return Number.isFinite(p) ? (p * 100).toFixed(0) + "%" : "n/a";
-          },
-          (r) => this.successPctStyle(r?._metrics?.success_rate),
-          (r) => Number(r?._metrics?.success_rate ?? NaN)
-        ),
-
-        new ReportColumn(
-          "Avg Duration",
-          "Average duration across runs with duration_ms",
-          "9rem",
-          false,
-          "number",
-          (r) => msToPretty(r?._metrics?.avg_duration_ms),
-          null,
-          (r) => Number(r?._metrics?.avg_duration_ms ?? NaN)
-        ),
-
-        new ReportColumn(
-          "Description",
-          "Automation description",
-          "24rem",
-          false,
-          "string",
-          (r) => safeStr(r?.description),
-          null,
-          (r) => safeStr(r?.description)
-        ),
-      ]);
-
+      // Columns come from columns.js
+      this.table.setColumns(RA.columns.buildColumns(this));
       await this.load();
     },
 
@@ -377,7 +148,7 @@
               r?.owner_email,
               r?.automation_id,
             ]
-              .map((x) => safeStr(x).toLowerCase())
+              .map((x) => U.safeStr(x).toLowerCase())
               .join(" ");
             return hay.includes(q);
           });
@@ -387,18 +158,20 @@
         if (owner) {
           rows = rows.filter(
             (r) =>
-              safeStr(r?.owner_email).toLowerCase().includes(owner) ||
-              safeStr(r?.owner_name).toLowerCase().includes(owner)
+              U.safeStr(r?.owner_email).toLowerCase().includes(owner) ||
+              U.safeStr(r?.owner_name).toLowerCase().includes(owner)
           );
         }
 
         const status = this.filters.status;
         if (status && status !== "All") {
-          rows = rows.filter((r) => safeStr(r?._metrics?.status) === status);
+          rows = rows.filter((r) => U.safeStr(r?._metrics?.status) === status);
         }
 
         if (this.filters.hideHealthy) {
-          rows = rows.filter((r) => safeStr(r?._metrics?.status) !== "Healthy");
+          rows = rows.filter(
+            (r) => U.safeStr(r?._metrics?.status) !== "Healthy"
+          );
         }
 
         this.table.setRows(rows);
@@ -406,9 +179,8 @@
       },
 
       summary() {
-        const rows = Array.isArray(this.visibleRows) ? this.visibleRows : [];
-        return rows.reduce((acc, r) => {
-          const s = safeStr(r?._metrics?.status) || "Unknown";
+        return (this.visibleRows || []).reduce((acc, r) => {
+          const s = U.safeStr(r?._metrics?.status) || "Unknown";
           acc[s] = (acc[s] || 0) + 1;
           return acc;
         }, {});
@@ -424,8 +196,9 @@
         this.tableTick++;
       },
 
+      // --- styles (unchanged) ---
       statusStyle(status) {
-        const s = safeStr(status);
+        const s = U.safeStr(status);
         if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
         if (s === "Watch") return { backgroundColor: this.colors.yellow, color: this.colors.black };
         if (s === "Needs Attention") return { backgroundColor: this.colors.red, color: this.colors.white };
@@ -469,19 +242,16 @@
         this.loading = true;
         this.error = "";
         try {
-          const limit = DEFAULT_RUNS_LIMIT;
-          const url = `${API_URL}?runs_limit=${encodeURIComponent(limit)}`;
+          const url = `${API_URL}?runs_limit=${encodeURIComponent(DEFAULT_RUNS_LIMIT)}`;
+          const docs = await U.httpGetJson(url);
 
-          const docs = await httpGetJson(url);
-
-          // tolerate multiple response shapes
           const list =
             Array.isArray(docs) ? docs :
             Array.isArray(docs?.data) ? docs.data :
             Array.isArray(docs?.automations) ? docs.automations :
             [];
 
-          this.rows = list.map(computeAutomationMetrics);
+          this.rows = list.map(RA.metrics.computeAutomationMetrics);
         } catch (e) {
           this.error = String(e?.message || e);
           this.rows = [];
