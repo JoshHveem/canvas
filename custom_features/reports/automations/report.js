@@ -19,14 +19,16 @@
       );
     }
 
-    // Report core (ReportTable / ReportColumn / utils / mount helper)
     await loadScriptOnce(
       "https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js"
     );
 
-    // Metrics helper (adds _metrics to each automation)
     await loadScriptOnce(
       "https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js"
+    );
+
+    await loadScriptOnce(
+      "https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js"
     );
 
     // Views (each view owns its own columns/rows/table/filtering)
