@@ -80,26 +80,32 @@
             <div v-else>
                 <automations-table-view
                     v-show="viewMode === 'table'"
-                    :table="table"
-                    :visible-rows="visibleRows"
-                    :get-columns-widths-string="getColumnsWidthsString"
-                    :set-sort-column="setSortColumn"
+                    :rows="visibleRows"
+                    :columns="tableColumns"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    :set-sort="setSort"
                 ></automations-table-view>
 
                 <automations-graph-view
                     v-show="viewMode === 'graph'"
                     ref="graphView"
-                    :visible-rows="visibleRows"
+                    :rows="visibleRows"
                     :status-style="statusStyle"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    :set-sort="setSort"
                 ></automations-graph-view>
 
                 <automations-flagged-view
                     v-show="viewMode === 'flagged'"
-                    :visible-rows="visibleRows"
+                    :rows="visibleRows"
                     :status-style="statusStyle"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    :set-sort="setSort"
                 ></automations-flagged-view>
-
-            </div>
+            </div> 
         </div>
     </div>
 </div>
