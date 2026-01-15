@@ -19,17 +19,38 @@
       ),
 
       new ReportColumn(
+        "ID",
+        "Name",
+        "2rem",
+        false,
+        "string",
+        (r) =>
+          `${r?.automation_id}`,
+        null,
+        (r) => r?.automation_id
+      ),
+
+      new ReportColumn(
         "Automation",
-        "Name (automation_id)",
+        "Name",
         "18rem",
         false,
         "string",
         (r) =>
-          `${U.safeStr(r?.name)} <span class="btech-muted">(#${U.safeStr(
-            r?.automation_id
-          )})</span>`,
+          `${U.safeStr(r?.name)}`,
         null,
         (r) => U.safeStr(r?.name)
+      ),
+
+      new ReportColumn(
+        "Description",
+        "Automation description",
+        "24rem",
+        false,
+        "string",
+        (r) => U.safeStr(r?.description),
+        null,
+        (r) => U.safeStr(r?.description)
       ),
 
       new ReportColumn(
@@ -80,42 +101,6 @@
       ),
 
       new ReportColumn(
-        "Fail Streak",
-        "Consecutive failures since last success",
-        "8rem",
-        false,
-        "number",
-        (r) => Number(r?._metrics?.fails_since_success ?? 0),
-        (r) => vm.failStreakStyle(r?._metrics?.fails_since_success),
-        (r) => Number(r?._metrics?.fails_since_success ?? 0)
-      ),
-
-      new ReportColumn(
-        "Runs",
-        "Total runs in window",
-        "5rem",
-        false,
-        "number",
-        (r) => Number(r?._metrics?.total_runs ?? 0),
-        null,
-        (r) => Number(r?._metrics?.total_runs ?? 0)
-      ),
-
-      new ReportColumn(
-        "Success %",
-        "Success rate over window",
-        "7rem",
-        false,
-        "number",
-        (r) => {
-          const p = r?._metrics?.success_rate;
-          return Number.isFinite(p) ? (p * 100).toFixed(0) + "%" : "n/a";
-        },
-        (r) => vm.successPctStyle(r?._metrics?.success_rate),
-        (r) => Number(r?._metrics?.success_rate ?? NaN)
-      ),
-
-      new ReportColumn(
         "Avg Duration",
         "Average duration across runs with duration_ms",
         "9rem",
@@ -126,16 +111,6 @@
         (r) => Number(r?._metrics?.avg_duration_ms ?? NaN)
       ),
 
-      new ReportColumn(
-        "Description",
-        "Automation description",
-        "24rem",
-        false,
-        "string",
-        (r) => U.safeStr(r?.description),
-        null,
-        (r) => U.safeStr(r?.description)
-      ),
     ];
   };
 })();
