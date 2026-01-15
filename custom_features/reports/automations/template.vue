@@ -1,109 +1,74 @@
 <template>
-<div id="automations-report-root" class="btech-card btech-theme" style="padding:12px;">
-    <!-- put your existing report markup here -->
+  <div id="automations-report-root" class="btech-card btech-theme" style="padding:12px;">
     <h3 class="btech-card-title" style="margin:0 0 10px 0;">Automations</h3>
 
-    <!-- example slot: your table etc -->
     <div v-if="loading" class="btech-muted">Loading…</div>
+
     <div v-else>
-        <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-            <!-- Header / Actions -->
-             <!-- Header / Actions -->
-            <div class="btech-row" style="align-items:flex-start; gap:12px; margin-bottom:12px;">
-            <div>
-                <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
-                <div class="btech-muted" style="font-size:12px; margin-top:2px;">
-                Monitor runs, errors, and ownership at a glance
-                </div>
+      <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
+        <!-- Header / Actions -->
+        <div class="btech-row" style="align-items:flex-start; gap:12px; margin-bottom:12px;">
+          <div>
+            <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
+            <div class="btech-muted" style="font-size:12px; margin-top:2px;">
+              Monitor runs, errors, and ownership at a glance
             </div>
+          </div>
 
-            <div style="flex:1;"></div>
+          <div style="flex:1;"></div>
 
-            <!-- View buttons -->
-            <div class="btech-row" style="gap:8px; align-items:center;">
-                <button
-                class="Button"
-                @click="viewMode = 'table'"
-                :style="viewMode === 'table' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
-                title="Table view"
-                >
-                Table
-                </button>
-
-                <button
-                class="Button"
-                @click="viewMode = 'graph'"
-                :style="viewMode === 'graph' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
-                title="Graph view"
-                >
-                Graph
-                </button>
-
-                <button
-                class="Button"
-                @click="viewMode = 'flagged'"
-                :style="viewMode === 'flagged' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
-                title="Flagged view"
-                >
-                Flagged
-                </button>
-            </div>
-
-            <!-- Refresh icon button -->
-            <button
-                class="Button"
-                @click="load()"
-                :disabled="loading"
-                title="Refresh"
-                style="margin-left:8px; width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;"
-            >
-                <!-- refresh icon -->
-                <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px; height:18px;">
-                <path
-                    fill="currentColor"
-                    d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-4.65Z"
-                />
-                </svg>
+          <!-- View buttons -->
+          <div class="btech-row" style="gap:8px; align-items:center;">
+            <button class="Button"
+              @click="viewMode='table'"
+              :style="viewMode==='table' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+              Table
             </button>
-            </div>
 
-            
+            <button class="Button"
+              @click="viewMode='graph'"
+              :style="viewMode==='graph' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+              Graph
+            </button>
 
-            <div v-if="error" class="btech-muted" style="padding:8px; color:#b20b0f;">
-                {{ error }}
-            </div>
+            <button class="Button"
+              @click="viewMode='flagged'"
+              :style="viewMode==='flagged' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+              Flagged
+            </button>
+          </div>
 
-            <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
-                Loading automations…
-            </div>
-
-            <div v-else>
-                <automations-table-view
-                    v-show="viewMode === 'table'"
-                    :table="tableTable"
-                    :rows="tableRows"
-                    :get-columns-widths-string="getColumnsWidthsString"
-                    :set-sort-column="setSortColumn"
-                ></automations-table-view>
-
-                <automations-graph-view
-                    v-show="viewMode === 'graph'"
-                    :table="graphTable"
-                    :rows="graphRows"
-                    :get-columns-widths-string="getColumnsWidthsString"
-                    :set-sort-column="setSortColumn"
-                ></automations-graph-view>
-
-                <automations-flagged-view
-                    v-show="viewMode === 'flagged'"
-                    :table="flaggedTable"
-                    :rows="flaggedRows"
-                    :get-columns-widths-string="getColumnsWidthsString"
-                    :set-sort-column="setSortColumn"
-                ></automations-flagged-view>
-            </div>
- 
+          <!-- Refresh icon button -->
+          <button
+            class="Button"
+            @click="load()"
+            :disabled="loading"
+            title="Refresh"
+            style="margin-left:8px; width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px; height:18px;">
+              <path
+                fill="currentColor"
+                d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-4.65Z"
+              />
+            </svg>
+          </button>
         </div>
+
+        <div v-if="error" class="btech-muted" style="padding:8px; color:#b20b0f;">
+          {{ error }}
+        </div>
+
+        <!-- Active view -->
+        <component
+          :is="activeViewComponent"
+          :automations="automations"
+          :runs="runs"
+          :colors="colors"
+          :filters="filters"
+          :util="U"
+        />
+      </div>
     </div>
-</div>
+  </div>
 </template>
