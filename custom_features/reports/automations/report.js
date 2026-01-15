@@ -243,6 +243,7 @@
 
           this.automations = processed;
           this.runs = flattenRuns(processed);
+          console.log(this.runs);
         } catch (e) {
           this.error = String(e?.message || e);
           this.automations = [];
