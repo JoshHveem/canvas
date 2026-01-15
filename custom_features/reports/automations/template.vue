@@ -8,56 +8,56 @@
       <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
         <!-- Header / Actions -->
         <!-- Header / Actions -->
-<div
-  style="display:grid; grid-template-columns: 1fr auto; grid-template-rows:auto auto; column-gap:12px; row-gap:8px; margin-bottom:12px;"
->
-  <!-- Left title -->
-  <div style="grid-column:1; grid-row:1;">
-    <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
-    <div class="btech-muted" style="font-size:12px; margin-top:2px;">
-      Monitor runs, errors, and ownership at a glance
-    </div>
-  </div>
+        <div
+        style="display:grid; grid-template-columns: 1fr auto; grid-template-rows:auto auto; column-gap:12px; row-gap:8px; margin-bottom:12px;"
+        >
+        <!-- Left title -->
+        <div style="grid-column:1; grid-row:1;">
+            <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
+            <div class="btech-muted" style="font-size:12px; margin-top:2px;">
+            Monitor runs, errors, and ownership at a glance
+            </div>
+        </div>
 
-  <!-- Top-right refresh -->
-  <div style="grid-column:2; grid-row:1; justify-self:end; align-self:start;">
-    <button
-      class="Button"
-      @click="load()"
-      :disabled="loading"
-      title="Refresh"
-      style="width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px; height:18px;">
-        <path
-          fill="currentColor"
-          d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-4.65Z"
-        />
-      </svg>
-    </button>
-  </div>
+        <!-- Top-right refresh -->
+        <div style="grid-column:2; grid-row:1; justify-self:end; align-self:start;">
+            <button
+            class="Button"
+            @click="load()"
+            :disabled="loading"
+            title="Refresh"
+            style="width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;"
+            >
+            <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px; height:18px;">
+                <path
+                fill="currentColor"
+                d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-4.65Z"
+                />
+            </svg>
+            </button>
+        </div>
 
-  <!-- Bottom row: view buttons aligned right -->
-  <div style="grid-column:1 / span 2; grid-row:2; display:flex; justify-content:flex-end; gap:8px; align-items:center;">
-    <button class="Button"
-      @click="viewMode='table'"
-      :style="viewMode==='table' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
-      Table
-    </button>
+        <!-- Bottom row: view buttons aligned right -->
+        <div style="grid-column:1 / span 2; grid-row:2; display:flex; justify-content:flex-end; gap:8px; align-items:center;">
+            <button class="Button"
+            @click="viewMode='table'"
+            :style="viewMode==='table' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+            Table
+            </button>
 
-    <button class="Button"
-      @click="viewMode='graph'"
-      :style="viewMode==='graph' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
-      Graph
-    </button>
+            <button class="Button"
+            @click="viewMode='graph'"
+            :style="viewMode==='graph' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+            Graph
+            </button>
 
-    <button class="Button"
-      @click="viewMode='flagged'"
-      :style="viewMode==='flagged' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
-      Flagged
-    </button>
-  </div>
-</div>
+            <button class="Button"
+            @click="viewMode='flagged'"
+            :style="viewMode==='flagged' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''">
+            Flagged
+            </button>
+        </div>
+        </div>
 
 
         <div v-if="error" class="btech-muted" style="padding:8px; color:#b20b0f;">
