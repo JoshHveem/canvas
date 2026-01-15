@@ -219,8 +219,8 @@
       statusStyle(status) {
         const s = U.safeStr(status);
         if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
-        if (s === "Watch") return { backgroundColor: this.colors.yellow, color: this.colors.black };
-        if (s === "Needs Attention") return { backgroundColor: this.colors.red, color: this.colors.white };
+        if (s === "Flagged") return { backgroundColor: this.colors.yellow, color: this.colors.black };
+        if (s === "Error") return { backgroundColor: this.colors.red, color: this.colors.white };
         if (s === "No Runs") return { backgroundColor: this.colors.gray, color: this.colors.black };
         return { backgroundColor: this.colors.gray, color: this.colors.black };
       },

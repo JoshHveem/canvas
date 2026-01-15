@@ -10,14 +10,6 @@
     const dd = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${dd}`;
   }
-  function hasAnyFlags(run) {
-    const f = run?.flags;
-    if (!f) return false;
-    if (Array.isArray(f)) return f.length > 0;
-    if (typeof f === "object") return Object.keys(f).length > 0;
-    return Boolean(f); // last-resort
-  }
-
 
   RA.charts.renderRuns30 = function renderRuns30(container, row, colors, U) {
     if (!window.d3) return;
@@ -50,18 +42,14 @@
       const b = byDay.get(k);
       if (!b) continue;
 
-      const s = r?.success;
-      const ok = (s === true || s === "true" || s === 1 || s === "1");
-      const bad = (s === false || s === "false" || s === 0 || s === "0");
+      const st = r?.run_status;
 
-      if (ok) {
-        if (hasAnyFlags(r)) b.flagged_success += 1;
-        else b.success += 1;
-      } else if (bad) {
-        b.fail += 1;
-      }
+      if (st === "Healthy") b.success += 1;
+      else if (st === "Flagged") b.flagged_success += 1;
+      else if (st === "Error") b.fail += 1;
 
       b.total = b.success + b.flagged_success + b.fail;
+
     }
  
 
