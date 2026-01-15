@@ -69,7 +69,7 @@
       new ReportColumn(
         "Frequency",
         "How frequently should this automation be running?",
-        "24rem",
+        "8rem",
         false,
         "string",
         (r) => `<p style="margin:0;">${U.safeStr(r?.frequency)}</p>`,
