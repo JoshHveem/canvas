@@ -83,9 +83,9 @@
         "7rem",
         false,
         "string",
-        (r) => U.safeStr((r?._run || {})?.status),
+        (r) => U.safeStr((r?._run || {})?.run_status),
         null,
-        (r) => U.safeStr((r?._run || {})?.status)
+        (r) => U.safeStr((r?._run || {})?.run_status)
       ),
 
       new ReportColumn(
