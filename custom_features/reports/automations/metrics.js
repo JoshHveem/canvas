@@ -6,6 +6,7 @@
 
   RA.metrics.computeAutomationMetrics = function computeAutomationMetrics(a) {
     const runs = Array.isArray(a?.runs) ? a.runs.slice() : [];
+    console.log(runs);
     runs.sort((x, y) => U.parseTs(y?.run_time) - U.parseTs(x?.run_time));
 
     const lastRun = runs[0] || null;
