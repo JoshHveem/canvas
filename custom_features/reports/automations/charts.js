@@ -10,6 +10,14 @@
     const dd = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${dd}`;
   }
+  function hasAnyFlags(run) {
+    const f = run?.flags;
+    if (!f) return false;
+    if (Array.isArray(f)) return f.length > 0;
+    if (typeof f === "object") return Object.keys(f).length > 0;
+    return Boolean(f); // last-resort
+  }
+
 
   RA.charts.renderRuns30 = function renderRuns30(container, row, colors, U) {
     if (!window.d3) return;
@@ -27,7 +35,8 @@
     for (let i = 29; i >= 0; i--) {
       const t = now - i * 24 * 60 * 60 * 1000;
       const k = dayKey(t);
-      const obj = { day: k, success: 0, fail: 0, total: 0 };
+      const obj = { day: k, success: 0, flagged_success: 0, fail: 0, total: 0 };
+
       bins.push(obj);
       byDay.set(k, obj);
     }
@@ -42,11 +51,19 @@
       if (!b) continue;
 
       const s = r?.success;
-      if (s === true || s === "true" || s === 1 || s === "1") b.success += 1;
-      else if (s === false || s === "false" || s === 0 || s === "0") b.fail += 1;
+      const ok = (s === true || s === "true" || s === 1 || s === "1");
+      const bad = (s === false || s === "false" || s === 0 || s === "0");
 
-      b.total = b.success + b.fail;
+      if (ok) {
+        if (hasAnyFlags(r)) b.flagged_success += 1;
+        else b.success += 1;
+      } else if (bad) {
+        b.fail += 1;
+      }
+
+      b.total = b.success + b.flagged_success + b.fail;
     }
+ 
 
     const data = bins;
     const maxY = Math.max(1, ...data.map(d => d.total));
@@ -83,7 +100,7 @@
       .attr("class", "bar")
       .attr("transform", d => `translate(${x(d.day)},0)`);
 
-    // success portion
+    // clean success portion (green)
     bar.append("rect")
       .attr("x", 0)
       .attr("y", d => y(d.success))
@@ -91,13 +108,22 @@
       .attr("height", d => innerH - y(d.success))
       .attr("fill", colors.green);
 
-    // fail portion stacked above success
+    // flagged success portion stacked above clean success (yellow)
     bar.append("rect")
       .attr("x", 0)
-      .attr("y", d => y(d.success + d.fail))
+      .attr("y", d => y(d.success + d.flagged_success))
       .attr("width", x.bandwidth())
-      .attr("height", d => y(d.success) - y(d.success + d.fail))
+      .attr("height", d => y(d.success) - y(d.success + d.flagged_success))
+      .attr("fill", colors.yellow);
+
+    // fail portion stacked above successes (red)
+    bar.append("rect")
+      .attr("x", 0)
+      .attr("y", d => y(d.success + d.flagged_success + d.fail))
+      .attr("width", x.bandwidth())
+      .attr("height", d => y(d.success + d.flagged_success) - y(d.success + d.flagged_success + d.fail))
       .attr("fill", colors.red);
+
 
     // tooltip (simple title)
     bar.append("title")
