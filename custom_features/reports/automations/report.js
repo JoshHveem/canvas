@@ -107,6 +107,7 @@
 
   function flattenRuns(processedAutomations) {
     const out = [];
+    console.log(processedAutomations);
     for (const a of processedAutomations || []) {
       const runs =
         a?.runs ||
