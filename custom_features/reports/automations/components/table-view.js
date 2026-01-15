@@ -173,6 +173,7 @@
             const hay = [
               r?.name,
               r?.description,
+              r?.frequency,
               r?.owner_name,
               r?.owner_email,
               r?.automation_id,
