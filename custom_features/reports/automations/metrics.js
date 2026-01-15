@@ -14,6 +14,7 @@
     const lastSuccess = runs.find((r) => r && r.success === true) || null;
     const lastSuccessTime = lastSuccess?.run_time ?? null;
 
+
     let failsSinceSuccess = 0;
     for (const r of runs) {
       if (!r) continue;

@@ -54,14 +54,14 @@
         false,
         "number",
         (r) => {
-          const t = r?._metrics?.last_run_time;
+          const t = r?._metrics?.last_success_time;
           const ok = r?._metrics?.last_run_success;
           if (!t) return "n/a";
           const label = ok === true ? "success" : ok === false ? "FAIL" : "n/a";
           return `${U.fmtDateTime(t)}<br><span class="btech-muted">${label}</span>`;
         },
         (r) => vm.lastRunStyle(r),
-        (r) => U.parseTs(r?._metrics?.last_run_time)
+        (r) => parseTs(r?._metrics?.last_success_time)
       ),
 
       new ReportColumn(
