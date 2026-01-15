@@ -1,25 +1,16 @@
 // reports/automations/report.js
 (async function () {
-  /********************************************************************
-   * Script loader helpers
-   ********************************************************************/
   async function loadScriptOnce(url) {
     if (document.querySelector(`script[src="${url}"]`)) return;
     await $.getScript(url);
   }
 
-  /********************************************************************
-   * Ensure dependencies (ORDER MATTERS)
-   ********************************************************************/
   try {
     if (!window.Vue) {
       await loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
 
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js");
-    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js");
-    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/columns.js");
-
     await loadScriptOnce("https://d3js.org/d3.v7.min.js");
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js");
 
@@ -27,63 +18,39 @@
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsTableView.js");
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsGraphView.js");
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/AutomationsFlaggedView.js");
+
+    // Views (each view owns its rows+columns+filtering)
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/views/table_view.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/views/graph_view.js");
+    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/views/flagged_view.js");
+
   } catch (e) {
     console.error("Failed to load automations report dependencies", e);
     return;
   }
 
-  /********************************************************************
-   * Sanity checks
-   ********************************************************************/
   const RC = window.ReportCore;
   const RA = window.ReportAutomations;
+  const U = RC?.util;
 
-  if (!RC?.util || !RC?.ui) {
-    console.error("ReportCore not initialized correctly.");
-    return;
-  }
-  if (!RA?.metrics?.computeAutomationMetrics) {
-    console.error("Automations metrics not loaded.");
-    return;
-  }
-  if (!RA?.columns?.buildColumns) {
-    console.error("Automations columns not loaded.");
-    return;
-  }
-  if (!RA?.columns?.buildGraphColumns) {
-    console.error("Automations graph columns not loaded (buildGraphColumns missing).");
-    return;
-  }
-  if (!RA?.columns?.buildFlaggedColumns) {
-    console.error("Automations flagged columns not loaded (buildFlaggedColumns missing).");
-    return;
+  if (!RC?.util || !RC?.ui) return console.error("ReportCore not initialized correctly.");
+  if (!RA?.views?.Table || !RA?.views?.Graph || !RA?.views?.Flagged) {
+    return console.error("Views not loaded. Expected RA.views.Table/Graph/Flagged.");
   }
 
-  /********************************************************************
-   * Config
-   ********************************************************************/
   const API_BASE = "https://reports.bridgetools.dev";
   const API_URL = `${API_BASE}/api/automations`;
   const TEMPLATE_URL = "https://bridgetools.dev/canvas/custom_features/reports/automations/template.vue";
   const DEFAULT_RUNS_LIMIT = 200;
 
-  const U = RC.util;
-
-  /********************************************************************
-   * Mount template
-   ********************************************************************/
   const rootEl = await RC.ui.mountIntoContentWithTemplate({
     templateUrl: TEMPLATE_URL,
     hostId: "automations-report-host",
     rootId: "automations-report-root",
     contentSelector: "#content",
   });
-
   if (!rootEl) return;
 
-  /********************************************************************
-   * Vue app
-   ********************************************************************/
   new Vue({
     el: rootEl,
 
@@ -91,15 +58,6 @@
       AutomationsTableView: RA.components.AutomationsTableView,
       AutomationsGraphView: RA.components.AutomationsGraphView,
       AutomationsFlaggedView: RA.components.AutomationsFlaggedView,
-    },
-
-    watch: {
-      viewMode() {
-        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
-      },
-      graphRows() {
-        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
-      },
     },
 
     data() {
@@ -113,22 +71,21 @@
         white: "#fff",
       };
 
-      // One ReportTable per view (same renderer, different columns + sorting state)
-      const tableTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
-      const graphTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
-      const flaggedTable = new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors });
+      // One ReportTable per view => independent sort state
+      const tables = {
+        table: new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors }),
+        graph: new ReportTable({ rows: [], columns: [], sort_column: "Status", sort_dir: 1, colors }),
+        flagged: new ReportTable({ rows: [], columns: [], sort_column: "Started", sort_dir: -1, colors }),
+      };
 
       return {
         colors,
-
-        tableTable,
-        graphTable,
-        flaggedTable,
+        tables,
 
         loading: false,
         error: "",
-        rows: [],
-        runs: [],
+
+        raw: [],
 
         filters: {
           q: "",
@@ -141,28 +98,42 @@
       };
     },
 
-    async created() {
-      // attach columns for each view
-      this.tableTable.setColumns(RA.columns.buildColumns(this));
-      this.graphTable.setColumns(RA.columns.buildGraphColumns(this));
-      this.flaggedTable.setColumns(RA.columns.buildFlaggedColumns(this));
-
-      await this.load();
-    },
-
     computed: {
-      ownerOptions() {
-        const rows = Array.isArray(this.rows) ? this.rows : [];
-        const seen = new Map();
+      activeView() {
+        if (this.viewMode === "graph") return RA.views.Graph;
+        if (this.viewMode === "flagged") return RA.views.Flagged;
+        return RA.views.Table;
+      },
 
-        for (const r of rows) {
+      activeTable() {
+        return this.tables[this.viewMode] || this.tables.table;
+      },
+
+      // view controls row shape + filtering
+      visibleRows() {
+        const raw = Array.isArray(this.raw) ? this.raw : [];
+        const view = this.activeView;
+
+        const baseRows = view.buildRows(this, raw);
+        const filtered = view.filterRows ? view.filterRows(this, baseRows) : baseRows;
+
+        this.activeTable.setRows(filtered);
+        return this.activeTable.getSortedRows();
+      },
+
+      ownerOptions() {
+        // Let view decide where owner list comes from.
+        // Default: derive from raw automations list.
+        const raw = Array.isArray(this.raw) ? this.raw : [];
+        if (this.activeView.ownerOptions) return this.activeView.ownerOptions(this, raw);
+
+        const seen = new Map();
+        for (const r of raw) {
           const email = U.safeStr(r?.owner_email).trim();
           const name = U.safeStr(r?.owner_name).trim();
           const key = email || name;
           if (!key) continue;
-
           const label = email && name ? `${name} (${email})` : (name || email);
-
           if (!seen.has(key)) seen.set(key, { key, label, name, email });
         }
 
@@ -176,228 +147,60 @@
 
         return [{ key: "", label: "All owners" }, ...opts];
       },
+    },
 
-      filteredRuns() {
-        const U = window.ReportCore.util;
-        let runs = Array.isArray(this.runs) ? this.runs : [];
+    watch: {
+      viewMode() {
+        // ensure columns are set for that view table
+        this.ensureColumnsForView(this.viewMode);
 
-        const q = String(this.filters.q || "").trim().toLowerCase();
-        if (q) {
-          runs = runs.filter((rr) => {
-            const run = rr?._run;
-            const hay = [
-              rr?.automation_name,
-              rr?.automation_id,
-              rr?.owner_name,
-              rr?.owner_email,
-              run?.id,
-              run?.status,
-              JSON.stringify(run?.flags || run?._flags || run?.flag_data || ""),
-            ]
-              .map((x) => U.safeStr(x).toLowerCase())
-              .join(" ");
-            return hay.includes(q);
-          });
-        }
-
-        const ownerKey = U.safeStr(this.filters.owner).trim();
-        if (ownerKey) {
-          runs = runs.filter((rr) => {
-            const key = U.safeStr(rr?.owner_email).trim() || U.safeStr(rr?.owner_name).trim();
-            return key === ownerKey;
-          });
-        }
-
-        // status filter can apply to run status in flagged view
-        const status = this.filters.status;
-        if (status && status !== "All") {
-          runs = runs.filter((rr) => U.safeStr(rr?._run?.status) === status);
-        }
-
-        return runs;
-      },
-
-      // "Flagged" means: run has any flags payload
-      flaggedRunsOnly() {
-        const U = window.ReportCore.util;
-        return (this.filteredRuns || []).filter((rr) => {
-          const run = rr?._run;
-          const flags = run?.flags || run?._flags || run?.flag_data || run?.flagData;
-          if (!flags) return false;
-          if (Array.isArray(flags)) return flags.length > 0;
-          if (typeof flags === "object") return Object.keys(flags).length > 0;
-          return Boolean(U.safeStr(flags).trim());
+        // give the view a post-render hook (graph charts etc)
+        this.$nextTick(() => {
+          const v = this.activeView;
+          if (typeof v.afterRender === "function") v.afterRender(this, this.visibleRows);
         });
       },
 
-      flaggedRows() {
-        // sort the RUN rows using flaggedTable
-        this.flaggedTable.setRows(this.flaggedRunsOnly);
-        return this.flaggedTable.getSortedRows();
-      },
-
-
-      // One shared filtering pipeline, no sorting here.
-      filteredRows() {
-        let rows = Array.isArray(this.rows) ? this.rows : [];
-
-        const q = String(this.filters.q || "").trim().toLowerCase();
-        if (q) {
-          rows = rows.filter((r) => {
-            const hay = [
-              r?.name,
-              r?.description,
-              r?.owner_name,
-              r?.owner_email,
-              r?.automation_id,
-            ]
-              .map((x) => U.safeStr(x).toLowerCase())
-              .join(" ");
-            return hay.includes(q);
-          });
-        }
-
-        const ownerKey = U.safeStr(this.filters.owner).trim();
-        if (ownerKey) {
-          rows = rows.filter((r) => {
-            const email = U.safeStr(r?.owner_email).trim();
-            const name = U.safeStr(r?.owner_name).trim();
-            return (email || name) === ownerKey;
-          });
-        }
-
-        const status = this.filters.status;
-        if (status && status !== "All") {
-          rows = rows.filter((r) => U.safeStr(r?._metrics?.status) === status);
-        }
-
-        if (this.filters.hideHealthy) {
-          rows = rows.filter((r) => U.safeStr(r?._metrics?.status) !== "Healthy");
-        }
-
-        return rows;
-      },
-
-      // Sorted rows per view (each view maintains its own sort state)
-      tableRows() {
-        this.tableTable.setRows(this.filteredRows);
-        return this.tableTable.getSortedRows();
-      },
-
-      graphRows() {
-        this.graphTable.setRows(this.filteredRows);
-        return this.graphTable.getSortedRows();
-      },
-
-      flaggedRows() {
-        // later you’ll filter down to flagged-only; for now same base list
-        this.flaggedTable.setRows(this.filteredRows);
-        return this.flaggedTable.getSortedRows();
-      },
-
-      summary() {
-        // summary should match what user sees; use filtered rows
-        return (this.filteredRows || []).reduce((acc, r) => {
-          const s = U.safeStr(r?._metrics?.status) || "Unknown";
-          acc[s] = (acc[s] || 0) + 1;
-          return acc;
-        }, {});
+      visibleRows() {
+        // re-render if view needs it (graph)
+        this.$nextTick(() => {
+          const v = this.activeView;
+          if (typeof v.afterRender === "function") v.afterRender(this, this.visibleRows);
+        });
       },
     },
 
+    async created() {
+      // Initialize all view columns once
+      this.ensureColumnsForView("table");
+      this.ensureColumnsForView("graph");
+      this.ensureColumnsForView("flagged");
+
+      await this.load();
+    },
+
     methods: {
-      flattenRunsFromAutomations(automations) {
-        const U = window.ReportCore.util;
+      ensureColumnsForView(viewKey) {
+        const view =
+          viewKey === "graph" ? RA.views.Graph :
+          viewKey === "flagged" ? RA.views.Flagged :
+          RA.views.Table;
 
-        const out = [];
-        for (const a of automations || []) {
-          const runs =
-            a?.runs ||
-            a?.recent_runs ||
-            a?.automation_runs ||
-            a?.recentRuns ||
-            [];
+        const table = this.tables[viewKey];
+        if (!table) return;
 
-          for (const run of (runs || [])) {
-            out.push({
-              // attach automation context onto each run row
-              automation_id: a?.automation_id ?? a?.id,
-              automation_name: U.safeStr(a?.name),
-              owner_name: U.safeStr(a?.owner_name),
-              owner_email: U.safeStr(a?.owner_email),
-
-              // keep the full run object for debugging / future needs
-              _run: run,
-            });
-          }
+        // only set once unless you want dynamic columns; you can reset if needed
+        if (!table.columns || table.columns.length === 0) {
+          table.setColumns(view.buildColumns(this));
         }
-        return out;
       },
 
-      // Generic helpers used by all “table-like” view components
       getColumnsWidthsString(table) {
         return table.getColumnsWidthsString();
       },
 
       setSortColumn(table, name) {
         table.setSortColumn(name);
-        if (this.viewMode === "graph") this.$nextTick(this.renderAllCharts);
-      },
-
-      renderAllCharts() {
-        if (this.viewMode !== "graph") return;
-
-        // Graph columns should have emitted <div id="chart_<automation_id>"></div>
-        const rows = this.graphRows || [];
-        for (const r of rows) {
-          const id = r?.automation_id;
-          if (!id && id !== 0) continue;
-
-          const node = document.getElementById(`chart_${id}`);
-          if (node) RA.charts.renderRuns30(node, r, this.colors, U);
-        }
-      },
-
-      // --- styles (unchanged) ---
-      statusStyle(status) {
-        const s = U.safeStr(status);
-        if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
-        if (s === "Flagged") return { backgroundColor: this.colors.yellow, color: this.colors.white };
-        if (s === "Error") return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (s === "No Runs") return { backgroundColor: this.colors.gray, color: this.colors.black };
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      },
-
-      lastRunStyle(r) {
-        const ok = r?._metrics?.last_run_success;
-        if (ok === true) return { backgroundColor: this.colors.green, color: this.colors.white };
-        if (ok === false) return { backgroundColor: this.colors.red, color: this.colors.white };
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      },
-
-      daysSinceStyle(days) {
-        const d = Number(days);
-        if (!Number.isFinite(d)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-        if (d >= 7) return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (d >= 3) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-        return { backgroundColor: this.colors.green, color: this.colors.white };
-      },
-
-      failStreakStyle(n) {
-        const x = Number(n);
-        if (!Number.isFinite(x)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-        if (x >= 3) return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (x >= 1) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-        return { backgroundColor: this.colors.green, color: this.colors.white };
-      },
-
-      successPctStyle(p) {
-        const n = Number(p);
-        if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-        const pct = n * 100;
-        if (pct < 80) return { backgroundColor: this.colors.red, color: this.colors.white };
-        if (pct < 90) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-        return { backgroundColor: this.colors.green, color: this.colors.white };
       },
 
       async load() {
@@ -413,15 +216,23 @@
             Array.isArray(docs?.automations) ? docs.automations :
             [];
 
-          this.rows = list.map(RA.metrics.computeAutomationMetrics);
-          this.runs = this.flattenRunsFromAutomations(list);
-
+          this.raw = list;
         } catch (e) {
           this.error = String(e?.message || e);
-          this.rows = [];
+          this.raw = [];
         } finally {
           this.loading = false;
         }
+      },
+
+      // keep your existing style helpers here if columns need them
+      statusStyle(status) {
+        const s = U.safeStr(status);
+        if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
+        if (s === "Flagged") return { backgroundColor: this.colors.yellow, color: this.colors.white };
+        if (s === "Error") return { backgroundColor: this.colors.red, color: this.colors.white };
+        if (s === "No Runs") return { backgroundColor: this.colors.gray, color: this.colors.black };
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
       },
     },
   });
