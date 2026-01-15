@@ -1,5 +1,7 @@
 (function () {
   const RC = (window.ReportCore = window.ReportCore || {});
+  window.ReportTable = ReportTable;
+  window.ReportColumn = ReportColumn;
 
   RC.util = RC.util || (function () {
     function safeStr(v) {
