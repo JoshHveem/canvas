@@ -128,6 +128,7 @@
         loading: false,
         error: "",
         rows: [],
+        runs: [],
 
         filters: {
           q: "",
@@ -175,6 +176,66 @@
 
         return [{ key: "", label: "All owners" }, ...opts];
       },
+
+      filteredRuns() {
+        const U = window.ReportCore.util;
+        let runs = Array.isArray(this.runs) ? this.runs : [];
+
+        const q = String(this.filters.q || "").trim().toLowerCase();
+        if (q) {
+          runs = runs.filter((rr) => {
+            const run = rr?._run;
+            const hay = [
+              rr?.automation_name,
+              rr?.automation_id,
+              rr?.owner_name,
+              rr?.owner_email,
+              run?.id,
+              run?.status,
+              JSON.stringify(run?.flags || run?._flags || run?.flag_data || ""),
+            ]
+              .map((x) => U.safeStr(x).toLowerCase())
+              .join(" ");
+            return hay.includes(q);
+          });
+        }
+
+        const ownerKey = U.safeStr(this.filters.owner).trim();
+        if (ownerKey) {
+          runs = runs.filter((rr) => {
+            const key = U.safeStr(rr?.owner_email).trim() || U.safeStr(rr?.owner_name).trim();
+            return key === ownerKey;
+          });
+        }
+
+        // status filter can apply to run status in flagged view
+        const status = this.filters.status;
+        if (status && status !== "All") {
+          runs = runs.filter((rr) => U.safeStr(rr?._run?.status) === status);
+        }
+
+        return runs;
+      },
+
+      // "Flagged" means: run has any flags payload
+      flaggedRunsOnly() {
+        const U = window.ReportCore.util;
+        return (this.filteredRuns || []).filter((rr) => {
+          const run = rr?._run;
+          const flags = run?.flags || run?._flags || run?.flag_data || run?.flagData;
+          if (!flags) return false;
+          if (Array.isArray(flags)) return flags.length > 0;
+          if (typeof flags === "object") return Object.keys(flags).length > 0;
+          return Boolean(U.safeStr(flags).trim());
+        });
+      },
+
+      flaggedRows() {
+        // sort the RUN rows using flaggedTable
+        this.flaggedTable.setRows(this.flaggedRunsOnly);
+        return this.flaggedTable.getSortedRows();
+      },
+
 
       // One shared filtering pipeline, no sorting here.
       filteredRows() {
@@ -245,6 +306,34 @@
     },
 
     methods: {
+      flattenRunsFromAutomations(automations) {
+        const U = window.ReportCore.util;
+
+        const out = [];
+        for (const a of automations || []) {
+          const runs =
+            a?.runs ||
+            a?.recent_runs ||
+            a?.automation_runs ||
+            a?.recentRuns ||
+            [];
+
+          for (const run of (runs || [])) {
+            out.push({
+              // attach automation context onto each run row
+              automation_id: a?.automation_id ?? a?.id,
+              automation_name: U.safeStr(a?.name),
+              owner_name: U.safeStr(a?.owner_name),
+              owner_email: U.safeStr(a?.owner_email),
+
+              // keep the full run object for debugging / future needs
+              _run: run,
+            });
+          }
+        }
+        return out;
+      },
+
       // Generic helpers used by all “table-like” view components
       getColumnsWidthsString(table) {
         return table.getColumnsWidthsString();
@@ -325,6 +414,8 @@
             [];
 
           this.rows = list.map(RA.metrics.computeAutomationMetrics);
+          this.runs = this.flattenRunsFromAutomations(list);
+
         } catch (e) {
           this.error = String(e?.message || e);
           this.rows = [];
