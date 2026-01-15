@@ -1,8 +1,11 @@
 // reports/automations/report.js
 (async function () {
+  const _loaded = new Set();
+
   async function loadScriptOnce(url) {
-    if (document.querySelector(`script[src="${url}"]`)) return;
+    if (_loaded.has(url)) return;
     await $.getScript(url);
+    _loaded.add(url);
   }
 
   try {
@@ -11,18 +14,10 @@
     }
 
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/_core/report_core.js");
-
-    // metrics helper (computes _metrics per automation)
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/metrics.js");
 
-    // d3 + charts (graph view depends on it)
-    await loadScriptOnce("https://d3js.org/d3.v7.min.js");
-    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/charts.js");
-
-    // views (ALL view logic lives in these files)
+    // ✅ only table view
     await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/table-view.js");
-    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/graph-view.js");
-    await loadScriptOnce("https://bridgetools.dev/canvas/custom_features/reports/automations/components/flagged-view.js");
   } catch (e) {
     console.error("Failed to load automations report dependencies", e);
     return;
@@ -39,8 +34,11 @@
     console.error("Automations metrics not loaded.");
     return;
   }
-  if (!RA?.components?.AutomationsTableView || !RA?.components?.AutomationsGraphView || !RA?.components?.AutomationsFlaggedView) {
-    console.error("One or more view components not loaded.");
+
+  // ✅ only table view guard
+  console.log("Loaded RA.components:", Object.keys(RA?.components || {}));
+  if (!RA?.components?.AutomationsTableView) {
+    console.error("AutomationsTableView not loaded.");
     return;
   }
 
@@ -67,32 +65,12 @@
       [];
   }
 
-  function flattenRuns(automations) {
-    const out = [];
-    for (const a of automations || []) {
-      const runs =
-        a?.runs ||
-        a?.recent_runs ||
-        a?.automation_runs ||
-        a?.recentRuns ||
-        [];
-
-      for (const run of runs || []) {
-        out.push({
-          automation_id: a?.automation_id ?? a?.id,
-          automation_name: U.safeStr(a?.name),
-          owner_name: U.safeStr(a?.owner_name),
-          owner_email: U.safeStr(a?.owner_email),
-          _metrics: a?._metrics, // handy sometimes
-          _run: run,
-        });
-      }
-    }
-    return out;
-  }
-
   new Vue({
     el: rootEl,
+
+    components: {
+      AutomationsTableView: RA.components.AutomationsTableView,
+    },
 
     data() {
       const colors = window.bridgetools?.colors || {
@@ -106,16 +84,14 @@
       };
 
       return {
-        // exposed to template + views
         U,
         colors,
 
         loading: false,
         error: "",
 
-        // processed raw data (views decide what to do with it)
+        // ✅ raw-but-processed by metrics only
         automations: [],
-        runs: [],
 
         filters: {
           q: "",
@@ -124,22 +100,9 @@
           hideHealthy: false,
         },
 
+        // ✅ only one mode for now
         viewMode: "table",
       };
-    },
-
-    computed: {
-      activeViewComponent() {
-        if (this.viewMode === "graph") return "AutomationsGraphView";
-        if (this.viewMode === "flagged") return "AutomationsFlaggedView";
-        return "AutomationsTableView";
-      },
-    },
-
-    components: {
-      AutomationsTableView: RA.components.AutomationsTableView,
-      AutomationsGraphView: RA.components.AutomationsGraphView,
-      AutomationsFlaggedView: RA.components.AutomationsFlaggedView,
     },
 
     async created() {
@@ -155,21 +118,17 @@
           const payload = await U.httpGetJson(url);
           const autos = extractAutomations(payload);
 
-          // ✅ ONLY "processing" here: compute metrics onto each automation
-          const processedAutomations = autos.map(RA.metrics.computeAutomationMetrics);
-
-          this.automations = processedAutomations;
-          this.runs = flattenRuns(processedAutomations);
+          // ✅ only processing done here
+          this.automations = autos.map(RA.metrics.computeAutomationMetrics);
         } catch (e) {
           this.error = String(e?.message || e);
           this.automations = [];
-          this.runs = [];
         } finally {
           this.loading = false;
         }
       },
 
-      // styles are allowed to live here (views can call them if needed)
+      // keep shared styles here (views can call via parent if desired)
       statusStyle(status) {
         const s = U.safeStr(status);
         if (s === "Healthy") return { backgroundColor: this.colors.green, color: this.colors.white };
