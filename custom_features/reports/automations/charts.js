@@ -127,7 +127,8 @@
 
     // tooltip (simple title)
     bar.append("title")
-      .text(d => `${d.day}: ${d.success} success, ${d.fail} fail`);
+      .text(d => `${d.day}: ${d.success} clean, ${d.flagged_success} flagged, ${d.fail} fail`);
+
 
     // optional mini x-axis ticks (every ~7 days)
     const ticks = data.filter((_, i) => i % 7 === 0).map(d => d.day);
