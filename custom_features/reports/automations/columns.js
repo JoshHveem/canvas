@@ -48,7 +48,7 @@
         "24rem",
         false,
         "string",
-        (r) => `<p>${r?.description}</p>`
+        (r) => `<p>${r?.description}</p>`,
         () => ({
           whiteSpace: "normal",
           wordBreak: "break-word",
