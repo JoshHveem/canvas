@@ -21,18 +21,12 @@
     function parseTs(v) {
       if (v === null || v === undefined) return NaN;
 
-      let s = String(v);
-
-      // Trim whitespace + odd spaces
-      s = s.trim().replace(/\u00A0/g, ""); // NBSP
-
-      // If it's wrapped in quotes, remove them
-      // e.g. "\"2026-01-14T...Z\"" or "'2026-01-14T...Z'"
+      let s = String(v).trim().replace(/\u00A0/g, "");
       s = s.replace(/^["']+/, "").replace(/["']+$/, "");
 
-      console.log(s);
-      const t = Date.parse(s);
-      console.log(t);
+      // Use Date constructor, not Date.parse (Canvas seems to have patched Date.parse)
+      const d = new Date(s);
+      const t = d.getTime();
       return Number.isFinite(t) ? t : NaN;
     }
 
