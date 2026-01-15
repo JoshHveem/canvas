@@ -59,8 +59,8 @@
                 <div style="flex:1;"></div>
 
                 <span class="btech-pill">Healthy: {{ summary["Healthy"] || 0 }}</span>
-                <span class="btech-pill">Watch: {{ summary["Watch"] || 0 }}</span>
-                <span class="btech-pill">Needs Attention: {{ summary["Needs Attention"] || 0 }}</span>
+                <span class="btech-pill">Flagged: {{ summary["Flagged"] || 0 }}</span>
+                <span class="btech-pill">Error: {{ summary["Error"] || 0 }}</span>
                 <span class="btech-pill">No Runs: {{ summary["No Runs"] || 0 }}</span>
             </div>
 
