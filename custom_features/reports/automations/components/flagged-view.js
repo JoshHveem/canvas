@@ -50,6 +50,16 @@
 
     return [
       new ReportColumn(
+        "Run Status",
+        "Status of this run",
+        "7rem",
+        false,
+        "string",
+        (r) => U.safeStr((r?._run || {})?.run_status),
+        null,
+        (r) => U.safeStr((r?._run || {})?.run_status)
+      ),
+      new ReportColumn(
         "Automation",
         "Automation name",
         "18rem",
@@ -60,33 +70,6 @@
         (r) => U.safeStr(r?.automation_name)
       ),
 
-      new ReportColumn(
-        "Run ID",
-        "Unique run identifier",
-        "7rem",
-        false,
-        "string",
-        (r) => {
-          const run = r?._run || {};
-          return U.safeStr(run?.id || run?.run_id);
-        },
-        null,
-        (r) => {
-          const run = r?._run || {};
-          return U.safeStr(run?.id || run?.run_id);
-        }
-      ),
-
-      new ReportColumn(
-        "Run Status",
-        "Status of this run",
-        "7rem",
-        false,
-        "string",
-        (r) => U.safeStr((r?._run || {})?.run_status),
-        null,
-        (r) => U.safeStr((r?._run || {})?.run_status)
-      ),
 
       new ReportColumn(
         "Started",
@@ -96,13 +79,13 @@
         "number",
         (r) => {
           const run = r?._run || {};
-          const t = run?.started_at || run?.start_time || run?.created_at;
+          const t = run?.run_time;
           return t ? U.fmtDateTime(t) : "n/a";
         },
         null,
         (r) => {
           const run = r?._run || {};
-          const t = run?.started_at || run?.start_time || run?.created_at;
+          const t = run?.run_time;
           return U.parseTs(t);
         }
       ),
