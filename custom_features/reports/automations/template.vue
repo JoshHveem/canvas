@@ -39,8 +39,8 @@
                     style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;">
                     <option>All</option>
                     <option>Healthy</option>
-                    <option>Watch</option>
-                    <option>Needs Attention</option>
+                    <option>Flagged</option>
+                    <option>Error</option>
                     <option>No Runs</option>
                     <option>Unknown</option>
                 </select>
