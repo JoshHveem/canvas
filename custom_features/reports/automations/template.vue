@@ -8,7 +8,8 @@
     <div v-else>
         <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
             <!-- Header / Actions -->
-            <div class="btech-row" style="align-items:center; gap:10px; margin-bottom:12px;">
+             <!-- Header / Actions -->
+            <div class="btech-row" style="align-items:flex-start; gap:12px; margin-bottom:12px;">
             <div>
                 <h4 class="btech-card-title" style="margin:0;">Automation Status</h4>
                 <div class="btech-muted" style="font-size:12px; margin-top:2px;">
@@ -18,65 +19,52 @@
 
             <div style="flex:1;"></div>
 
-            <button class="Button"
-                    @click="viewMode = (viewMode==='table' ? 'graph' : 'table')"
-                    style="margin-left:8px;">
-                {{ viewMode === 'table' ? 'Graph view' : 'Table view' }}
-            </button>
+            <!-- View buttons -->
+            <div class="btech-row" style="gap:8px; align-items:center;">
+                <button
+                class="Button"
+                @click="viewMode = 'table'"
+                :style="viewMode === 'table' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
+                title="Table view"
+                >
+                Table
+                </button>
 
-            <button class="Button"
-                    @click="load()"
-                    :disabled="loading">
-                {{ loading ? "Refreshing..." : "Refresh" }}
-            </button>
+                <button
+                class="Button"
+                @click="viewMode = 'graph'"
+                :style="viewMode === 'graph' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
+                title="Graph view"
+                >
+                Graph
+                </button>
+
+                <button
+                class="Button"
+                @click="viewMode = 'flagged'"
+                :style="viewMode === 'flagged' ? 'box-shadow: inset 0 0 0 2px #111; font-weight:600;' : ''"
+                title="Flagged view"
+                >
+                Flagged
+                </button>
             </div>
 
-            <!-- Filters -->
-            <div class="btech-card btech-theme" style="padding:10px; margin-bottom:12px; background:#fafafa;">
-                <div class="btech-row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
-                    <!-- Search -->
-                    <div style="min-width:240px; flex:1;">
-                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-                        Search
-                    </label>
-                    <input
-                        v-model="filters.search"
-                        type="text"
-                        placeholder="name, id, status..."
-                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-                    />
-                    </div>
-
-                    <!-- Owner dropdown -->
-                    <div style="min-width:220px;">
-                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-                        Owner
-                    </label>
-                    <select
-                        v-model="filters.owner"
-                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-                    >
-                        <option v-for="o in ownerOptions" :key="o.key" :value="o.key">
-                        {{ o.label }}
-                        </option>
-                    </select>
-                    </div>
-
-                    <!-- Toggles -->
-                    <div style="min-width:200px;">
-                    <label style="display:flex; gap:8px; align-items:center; font-size:12px;">
-                        <input type="checkbox" v-model="filters.hideHealthy" />
-                        Hide healthy
-                    </label>
-                    </div>
-
-                    <div style="flex:1;"></div>
-
-                    <!-- Quick actions -->
-                    <button class="Button" @click="resetFilters()" style="margin-left:auto;">
-                    Reset filters
-                    </button>
-                </div>
+            <!-- Refresh icon button -->
+            <button
+                class="Button"
+                @click="load()"
+                :disabled="loading"
+                title="Refresh"
+                style="margin-left:8px; width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;"
+            >
+                <!-- refresh icon -->
+                <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px; height:18px;">
+                <path
+                    fill="currentColor"
+                    d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-4.65Z"
+                />
+                </svg>
+            </button>
             </div>
 
             
