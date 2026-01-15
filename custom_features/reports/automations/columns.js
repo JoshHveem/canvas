@@ -10,7 +10,7 @@
       new ReportColumn(
         "Status",
         "Health status computed from recent runs.",
-        "10rem",
+        "5rem",
         false,
         "string",
         (r) => U.safeStr(r?._metrics?.status),
@@ -56,7 +56,7 @@
       new ReportColumn(
         "Owner",
         "Owner name/email",
-        "16rem",
+        "8rem",
         false,
         "string",
         (r) => {
@@ -89,7 +89,7 @@
       new ReportColumn(
         "Days Since",
         "Days since last run",
-        "7rem",
+        "6rem",
         false,
         "number",
         (r) => {
