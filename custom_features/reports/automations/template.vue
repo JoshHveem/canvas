@@ -27,25 +27,13 @@
 
 
                 <div style="min-width:220px;">
-                <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Owner</label>
-                <input v-model="filters.owner" type="text"
-                    placeholder="email or name..."
-                    style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;" />
+                    <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Owner</label>
+                    <input v-model="filters.owner" type="text"
+                        placeholder="email or name..."
+                        style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;" />
                 </div>
 
                 <div style="min-width:160px;">
-                <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Status</label>
-                <select v-model="filters.status"
-                    style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;">
-                    <option>All</option>
-                    <option>Healthy</option>
-                    <option>Flagged</option>
-                    <option>Error</option>
-                    <option>No Runs</option>
-                    <option>Unknown</option>
-                </select>
-                </div>
-
                 <label style="display:flex; gap:8px; align-items:center; font-size:12px; margin-left:6px;">
                 <input type="checkbox" v-model="filters.hideHealthy" />
                 Hide Healthy
