@@ -59,10 +59,10 @@
           console.log(r?._metrics?.last_success_time);
           if (!t) return "n/a";
           const label = ok === true ? "success" : ok === false ? "FAIL" : "n/a";
-          return `${U.fmtDateTime(t)}<br><span class="btech-muted">${label}</span>`;
+          return `${RC.fmtDateTime(t)}<br><span class="btech-muted">${label}</span>`;
         },
         (r) => vm.lastRunStyle(r),
-        (r) => parseTs(r?._metrics?.last_success_time)
+        (r) => RC.parseTs(r?._metrics?.last_success_time)
       ),
 
       new ReportColumn(
