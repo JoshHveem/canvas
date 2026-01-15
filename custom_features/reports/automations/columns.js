@@ -48,7 +48,7 @@
         "24rem",
         false,
         "string",
-        (r) => U.safeStr(r?.description),
+        (r) => `<p>${r?.description}</p>`
         () => ({
           whiteSpace: "normal",
           wordBreak: "break-word",
