@@ -8,6 +8,14 @@ Vue.component('reports-departments', {
         :tags="allSurveyTags"
       ></departments-overview>
 
+      <departments-instructors
+        v-if="subMenu == 'instructors'"
+        :year="year"
+        :departments="departmentsClean"
+        :allCourseTags="allCourseTags"
+        :selectedCourseTags="selectedCourseTags"
+      ></departments-instructors>
+
       <departments-course-surveys
         v-if="subMenu == 'course-surveys'"
         :year="year"
@@ -57,6 +65,7 @@ Vue.component('reports-departments', {
       const depts = Array.isArray(this.departmentsRaw) ? this.departmentsRaw : [];
 
       this.departmentsClean = depts.map(d => this.cleanDeptForYear(d, yr));
+      console.log(this.departmentsClean);
 
       // global unique tag list for the selected year
       this.allSurveyTags = this.collectAllSurveyTags(this.departmentsClean);
