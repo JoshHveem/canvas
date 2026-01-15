@@ -67,7 +67,7 @@
       >
         <defs>
           <style>
-            .a{fill:none;stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round;}
+            .a{fill:none;stroke-width: 2.5; stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round;}
           </style>
         </defs>
         <path class="a" d="M12,19.77a11.13,11.13,0,0,0-2.26.94L10,25.24,5.44,25a11.13,11.13,0,0,0-.94,2.26l3.37,3.05-3.37,3a10.68,10.68,0,0,0,.94,2.26L10,35.39l-.23,4.54a11.09,11.09,0,0,0,2.26.93l3.05-3.37,3,3.37a10.64,10.64,0,0,0,2.26-.93l-.23-4.54,4.54.23a10.64,10.64,0,0,0,.93-2.26l-3.37-3,3.37-3.05A11.09,11.09,0,0,0,24.66,25l-4.54.23.23-4.53a10.68,10.68,0,0,0-2.26-.94l-3,3.37Z"/>
