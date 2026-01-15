@@ -56,7 +56,7 @@
         false,
         "string",
         (r) => U.safeStr((r?._run || {})?.run_status),
-        null,
+        (r) => vm.shared.styles.statusStyle(r?._run?.run_status),
         (r) => U.safeStr((r?._run || {})?.run_status)
       ),
       new ReportColumn(
