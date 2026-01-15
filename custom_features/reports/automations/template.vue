@@ -71,7 +71,7 @@
             </div>
 
             <div v-else>
-                <div v-if="viewMode === 'table'">
+                <div v-show="viewMode === 'table'">
                     <div
                     style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
                     :style="{ 'grid-template-columns': getColumnsWidthsString() }"
@@ -121,7 +121,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="viewMode=='graph'">
+                <div v-show="viewMode === 'graph'">
                     <!-- graph view -->
                     <div v-for="row in visibleRows" :key="row.automation_id"
                         style="display:flex; gap:10px; align-items:center; padding:6px 8px; border-bottom:1px solid #eee;">
