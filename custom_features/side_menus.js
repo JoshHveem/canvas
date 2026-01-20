@@ -57,7 +57,7 @@
     )
     createSideMenuButton(
       'Automations',
-      'https://btech.instructure.com/automations',
+      'https://bridgetools.dev/automationdashboard',
       `<svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 48 48"
