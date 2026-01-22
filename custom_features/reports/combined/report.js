@@ -359,10 +359,11 @@
             datasets: ['departments'],
             selectors: [],
             subMenus: [
-              { value: 'overview', label: 'Overview' },
+              { value: 'overview',    label: 'Overview' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
               { value: 'occupations', label: 'Occupations' },
+              { value: 'completion',  label: 'completion' },
               { value: 'coe',         label: 'COE' },
             ]
           },
