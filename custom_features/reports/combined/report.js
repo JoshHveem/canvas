@@ -850,7 +850,9 @@
   async function _init() {
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     loadCSS("https://reports.bridgetools.dev/style/main.css");
+
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
+    await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
     // Instructor sub-components
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/grading.js");
