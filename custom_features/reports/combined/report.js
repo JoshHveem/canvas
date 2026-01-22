@@ -363,7 +363,7 @@
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
               { value: 'occupations', label: 'Occupations' },
-              { value: 'completion',  label: 'completion' },
+              { value: 'completion',  label: 'Completions' },
               { value: 'coe',         label: 'COE' },
             ]
           },
