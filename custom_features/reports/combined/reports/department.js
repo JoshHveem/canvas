@@ -48,7 +48,7 @@ Vue.component('reports-department', {
       ></reports-department-coe>
 
       <reports-department-completion
-        v-if="subMenu == 'coe'"
+        v-if="subMenu == 'completion'"
         :year="year"
         :cpl="cpl"
         :statistics="statistics"
