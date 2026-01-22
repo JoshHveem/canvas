@@ -46,6 +46,14 @@ Vue.component('reports-department', {
         :cpl="cpl"
         :coe="coe"
       ></reports-department-coe>
+
+      <reports-department-completion
+        v-if="subMenu == 'coe'"
+        :year="year"
+        :cpl="cpl"
+        :statistics="statistics"
+        :credits-remaining="department_metrics.credits_remaining"
+      ></reports-department-coe>
     </div>
   `,
   props: {
