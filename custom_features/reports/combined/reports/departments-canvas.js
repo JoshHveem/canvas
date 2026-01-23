@@ -43,10 +43,17 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-            'Courses Published', 'Published Canvas courses.', '6rem', false, 'number',
+            'Courses', 'Published Canvas courses.', '6rem', false, 'number',
             d => d?.canvas?.courses_published ?? '—',
             null,
             d => Number(d?.canvas?.courses_published ?? -1)
+        ),
+
+        new window.ReportColumn(
+            'Courses Updated (Recently)', 'Courses updated in the last month.', '7rem', false, 'number',
+            d => d?.canvas?.courses_updated_recent ?? '—',
+            null,
+            d => Number(d?.canvas?.courses_updated_recent ?? -1)
         ),
 
         new window.ReportColumn(
@@ -84,22 +91,23 @@ Vue.component('departments-canvas', {
             d => Number(d?.canvas?.quizzes_total ?? -1)
         ),
 
-        new window.ReportColumn(
-            'Quiz Questions', 'Total quiz questions.', '6rem', false, 'number',
-            d => d?.canvas?.quiz_questions_total ?? '—',
-            null,
-            d => Number(d?.canvas?.quiz_questions_total ?? -1)
-        ),
+        // number seems innacurate
+        // new window.ReportColumn(
+        //     'Quiz Questions', 'Total quiz questions.', '6rem', false, 'number',
+        //     d => d?.canvas?.quiz_questions_total ?? '—',
+        //     null,
+        //     d => Number(d?.canvas?.quiz_questions_total ?? -1)
+        // ),
 
         new window.ReportColumn(
-            'Content Created (Recent)', 'Recently created content.', '7rem', false, 'number',
+            'Content Created (Recently)', 'Recently created content.', '7rem', false, 'number',
             d => d?.canvas?.content_created_recent ?? '—',
             null,
             d => Number(d?.canvas?.content_created_recent ?? -1)
         ),
 
         new window.ReportColumn(
-            'Content Updated (Recent)', 'Recently updated content.', '7rem', false, 'number',
+            'Content Updated (Recently)', 'Recently updated content.', '7rem', false, 'number',
             d => d?.canvas?.content_updated_recent ?? '—',
             null,
             d => Number(d?.canvas?.content_updated_recent ?? -1)
@@ -113,18 +121,12 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-            'Kaltura Videos (Recent)', 'Recently created Kaltura videos.', '7rem', false, 'number',
+            'Kaltura Videos (Recently)', 'Recently created Kaltura videos.', '7rem', false, 'number',
             d => d?.canvas?.kaltura_videos_created_recent ?? '—',
             null,
             d => Number(d?.canvas?.kaltura_videos_created_recent ?? -1)
         ),
 
-        new window.ReportColumn(
-            'Courses Updated (Recent)', 'Recently updated courses.', '7rem', false, 'number',
-            d => d?.canvas?.courses_updated_recent ?? '—',
-            null,
-            d => Number(d?.canvas?.courses_updated_recent ?? -1)
-        ),
 
         new window.ReportColumn(
             'Assn w/ Rubrics', 'Share of assignments with a rubric.', '6rem', false, 'number',
