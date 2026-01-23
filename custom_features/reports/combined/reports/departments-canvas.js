@@ -43,53 +43,67 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-            'Courses', 'Published Canvas courses.', '6rem', false, 'number',
-            d => d?.canvas?.courses_published ?? '—',
-            null,
-            d => Number(d?.canvas?.courses_published ?? -1)
-        ),
-
-        // new window.ReportColumn(
-        //     'Courses Updated (Recently)', 'Courses updated in the last month.', '7rem', false, 'number',
-        //     d => d?.canvas?.courses_updated_recent ?? '—',
-        //     null,
-        //     d => Number(d?.canvas?.courses_updated_recent ?? -1)
-        // ),
-
-        new window.ReportColumn(
-            'Assignments', 'Total assignments.', '6rem', false, 'number',
-            d => d?.canvas?.assignments_total ?? '—',
-            null,
-            d => Number(d?.canvas?.assignments_total ?? -1)
+        'Courses', 'Published Canvas courses.', '6rem', false, 'number',
+        d => d?.canvas?.courses_published ?? '—',
+        null,
+        d => Number(d?.canvas?.courses_published ?? -1)
         ),
 
         new window.ReportColumn(
-            'Pages', 'Total pages.', '6rem', false, 'number',
-            d => d?.canvas?.pages_total ?? '—',
-            null,
-            d => Number(d?.canvas?.pages_total ?? -1)
+        'Assignments / Course', 'Avg assignments per course.', '6rem', false, 'number',
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.assignments_total / d.canvas.courses_published)
+            : '—',
+        null,
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.assignments_total / d.canvas.courses_published)
+            : -1
         ),
 
         new window.ReportColumn(
-            'Modules', 'Total modules.', '6rem', false, 'number',
-            d => d?.canvas?.modules_total ?? '—',
-            null,
-            d => Number(d?.canvas?.modules_total ?? -1)
+        'Pages / Course', 'Avg pages per course.', '6rem', false, 'number',
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.pages_total / d.canvas.courses_published)
+            : '—',
+        null,
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.pages_total / d.canvas.courses_published)
+            : -1
         ),
 
         new window.ReportColumn(
-            'Discussions', 'Total discussions.', '6rem', false, 'number',
-            d => d?.canvas?.discussions_total ?? '—',
-            null,
-            d => Number(d?.canvas?.discussions_total ?? -1)
+        'Modules / Course', 'Avg modules per course.', '6rem', false, 'number',
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.modules_total / d.canvas.courses_published)
+            : '—',
+        null,
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.modules_total / d.canvas.courses_published)
+            : -1
         ),
 
         new window.ReportColumn(
-            'Quizzes', 'Total quizzes.', '6rem', false, 'number',
-            d => d?.canvas?.quizzes_total ?? '—',
-            null,
-            d => Number(d?.canvas?.quizzes_total ?? -1)
+        'Discussions / Course', 'Avg discussions per course.', '6rem', false, 'number',
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.discussions_total / d.canvas.courses_published)
+            : '—',
+        null,
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.discussions_total / d.canvas.courses_published)
+            : -1
         ),
+
+        new window.ReportColumn(
+        'Quizzes / Course', 'Avg quizzes per course.', '6rem', false, 'number',
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.quizzes_total / d.canvas.courses_published)
+            : '—',
+        null,
+        d => (d?.canvas?.courses_published > 0)
+            ? (d.canvas.quizzes_total / d.canvas.courses_published)
+            : -1
+        ),
+
 
         // number seems innacurate
         // new window.ReportColumn(
