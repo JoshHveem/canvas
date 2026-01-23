@@ -106,12 +106,13 @@ Vue.component('departments-canvas', {
             d => Number(d?.canvas?.content_created_recent ?? -1)
         ),
 
-        new window.ReportColumn(
-            'Content Updated (Recently)', 'Recently updated content.', '7rem', false, 'number',
-            d => d?.canvas?.content_updated_recent ?? '—',
-            null,
-            d => Number(d?.canvas?.content_updated_recent ?? -1)
-        ),
+        // Not confident any of the recent updates values are useful since we have scripts that run through and update things
+        // new window.ReportColumn(
+        //     'Content Updated (Recently)', 'Recently updated content.', '7rem', false, 'number',
+        //     d => d?.canvas?.content_updated_recent ?? '—',
+        //     null,
+        //     d => Number(d?.canvas?.content_updated_recent ?? -1)
+        // ),
 
         new window.ReportColumn(
             'Kaltura Videos', 'Total Kaltura videos.', '6rem', false, 'number',
