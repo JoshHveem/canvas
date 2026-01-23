@@ -129,14 +129,14 @@ Vue.component('departments-canvas', {
         // ),
 
         new window.ReportColumn(
-            'Kaltura Videos', 'Total Kaltura videos.', '6rem', false, 'number',
+            'New Kaltura Videos (Year)', 'Kaltura videos created this academic year.', '6rem', false, 'number',
             d => d?.canvas?.kaltura_videos_created ?? '—',
             null,
             d => Number(d?.canvas?.kaltura_videos_created ?? -1)
         ),
 
         new window.ReportColumn(
-            'Kaltura Videos (Recently)', 'Recently created Kaltura videos.', '7rem', false, 'number',
+            'New Kaltura Videos (Month)', 'Kaltura videos created in the last month.', '7rem', false, 'number',
             d => d?.canvas?.kaltura_videos_created_recent ?? '—',
             null,
             d => Number(d?.canvas?.kaltura_videos_created_recent ?? -1)
