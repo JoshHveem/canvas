@@ -204,6 +204,143 @@ function processListItem(listItem, editor) {
       </div>
       `);
   }
+
+  // ACCESSIBILITY CHECKER WILL IGNORE SELECTED CONTENT
+  function toastGreen(text) {
+  const toast = document.createElement("div");
+  toast.textContent = text;
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    padding: "10px 14px",
+    borderRadius: "4px",
+    color: "#fff",
+    backgroundColor: "#2e7d32",
+    zIndex: "10000",
+    fontSize: "14px"
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+  
+  function toastRed(text) {
+  const toast = document.createElement("div");
+  toast.textContent = text;
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    padding: "10px 14px",
+    borderRadius: "4px",
+    color: "#fff",
+    backgroundColor: "#c62828",
+    zIndex: "10000",
+    fontSize: "14px"
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+function overrideAccessibility() {
+  const editor = tinymce.activeEditor;
+  const sel = editor.selection;
+  const body = editor.getBody();
+  const WRAP_SELECTOR = ".content-box.phpally-ignore";
+  const WRAP_CLASS = "content-box phpally-ignore";
+ 
+  function unwrap(wrapper) {
+    while (wrapper.firstChild) wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+    wrapper.remove();
+    toastRed("Accessibility check enabled");
+  }
+ 
+  function wrap(el) {
+    if (!el || el === body) return;
+    if (el.closest?.(WRAP_SELECTOR)) return; // don't double-wrap
+    const w = document.createElement("div");
+    w.className = WRAP_CLASS;
+    el.parentNode.insertBefore(w, el);
+    w.appendChild(el);
+    toastGreen("Accessibility check disabled");
+  }
+ 
+  function getSelectedElements() {
+    const blocks = sel.getSelectedBlocks ? Array.from(sel.getSelectedBlocks()) : [];
+    const raw = blocks.length ? blocks : [sel.getNode()];
+    const els = raw
+      .map(n => (n && n.nodeType === 1) ? n : n?.parentElement)
+      .filter(Boolean);
+    return Array.from(new Set(els));
+  }
+ 
+  // Promote to parent if ALL of that parent's direct element-children are in candidates
+  function promoteParents(candidates) {
+    if (candidates.length <= 1) return candidates;
+ 
+    const candidateSet = new Set(candidates);
+ 
+    const candidateParents = new Set(
+      candidates
+        .map(el => el.parentElement)
+        .filter(p => p && p !== body)
+    );
+ 
+    const parentsToWrap = new Set();
+    const consumedChildren = new Set();
+ 
+    for (const p of candidateParents) {
+      const kids = Array.from(p.children);
+      if (!kids.length) continue;
+ 
+      const allKidsInCandidates = kids.every(k => candidateSet.has(k));
+      if (allKidsInCandidates) {
+        parentsToWrap.add(p);
+        kids.forEach(k => consumedChildren.add(k));
+      }
+    }
+ 
+    const finalTargets = [
+      ...parentsToWrap,
+      ...candidates.filter(el => !consumedChildren.has(el))
+    ];
+ 
+    return finalTargets;
+  }
+ 
+  // ---- main ----
+  const selected = getSelectedElements();
+  if (!selected.length) return;
+ 
+  // Determine which selected elements are currently wrapped
+  const wrappedSelected = selected.filter(el => el.closest?.(WRAP_SELECTOR));
+  const wrappedSelectedSet = new Set(wrappedSelected);
+ 
+  // Unwrap wrappers that intersect the selection (closest wrappers only)
+  //    (Using closest wrapper prevents ripping apart higher-up wrappers unnecessarily.)
+  const wrappersToRemove = new Set();
+  wrappedSelected.forEach(el => {
+    const w = el.closest(WRAP_SELECTOR);
+    if (w) wrappersToRemove.add(w);
+  });
+  wrappersToRemove.forEach(unwrap);
+ 
+  // Wrap ONLY the elements that were NOT wrapped originally
+  //    (This creates the "remove from some, add to others" behavior.)
+  const toWrapBase = selected.filter(el => !wrappedSelectedSet.has(el));
+  if (!toWrapBase.length) {
+    console.log("selection was all wrapped -> unwrapped");
+    return;
+  }
+ 
+  // Apply grouping logic on the ones being wrapped
+  const targets = promoteParents(toWrapBase);
+ 
+  // Wrap targets
+  targets.forEach(wrap);
+ 
+  console.log("complete");
+}
   
   // // SLIGHTLY MORE CONDENSE CALLOUT BOX THAT ALSO USES COLOR
   // async function exampleBoxSmall() {
@@ -436,4 +573,5 @@ function processListItem(listItem, editor) {
   TOOLBAR.addButtonIcon("icon-compose", "Citation", "Insert a citation.", citation);
   TOOLBAR.addButtonIcon("icon-materials-required", "Auto Format", "Auto format the page to break the page into sections. Sections are determined by the top level heading.", formatPage);
   TOOLBAR.addButtonIcon("icon-calendar-month", "Auto Format Table into List", "Auto format a table used for isntructions into an ordered list.", convertActiveTableInTinyMCE);
+  if (IS_ISD) {TOOLBAR.addButtonIcon("icon-eye", "Override Accessiblity Tracker", "Accessiblity tracker will ignore this content", overrideAccessibility);}
 })();
