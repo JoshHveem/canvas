@@ -50,9 +50,9 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-        'Assignments / Course', 'Avg assignments per course.', '6rem', false, 'number',
+        'Assignments', 'Avg assignments per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
-            ? (d.canvas.assignments_total / d.canvas.courses_published)
+            ? (d.canvas.assignments_total / d.canvas.courses_published).toFixed(1)
             : '—',
         null,
         d => (d?.canvas?.courses_published > 0)
@@ -61,9 +61,9 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-        'Pages / Course', 'Avg pages per course.', '6rem', false, 'number',
+        'Pages', 'Avg pages per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
-            ? (d.canvas.pages_total / d.canvas.courses_published)
+            ? (d.canvas.pages_total / d.canvas.courses_published).toFixed(1)
             : '—',
         null,
         d => (d?.canvas?.courses_published > 0)
@@ -72,9 +72,9 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-        'Modules / Course', 'Avg modules per course.', '6rem', false, 'number',
+        'Modules', 'Avg modules per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
-            ? (d.canvas.modules_total / d.canvas.courses_published)
+            ? (d.canvas.modules_total / d.canvas.courses_published).toFixed(1)
             : '—',
         null,
         d => (d?.canvas?.courses_published > 0)
@@ -83,9 +83,9 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-        'Discussions / Course', 'Avg discussions per course.', '6rem', false, 'number',
+        'Discussions', 'Avg discussions per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
-            ? (d.canvas.discussions_total / d.canvas.courses_published)
+            ? (d.canvas.discussions_total / d.canvas.courses_published).toFixed(1)
             : '—',
         null,
         d => (d?.canvas?.courses_published > 0)
@@ -94,9 +94,9 @@ Vue.component('departments-canvas', {
         ),
 
         new window.ReportColumn(
-        'Quizzes / Course', 'Avg quizzes per course.', '6rem', false, 'number',
+        'Quizzes', 'Avg quizzes per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
-            ? (d.canvas.quizzes_total / d.canvas.courses_published)
+            ? (d.canvas.quizzes_total / d.canvas.courses_published).toFixed(1)
             : '—',
         null,
         d => (d?.canvas?.courses_published > 0)
