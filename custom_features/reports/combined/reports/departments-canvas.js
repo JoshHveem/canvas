@@ -49,12 +49,12 @@ Vue.component('departments-canvas', {
             d => Number(d?.canvas?.courses_published ?? -1)
         ),
 
-        new window.ReportColumn(
-            'Courses Updated (Recently)', 'Courses updated in the last month.', '7rem', false, 'number',
-            d => d?.canvas?.courses_updated_recent ?? '—',
-            null,
-            d => Number(d?.canvas?.courses_updated_recent ?? -1)
-        ),
+        // new window.ReportColumn(
+        //     'Courses Updated (Recently)', 'Courses updated in the last month.', '7rem', false, 'number',
+        //     d => d?.canvas?.courses_updated_recent ?? '—',
+        //     null,
+        //     d => Number(d?.canvas?.courses_updated_recent ?? -1)
+        // ),
 
         new window.ReportColumn(
             'Assignments', 'Total assignments.', '6rem', false, 'number',
