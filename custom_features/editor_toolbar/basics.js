@@ -573,5 +573,5 @@ function overrideAccessibility() {
   TOOLBAR.addButtonIcon("icon-compose", "Citation", "Insert a citation.", citation);
   TOOLBAR.addButtonIcon("icon-materials-required", "Auto Format", "Auto format the page to break the page into sections. Sections are determined by the top level heading.", formatPage);
   TOOLBAR.addButtonIcon("icon-calendar-month", "Auto Format Table into List", "Auto format a table used for isntructions into an ordered list.", convertActiveTableInTinyMCE);
-  if (IS_ISD) {TOOLBAR.addButtonIcon("icon-eye", "Override Accessiblity Tracker", "Accessiblity tracker will ignore this content", overrideAccessibility);}
+  // if (IS_ISD) {TOOLBAR.addButtonIcon("icon-eye", "Override Accessiblity Tracker", "Accessiblity tracker will ignore this content", overrideAccessibility);}
 })();
