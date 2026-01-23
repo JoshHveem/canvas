@@ -44,7 +44,7 @@ Vue.component('departments-canvas', {
 
         new window.ReportColumn(
         'Courses', 'Published Canvas courses.', '6rem', false, 'number',
-        d => d?.canvas?.courses_published ?? '—',
+        d => d?.canvas?.courses_published ?? 'n/a',
         null,
         d => Number(d?.canvas?.courses_published ?? -1)
         ),
@@ -53,7 +53,7 @@ Vue.component('departments-canvas', {
         'Assignments', 'Avg assignments per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.assignments_total / d.canvas.courses_published).toFixed(1)
-            : '—',
+            : 'n/a',
         null,
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.assignments_total / d.canvas.courses_published)
@@ -64,7 +64,7 @@ Vue.component('departments-canvas', {
         'Pages', 'Avg pages per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.pages_total / d.canvas.courses_published).toFixed(1)
-            : '—',
+            : 'n/a',
         null,
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.pages_total / d.canvas.courses_published)
@@ -75,7 +75,7 @@ Vue.component('departments-canvas', {
         'Modules', 'Avg modules per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.modules_total / d.canvas.courses_published).toFixed(1)
-            : '—',
+            : 'n/a',
         null,
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.modules_total / d.canvas.courses_published)
@@ -86,7 +86,7 @@ Vue.component('departments-canvas', {
         'Discussions', 'Avg discussions per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.discussions_total / d.canvas.courses_published).toFixed(1)
-            : '—',
+            : 'n/a',
         null,
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.discussions_total / d.canvas.courses_published)
@@ -97,7 +97,7 @@ Vue.component('departments-canvas', {
         'Quizzes', 'Avg quizzes per course.', '6rem', false, 'number',
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.quizzes_total / d.canvas.courses_published).toFixed(1)
-            : '—',
+            : 'n/a',
         null,
         d => (d?.canvas?.courses_published > 0)
             ? (d.canvas.quizzes_total / d.canvas.courses_published)
@@ -108,14 +108,14 @@ Vue.component('departments-canvas', {
         // number seems innacurate
         // new window.ReportColumn(
         //     'Quiz Questions', 'Total quiz questions.', '6rem', false, 'number',
-        //     d => d?.canvas?.quiz_questions_total ?? '—',
+        //     d => d?.canvas?.quiz_questions_total ?? 'n/a',
         //     null,
         //     d => Number(d?.canvas?.quiz_questions_total ?? -1)
         // ),
 
         new window.ReportColumn(
             'Content Created (Recently)', 'Recently created content.', '7rem', false, 'number',
-            d => d?.canvas?.content_created_recent ?? '—',
+            d => d?.canvas?.content_created_recent ?? 'n/a',
             null,
             d => Number(d?.canvas?.content_created_recent ?? -1)
         ),
@@ -123,21 +123,21 @@ Vue.component('departments-canvas', {
         // Not confident any of the recent updates values are useful since we have scripts that run through and update things
         // new window.ReportColumn(
         //     'Content Updated (Recently)', 'Recently updated content.', '7rem', false, 'number',
-        //     d => d?.canvas?.content_updated_recent ?? '—',
+        //     d => d?.canvas?.content_updated_recent ?? 'n/a',
         //     null,
         //     d => Number(d?.canvas?.content_updated_recent ?? -1)
         // ),
 
         new window.ReportColumn(
             'New Kaltura Videos (Year)', 'Kaltura videos created this academic year.', '6rem', false, 'number',
-            d => d?.canvas?.kaltura_videos_created ?? '—',
+            d => d?.canvas?.kaltura_videos_created ?? 'n/a',
             null,
             d => Number(d?.canvas?.kaltura_videos_created ?? -1)
         ),
 
         new window.ReportColumn(
             'New Kaltura Videos (Month)', 'Kaltura videos created in the last month.', '7rem', false, 'number',
-            d => d?.canvas?.kaltura_videos_created_recent ?? '—',
+            d => d?.canvas?.kaltura_videos_created_recent ?? 'n/a',
             null,
             d => Number(d?.canvas?.kaltura_videos_created_recent ?? -1)
         ),
