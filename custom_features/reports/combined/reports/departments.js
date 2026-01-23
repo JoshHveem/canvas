@@ -8,6 +8,14 @@ Vue.component('reports-departments', {
         :tags="allSurveyTags"
       ></departments-overview>
 
+      <departments-canvas
+        v-if="subMenu == 'canvas'"
+        :year="year"
+        :departments="departmentsClean"
+        :allCourseTags="allCourseTags"
+        :selectedCourseTags="selectedCourseTags"
+      ></departments-canvas>
+
       <departments-instructors
         v-if="subMenu == 'instructors'"
         :year="year"
