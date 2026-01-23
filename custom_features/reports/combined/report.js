@@ -347,6 +347,7 @@
             datasets: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
+              { value: 'canvas', label: 'Canvas' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'course-surveys', label: 'Course Surveys' },
             ]
@@ -877,6 +878,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
