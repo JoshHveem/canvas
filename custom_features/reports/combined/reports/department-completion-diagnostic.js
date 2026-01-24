@@ -660,23 +660,6 @@ isAtRisk(s) {
   ></div>
 </div>
 
-
-          <div class="btech-row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <span class="btech-pill" :style="pctPillStyleByPct(currentCompletionRate)">
-              Now: {{ pctNowText }}
-              <span style="opacity:.8;"> ({{ completerExiters.length }}/{{ exiters.length }})</span>
-            </span>
-
-            <span class="btech-pill" :style="pctPillStyleByPct(projectedCompletionRate_OnTrackComplete)">
-              If on-track complete: {{ pctProjectedText }}
-              <span style="opacity:.8;"> (+{{ activeOnTrack.length }})</span>
-            </span>
-
-            <span class="btech-pill" :style="{ backgroundColor: colors.gray, color: colors.black }">
-              Needed to hit 60%: {{ completersNeededToHit60 }}
-            </span>
-          </div>
-
           <div class="btech-muted" style="font-size:.7rem; margin-top:8px;">
             AY Window: {{ academicYearStart.toISOString().slice(0,10) }} → {{ cutoffDate.toISOString().slice(0,10) }}
           </div>
