@@ -549,16 +549,112 @@ Vue.component('reports-department-completion-diagnostic', {
       <!-- ACTIVE TABLE -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
         <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Active students</h4>
-        <div style="flex:1;"></div>
-        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleActiveRows.length }}</span>
       </div>
 
-      <!-- (Keeping your header/rows markup as-is; main cleanup was JS duplication) -->
-      <!-- ... your existing table header + rows for active ... -->
+      <div
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringActive() }"
+      >
+        <div
+          v-for="col in tableActive.getVisibleColumns()"
+          :key="col.name"
+          :title="col.description"
+          style="display:inline-block; cursor:pointer;"
+          @click="setSortColumnActive(col.name)"
+        >
+          <span><b>{{ col.name }}</b></span>
+          <span style="margin-left:.25rem;">
+            <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
+              <g>
+                <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
+                  points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 0,194.27 37.087,221.213"/>
+                <polygon :style="{ fill: col.sort_state > 0 ? '#000' : '#E0E0E0' }"
+                  points="404.13,335.988 404.13,61.691 358.301,61.691 358.301,335.99 309.503,268.787 272.416,295.73 381.216,445.54 490,295.715 452.913,268.802"/>
+              </g>
+            </svg>
+          </span>
+        </div>
+      </div>
 
-      <!-- FINISHED TABLE -->
-      <!-- ... your existing finished header + rows ... -->
+      <div
+        v-for="(s, i) in visibleActiveRows"
+        :key="'a-' + (s.canvas_user_id || s.id || i)"
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
+        :style="Object.assign(
+            {
+              'grid-template-columns': getColumnsWidthsStringActive(),
+              'background-color': (i % 2) ? 'white' : '#F8F8F8'
+            },
+            activeRowDividerStyle(s, i, visibleActiveRows)
+          )"
+      >
+        <div
+          v-for="col in tableActive.getVisibleColumns()"
+          :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+        >
+          <span
+            :class="col.style_formula ? 'btech-pill-text' : ''"
+            :style="col.get_style(s)"
+            v-html="col.getContent(s)"
+          ></span>
+        </div>
+      </div>
 
+      <!-- ================= FINISHED TABLE ================= -->
+      <div class="btech-row" style="align-items:center; margin: 14px 0 8px;">
+        <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Finished students</h4>
+        <div style="flex:1;"></div>
+        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleFinishedRows.length }}</span>
+      </div>
+
+      <div
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringFinished() }"
+      >
+        <div
+          v-for="col in tableFinished.getVisibleColumns()"
+          :key="col.name"
+          :title="col.description"
+          style="display:inline-block; cursor:pointer;"
+          @click="setSortColumnFinished(col.name)"
+        >
+          <span><b>{{ col.name }}</b></span>
+          <span style="margin-left:.25rem;">
+            <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
+              <g>
+                <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
+                  points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 0,194.27 37.087,221.213"/>
+                <polygon :style="{ fill: col.sort_state > 0 ? '#000' : '#E0E0E0' }"
+                  points="404.13,335.988 404.13,61.691 358.301,61.691 358.301,335.99 309.503,268.787 272.416,295.73 381.216,445.54 490,295.715 452.913,268.802"/>
+              </g>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div
+        v-for="(s, i) in visibleFinishedRows"
+        :key="'f-' + (s.canvas_user_id || s.id || i)"
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
+        :style="{
+          'grid-template-columns': getColumnsWidthsStringFinished(),
+          'background-color': (i % 2) ? 'white' : '#F8F8F8',
+          'opacity': 0.65
+        }"
+      >
+        <div
+          v-for="col in tableFinished.getVisibleColumns()"
+          :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+        >
+          <span
+            :class="col.style_formula ? 'btech-pill-text' : ''"
+            :style="col.get_style(s)"
+            v-html="col.getContent(s)"
+          ></span>
+        </div>
+      </div>
       <div class="btech-muted" style="font-size:.7rem; margin-top:10px;">
         Projection uses a simple rule-of-thumb: <b>~2 credits/month</b> based on <code>credits_remaining</code>.
       </div>
