@@ -19,7 +19,7 @@ Vue.component('reports-department-completion-diagnostic', {
 
         // --- ACTIVE: ON TRACK ---
         { name: "Fatima Noor",    canvas_user_id: 106, exited: null, is_completer: false, credits_remaining: 6 },
-        { name: "Gavin Holt",     canvas_user_id: 107, exited: null, is_completer: false, credits_remaining: 8 },
+        { name: "Gavin Holt",     canvas_user_id: 107, exited: null, is_completer: false, credits_remaining: 13 },
 
         // --- ACTIVE: AT RISK ---
         { name: "Hannah Lee",     canvas_user_id: 108, exited: null, is_completer: false, credits_remaining: 10 },
