@@ -74,18 +74,19 @@ Vue.component('reports-department-completion-diagnostic', {
     // -------- ACTIVE TABLE (uses projected finish) --------
     this.tableActive.setColumns([
       new window.ReportColumn(
+        'Status', '● green = on-track, ● yellow = in danger; blank = not going to complete in-window.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s, { mode: 'active' }),
+        null,
+        s => this.statusSortValue(s, { mode: 'active' })
+      ),
+
+      new window.ReportColumn(
         'Student', 'Student name.', '16rem', false, 'string',
         s => this.anonymous ? 'STUDENT' : (s?.name ?? ''),
         null,
         s => (s?.name ?? '')
       ),
 
-      new window.ReportColumn(
-        'Status', '● green = on-track, ● yellow = in danger; blank = not going to complete in-window.', '3.5rem', false, 'string',
-        s => this.statusDotHtml(s, { mode: 'active' }),
-        null,
-        s => this.statusSortValue(s, { mode: 'active' })
-      ),
 
       new window.ReportColumn(
         'Cr Rem', 'Credits remaining (used for projection).', '5.5rem', false, 'number',
@@ -106,18 +107,18 @@ Vue.component('reports-department-completion-diagnostic', {
     // -------- FINISHED TABLE (uses actual exit) --------
     this.tableFinished.setColumns([
       new window.ReportColumn(
+        'Status', '● green = completer, ● red = non-completer.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s, { mode: 'finished' }),
+        null,
+        s => this.statusSortValue(s, { mode: 'finished' })
+      ),
+      new window.ReportColumn(
         'Student', 'Student name.', '16rem', false, 'string',
         s => this.anonymous ? 'STUDENT' : (s?.name ?? ''),
         null,
         s => (s?.name ?? '')
       ),
 
-      new window.ReportColumn(
-        'Status', '● green = completer, ● red = non-completer.', '3.5rem', false, 'string',
-        s => this.statusDotHtml(s, { mode: 'finished' }),
-        null,
-        s => this.statusSortValue(s, { mode: 'finished' })
-      ),
 
       // Merged date column: "End" = actual end date (exit) for finished
       new window.ReportColumn(
