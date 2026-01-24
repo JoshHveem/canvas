@@ -528,7 +528,7 @@ whatIfPctText() {
     </div>
 
     <div v-else>
-      <div style="display:grid; grid-template-columns: auto 100%; gap:10px; align-items:start; margin-bottom:12px;">
+      <div style="display:grid; grid-template-columns: auto 10rem; gap:10px; align-items:start; margin-bottom:12px;">
         <div>
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
             <div style="position:absolute; inset:0; display:flex;">
