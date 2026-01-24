@@ -564,13 +564,13 @@ whatIfPctText() {
       class="btech-pill"
       style="margin-left:8px; display:inline-flex; align-items:center; gap:6px;"
     >
-      What-if exits:
+      What-if drop:
       <button
         type="button"
         style="width:22px;height:22px;border-radius:6px;"
         @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
         :disabled="whatIfDrops <= 0"
-        title="Remove hypothetical exiter"
+        title="Remove hypothetical non-completor"
       >−</button>
 
       <b style="min-width:1.5rem; text-align:center;">
