@@ -62,6 +62,13 @@ Vue.component('reports-department-completion-diagnostic', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
+        'Status', '● green = completer/on-track, ● yellow = in danger, ● red = non-completer; blank = not going to complete.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s),
+        null,
+        s => this.statusSortValue(s)
+      ),
+
+      new window.ReportColumn(
         'Student', 'Student name.', '16rem', false, 'string',
         s => this.anonymous ? 'STUDENT' : (s?.name ?? ''),
         null,
@@ -69,12 +76,6 @@ Vue.component('reports-department-completion-diagnostic', {
       ),
 
       // STATUS -> just a colored circle (and blank = empty)
-      new window.ReportColumn(
-        'Status', '● green = completer/on-track, ● yellow = in danger, ● red = non-completer; blank = not going to complete.', '3.5rem', false, 'string',
-        s => this.statusDotHtml(s),
-        null,
-        s => this.statusSortValue(s)
-      ),
 
       new window.ReportColumn(
         'Exited', 'Exit date (if any).', '7rem', false, 'string',
