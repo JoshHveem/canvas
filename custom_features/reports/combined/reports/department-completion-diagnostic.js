@@ -267,7 +267,40 @@ Vue.component('reports-department-completion-diagnostic', {
       const n = this.projectedCompletionRate_OnTrackComplete;
       if (!Number.isFinite(n)) return 0;
       return Math.max(0, Math.min(100, n * 100));
-    }
+    },
+    barSegmentsNow() {
+  // one segment per exiter in the KPI denominator
+  return this.exiters.map(s => {
+    const isCompleter = !!s?.is_completer;
+    return {
+      key: 'exiter-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: isCompleter ? this.colors.green : this.colors.red,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${isCompleter ? 'Completer' : 'Non-completer'}`
+    };
+  });
+},
+
+barSegmentsPotential() {
+  // one segment per *active* student to visualize who might move the needle
+  // green = on-track, yellow = at-risk, null = off-track/unknown
+  return this.activeStudents.map(s => {
+    const ot = this.isOnTrack(s);
+    const ar = this.isAtRisk(s);
+
+    let color = null;
+    if (ot === true) color = this.colors.green;
+    else if (ar === true) color = this.colors.yellow;
+
+    return {
+      key: 'active-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${
+        ot === true ? 'On-track' : ar === true ? 'At-risk' : 'Off-track/unknown'
+      }`
+    };
+  });
+},
+
   },
 
   methods: {
@@ -511,35 +544,69 @@ Vue.component('reports-department-completion-diagnostic', {
           </div>
 
           <!-- Bar -->
-          <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
-            <div
-              :style="{
-                position:'absolute', left:'0', top:'0', bottom:'0',
-                width: barNowPct + '%',
-                background: colors.green
-              }"
-              :title="'Current completion: ' + pctNowText"
-            ></div>
+          <!-- Segmented Bar (per-student) -->
+<div style="display:grid; gap:6px;">
+  <!-- NOW: one segment per exiter -->
+  <div
+    style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;"
+    :title="'Current completion: ' + pctNowText"
+  >
+    <div style="position:absolute; inset:0; display:flex;">
+      <div
+        v-for="seg in barSegmentsNow"
+        :key="seg.key"
+        :title="seg.title"
+        :style="{
+          flex: '1 1 0',
+          background: seg.color,
+          borderRight: '1px solid rgba(255,255,255,0.65)'
+        }"
+      ></div>
+    </div>
 
-            <div
-              v-if="barProjectedPct > barNowPct"
-              :style="{
-                position:'absolute', left: barNowPct + '%', top:'0', bottom:'0',
-                width: (barProjectedPct - barNowPct) + '%',
-                background: colors.green,
-                opacity: 0.35
-              }"
-              :title="'Projected if all on-track complete: ' + pctProjectedText"
-            ></div>
+    <!-- 60% marker -->
+    <div
+      :style="{
+        position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
+        width:'2px', background: colors.black, opacity: 0.6
+      }"
+      title="60% requirement"
+    ></div>
+  </div>
 
-            <div
-              :style="{
-                position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
-                width:'2px', background: colors.black, opacity: 0.6
-              }"
-              title="60% requirement"
-            ></div>
-          </div>
+  <!-- POTENTIAL: one segment per active student, colored green/yellow if relevant -->
+  <div
+    style="position:relative; height:12px; border-radius:10px; overflow:hidden; background:#F2F2F2;"
+    title="Potential completers (active students): green=on-track, yellow=at-risk"
+  >
+    <div style="position:absolute; inset:0; display:flex;">
+      <div
+        v-for="seg in barSegmentsPotential"
+        :key="seg.key"
+        :title="seg.title"
+        :style="{
+          flex: '1 1 0',
+          background: seg.color ? seg.color : 'transparent',
+          opacity: seg.color ? 0.45 : 1,
+          borderRight: '1px solid rgba(0,0,0,0.06)'
+        }"
+      ></div>
+    </div>
+
+    <!-- 60% marker for visual alignment -->
+    <div
+      :style="{
+        position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
+        width:'2px', background: colors.black, opacity: 0.25
+      }"
+      title="60% requirement"
+    ></div>
+  </div>
+
+  <div class="btech-muted" style="font-size:.7rem;">
+    Top row = exiters (green completer / red non-completer). Bottom row = active students (green on-track / yellow at-risk).
+  </div>
+</div>
 
           <div class="btech-row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
             <span class="btech-pill" :style="pctPillStyleByPct(currentCompletionRate)">
