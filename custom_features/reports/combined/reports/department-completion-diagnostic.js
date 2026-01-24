@@ -518,9 +518,6 @@ whatIfPctText() {
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
       <h4 class="btech-card-title" style="margin:0;">Completion Diagnostic</h4>
       <div style="flex:1;"></div>
-      <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Students: {{ studentsClean.length }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Exiters: {{ exiters.length }}</span>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
@@ -561,8 +558,7 @@ whatIfPctText() {
         </div>
       <div>
       <span
-      class="btech-pill"
-      style="margin-left:8px; display:inline-flex; align-items:center; gap:6px;"
+      style="display:inline-flex; align-items:center; gap:6px;"
     >
       What-if drop:
       <button
