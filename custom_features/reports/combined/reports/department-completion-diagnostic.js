@@ -1,5 +1,5 @@
 // completion-diagnostic.js
-Vue.component('department-completion-diagnostic', {
+Vue.component('reports-department-completion-diagnostic', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
