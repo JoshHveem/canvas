@@ -528,12 +528,8 @@ whatIfPctText() {
     </div>
 
     <div v-else>
-      <div style="display:grid; grid-template-columns: 1fr; gap:10px; align-items:start; margin-bottom:12px;">
+      <div style="display:grid; grid-template-columns: 1.5fr 0.5fr; gap:10px; align-items:start; margin-bottom:12px;">
         <div>
-          <div class="btech-muted" style="font-size:.75rem; margin-bottom:6px;">
-            Completion = Completers / Exiters (excused withdrawals excluded upstream)
-          </div>
-
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
             <div style="position:absolute; inset:0; display:flex;">
               <div
@@ -562,44 +558,40 @@ whatIfPctText() {
               title="60% requirement"
             ></div>
           </div>
-
-          <div class="btech-muted" style="font-size:.7rem; margin-top:8px;">
-            AY Window: {{ academicYearStart.toISOString().slice(0,10) }} → {{ cutoffDate.toISOString().slice(0,10) }}
-          </div>
         </div>
-      </div>
-
-      <div class="btech-row">
+      <div>
       <span
-  class="btech-pill"
-  style="margin-left:8px; display:inline-flex; align-items:center; gap:6px;"
->
-  What-if exits:
-  <button
-    type="button"
-    style="width:22px;height:22px;border-radius:6px;"
-    @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
-    :disabled="whatIfDrops <= 0"
-    title="Remove hypothetical exiter"
-  >−</button>
+      class="btech-pill"
+      style="margin-left:8px; display:inline-flex; align-items:center; gap:6px;"
+    >
+      What-if exits:
+      <button
+        type="button"
+        style="width:22px;height:22px;border-radius:6px;"
+        @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
+        :disabled="whatIfDrops <= 0"
+        title="Remove hypothetical exiter"
+      >−</button>
 
-  <b style="min-width:1.5rem; text-align:center;">
-    {{ whatIfDrops }}
-  </b>
+      <b style="min-width:1.5rem; text-align:center;">
+        {{ whatIfDrops }}
+      </b>
 
-  <button
-    type="button"
-    style="width:22px;height:22px;border-radius:6px;"
-    @click="whatIfDrops++"
-    title="Add hypothetical exiter"
-  >+</button>
-</span>
+      <button
+        type="button"
+        style="width:22px;height:22px;border-radius:6px;"
+        @click="whatIfDrops++"
+        title="Add hypothetical exiter"
+      >+</button>
+    </span>
 
-<span class="btech-pill" style="margin-left:8px;">
-  What-if rate: {{ whatIfPctText }}
-</span>
+    <span class="btech-pill" style="margin-left:8px;">
+      What-if rate: {{ whatIfPctText }}
+    </span>
 
       </div>
+      </div>
+
 
       <!-- ACTIVE TABLE -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
