@@ -8,12 +8,12 @@ Vue.component('reports-department-completion-diagnostic', {
     students: {
       type: Array,
       default: () => ([
-        // --- EXITED: COMPLETERS ---
+        // --- FINISHED: COMPLETERS ---
         { name: "Alex Martinez",  canvas_user_id: 101, exited: "2025-02-15", is_completer: true,  credits_remaining: 0 },
         { name: "Brianna Chen",   canvas_user_id: 102, exited: "2025-03-10", is_completer: true,  credits_remaining: 0 },
         { name: "Carlos Rivera",  canvas_user_id: 103, exited: "2025-01-28", is_completer: true,  credits_remaining: 0 },
 
-        // --- EXITED: NON-COMPLETERS ---
+        // --- FINISHED: NON-COMPLETERS ---
         { name: "Danielle Foster", canvas_user_id: 104, exited: "2025-02-02", is_completer: false, credits_remaining: 5 },
         { name: "Ethan Brooks",    canvas_user_id: 105, exited: "2025-03-01", is_completer: false, credits_remaining: 2 },
 
@@ -30,7 +30,7 @@ Vue.component('reports-department-completion-diagnostic', {
         { name: "Kara O'Neill",     canvas_user_id: 111, exited: null, is_completer: false, credits_remaining: 26 },
 
         // --- EDGE CASES ---
-        { name: "Liam Patel",     canvas_user_id: 112, exited: null, is_completer: false, credits_remaining: 0 },   // done but not exited
+        { name: "Liam Patel",     canvas_user_id: 112, exited: null, is_completer: false, credits_remaining: 0 },   // done but not exited (counts as "active done")
         { name: "Maya Rodriguez", canvas_user_id: 113, exited: "2025-04-05", is_completer: false, credits_remaining: null } // bad/missing
       ])
     },
@@ -44,7 +44,16 @@ Vue.component('reports-department-completion-diagnostic', {
       green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
     };
 
-    const table = new window.ReportTable({
+    // Two independent tables (so sorting one doesn't affect the other)
+    const tableActive = new window.ReportTable({
+      rows: [],
+      columns: [],
+      sort_column: "Student",
+      sort_dir: 1,
+      colors
+    });
+
+    const tableFinished = new window.ReportTable({
       rows: [],
       columns: [],
       sort_column: "Student",
@@ -54,20 +63,16 @@ Vue.component('reports-department-completion-diagnostic', {
 
     return {
       colors,
-      table,
-      tableTick: 0
+      tableActive,
+      tableFinished,
+      tableTickActive: 0,
+      tableTickFinished: 0
     };
   },
 
   created() {
-    this.table.setColumns([
-      new window.ReportColumn(
-        'Status', '● green = completer/on-track, ● yellow = in danger, ● red = non-completer; blank = not going to complete.', '3.5rem', false, 'string',
-        s => this.statusDotHtml(s),
-        null,
-        s => this.statusSortValue(s)
-      ),
-
+    // -------- ACTIVE TABLE (uses projected finish) --------
+    this.tableActive.setColumns([
       new window.ReportColumn(
         'Student', 'Student name.', '16rem', false, 'string',
         s => this.anonymous ? 'STUDENT' : (s?.name ?? ''),
@@ -75,13 +80,11 @@ Vue.component('reports-department-completion-diagnostic', {
         s => (s?.name ?? '')
       ),
 
-      // STATUS -> just a colored circle (and blank = empty)
-
       new window.ReportColumn(
-        'Exited', 'Exit date (if any).', '7rem', false, 'string',
-        s => this.dateOrDash(s?.exited),
+        'Status', '● green = on-track, ● yellow = in danger; blank = not going to complete in-window.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s, { mode: 'active' }),
         null,
-        s => this.sortDateValue(s?.exited)
+        s => this.statusSortValue(s, { mode: 'active' })
       ),
 
       new window.ReportColumn(
@@ -91,11 +94,37 @@ Vue.component('reports-department-completion-diagnostic', {
         s => Number(s?.credits_remaining ?? -1)
       ),
 
+      // Merged date column: "End" = projected end date for actives
       new window.ReportColumn(
-        'Proj Finish', 'Projected finish date (~2 credits/month).', '8rem', false, 'string',
-        s => this.projectedFinishText(s),
-        s => this.projectedFinishPillStyle(s),
-        s => this.projectedFinishSortValue(s)
+        'End', 'Projected finish date (~2 credits/month).', '8rem', false, 'string',
+        s => this.endDateText(s, { mode: 'active' }),
+        s => this.endDatePillStyle(s, { mode: 'active' }),
+        s => this.endDateSortValue(s, { mode: 'active' })
+      ),
+    ]);
+
+    // -------- FINISHED TABLE (uses actual exit) --------
+    this.tableFinished.setColumns([
+      new window.ReportColumn(
+        'Student', 'Student name.', '16rem', false, 'string',
+        s => this.anonymous ? 'STUDENT' : (s?.name ?? ''),
+        null,
+        s => (s?.name ?? '')
+      ),
+
+      new window.ReportColumn(
+        'Status', '● green = completer, ● red = non-completer.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s, { mode: 'finished' }),
+        null,
+        s => this.statusSortValue(s, { mode: 'finished' })
+      ),
+
+      // Merged date column: "End" = actual end date (exit) for finished
+      new window.ReportColumn(
+        'End', 'Actual end date (exit date).', '8rem', false, 'string',
+        s => this.endDateText(s, { mode: 'finished' }),
+        s => this.endDatePillStyle(s, { mode: 'finished' }),
+        s => this.endDateSortValue(s, { mode: 'finished' })
       ),
     ]);
   },
@@ -105,19 +134,30 @@ Vue.component('reports-department-completion-diagnostic', {
       return Array.isArray(this.students) ? this.students : [];
     },
 
-    // Academic year: Jul 1 -> Jun 30. Cutoff is the *upcoming* June 30, based on today.
+    // Academic year: Jul 1 -> Jun 30 (upcoming June 30)
     cutoffDate() {
       const now = new Date();
       const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
-      return new Date(endYear, 5, 30, 23, 59, 59); // June=5
+      return new Date(endYear, 5, 30, 23, 59, 59);
     },
 
     academicYearStart() {
       const now = new Date();
       const startYear = (now.getMonth() >= 6) ? now.getFullYear() : (now.getFullYear() - 1);
-      return new Date(startYear, 6, 1, 0, 0, 0); // July=6
+      return new Date(startYear, 6, 1, 0, 0, 0);
     },
 
+    // Finished = exited (official) OR done-but-not-exited (0 credits) (operationally finished)
+    finishedStudents() {
+      return this.studentsClean.filter(s => this.isFinished(s));
+    },
+
+    // Active = not finished
+    activeStudents() {
+      return this.studentsClean.filter(s => !this.isFinished(s));
+    },
+
+    // Exiters for completion KPI (official exited only)
     exiters() {
       return this.studentsClean.filter(s => !!s?.exited);
     },
@@ -132,14 +172,6 @@ Vue.component('reports-department-completion-diagnostic', {
       return this.completerExiters.length / denom;
     },
 
-    activeStudents() {
-      return this.studentsClean.filter(s => !this.isDone(s));
-    },
-
-    doneNotExited() {
-      return this.studentsClean.filter(s => this.isDone(s) && !s?.exited);
-    },
-
     activeOnTrack() {
       return this.activeStudents.filter(s => this.isOnTrack(s) === true);
     },
@@ -152,7 +184,7 @@ Vue.component('reports-department-completion-diagnostic', {
       const baseExiters = this.exiters.length;
       const baseCompleters = this.completerExiters.length;
 
-      const add = this.activeOnTrack.length;
+      const add = this.activeOnTrack.length; // assume they exit as completers
       const denom = baseExiters + add;
       if (!denom) return null;
 
@@ -168,12 +200,13 @@ Vue.component('reports-department-completion-diagnostic', {
       return Math.ceil(rhs / 0.40);
     },
 
-    visibleRows() {
-      const rows = this.studentsClean.slice();
+    // ACTIVE rows: diagnostic bucket ordering (risk -> ontrack -> offtrack/unknown)
+    visibleActiveRows() {
+      const rows = this.activeStudents.slice();
 
       rows.sort((a, b) => {
-        const wa = this.rowBucketWeight(a);
-        const wb = this.rowBucketWeight(b);
+        const wa = this.activeBucketWeight(a);
+        const wb = this.activeBucketWeight(b);
         if (wa !== wb) return wa - wb;
 
         const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
@@ -185,8 +218,30 @@ Vue.component('reports-department-completion-diagnostic', {
         return na.localeCompare(nb);
       });
 
-      this.table.setRows(rows);
-      return this.table.getSortedRows();
+      this.tableActive.setRows(rows);
+      return this.tableActive.getSortedRows();
+    },
+
+    // FINISHED rows: show completers above non-completers, newest end date first
+    visibleFinishedRows() {
+      const rows = this.finishedStudents.slice();
+
+      rows.sort((a, b) => {
+        const wa = this.finishedBucketWeight(a);
+        const wb = this.finishedBucketWeight(b);
+        if (wa !== wb) return wa - wb;
+
+        const da = this.actualEndDate(a)?.getTime() ?? -Infinity;
+        const db = this.actualEndDate(b)?.getTime() ?? -Infinity;
+        if (da !== db) return db - da; // newest first
+
+        const na = (a?.name ?? '').toLowerCase();
+        const nb = (b?.name ?? '').toLowerCase();
+        return na.localeCompare(nb);
+      });
+
+      this.tableFinished.setRows(rows);
+      return this.tableFinished.getSortedRows();
     },
 
     pctNowText() {
@@ -215,15 +270,19 @@ Vue.component('reports-department-completion-diagnostic', {
   },
 
   methods: {
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
+    // --- sort header click handlers (two tables) ---
+    getColumnsWidthsStringActive() { return this.tableActive.getColumnsWidthsString(); },
+    setSortColumnActive(name) { this.tableActive.setSortColumn(name); this.tableTickActive++; },
 
-    // ---------- done logic ----------
-    isDone(s) {
+    getColumnsWidthsStringFinished() { return this.tableFinished.getColumnsWidthsString(); },
+    setSortColumnFinished(name) { this.tableFinished.setSortColumn(name); this.tableTickFinished++; },
+
+    // ---------- finished logic ----------
+    isFinished(s) {
       if (!s) return false;
       if (s?.exited) return true;
       const cr = Number(s?.credits_remaining);
-      return Number.isFinite(cr) && cr <= 0;
+      return Number.isFinite(cr) && cr <= 0; // operationally finished
     },
 
     // ---------- formatting ----------
@@ -237,13 +296,6 @@ Vue.component('reports-department-completion-diagnostic', {
       const d = new Date(v);
       if (Number.isNaN(d.getTime())) return '—';
       return d.toISOString().slice(0, 10);
-    },
-
-    sortDateValue(v) {
-      if (!v) return -1;
-      const d = new Date(v);
-      const t = d.getTime();
-      return Number.isFinite(t) ? t : -1;
     },
 
     // ---------- projection ----------
@@ -260,21 +312,24 @@ Vue.component('reports-department-completion-diagnostic', {
       return d;
     },
 
-    projectedFinishText(s) {
-      if (!s || s?.exited) return '—';
-      const d = this.projectedFinishDate(s);
-      if (!d) return 'n/a';
-      return d.toISOString().slice(0, 10);
+    // ---------- actual end date ----------
+    actualEndDate(s) {
+      if (!s) return null;
+      if (s?.exited) {
+        const d = new Date(s.exited);
+        return Number.isNaN(d.getTime()) ? null : d;
+      }
+      // done-but-not-exited has no "actual", so keep null
+      return null;
     },
 
-    projectedFinishSortValue(s) {
-      const d = this.projectedFinishDate(s);
-      return d ? d.getTime() : Infinity;
-    },
-
+    // ---------- on track logic ----------
     isOnTrack(s) {
       if (!s || s?.exited) return null;
-      if (this.isDone(s)) return true;
+
+      // If they’re done (0 cr) but not exited, treat as on-track (operationally complete)
+      const cr = Number(s?.credits_remaining);
+      if (Number.isFinite(cr) && cr <= 0) return true;
 
       const cutoff = this.cutoffDate;
       const d = this.projectedFinishDate(s);
@@ -284,7 +339,9 @@ Vue.component('reports-department-completion-diagnostic', {
 
     isAtRisk(s) {
       if (!s || s?.exited) return null;
-      if (this.isDone(s)) return false;
+
+      const cr = Number(s?.credits_remaining);
+      if (Number.isFinite(cr) && cr <= 0) return false;
 
       const cutoff = this.cutoffDate;
       const d = this.projectedFinishDate(s);
@@ -294,10 +351,49 @@ Vue.component('reports-department-completion-diagnostic', {
       return diffDays > 0 && diffDays <= 30;
     },
 
-    projectedFinishPillStyle(s) {
-      if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
-      if (this.isDone(s)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+    // ---------- merged End column ----------
+    endDateText(s, { mode }) {
+      if (!s) return 'n/a';
 
+      if (mode === 'finished') {
+        // official exited date or blank for done-not-exited
+        if (s?.exited) return this.dateOrDash(s.exited);
+        return '—';
+      }
+
+      // active
+      const d = this.projectedFinishDate(s);
+      if (!d) return 'n/a';
+      return d.toISOString().slice(0, 10);
+    },
+
+    endDateSortValue(s, { mode }) {
+      if (!s) return Infinity;
+
+      if (mode === 'finished') {
+        const d = this.actualEndDate(s);
+        // no actual date => push to bottom
+        return d ? d.getTime() : Infinity;
+      }
+
+      const d = this.projectedFinishDate(s);
+      return d ? d.getTime() : Infinity;
+    },
+
+    endDatePillStyle(s, { mode }) {
+      if (!s) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      // finished: show completer/non-completer tint based on outcome (exited only)
+      if (mode === 'finished') {
+        if (!s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
+        return {
+          backgroundColor: s?.is_completer ? this.colors.green : this.colors.red,
+          color: this.colors.white,
+          opacity: 0.85
+        };
+      }
+
+      // active: style by projected vs cutoff
       const d = this.projectedFinishDate(s);
       if (!d) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
@@ -310,34 +406,33 @@ Vue.component('reports-department-completion-diagnostic', {
       return { backgroundColor: this.colors.red, color: this.colors.white };
     },
 
-    // ---------- STATUS DOT ----------
-    // Spec:
-    // - red if exited non-completer
-    // - green if exited completer OR active on-track OR active done (0 credits)
-    // - yellow if in danger (at-risk band)
-    // - blank if not going to complete (off-track OR unknown)
-    statusDotColor(s) {
+    // ---------- status dot ----------
+    // mode=active:
+    //   green if on-track
+    //   yellow if at-risk
+    //   blank if off-track OR unknown
+    // mode=finished:
+    //   green if exited completer
+    //   red if exited non-completer
+    //   blank if done-not-exited (no official outcome yet)
+    statusDotColor(s, { mode }) {
       if (!s) return null;
 
-      if (s?.exited) {
+      if (mode === 'finished') {
+        if (!s?.exited) return null;
         return s?.is_completer ? this.colors.green : this.colors.red;
       }
 
-      if (this.isDone(s)) return this.colors.green;
-
+      // active
       const ot = this.isOnTrack(s);
       if (ot === true) return this.colors.green;
       if (this.isAtRisk(s)) return this.colors.yellow;
-
-      // off-track or unknown => blank
       return null;
     },
 
-    statusDotHtml(s) {
-      const c = this.statusDotColor(s);
-      if (!c) return ''; // blank
-
-      // inline HTML so v-html can render it
+    statusDotHtml(s, { mode }) {
+      const c = this.statusDotColor(s, { mode });
+      if (!c) return '';
       return `
         <span
           title="status"
@@ -354,35 +449,29 @@ Vue.component('reports-department-completion-diagnostic', {
       `;
     },
 
-    // Sort: red/yellow/green/blank in a helpful order (danger first)
-    // (This does NOT control row ordering; just helps if user sorts by Status)
-    statusSortValue(s) {
-      const c = this.statusDotColor(s);
-      if (c === this.colors.yellow) return 1; // danger first
+    statusSortValue(s, { mode }) {
+      const c = this.statusDotColor(s, { mode });
+      // In both tables: yellow first (if present), then green, then red, then blank
+      if (c === this.colors.yellow) return 1;
       if (c === this.colors.green) return 2;
       if (c === this.colors.red) return 3;
-      return 9; // blank last
+      return 9;
     },
 
-    // Sorting buckets:
-    // 0  = at-risk (top)
-    // 1  = on-track
-    // 2  = off-track
-    // 3  = unknown
-    // 85 = done (0 cr) but not exited
-    // 90 = exited completer
-    // 95 = exited non-completer
-    rowBucketWeight(s) {
-      if (this.isDone(s)) {
-        if (s?.exited) return s?.is_completer ? 90 : 95;
-        return 85;
-      }
-
+    // ---------- bucket ordering ----------
+    activeBucketWeight(s) {
+      // at-risk first, then on-track, then off-track, then unknown
       const ot = this.isOnTrack(s);
       if (ot === false && this.isAtRisk(s)) return 0;
       if (ot === true) return 1;
       if (ot === false) return 2;
       return 3;
+    },
+
+    finishedBucketWeight(s) {
+      // completers above non-completers, but put "done-not-exited" at very bottom
+      if (!s?.exited) return 9;
+      return s?.is_completer ? 0 : 1;
     },
 
     // ---------- bar helpers ----------
@@ -451,7 +540,6 @@ Vue.component('reports-department-completion-diagnostic', {
             ></div>
           </div>
 
-          <!-- KPI labels -->
           <div class="btech-row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
             <span class="btech-pill" :style="pctPillStyleByPct(currentCompletionRate)">
               Now: {{ pctNowText }}
@@ -473,7 +561,6 @@ Vue.component('reports-department-completion-diagnostic', {
           </div>
         </div>
 
-        <!-- Quick counts -->
         <div style="border:1px solid #EEE; border-radius:10px; padding:10px;">
           <div class="btech-muted" style="font-size:.75rem; margin-bottom:6px;">Active diagnostics</div>
           <div class="btech-row" style="gap:8px; flex-wrap:wrap;">
@@ -487,23 +574,29 @@ Vue.component('reports-department-completion-diagnostic', {
               On track: {{ activeOnTrack.length }}
             </span>
             <span class="btech-pill" :style="{ backgroundColor: colors.gray, color: colors.black }">
-              Done (not exited): {{ doneNotExited.length }}
+              Finished: {{ finishedStudents.length }}
             </span>
           </div>
         </div>
       </div>
 
-      <!-- Column headers -->
+      <!-- ================= ACTIVE TABLE ================= -->
+      <div class="btech-row" style="align-items:center; margin: 8px 0;">
+        <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Active students</h4>
+        <div style="flex:1;"></div>
+        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleActiveRows.length }}</span>
+      </div>
+
       <div
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
-        :style="{ 'grid-template-columns': getColumnsWidthsString() }"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringActive() }"
       >
         <div
-          v-for="col in table.getVisibleColumns()"
+          v-for="col in tableActive.getVisibleColumns()"
           :key="col.name"
           :title="col.description"
           style="display:inline-block; cursor:pointer;"
-          @click="setSortColumn(col.name)"
+          @click="setSortColumnActive(col.name)"
         >
           <span><b>{{ col.name }}</b></span>
           <span style="margin-left:.25rem;">
@@ -519,19 +612,72 @@ Vue.component('reports-department-completion-diagnostic', {
         </div>
       </div>
 
-      <!-- Rows -->
       <div
-        v-for="(s, i) in visibleRows"
-        :key="s.canvas_user_id || s.id || i"
+        v-for="(s, i) in visibleActiveRows"
+        :key="'a-' + (s.canvas_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
-          'grid-template-columns': getColumnsWidthsString(),
-          'background-color': (i % 2) ? 'white' : '#F8F8F8',
-          'opacity': isDone(s) ? 0.55 : 1
+          'grid-template-columns': getColumnsWidthsStringActive(),
+          'background-color': (i % 2) ? 'white' : '#F8F8F8'
         }"
       >
         <div
-          v-for="col in table.getVisibleColumns()"
+          v-for="col in tableActive.getVisibleColumns()"
+          :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+        >
+          <span
+            :class="col.style_formula ? 'btech-pill-text' : ''"
+            :style="col.get_style(s)"
+            v-html="col.getContent(s)"
+          ></span>
+        </div>
+      </div>
+
+      <!-- ================= FINISHED TABLE ================= -->
+      <div class="btech-row" style="align-items:center; margin: 14px 0 8px;">
+        <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Finished students</h4>
+        <div style="flex:1;"></div>
+        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleFinishedRows.length }}</span>
+      </div>
+
+      <div
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringFinished() }"
+      >
+        <div
+          v-for="col in tableFinished.getVisibleColumns()"
+          :key="col.name"
+          :title="col.description"
+          style="display:inline-block; cursor:pointer;"
+          @click="setSortColumnFinished(col.name)"
+        >
+          <span><b>{{ col.name }}</b></span>
+          <span style="margin-left:.25rem;">
+            <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
+              <g>
+                <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
+                  points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 0,194.27 37.087,221.213"/>
+                <polygon :style="{ fill: col.sort_state > 0 ? '#000' : '#E0E0E0' }"
+                  points="404.13,335.988 404.13,61.691 358.301,61.691 358.301,335.99 309.503,268.787 272.416,295.73 381.216,445.54 490,295.715 452.913,268.802"/>
+              </g>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div
+        v-for="(s, i) in visibleFinishedRows"
+        :key="'f-' + (s.canvas_user_id || s.id || i)"
+        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
+        :style="{
+          'grid-template-columns': getColumnsWidthsStringFinished(),
+          'background-color': (i % 2) ? 'white' : '#F8F8F8',
+          'opacity': 0.65
+        }"
+      >
+        <div
+          v-for="col in tableFinished.getVisibleColumns()"
           :key="col.name"
           style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
         >
