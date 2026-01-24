@@ -503,7 +503,7 @@ Vue.component('reports-department-completion-diagnostic', {
 
     <div v-else>
       <!-- KPI area -->
-      <div style="display:grid; grid-template-columns: 1.2fr .8fr; gap:10px; align-items:start; margin-bottom:12px;">
+      <div style="display:grid; grid-template-columns: 1fr; gap:10px; align-items:start; margin-bottom:12px;">
         <div>
           <div class="btech-muted" style="font-size:.75rem; margin-bottom:6px;">
             Completion = Completers / Exiters (excused withdrawals excluded upstream)
