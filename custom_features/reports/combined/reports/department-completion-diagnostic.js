@@ -412,8 +412,7 @@ Vue.component('reports-department-completion-diagnostic', {
   for (const s of exitersNon) {
     segs.push({
       key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.red,
-      opacity: 0.35,
+      color: this.colors.gray,
       title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete (exited)`
     });
   }
