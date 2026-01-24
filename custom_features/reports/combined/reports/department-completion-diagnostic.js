@@ -88,19 +88,20 @@ Vue.component('reports-department-completion-diagnostic', {
       ),
 
 
+
+      // Merged date column: "End" = projected end date for actives
+      new window.ReportColumn(
+        'End (Projected)', 'Projected finish date (~2 credits/month).', '8rem', false, 'string',
+        s => this.endDateText(s, { mode: 'active' }),
+        s => this.endDatePillStyle(s, { mode: 'active' }),
+        s => this.endDateSortValue(s, { mode: 'active' })
+      ),
+
       new window.ReportColumn(
         'Cr Rem', 'Credits remaining (used for projection).', '5.5rem', false, 'number',
         s => this.numOrNA(s?.credits_remaining, 0),
         null,
         s => Number(s?.credits_remaining ?? -1)
-      ),
-
-      // Merged date column: "End" = projected end date for actives
-      new window.ReportColumn(
-        'End', 'Projected finish date (~2 credits/month).', '8rem', false, 'string',
-        s => this.endDateText(s, { mode: 'active' }),
-        s => this.endDatePillStyle(s, { mode: 'active' }),
-        s => this.endDateSortValue(s, { mode: 'active' })
       ),
     ]);
 
