@@ -268,37 +268,41 @@ Vue.component('reports-department-completion-diagnostic', {
       if (!Number.isFinite(n)) return 0;
       return Math.max(0, Math.min(100, n * 100));
     },
-    barSegmentsNow() {
-  // one segment per exiter in the KPI denominator
-  return this.exiters.map(s => {
+    barSegmentsProjected() {
+  // Bar represents: (current exiters) + (active on-track, assumed to become completer exiters)
+  const segs = [];
+
+  // current exiters (already in denominator)
+  for (const s of this.exiters) {
     const isCompleter = !!s?.is_completer;
-    return {
+    segs.push({
       key: 'exiter-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: isCompleter ? this.colors.green : this.colors.red,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${isCompleter ? 'Completer' : 'Non-completer'}`
-    };
-  });
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${isCompleter ? 'Completer' : 'Non-completer'} (exited)`
+    });
+  }
+
+  // projected adds (become completer exiters)
+  for (const s of this.activeOnTrack) {
+    segs.push({
+      key: 'proj-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.yellow,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (assumed completer)`
+    });
+  }
+
+  return segs;
 },
 
-barSegmentsPotential() {
-  // one segment per *active* student to visualize who might move the needle
-  // green = on-track, yellow = at-risk, null = off-track/unknown
-  return this.activeStudents.map(s => {
-    const ot = this.isOnTrack(s);
-    const ar = this.isAtRisk(s);
+projectedDenomCount() {
+  return this.exiters.length + this.activeOnTrack.length;
+},
 
-    let color = null;
-    if (ot === true) color = this.colors.green;
-    else if (ar === true) color = this.colors.yellow;
-
-    return {
-      key: 'active-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${
-        ot === true ? 'On-track' : ar === true ? 'At-risk' : 'Off-track/unknown'
-      }`
-    };
-  });
+projectedPctText() {
+  const denom = this.projectedDenomCount;
+  if (!denom) return 'n/a';
+  const num = this.completerExiters.length + this.activeOnTrack.length;
+  return ((num / denom) * 100).toFixed(1) + '%';
 },
 
   },
@@ -543,69 +547,29 @@ barSegmentsPotential() {
             Completion = Completers / Exiters (excused withdrawals excluded upstream)
           </div>
 
-          <!-- Bar -->
-          <!-- Segmented Bar (per-student) -->
-<div style="display:grid; gap:6px;">
-  <!-- NOW: one segment per exiter -->
-  <div
-    style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;"
-    :title="'Current completion: ' + pctNowText"
-  >
-    <div style="position:absolute; inset:0; display:flex;">
-      <div
-        v-for="seg in barSegmentsNow"
-        :key="seg.key"
-        :title="seg.title"
-        :style="{
-          flex: '1 1 0',
-          background: seg.color,
-          borderRight: '1px solid rgba(255,255,255,0.65)'
-        }"
-      ></div>
-    </div>
-
-    <!-- 60% marker -->
+          <!-- Segmented projected bar -->
+<div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
+  <div style="position:absolute; inset:0; display:flex;">
     <div
+      v-for="seg in barSegmentsProjected"
+      :key="seg.key"
+      :title="seg.title"
       :style="{
-        position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
-        width:'2px', background: colors.black, opacity: 0.6
+        flex: '1 1 0',
+        background: seg.color,
+        borderRight: '1px solid rgba(255,255,255,0.65)'
       }"
-      title="60% requirement"
     ></div>
   </div>
 
-  <!-- POTENTIAL: one segment per active student, colored green/yellow if relevant -->
+  <!-- 60% marker -->
   <div
-    style="position:relative; height:12px; border-radius:10px; overflow:hidden; background:#F2F2F2;"
-    title="Potential completers (active students): green=on-track, yellow=at-risk"
-  >
-    <div style="position:absolute; inset:0; display:flex;">
-      <div
-        v-for="seg in barSegmentsPotential"
-        :key="seg.key"
-        :title="seg.title"
-        :style="{
-          flex: '1 1 0',
-          background: seg.color ? seg.color : 'transparent',
-          opacity: seg.color ? 0.45 : 1,
-          borderRight: '1px solid rgba(0,0,0,0.06)'
-        }"
-      ></div>
-    </div>
-
-    <!-- 60% marker for visual alignment -->
-    <div
-      :style="{
-        position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
-        width:'2px', background: colors.black, opacity: 0.25
-      }"
-      title="60% requirement"
-    ></div>
-  </div>
-
-  <div class="btech-muted" style="font-size:.7rem;">
-    Top row = exiters (green completer / red non-completer). Bottom row = active students (green on-track / yellow at-risk).
-  </div>
+    :style="{
+      position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
+      width:'2px', background: colors.black, opacity: 0.6
+    }"
+    title="60% requirement"
+  ></div>
 </div>
 
           <div class="btech-row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
