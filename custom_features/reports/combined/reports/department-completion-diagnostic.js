@@ -290,18 +290,30 @@ whatIfPctText() {
           title: `${this.displayName(s)}: ${this.bucketLabel(b)}`
         });
       }
-
+      // Put actual non-completer exiters LAST (gray), always
       for (let i = 0; i < exitersNon.length; i++) {
         const s = exitersNon[i];
         segs.push({
-          key: keyFor('done-bad', s, i),
+          key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? i),
           color: this.colors.gray,
           opacity: 1,
-          title: `${this.displayName(s)}: Did not complete (exited)`
+          title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete (exited)`
+        });
+      }
+
+      // Add hypothetical drops as additional non-completer exiters (gray)
+      const drops = Math.max(0, Number(this.whatIfDrops) || 0);
+      for (let i = 0; i < drops; i++) {
+        segs.push({
+          key: 'whatif-drop-' + i,
+          color: this.colors.gray,
+          opacity: 0.9,
+          title: `What-if exiter (non-completer) #${i + 1}`
         });
       }
 
       return segs;
+
     },
   },
 
