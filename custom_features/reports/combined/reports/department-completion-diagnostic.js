@@ -268,10 +268,10 @@ Vue.component('reports-department-completion-diagnostic', {
       if (!Number.isFinite(n)) return 0;
       return Math.max(0, Math.min(100, n * 100));
     },
-    barSegmentsProjected() {
+barSegmentsProjected() {
   const segs = [];
 
-  // 1) ACTUAL COMPLETERS (faded green)
+  // actual completers (faded green)
   for (const s of this.completerExiters) {
     segs.push({
       key: 'done-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
@@ -281,39 +281,38 @@ Vue.component('reports-department-completion-diagnostic', {
     });
   }
 
-  // 2) PROJECTED COMPLETERS (solid green, May or earlier)
-for (const s of this.activeStudents.filter(x => this.isOnTrack(x))) {
-  segs.push({
-    key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-    color: this.colors.green,
-    opacity: 1,
-    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (May or earlier)`
-  });
-}
+  // projected safe (solid green)
+  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'green')) {
+    segs.push({
+      key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.green,
+      opacity: 1,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Projected complete (before June)`
+    });
+  }
 
-// 3) JUNE RISK (yellow)
-for (const s of this.activeStudents.filter(x => this.isJuneRisk(x))) {
-  segs.push({
-    key: 'proj-june-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-    color: this.colors.yellow,
-    opacity: 1,
-    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: June finish (fragile)`
-  });
-}
+  // June (yellow)
+  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'yellow')) {
+    segs.push({
+      key: 'proj-june-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.yellow,
+      opacity: 1,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: June finish (fragile)`
+    });
+  }
 
-// 4) JULY+ (orange — too late)
-for (const s of this.activeStudents.filter(x => this.isJulyOrLater(x))) {
-  segs.push({
-    key: 'proj-july-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-    color: this.colors.orange,
-    opacity: 1,
-    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: July+ finish (too late)`
-  });
-}
+  // July+ (orange)
+  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'orange')) {
+    segs.push({
+      key: 'proj-july-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.orange,
+      opacity: 1,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: July+ finish (too late)`
+    });
+  }
 
-  // 4) ACTUAL NON-COMPLETERS (faded red, LAST)
-  const nonCompleters = this.exiters.filter(s => !s?.is_completer);
-  for (const s of nonCompleters) {
+  // actual non-completers (faded red, LAST)
+  for (const s of this.exiters.filter(x => !x?.is_completer)) {
     segs.push({
       key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: this.colors.red,
@@ -339,32 +338,25 @@ projectedPctText() {
   },
 
   methods: {
-    projectedFinishMonth(s) {
-  const d = this.projectedFinishDate(s);
-  if (!d) return null;
-  return d.getMonth(); // 0 = Jan, 5 = Jun, 6 = Jul
-},
+    projectionBucket(s) {
+      if (!s || s?.exited) return null;
 
-isJuneRisk(s) {
-  if (!s || s?.exited) return false;
+      // operationally done
+      const cr = Number(s?.credits_remaining);
+      if (Number.isFinite(cr) && cr <= 0) return 'green';
 
-  const m = this.projectedFinishMonth(s);
-  if (m === null) return false;
+      const d = this.projectedFinishDate(s);
+      const cutoff = this.cutoffDate;
+      if (!d || !cutoff) return null;
 
-  // June = month 5
-  return m === 5;
-},
+      const y = cutoff.getFullYear();
+      const juneStart = new Date(y, 5, 1, 0, 0, 0); // Jun 1 of cutoff year
+      const julyStart = new Date(y, 6, 1, 0, 0, 0); // Jul 1 of cutoff year
 
-isJulyOrLater(s) {
-  if (!s || s?.exited) return false;
-
-  const m = this.projectedFinishMonth(s);
-  if (m === null) return false;
-
-  // July or later
-  return m >= 6;
-},
-
+      if (d.getTime() < juneStart.getTime()) return 'green';   // before June (safe)
+      if (d.getTime() < julyStart.getTime()) return 'yellow';  // June (fragile)
+      return 'orange';                                         // July+ (too late)
+    },
     // --- sort header click handlers (two tables) ---
     getColumnsWidthsStringActive() { return this.tableActive.getColumnsWidthsString(); },
     setSortColumnActive(name) { this.tableActive.setSortColumn(name); this.tableTickActive++; },
@@ -420,32 +412,13 @@ isJulyOrLater(s) {
 
     // ---------- on track logic ----------
     isOnTrack(s) {
-  if (!s || s?.exited) return null;
-
-  const cr = Number(s?.credits_remaining);
-  if (Number.isFinite(cr) && cr <= 0) return true;
-
-  const d = this.projectedFinishDate(s);
-  if (!d) return null;
-
-  // May or earlier
-  return d.getMonth() <= 4;
+  return this.projectionBucket(s) === 'green';
 },
 
-    isAtRisk(s) {
-      if (!s || s?.exited) return null;
-
-      const cr = Number(s?.credits_remaining);
-      if (Number.isFinite(cr) && cr <= 0) return false;
-
-      const cutoff = this.cutoffDate;
-      const d = this.projectedFinishDate(s);
-      if (!cutoff || !d) return null;
-
-      const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays > 0 && diffDays <= 30;
-    },
-
+// 4) REPLACE your isAtRisk with this:
+isAtRisk(s) {
+  return this.projectionBucket(s) === 'yellow';
+},
     // ---------- merged End column ----------
     endDateText(s, { mode }) {
       if (!s) return 'n/a';
@@ -487,18 +460,12 @@ isJulyOrLater(s) {
           opacity: 0.85
         };
       }
+      const b = this.projectionBucket(s);
+      if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
-      // active: style by projected vs cutoff
-      const d = this.projectedFinishDate(s);
-      if (!d) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-      const cutoff = this.cutoffDate;
-      if (!cutoff) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      const m = d.getMonth();
-      if (m <= 4) return { backgroundColor: this.colors.green, color: this.colors.white };
-      if (m === 5) return { backgroundColor: this.colors.yellow, color: this.colors.white};
-      return { backgroundColor: this.colors.orange, color: this.colors.white};
-
+      if (b === 'green')  return { backgroundColor: this.colors.green,  color: this.colors.white };
+      if (b === 'yellow') return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return               { backgroundColor: this.colors.orange, color: this.colors.black };
     },
 
     // ---------- status dot ----------
@@ -519,9 +486,10 @@ isJulyOrLater(s) {
       }
 
       // active
-      if (this.isOnTrack(s)) return this.colors.green;
-      if (this.isJuneRisk(s)) return this.colors.yellow;
-      if (this.isJulyOrLater(s)) return this.colors.orange;
+      const b = this.projectionBucket(s);
+      if (b === 'green') return this.colors.green;
+      if (b === 'yellow') return this.colors.yellow;
+      if (b === 'orange') return this.colors.orange; // or return null if you want orange to be blank
       return null;
     },
 
