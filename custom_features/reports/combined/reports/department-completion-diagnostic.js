@@ -132,6 +132,57 @@ Vue.component('reports-department-completion-diagnostic', {
   },
 
   computed: {
+    neededActiveIdsFor60() {
+  // Which ACTIVE students (by id) are in the minimum-needed set to reach 60%.
+  // Sorted by projected finish date (soonest -> latest).
+
+  const baseE = this.exiters.length;
+  const baseC = this.completerExiters.length;
+
+  // If no exiters yet, define "needed" as empty (avoid weird behavior)
+  if (!baseE) return new Set();
+
+  const candidates = this.activeStudents
+    .map(s => {
+      const t = this.projectedFinishDate(s)?.getTime();
+      return { s, t: Number.isFinite(t) ? t : Infinity };
+    })
+    .filter(x => x.t !== Infinity) // must have a projected date
+    .sort((a, b) => a.t - b.t);
+
+  // If greens alone cross 60, we show ALL greens (as "needed" == "shown")
+  const greens = candidates.filter(x => this.projectionBucket(x.s) === 'green');
+  const rateIfAllGreens =
+    (baseE + greens.length) ? ((baseC + greens.length) / (baseE + greens.length)) : null;
+
+  const hits60WithGreens = Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60;
+
+  const needed = [];
+  let add = 0;
+
+  const pushAndCheck = (x) => {
+    needed.push(x);
+    add += 1;
+    const denom = baseE + add;
+    const num = baseC + add; // assume each "needed" becomes a completer
+    return (num / denom) >= 0.60;
+  };
+
+  if (hits60WithGreens) {
+    needed.push(...greens);
+  } else {
+    for (const x of candidates) {
+      if (pushAndCheck(x)) break;
+    }
+  }
+
+  return new Set(
+    needed
+      .map(x => x.s?.canvas_user_id ?? x.s?.id)
+      .filter(v => v != null)
+  );
+},
+
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
     },
@@ -204,25 +255,21 @@ Vue.component('reports-department-completion-diagnostic', {
 
     // ACTIVE rows: diagnostic bucket ordering (risk -> ontrack -> offtrack/unknown)
     visibleActiveRows() {
-      const rows = this.activeStudents.slice();
+  const rows = this.activeStudents.slice();
 
-      rows.sort((a, b) => {
-        const wa = this.activeBucketWeight(a);
-        const wb = this.activeBucketWeight(b);
-        if (wa !== wb) return wa - wb;
+  rows.sort((a, b) => {
+    const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
+    const db = this.projectedFinishDate(b)?.getTime() ?? Infinity;
+    if (da !== db) return da - db;
 
-        const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
-        const db = this.projectedFinishDate(b)?.getTime() ?? Infinity;
-        if (da !== db) return da - db;
+    const na = (a?.name ?? '').toLowerCase();
+    const nb = (b?.name ?? '').toLowerCase();
+    return na.localeCompare(nb);
+  });
 
-        const na = (a?.name ?? '').toLowerCase();
-        const nb = (b?.name ?? '').toLowerCase();
-        return na.localeCompare(nb);
-      });
-
-      this.tableActive.setRows(rows);
-      return this.tableActive.getSortedRows();
-    },
+  this.tableActive.setRows(rows);
+  return this.tableActive.getSortedRows();
+},
 
     // FINISHED rows: show completers above non-completers, newest end date first
     visibleFinishedRows() {
@@ -390,6 +437,30 @@ projectedPctText() {
   },
 
   methods: {
+    activeRowDividerStyle(s, idx, rows) {
+  // draw a thick line ABOVE the first row that is NOT in the needed set,
+  // but only if there is at least one needed row.
+  const id = s?.canvas_user_id ?? s?.id;
+  const needed = this.neededActiveIdsFor60;
+
+  if (!needed || needed.size === 0) return {};
+
+  const inNeeded = needed.has(id);
+
+  // first non-needed row that comes right after a needed row
+  if (!inNeeded) {
+    const prev = rows[idx - 1];
+    const prevId = prev?.canvas_user_id ?? prev?.id;
+    const prevInNeeded = prev && needed.has(prevId);
+
+    if (prevInNeeded) {
+      return { borderTop: '4px solid rgba(0,0,0,0.75)' };
+    }
+  }
+
+  return {};
+},
+
     projectionBucket(s) {
   if (!s || s?.exited) return null;
 
@@ -703,10 +774,13 @@ isAtRisk(s) {
         v-for="(s, i) in visibleActiveRows"
         :key="'a-' + (s.canvas_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
-        :style="{
-          'grid-template-columns': getColumnsWidthsStringActive(),
-          'background-color': (i % 2) ? 'white' : '#F8F8F8'
-        }"
+        :style="Object.assign(
+            {
+              'grid-template-columns': getColumnsWidthsStringActive(),
+              'background-color': (i % 2) ? 'white' : '#F8F8F8'
+            },
+            activeRowDividerStyle(s, i, visibleActiveRows)
+          )"
       >
         <div
           v-for="col in tableActive.getVisibleColumns()"
