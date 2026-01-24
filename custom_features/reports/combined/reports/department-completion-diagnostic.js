@@ -435,6 +435,28 @@ Vue.component('reports-department-completion-diagnostic', {
       return 'Active';
     },
 
+    projectedFinishPillStyle(s) {
+  if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
+
+  const d = this.projectedFinishDate(s);
+  if (!d) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+  const cutoff = this.cutoffDate;
+  if (!cutoff) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+  const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
+
+  // finish by cutoff => green
+  if (diffDays <= 0) return { backgroundColor: this.colors.green, color: this.colors.white };
+
+  // within 30 days after cutoff => yellow (at risk)
+  if (diffDays <= 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+
+  // beyond that => red
+  return { backgroundColor: this.colors.red, color: this.colors.white };
+},
+
+
     statusPillStyle(s) {
       if (!!s?.exited) {
         return {
