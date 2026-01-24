@@ -271,21 +271,17 @@ Vue.component('reports-department-completion-diagnostic', {
     barSegmentsProjected() {
   const segs = [];
 
-  // --- ACTUAL EXITERS (faded colors) ---
-  for (const s of this.exiters) {
-    const isCompleter = !!s?.is_completer;
-
+  // 1) ACTUAL COMPLETERS (faded green)
+  for (const s of this.completerExiters) {
     segs.push({
-      key: 'exiter-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: isCompleter ? this.colors.green : this.colors.red,
-      opacity: 0.35, // faded = actual outcome
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${
-        isCompleter ? 'Completed' : 'Did not complete'
-      } (exited)`
+      key: 'done-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.green,
+      opacity: 0.35,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Completed`
     });
   }
 
-  // --- PROJECTED COMPLETERS (solid green) ---
+  // 2) PROJECTED COMPLETERS (solid green)
   for (const s of this.activeOnTrack) {
     segs.push({
       key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
@@ -295,13 +291,24 @@ Vue.component('reports-department-completion-diagnostic', {
     });
   }
 
-  // --- FENCE-SITTERS (yellow) ---
+  // 3) AT-RISK (yellow)
   for (const s of this.activeAtRisk) {
     segs.push({
       key: 'proj-risk-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: this.colors.yellow,
       opacity: 1,
       title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: At-risk`
+    });
+  }
+
+  // 4) ACTUAL NON-COMPLETERS (faded red, LAST)
+  const nonCompleters = this.exiters.filter(s => !s?.is_completer);
+  for (const s of nonCompleters) {
+    segs.push({
+      key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.red,
+      opacity: 0.35,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete`
     });
   }
 
