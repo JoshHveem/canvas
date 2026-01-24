@@ -281,25 +281,35 @@ Vue.component('reports-department-completion-diagnostic', {
     });
   }
 
-  // 2) PROJECTED COMPLETERS (solid green)
-  for (const s of this.activeOnTrack) {
-    segs.push({
-      key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.green,
-      opacity: 1,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (projected complete)`
-    });
-  }
+  // 2) PROJECTED COMPLETERS (solid green, May or earlier)
+for (const s of this.activeStudents.filter(x => this.isOnTrack(x))) {
+  segs.push({
+    key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+    color: this.colors.green,
+    opacity: 1,
+    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (May or earlier)`
+  });
+}
 
-  // 3) AT-RISK (yellow)
-  for (const s of this.activeAtRisk) {
-    segs.push({
-      key: 'proj-risk-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.yellow,
-      opacity: 1,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: At-risk`
-    });
-  }
+// 3) JUNE RISK (yellow)
+for (const s of this.activeStudents.filter(x => this.isJuneRisk(x))) {
+  segs.push({
+    key: 'proj-june-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+    color: this.colors.yellow,
+    opacity: 1,
+    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: June finish (fragile)`
+  });
+}
+
+// 4) JULY+ (orange — too late)
+for (const s of this.activeStudents.filter(x => this.isJulyOrLater(x))) {
+  segs.push({
+    key: 'proj-july-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+    color: this.colors.orange,
+    opacity: 1,
+    title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: July+ finish (too late)`
+  });
+}
 
   // 4) ACTUAL NON-COMPLETERS (faded red, LAST)
   const nonCompleters = this.exiters.filter(s => !s?.is_completer);
@@ -329,6 +339,32 @@ projectedPctText() {
   },
 
   methods: {
+    projectedFinishMonth(s) {
+  const d = this.projectedFinishDate(s);
+  if (!d) return null;
+  return d.getMonth(); // 0 = Jan, 5 = Jun, 6 = Jul
+},
+
+isJuneRisk(s) {
+  if (!s || s?.exited) return false;
+
+  const m = this.projectedFinishMonth(s);
+  if (m === null) return false;
+
+  // June = month 5
+  return m === 5;
+},
+
+isJulyOrLater(s) {
+  if (!s || s?.exited) return false;
+
+  const m = this.projectedFinishMonth(s);
+  if (m === null) return false;
+
+  // July or later
+  return m >= 6;
+},
+
     // --- sort header click handlers (two tables) ---
     getColumnsWidthsStringActive() { return this.tableActive.getColumnsWidthsString(); },
     setSortColumnActive(name) { this.tableActive.setSortColumn(name); this.tableTickActive++; },
@@ -384,17 +420,17 @@ projectedPctText() {
 
     // ---------- on track logic ----------
     isOnTrack(s) {
-      if (!s || s?.exited) return null;
+  if (!s || s?.exited) return null;
 
-      // If they’re done (0 cr) but not exited, treat as on-track (operationally complete)
-      const cr = Number(s?.credits_remaining);
-      if (Number.isFinite(cr) && cr <= 0) return true;
+  const cr = Number(s?.credits_remaining);
+  if (Number.isFinite(cr) && cr <= 0) return true;
 
-      const cutoff = this.cutoffDate;
-      const d = this.projectedFinishDate(s);
-      if (!cutoff || !d) return null;
-      return d.getTime() <= cutoff.getTime();
-    },
+  const d = this.projectedFinishDate(s);
+  if (!d) return null;
+
+  // May or earlier
+  return d.getMonth() <= 4;
+},
 
     isAtRisk(s) {
       if (!s || s?.exited) return null;
@@ -458,11 +494,11 @@ projectedPctText() {
 
       const cutoff = this.cutoffDate;
       if (!cutoff) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      const m = d.getMonth();
+      if (m <= 4) return { backgroundColor: this.colors.green, color: this.colors.white };
+      if (m === 5) return { backgroundColor: this.colors.yellow, color: this.colors.white};
+      return { backgroundColor: this.colors.orange, color: this.colors.white};
 
-      const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) return { backgroundColor: this.colors.green, color: this.colors.white };
-      if (diffDays <= 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-      return { backgroundColor: this.colors.red, color: this.colors.white };
     },
 
     // ---------- status dot ----------
@@ -483,9 +519,9 @@ projectedPctText() {
       }
 
       // active
-      const ot = this.isOnTrack(s);
-      if (ot === true) return this.colors.green;
-      if (this.isAtRisk(s)) return this.colors.yellow;
+      if (this.isOnTrack(s)) return this.colors.green;
+      if (this.isJuneRisk(s)) return this.colors.yellow;
+      if (this.isJulyOrLater(s)) return this.colors.orange;
       return null;
     },
 
