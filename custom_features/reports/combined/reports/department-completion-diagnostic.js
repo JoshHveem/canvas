@@ -132,56 +132,54 @@ Vue.component('reports-department-completion-diagnostic', {
   },
 
   computed: {
-    neededActiveIdsFor60() {
-  // Which ACTIVE students (by id) are in the minimum-needed set to reach 60%.
-  // Sorted by projected finish date (soonest -> latest).
+    neededActiveCountFor60() {
+  // How many ACTIVE students must complete (in the "min needed" model) to reach 60%.
+  // This is a COUNT only, so the divider can always be placed after row N
+  // regardless of table sorting.
 
   const baseE = this.exiters.length;
   const baseC = this.completerExiters.length;
 
-  // If no exiters yet, define "needed" as empty (avoid weird behavior)
-  if (!baseE) return new Set();
+  if (!baseE) return 0; // undefined scenario; keep divider off
 
+  // Candidates: active with a projectionBucket (green/yellow/orange/red) and a projected date
   const candidates = this.activeStudents
+    .filter(s => !s?.exited)
     .map(s => {
+      const b = this.projectionBucket(s);
       const t = this.projectedFinishDate(s)?.getTime();
-      return { s, t: Number.isFinite(t) ? t : Infinity };
+      return {
+        s,
+        b,
+        t: Number.isFinite(t) ? t : Infinity
+      };
     })
-    .filter(x => x.t !== Infinity) // must have a projected date
-    .sort((a, b) => a.t - b.t);
+    .filter(x => !!x.b && x.t !== Infinity);
 
-  // If greens alone cross 60, we show ALL greens (as "needed" == "shown")
-  const greens = candidates.filter(x => this.projectionBucket(x.s) === 'green');
+  // If greens alone get you to >=60%, divider should be after ALL greens.
+  const greens = candidates.filter(x => x.b === 'green');
+
   const rateIfAllGreens =
     (baseE + greens.length) ? ((baseC + greens.length) / (baseE + greens.length)) : null;
 
   const hits60WithGreens = Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60;
 
-  const needed = [];
-  let add = 0;
+  if (hits60WithGreens) return greens.length;
 
-  const pushAndCheck = (x) => {
-    needed.push(x);
+  // Otherwise: minimum number of candidates (no matter bucket) required to hit 60
+  // (assumes each additional completer adds 1 to numerator and 1 to denominator)
+  let add = 0;
+  for (let i = 0; i < candidates.length; i++) {
     add += 1;
     const denom = baseE + add;
-    const num = baseC + add; // assume each "needed" becomes a completer
-    return (num / denom) >= 0.60;
-  };
-
-  if (hits60WithGreens) {
-    needed.push(...greens);
-  } else {
-    for (const x of candidates) {
-      if (pushAndCheck(x)) break;
-    }
+    const num = baseC + add;
+    if (denom > 0 && (num / denom) >= 0.60) return add;
   }
 
-  return new Set(
-    needed
-      .map(x => x.s?.canvas_user_id ?? x.s?.id)
-      .filter(v => v != null)
-  );
+  // Even taking everyone doesn't hit 60
+  return candidates.length;
 },
+
 
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
@@ -438,28 +436,21 @@ projectedPctText() {
 
   methods: {
     activeRowDividerStyle(s, idx, rows) {
-  // draw a thick line ABOVE the first row that is NOT in the needed set,
-  // but only if there is at least one needed row.
-  const id = s?.canvas_user_id ?? s?.id;
-  const needed = this.neededActiveIdsFor60;
+  const n = Number(this.neededActiveCountFor60);
 
-  if (!needed || needed.size === 0) return {};
+  // Divider off if nothing is needed, or if not enough rows to place it
+  if (!Number.isFinite(n) || n <= 0) return {};
+  if (!Array.isArray(rows) || rows.length === 0) return {};
 
-  const inNeeded = needed.has(id);
-
-  // first non-needed row that comes right after a needed row
-  if (!inNeeded) {
-    const prev = rows[idx - 1];
-    const prevId = prev?.canvas_user_id ?? prev?.id;
-    const prevInNeeded = prev && needed.has(prevId);
-
-    if (prevInNeeded) {
-      return { borderTop: '4px solid rgba(0,0,0,0.75)' };
-    }
+  // We want a thick line AFTER the nth row => border-top on row index n (0-based)
+  // Example: n=2 => line above idx=2 (3rd row), i.e., after the 2nd row.
+  if (idx === n) {
+    return { borderTop: '4px solid rgba(0,0,0,0.75)' };
   }
 
   return {};
 },
+
 
     projectionBucket(s) {
   if (!s || s?.exited) return null;
