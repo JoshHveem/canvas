@@ -268,56 +268,107 @@ Vue.component('reports-department-completion-diagnostic', {
       if (!Number.isFinite(n)) return 0;
       return Math.max(0, Math.min(100, n * 100));
     },
-barSegmentsProjected() {
+
+    barSegmentsProjected() {
   const segs = [];
 
-  // actual completers (faded green)
-  for (const s of this.completerExiters) {
+  // --- Fixed reality: all exiters always included in bar (faded) ---
+  const exitersCompleters = this.exiters.filter(s => !!s?.is_completer);
+  const exitersNon        = this.exiters.filter(s => !s?.is_completer);
+
+  for (const s of exitersCompleters) {
     segs.push({
       key: 'done-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: this.colors.green,
       opacity: 0.35,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Completed`
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Completed (exited)`
     });
   }
 
-  // projected safe (solid green)
-  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'green')) {
+  // --- Candidate pool (actives), sorted by bucket then by projected date ---
+  const candidates = this.activeStudents
+    .filter(s => !s?.exited) // paranoia
+    .map(s => {
+      const b = this.projectionBucket(s); // green/yellow/orange/red/null
+      const d = this.projectedFinishDate(s)?.getTime() ?? Infinity;
+      return { s, b, t: d };
+    })
+    .filter(x => !!x.b) // only bucketed candidates
+    .sort((a, b) => {
+      const w = (bb) => (bb === 'green' ? 0 : bb === 'yellow' ? 1 : bb === 'orange' ? 2 : 3);
+      const wa = w(a.b), wb = w(b.b);
+      if (wa !== wb) return wa - wb;
+      if (a.t !== b.t) return a.t - b.t;
+      return ((a.s?.name ?? '').toLowerCase()).localeCompare((b.s?.name ?? '').toLowerCase());
+    });
+
+  const greens = candidates.filter(x => x.b === 'green');
+  const rest   = candidates.filter(x => x.b !== 'green');
+
+  // --- Decide what to show ---
+  const baseE = this.exiters.length;
+  const baseC = this.completerExiters.length;
+
+  const rateIfAllGreens =
+    (baseE + greens.length) ? ((baseC + greens.length) / (baseE + greens.length)) : null;
+
+  const hits60WithGreens = Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60;
+
+  // If greens alone get you there: show ALL greens (and stop)
+  // Else: show MIN # of candidates needed to reach 60, pulling from green → yellow → orange → red
+  const chosen = [];
+  let add = 0;
+
+  const takeUntilHit60 = (list) => {
+    for (const x of list) {
+      chosen.push(x);
+      add += 1;
+      const denom = baseE + add;
+      const num   = baseC + add;
+      if (denom > 0 && (num / denom) >= 0.60) break;
+    }
+  };
+
+  if (hits60WithGreens) {
+    chosen.push(...greens);
+  } else {
+    // first take greens (safe bets)
+    takeUntilHit60(greens);
+    // if still not there, take next buckets in already-sorted order
+    if ((baseE + add) > 0 && ((baseC + add) / (baseE + add)) < 0.60) {
+      takeUntilHit60(rest);
+    }
+  }
+
+  // Render chosen candidates as SOLID segments
+  for (const x of chosen) {
+    const b = x.b;
+    const color =
+      (b === 'green') ? this.colors.green :
+      (b === 'yellow') ? this.colors.yellow :
+      (b === 'orange') ? this.colors.orange :
+      this.colors.red;
+
     segs.push({
-      key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.green,
+      key: 'proj-' + b + '-' + (x.s?.canvas_user_id ?? x.s?.id ?? Math.random()),
+      color,
       opacity: 1,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Projected complete (before June)`
+      title: `${this.anonymous ? 'STUDENT' : (x.s?.name ?? 'Student')}: ${
+        b === 'green' ? 'Projected complete (safe)' :
+        b === 'yellow' ? 'Projected complete (June / fragile)' :
+        b === 'orange' ? 'Projected complete (July / too late)' :
+        'Projected complete (Aug+ / very late)'
+      }`
     });
   }
 
-  // June (yellow)
-  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'yellow')) {
-    segs.push({
-      key: 'proj-june-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.yellow,
-      opacity: 1,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: June finish (fragile)`
-    });
-  }
-
-  // July+ (orange)
-  for (const s of this.activeStudents.filter(x => this.projectionBucket(x) === 'orange')) {
-    segs.push({
-      key: 'proj-july-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
-      color: this.colors.orange,
-      opacity: 1,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: July+ finish (too late)`
-    });
-  }
-
-  // actual non-completers (faded red, LAST)
-  for (const s of this.exiters.filter(x => !x?.is_completer)) {
+  // Put actual non-completer exiters LAST (faded red), always
+  for (const s of exitersNon) {
     segs.push({
       key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: this.colors.red,
       opacity: 0.35,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete`
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete (exited)`
     });
   }
 
@@ -339,24 +390,27 @@ projectedPctText() {
 
   methods: {
     projectionBucket(s) {
-      if (!s || s?.exited) return null;
+  if (!s || s?.exited) return null;
 
-      // operationally done
-      const cr = Number(s?.credits_remaining);
-      if (Number.isFinite(cr) && cr <= 0) return 'green';
+  // operationally done
+  const cr = Number(s?.credits_remaining);
+  if (Number.isFinite(cr) && cr <= 0) return 'green';
 
-      const d = this.projectedFinishDate(s);
-      const cutoff = this.cutoffDate;
-      if (!d || !cutoff) return null;
+  const d = this.projectedFinishDate(s);
+  const cutoff = this.cutoffDate;
+  if (!d || !cutoff) return null;
 
-      const y = cutoff.getFullYear();
-      const juneStart = new Date(y, 5, 1, 0, 0, 0); // Jun 1 of cutoff year
-      const julyStart = new Date(y, 6, 1, 0, 0, 0); // Jul 1 of cutoff year
+  const y = cutoff.getFullYear();
 
-      if (d.getTime() < juneStart.getTime()) return 'green';   // before June (safe)
-      if (d.getTime() < julyStart.getTime()) return 'yellow';  // June (fragile)
-      return 'orange';                                         // July+ (too late)
-    },
+  const juneStart = new Date(y, 5, 1, 0, 0, 0); // Jun 1
+  const julyStart = new Date(y, 6, 1, 0, 0, 0); // Jul 1
+  const augStart  = new Date(y, 7, 1, 0, 0, 0); // Aug 1 (treat as "red")
+
+  if (d.getTime() < juneStart.getTime()) return 'green';
+  if (d.getTime() < julyStart.getTime()) return 'yellow';
+  if (d.getTime() < augStart.getTime())  return 'orange';
+  return 'red'; // Aug+ (or next year) = red
+},
     // --- sort header click handlers (two tables) ---
     getColumnsWidthsStringActive() { return this.tableActive.getColumnsWidthsString(); },
     setSortColumnActive(name) { this.tableActive.setSortColumn(name); this.tableTickActive++; },
@@ -464,8 +518,9 @@ isAtRisk(s) {
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       if (b === 'green')  return { backgroundColor: this.colors.green,  color: this.colors.white };
-      if (b === 'yellow') return { backgroundColor: this.colors.yellow, color: this.colors.black };
-      return               { backgroundColor: this.colors.orange, color: this.colors.black };
+      if (b === 'yellow') return { backgroundColor: this.colors.yellow, color: this.colors.white };
+      if (b === 'orange') return { backgroundColor: this.colors.orange, color: this.colors.white };
+      return               { backgroundColor: this.colors.red,    color: this.colors.white };
     },
 
     // ---------- status dot ----------
@@ -490,6 +545,7 @@ isAtRisk(s) {
       if (b === 'green') return this.colors.green;
       if (b === 'yellow') return this.colors.yellow;
       if (b === 'orange') return this.colors.orange; // or return null if you want orange to be blank
+      if (b === 'red') return this.colors.red; // <- add this
       return null;
     },
 
