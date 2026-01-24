@@ -319,6 +319,14 @@ Vue.component('reports-department-completion-diagnostic', {
   },
 
   methods: {
+    isDone(s) {
+      if (!s) return false;
+      if (s?.exited) return true;
+
+      const cr = Number(s?.credits_remaining);
+      return Number.isFinite(cr) && cr <= 0;
+    },
+
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
@@ -484,18 +492,28 @@ Vue.component('reports-department-completion-diagnostic', {
     },
 
     rowBucketWeight(s) {
-      const exited = !!s?.exited;
-      if (!exited) {
-        const ot = this.isOnTrack(s);
-        if (ot === false && this.isAtRisk(s)) return 0; // treat at risk as top priority
-        if (ot === false) return 2;
-        if (ot === true) return 1;
-        return 1.5; // unknown sits with actives
-      }
+  // DONE students always go to the bottom
+  if (this.isDone(s)) {
+    // exited completers above exited non-completers, but all below actives
+    if (s?.exited) return s?.is_completer ? 90 : 95;
+    return 85; // active but credits_remaining <= 0
+  }
 
-      // exited -> bottom; completers above non-completers
-      return s?.is_completer ? 3 : 4;
-    },
+  // ACTIVE (not done yet)
+  const ot = this.isOnTrack(s);
+
+  // Highest priority: at-risk
+  if (ot === false && this.isAtRisk(s)) return 0;
+
+  // On track
+  if (ot === true) return 1;
+
+  // Off track
+  if (ot === false) return 2;
+
+  // Unknown / insufficient data
+  return 3;
+},
 
     // ---------- bar helpers ----------
     pctPillStyleByPct(p) {
