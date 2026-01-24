@@ -51,6 +51,14 @@ Vue.component('reports-department', {
         :cpl="cpl"
         :coe="coe"
       ></reports-department-coe>
+
+      <reports-department-completion
+        v-if="subMenu == 'completion'"
+        :year="year"
+        :cpl="cpl"
+        :statistics="statistics"
+        :credits-remaining="department_metrics.credits_remaining"
+      ></reports-department-coe>
     </div>
   `,
   props: {
@@ -84,6 +92,7 @@ Vue.component('reports-department', {
         list.find(d => Number(d?.dept) === deptId) ||
         list.find(d => String(d?.dept) === String(this.account));
 
+      console.log(dep);
       return dep || {};
     },
 

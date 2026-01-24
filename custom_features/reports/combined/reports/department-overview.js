@@ -30,6 +30,7 @@ Vue.component('reports-department-overview', {
     instructorMetrics: { type: Object, required: true },
     instructorSurveys: { type: Object, required: true },
     courseSurveys: { type: Object, required: true },
+    creditsRemaining: { type: Array, required: true }
   },
   data() {
     return {

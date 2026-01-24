@@ -358,6 +358,7 @@
             datasets: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
+              { value: 'canvas', label: 'Canvas' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'course-surveys', label: 'Course Surveys' },
             ]
@@ -370,11 +371,12 @@
             datasets: ['departments'],
             selectors: [],
             subMenus: [
-              { value: 'overview', label: 'Overview' },
+              { value: 'overview',    label: 'Overview' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
               { value: 'completion-diagnostic', label: 'TEST' }, 
               { value: 'occupations', label: 'Occupations' },
+              { value: 'completion',  label: 'Completions' },
               { value: 'coe',         label: 'COE' },
             ]
           },
@@ -861,7 +863,9 @@
   async function _init() {
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     loadCSS("https://reports.bridgetools.dev/style/main.css");
+
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
+    await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
     // Instructor sub-components
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/grading.js");
@@ -886,6 +890,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
@@ -895,6 +900,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses.js");
