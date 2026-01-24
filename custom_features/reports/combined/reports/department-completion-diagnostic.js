@@ -52,7 +52,8 @@ Vue.component('reports-department-completion-diagnostic', {
       tableActive: makeTable("End (Projected)", 1),
       tableFinished: makeTable("Student", 1),
       tableTickActive: 0,
-      tableTickFinished: 0
+      tableTickFinished: 0,
+      whatIfDrops: 0,
     };
   },
 
@@ -79,6 +80,26 @@ Vue.component('reports-department-completion-diagnostic', {
   },
 
   computed: {
+    whatIfExitersTotal() {
+  return this.exiters.length + Math.max(0, this.whatIfDrops);
+},
+
+whatIfCompletersTotal() {
+  // drops are assumed NON-completers
+  return this.completerExiters.length;
+},
+
+whatIfCompletionRate() {
+  const denom = this.whatIfExitersTotal;
+  if (!denom) return null;
+  return this.whatIfCompletersTotal / denom;
+},
+
+whatIfPctText() {
+  const n = this.whatIfCompletionRate;
+  return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
+},
+
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
     },
@@ -139,8 +160,9 @@ Vue.component('reports-department-completion-diagnostic', {
     },
 
     neededActiveCountFor60() {
-      const baseE = this.exiters.length;
-      const baseC = this.completerExiters.length;
+      const baseE = this.whatIfExitersTotal;
+      const baseC = this.whatIfCompletersTotal;
+
       if (!baseE) return 0;
 
       const greens = this.projectionCandidates.filter(x => x.b === 'green');
@@ -218,8 +240,9 @@ Vue.component('reports-department-completion-diagnostic', {
         });
       }
 
-      const baseE = this.exiters.length;
-      const baseC = this.completerExiters.length;
+      const baseE = this.whatIfExitersTotal;
+      const baseC = this.whatIfCompletersTotal;
+
 
       const greens = this.projectionCandidates.filter(x => x.b === 'green');
       const rest = this.projectionCandidates.filter(x => x.b !== 'green');
@@ -544,6 +567,38 @@ Vue.component('reports-department-completion-diagnostic', {
             AY Window: {{ academicYearStart.toISOString().slice(0,10) }} → {{ cutoffDate.toISOString().slice(0,10) }}
           </div>
         </div>
+      </div>
+
+      <div class="btech-row">
+      <span
+  class="btech-pill"
+  style="margin-left:8px; display:inline-flex; align-items:center; gap:6px;"
+>
+  What-if exits:
+  <button
+    type="button"
+    style="width:22px;height:22px;border-radius:6px;"
+    @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
+    :disabled="whatIfDrops <= 0"
+    title="Remove hypothetical exiter"
+  >−</button>
+
+  <b style="min-width:1.5rem; text-align:center;">
+    {{ whatIfDrops }}
+  </b>
+
+  <button
+    type="button"
+    style="width:22px;height:22px;border-radius:6px;"
+    @click="whatIfDrops++"
+    title="Add hypothetical exiter"
+  >+</button>
+</span>
+
+<span class="btech-pill" style="margin-left:8px;">
+  What-if rate: {{ whatIfPctText }}
+</span>
+
       </div>
 
       <!-- ACTIVE TABLE -->
