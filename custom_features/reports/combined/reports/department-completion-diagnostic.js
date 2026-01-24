@@ -48,7 +48,7 @@ Vue.component('reports-department-completion-diagnostic', {
     const tableActive = new window.ReportTable({
       rows: [],
       columns: [],
-      sort_column: "Student",
+      sort_column: "End (Projected)",
       sort_dir: 1,
       colors
     });
