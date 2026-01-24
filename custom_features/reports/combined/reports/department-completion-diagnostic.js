@@ -560,24 +560,6 @@ Vue.component('reports-department-completion-diagnostic', {
             AY Window: {{ academicYearStart.toISOString().slice(0,10) }} → {{ cutoffDate.toISOString().slice(0,10) }}
           </div>
         </div>
-
-        <div style="border:1px solid #EEE; border-radius:10px; padding:10px;">
-          <div class="btech-muted" style="font-size:.75rem; margin-bottom:6px;">Active diagnostics</div>
-          <div class="btech-row" style="gap:8px; flex-wrap:wrap;">
-            <span class="btech-pill" :style="{ backgroundColor: colors.red, color: colors.white }">
-              Off track: {{ activeStudents.filter(s => isOnTrack(s) === false && !isAtRisk(s)).length }}
-            </span>
-            <span class="btech-pill" :style="{ backgroundColor: colors.yellow, color: colors.black }">
-              At risk: {{ activeAtRisk.length }}
-            </span>
-            <span class="btech-pill" :style="{ backgroundColor: colors.green, color: colors.white }">
-              On track: {{ activeOnTrack.length }}
-            </span>
-            <span class="btech-pill" :style="{ backgroundColor: colors.gray, color: colors.black }">
-              Finished: {{ finishedStudents.length }}
-            </span>
-          </div>
-        </div>
       </div>
 
       <!-- ================= ACTIVE TABLE ================= -->
