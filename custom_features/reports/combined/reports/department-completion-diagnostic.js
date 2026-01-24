@@ -269,25 +269,39 @@ Vue.component('reports-department-completion-diagnostic', {
       return Math.max(0, Math.min(100, n * 100));
     },
     barSegmentsProjected() {
-  // Bar represents: (current exiters) + (active on-track, assumed to become completer exiters)
   const segs = [];
 
-  // current exiters (already in denominator)
+  // --- ACTUAL EXITERS (faded colors) ---
   for (const s of this.exiters) {
     const isCompleter = !!s?.is_completer;
+
     segs.push({
       key: 'exiter-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: isCompleter ? this.colors.green : this.colors.red,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${isCompleter ? 'Completer' : 'Non-completer'} (exited)`
+      opacity: 0.35, // faded = actual outcome
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: ${
+        isCompleter ? 'Completed' : 'Did not complete'
+      } (exited)`
     });
   }
 
-  // projected adds (become completer exiters)
+  // --- PROJECTED COMPLETERS (solid green) ---
   for (const s of this.activeOnTrack) {
     segs.push({
-      key: 'proj-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      key: 'proj-ok-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
+      color: this.colors.green,
+      opacity: 1,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (projected complete)`
+    });
+  }
+
+  // --- FENCE-SITTERS (yellow) ---
+  for (const s of this.activeAtRisk) {
+    segs.push({
+      key: 'proj-risk-' + (s?.canvas_user_id ?? s?.id ?? Math.random()),
       color: this.colors.yellow,
-      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: On-track (assumed completer)`
+      opacity: 1,
+      title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: At-risk`
     });
   }
 
@@ -548,6 +562,7 @@ projectedPctText() {
           </div>
 
           <!-- Segmented projected bar -->
+          <!-- Segmented projected bar -->
 <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
   <div style="position:absolute; inset:0; display:flex;">
     <div
@@ -557,7 +572,8 @@ projectedPctText() {
       :style="{
         flex: '1 1 0',
         background: seg.color,
-        borderRight: '1px solid rgba(255,255,255,0.65)'
+        opacity: seg.opacity,
+        borderRight: '1px solid rgba(255,255,255,0.6)'
       }"
     ></div>
   </div>
@@ -565,12 +581,18 @@ projectedPctText() {
   <!-- 60% marker -->
   <div
     :style="{
-      position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
-      width:'2px', background: colors.black, opacity: 0.6
+      position:'absolute',
+      left:'60%',
+      top:'-3px',
+      bottom:'-3px',
+      width:'2px',
+      background: colors.black,
+      opacity: 0.6
     }"
     title="60% requirement"
   ></div>
 </div>
+
 
           <div class="btech-row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
             <span class="btech-pill" :style="pctPillStyleByPct(currentCompletionRate)">
