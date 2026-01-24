@@ -68,10 +68,11 @@ Vue.component('reports-department-completion-diagnostic', {
         s => (s?.name ?? '')
       ),
 
+      // STATUS -> just a colored circle (and blank = empty)
       new window.ReportColumn(
-        'Status', 'Active vs done vs exited; if exited shows completer/non-completer.', '7rem', false, 'string',
-        s => this.statusText(s),
-        s => this.statusPillStyle(s),
+        'Status', '● green = completer/on-track, ● yellow = in danger, ● red = non-completer; blank = not going to complete.', '3.5rem', false, 'string',
+        s => this.statusDotHtml(s),
+        null,
         s => this.statusSortValue(s)
       ),
 
@@ -95,7 +96,6 @@ Vue.component('reports-department-completion-diagnostic', {
         s => this.projectedFinishPillStyle(s),
         s => this.projectedFinishSortValue(s)
       ),
-
     ]);
   },
 
@@ -104,8 +104,7 @@ Vue.component('reports-department-completion-diagnostic', {
       return Array.isArray(this.students) ? this.students : [];
     },
 
-    // Academic year: Jul 1 -> Jun 30.
-    // Cutoff is the *upcoming* June 30 for the current AY window, based on today.
+    // Academic year: Jul 1 -> Jun 30. Cutoff is the *upcoming* June 30, based on today.
     cutoffDate() {
       const now = new Date();
       const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
@@ -132,12 +131,10 @@ Vue.component('reports-department-completion-diagnostic', {
       return this.completerExiters.length / denom;
     },
 
-    // "Actionable" students: not exited and not already done (0 credits remaining)
     activeStudents() {
       return this.studentsClean.filter(s => !this.isDone(s));
     },
 
-    // Students done but not exited (useful operationally)
     doneNotExited() {
       return this.studentsClean.filter(s => this.isDone(s) && !s?.exited);
     },
@@ -154,7 +151,7 @@ Vue.component('reports-department-completion-diagnostic', {
       const baseExiters = this.exiters.length;
       const baseCompleters = this.completerExiters.length;
 
-      const add = this.activeOnTrack.length; // assume they exit as completers
+      const add = this.activeOnTrack.length;
       const denom = baseExiters + add;
       if (!denom) return null;
 
@@ -178,7 +175,6 @@ Vue.component('reports-department-completion-diagnostic', {
         const wb = this.rowBucketWeight(b);
         if (wa !== wb) return wa - wb;
 
-        // within bucket: soonest projected finish first (for actives), else by name
         const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
         const db = this.projectedFinishDate(b)?.getTime() ?? Infinity;
         if (da !== db) return da - db;
@@ -255,7 +251,6 @@ Vue.component('reports-department-completion-diagnostic', {
       const cr = Number(s?.credits_remaining);
       if (!Number.isFinite(cr)) return null;
 
-      // 2 credits/month ≈ 30 days per month
       const months = cr / 2;
       const days = Math.ceil(months * 30);
 
@@ -278,8 +273,6 @@ Vue.component('reports-department-completion-diagnostic', {
 
     isOnTrack(s) {
       if (!s || s?.exited) return null;
-
-      // If already done (0 credits remaining), treat as on-track (operationally complete)
       if (this.isDone(s)) return true;
 
       const cutoff = this.cutoffDate;
@@ -300,43 +293,6 @@ Vue.component('reports-department-completion-diagnostic', {
       return diffDays > 0 && diffDays <= 30;
     },
 
-    onTrackText(s) {
-      if (!s) return 'n/a';
-      if (s?.exited) return '—';
-      if (this.isDone(s)) return 'Done';
-
-      const v = this.isOnTrack(s);
-      if (v === true) return 'Yes';
-      if (v === false) return this.isAtRisk(s) ? 'At risk' : 'No';
-      return 'n/a';
-    },
-
-    onTrackPillStyle(s) {
-      if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
-      if (this.isDone(s)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-      const v = this.isOnTrack(s);
-      if (v === true) return { backgroundColor: this.colors.green, color: this.colors.white };
-
-      const risk = this.isAtRisk(s);
-      if (risk === true) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-
-      if (v === false) return { backgroundColor: this.colors.red, color: this.colors.white };
-
-      return { backgroundColor: this.colors.gray, color: this.colors.black };
-    },
-
-    onTrackSortValue(s) {
-      if (!s || s?.exited) return 9;
-      if (this.isDone(s)) return 8;
-
-      const v = this.isOnTrack(s);
-      if (v === true) return 1;
-      if (this.isAtRisk(s)) return 2;
-      if (v === false) return 3;
-      return 4;
-    },
-
     projectedFinishPillStyle(s) {
       if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
       if (this.isDone(s)) return { backgroundColor: this.colors.gray, color: this.colors.black };
@@ -353,60 +309,58 @@ Vue.component('reports-department-completion-diagnostic', {
       return { backgroundColor: this.colors.red, color: this.colors.white };
     },
 
-    // ---------- exited/completer ----------
-    completerIcon(s) {
-      if (!s?.exited) return '—';
-      return s?.is_completer ? '✅' : '❌';
-    },
+    // ---------- STATUS DOT ----------
+    // Spec:
+    // - red if exited non-completer
+    // - green if exited completer OR active on-track OR active done (0 credits)
+    // - yellow if in danger (at-risk band)
+    // - blank if not going to complete (off-track OR unknown)
+    statusDotColor(s) {
+      if (!s) return null;
 
-    completerSortValue(s) {
-      if (!s?.exited) return -1;
-      return s?.is_completer ? 1 : 0;
-    },
-
-    // ---------- status ----------
-    statusText(s) {
-      if (!s) return 'n/a';
-
-      if (this.isDone(s)) {
-        if (s?.exited) return s?.is_completer ? 'Exited (Completer)' : 'Exited (Non)';
-        return 'Done (0 cr)';
+      if (s?.exited) {
+        return s?.is_completer ? this.colors.green : this.colors.red;
       }
+
+      if (this.isDone(s)) return this.colors.green;
 
       const ot = this.isOnTrack(s);
-      if (ot === true) return 'Active (On track)';
-      if (this.isAtRisk(s)) return 'Active (At risk)';
-      if (ot === false) return 'Active (Off track)';
-      return 'Active';
+      if (ot === true) return this.colors.green;
+      if (this.isAtRisk(s)) return this.colors.yellow;
+
+      // off-track or unknown => blank
+      return null;
     },
 
-    statusPillStyle(s) {
-      if (!s) return { backgroundColor: this.colors.gray, color: this.colors.black };
+    statusDotHtml(s) {
+      const c = this.statusDotColor(s);
+      if (!c) return ''; // blank
 
-      // Done but not exited: neutral gray (keeps "Exited" meaning distinct)
-      if (this.isDone(s) && !s?.exited) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      // Exited: green/red
-      if (!!s?.exited) {
-        return {
-          backgroundColor: s?.is_completer ? this.colors.green : this.colors.red,
-          color: this.colors.white,
-          opacity: 0.9
-        };
-      }
-
-      // Active: by track
-      const ot = this.isOnTrack(s);
-      if (ot === true) return { backgroundColor: this.colors.green, color: this.colors.white };
-      if (this.isAtRisk(s)) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-      if (ot === false) return { backgroundColor: this.colors.red, color: this.colors.white };
-      return { backgroundColor: this.colors.gray, color: this.colors.black };
+      // inline HTML so v-html can render it
+      return `
+        <span
+          title="status"
+          style="
+            display:inline-block;
+            width:10px;
+            height:10px;
+            border-radius:999px;
+            background:${c};
+            box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+            vertical-align:middle;
+          "
+        ></span>
+      `;
     },
 
+    // Sort: red/yellow/green/blank in a helpful order (danger first)
+    // (This does NOT control row ordering; just helps if user sorts by Status)
     statusSortValue(s) {
-      return this.rowBucketWeight(s);
+      const c = this.statusDotColor(s);
+      if (c === this.colors.yellow) return 1; // danger first
+      if (c === this.colors.green) return 2;
+      if (c === this.colors.red) return 3;
+      return 9; // blank last
     },
 
     // Sorting buckets:
@@ -467,7 +421,6 @@ Vue.component('reports-department-completion-diagnostic', {
 
           <!-- Bar -->
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
-            <!-- current -->
             <div
               :style="{
                 position:'absolute', left:'0', top:'0', bottom:'0',
@@ -477,7 +430,6 @@ Vue.component('reports-department-completion-diagnostic', {
               :title="'Current completion: ' + pctNowText"
             ></div>
 
-            <!-- projected delta -->
             <div
               v-if="barProjectedPct > barNowPct"
               :style="{
@@ -489,7 +441,6 @@ Vue.component('reports-department-completion-diagnostic', {
               :title="'Projected if all on-track complete: ' + pctProjectedText"
             ></div>
 
-            <!-- 60% marker -->
             <div
               :style="{
                 position:'absolute', left:'60%', top:'-3px', bottom:'-3px',
