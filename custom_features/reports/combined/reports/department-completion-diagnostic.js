@@ -33,14 +33,14 @@ Vue.component('reports-department-completion-diagnostic', {
     canvas_user_id: 104,
     exited: "2025-02-02",
     is_completer: false,
-    credits_remaining: 18
+    credits_remaining: 5 
   },
   {
     name: "Ethan Brooks",
     canvas_user_id: 105,
     exited: "2025-03-01",
     is_completer: false,
-    credits_remaining: 22
+    credits_remaining: 2
   },
 
   // --- ACTIVE: ON TRACK ---
