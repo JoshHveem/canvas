@@ -191,12 +191,17 @@ Vue.component('reports-department-completion-diagnostic', {
     },
 
     cutoffDate() {
-      // June 30 of the academic year passed in (assumes year is the calendar year of the cutoff)
-      // If your "AY 2025-26" is passed as "2026", this works as-is.
-      const y = Number(this.year);
-      if (!Number.isFinite(y)) return null;
-      return new Date(Date.UTC(y, 5, 30, 23, 59, 59)); // June=5
-    },
+    // Academic year is Jul 1 -> Jun 30.
+    // We want the *upcoming* June 30 for the current academic year window (based on "today").
+    const now = new Date();
+
+    // If we're in July or later (month 6..11), we're in an AY that ends next calendar year June 30.
+    // If we're in Jan-Jun (month 0..5), we're in an AY that ends this calendar year June 30.
+    const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
+
+    // Use local time end-of-day to avoid UTC boundary weirdness.
+    return new Date(endYear, 5, 30, 23, 59, 59); // June=5
+  },
 
     nowUtc() {
       return new Date();
