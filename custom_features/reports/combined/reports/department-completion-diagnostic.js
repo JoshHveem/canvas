@@ -3,110 +3,38 @@ Vue.component('reports-department-completion-diagnostic', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
-    students: { type: Array, default: [
-  // --- EXITED: COMPLETERS ---
-  {
-    name: "Alex Martinez",
-    canvas_user_id: 101,
-    exited: "2025-02-15",
-    is_completer: true,
-    credits_remaining: 0
-  },
-  {
-    name: "Brianna Chen",
-    canvas_user_id: 102,
-    exited: "2025-03-10",
-    is_completer: true,
-    credits_remaining: 0
-  },
-  {
-    name: "Carlos Rivera",
-    canvas_user_id: 103,
-    exited: "2025-01-28",
-    is_completer: true,
-    credits_remaining: 0
-  },
 
-  // --- EXITED: NON-COMPLETERS ---
-  {
-    name: "Danielle Foster",
-    canvas_user_id: 104,
-    exited: "2025-02-02",
-    is_completer: false,
-    credits_remaining: 5 
-  },
-  {
-    name: "Ethan Brooks",
-    canvas_user_id: 105,
-    exited: "2025-03-01",
-    is_completer: false,
-    credits_remaining: 2
-  },
+    // Vue 2: Array defaults must be functions
+    students: {
+      type: Array,
+      default: () => ([
+        // --- EXITED: COMPLETERS ---
+        { name: "Alex Martinez",  canvas_user_id: 101, exited: "2025-02-15", is_completer: true,  credits_remaining: 0 },
+        { name: "Brianna Chen",   canvas_user_id: 102, exited: "2025-03-10", is_completer: true,  credits_remaining: 0 },
+        { name: "Carlos Rivera",  canvas_user_id: 103, exited: "2025-01-28", is_completer: true,  credits_remaining: 0 },
 
-  // --- ACTIVE: ON TRACK ---
-  {
-    name: "Fatima Noor",
-    canvas_user_id: 106,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 6
-  },
-  {
-    name: "Gavin Holt",
-    canvas_user_id: 107,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 8
-  },
+        // --- EXITED: NON-COMPLETERS ---
+        { name: "Danielle Foster", canvas_user_id: 104, exited: "2025-02-02", is_completer: false, credits_remaining: 5 },
+        { name: "Ethan Brooks",    canvas_user_id: 105, exited: "2025-03-01", is_completer: false, credits_remaining: 2 },
 
-  // --- ACTIVE: AT RISK (close to cutoff) ---
-  {
-    name: "Hannah Lee",
-    canvas_user_id: 108,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 10
-  },
-  {
-    name: "Isaiah Turner",
-    canvas_user_id: 109,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 12
-  },
+        // --- ACTIVE: ON TRACK ---
+        { name: "Fatima Noor",    canvas_user_id: 106, exited: null, is_completer: false, credits_remaining: 6 },
+        { name: "Gavin Holt",     canvas_user_id: 107, exited: null, is_completer: false, credits_remaining: 8 },
 
-  // --- ACTIVE: OFF TRACK ---
-  {
-    name: "Jamal Washington",
-    canvas_user_id: 110,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 20
-  },
-  {
-    name: "Kara O'Neill",
-    canvas_user_id: 111,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 26
-  },
+        // --- ACTIVE: AT RISK ---
+        { name: "Hannah Lee",     canvas_user_id: 108, exited: null, is_completer: false, credits_remaining: 10 },
+        { name: "Isaiah Turner",  canvas_user_id: 109, exited: null, is_completer: false, credits_remaining: 12 },
 
-  // --- EDGE CASES ---
-  {
-    name: "Liam Patel",
-    canvas_user_id: 112,
-    exited: null,
-    is_completer: false,
-    credits_remaining: 0   // active but basically done
-  },
-  {
-    name: "Maya Rodriguez",
-    canvas_user_id: 113,
-    exited: "2025-04-05",
-    is_completer: false,
-    credits_remaining: null // bad/missing data
-  }
-]},
+        // --- ACTIVE: OFF TRACK ---
+        { name: "Jamal Washington", canvas_user_id: 110, exited: null, is_completer: false, credits_remaining: 20 },
+        { name: "Kara O'Neill",     canvas_user_id: 111, exited: null, is_completer: false, credits_remaining: 26 },
+
+        // --- EDGE CASES ---
+        { name: "Liam Patel",     canvas_user_id: 112, exited: null, is_completer: false, credits_remaining: 0 },   // done but not exited
+        { name: "Maya Rodriguez", canvas_user_id: 113, exited: "2025-04-05", is_completer: false, credits_remaining: null } // bad/missing
+      ])
+    },
+
     loading: { type: Boolean, default: false }
   },
 
@@ -141,7 +69,7 @@ Vue.component('reports-department-completion-diagnostic', {
       ),
 
       new window.ReportColumn(
-        'Status', 'Active vs exited; if exited shows completer/non-completer.', '7rem', false, 'string',
+        'Status', 'Active vs done vs exited; if exited shows completer/non-completer.', '7rem', false, 'string',
         s => this.statusText(s),
         s => this.statusPillStyle(s),
         s => this.statusSortValue(s)
@@ -152,13 +80,6 @@ Vue.component('reports-department-completion-diagnostic', {
         s => this.dateOrDash(s?.exited),
         null,
         s => this.sortDateValue(s?.exited)
-      ),
-
-      new window.ReportColumn(
-        'Completer', 'If exited, whether student is a completer.', '6rem', false, 'string',
-        s => this.completerIcon(s),
-        null,
-        s => this.completerSortValue(s)
       ),
 
       new window.ReportColumn(
@@ -175,36 +96,26 @@ Vue.component('reports-department-completion-diagnostic', {
         s => this.projectedFinishSortValue(s)
       ),
 
-      new window.ReportColumn(
-        'On Track', 'Projected to finish by June 30 for this academic year.', '6rem', false, 'string',
-        s => this.onTrackText(s),
-        s => this.onTrackPillStyle(s),
-        s => this.onTrackSortValue(s)
-      ),
     ]);
   },
 
   computed: {
-    // --- core derived sets ---
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
     },
 
+    // Academic year: Jul 1 -> Jun 30.
+    // Cutoff is the *upcoming* June 30 for the current AY window, based on today.
     cutoffDate() {
-    // Academic year is Jul 1 -> Jun 30.
-    // We want the *upcoming* June 30 for the current academic year window (based on "today").
-    const now = new Date();
+      const now = new Date();
+      const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
+      return new Date(endYear, 5, 30, 23, 59, 59); // June=5
+    },
 
-    // If we're in July or later (month 6..11), we're in an AY that ends next calendar year June 30.
-    // If we're in Jan-Jun (month 0..5), we're in an AY that ends this calendar year June 30.
-    const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
-
-    // Use local time end-of-day to avoid UTC boundary weirdness.
-    return new Date(endYear, 5, 30, 23, 59, 59); // June=5
-  },
-
-    nowUtc() {
-      return new Date();
+    academicYearStart() {
+      const now = new Date();
+      const startYear = (now.getMonth() >= 6) ? now.getFullYear() : (now.getFullYear() - 1);
+      return new Date(startYear, 6, 1, 0, 0, 0); // July=6
     },
 
     exiters() {
@@ -221,8 +132,14 @@ Vue.component('reports-department-completion-diagnostic', {
       return this.completerExiters.length / denom;
     },
 
+    // "Actionable" students: not exited and not already done (0 credits remaining)
     activeStudents() {
-      return this.studentsClean.filter(s => !s?.exited);
+      return this.studentsClean.filter(s => !this.isDone(s));
+    },
+
+    // Students done but not exited (useful operationally)
+    doneNotExited() {
+      return this.studentsClean.filter(s => this.isDone(s) && !s?.exited);
     },
 
     activeOnTrack() {
@@ -230,11 +147,9 @@ Vue.component('reports-department-completion-diagnostic', {
     },
 
     activeAtRisk() {
-      // optional middle band: projected within 30 days after cutoff
       return this.activeStudents.filter(s => this.isAtRisk(s) === true);
     },
 
-    // Projection: if all "on track" students complete by cutoff, they would add to completers & exiters.
     projectedCompletionRate_OnTrackComplete() {
       const baseExiters = this.exiters.length;
       const baseCompleters = this.completerExiters.length;
@@ -246,31 +161,24 @@ Vue.component('reports-department-completion-diagnostic', {
       return (baseCompleters + add) / denom;
     },
 
-    // how many additional completers needed among actives to hit 60% if they exit as completers
     completersNeededToHit60() {
       const baseExiters = this.exiters.length;
       const baseCompleters = this.completerExiters.length;
 
-      // Need smallest n such that (baseCompleters + n) / (baseExiters + n) >= 0.60
-      // Solve: baseCompleters + n >= 0.60*baseExiters + 0.60*n
-      // => 0.40*n >= 0.60*baseExiters - baseCompleters
       const rhs = (0.60 * baseExiters) - baseCompleters;
       if (rhs <= 0) return 0;
       return Math.ceil(rhs / 0.40);
     },
 
-    // table rows: active first (risk -> ontrack -> offtrack), exited last (completer then non)
     visibleRows() {
       const rows = this.studentsClean.slice();
 
-      // Pre-sort into buckets with a deterministic weight for table sorting baseline.
-      // Table sorting will still apply, but this makes default view "diagnostic".
       rows.sort((a, b) => {
         const wa = this.rowBucketWeight(a);
         const wb = this.rowBucketWeight(b);
         if (wa !== wb) return wa - wb;
 
-        // within bucket: soonest projected finish first (actives), else by name
+        // within bucket: soonest projected finish first (for actives), else by name
         const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
         const db = this.projectedFinishDate(b)?.getTime() ?? Infinity;
         if (da !== db) return da - db;
@@ -284,7 +192,6 @@ Vue.component('reports-department-completion-diagnostic', {
       return this.table.getSortedRows();
     },
 
-    // --- bar numbers ---
     pctNowText() {
       const n = this.currentCompletionRate;
       if (!Number.isFinite(n)) return 'n/a';
@@ -297,7 +204,6 @@ Vue.component('reports-department-completion-diagnostic', {
       return (n * 100).toFixed(1) + '%';
     },
 
-    // width for bar segments
     barNowPct() {
       const n = this.currentCompletionRate;
       if (!Number.isFinite(n)) return 0;
@@ -308,29 +214,22 @@ Vue.component('reports-department-completion-diagnostic', {
       const n = this.projectedCompletionRate_OnTrackComplete;
       if (!Number.isFinite(n)) return 0;
       return Math.max(0, Math.min(100, n * 100));
-    },
-
-    barNeededPct() {
-      // deficit to reach 60 based on current rate only (visual cue)
-      const n = this.currentCompletionRate;
-      if (!Number.isFinite(n)) return 60;
-      return 60;
     }
   },
 
   methods: {
+    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
+    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
+
+    // ---------- done logic ----------
     isDone(s) {
       if (!s) return false;
       if (s?.exited) return true;
-
       const cr = Number(s?.credits_remaining);
       return Number.isFinite(cr) && cr <= 0;
     },
 
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
-
-    // ---------- formatting helpers ----------
+    // ---------- formatting ----------
     numOrNA(v, decimals = 2) {
       const n = Number(v);
       return Number.isFinite(n) ? n.toFixed(decimals) : 'n/a';
@@ -350,16 +249,15 @@ Vue.component('reports-department-completion-diagnostic', {
       return Number.isFinite(t) ? t : -1;
     },
 
-    // ---------- completion logic ----------
-    // Projection assumption: ~2 credits/month => 0.5 credits/week => 2 credits/30 days
+    // ---------- projection ----------
     projectedFinishDate(s) {
       if (!s || s?.exited) return null;
       const cr = Number(s?.credits_remaining);
       if (!Number.isFinite(cr)) return null;
 
-      // months needed at 2 credits/month
+      // 2 credits/month ≈ 30 days per month
       const months = cr / 2;
-      const days = Math.ceil(months * 30); // intentionally simple
+      const days = Math.ceil(months * 30);
 
       const d = new Date();
       d.setDate(d.getDate() + days);
@@ -380,6 +278,10 @@ Vue.component('reports-department-completion-diagnostic', {
 
     isOnTrack(s) {
       if (!s || s?.exited) return null;
+
+      // If already done (0 credits remaining), treat as on-track (operationally complete)
+      if (this.isDone(s)) return true;
+
       const cutoff = this.cutoffDate;
       const d = this.projectedFinishDate(s);
       if (!cutoff || !d) return null;
@@ -388,17 +290,21 @@ Vue.component('reports-department-completion-diagnostic', {
 
     isAtRisk(s) {
       if (!s || s?.exited) return null;
+      if (this.isDone(s)) return false;
+
       const cutoff = this.cutoffDate;
       const d = this.projectedFinishDate(s);
       if (!cutoff || !d) return null;
 
       const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
-      // at risk = within 30 days after cutoff (tweak to taste)
       return diffDays > 0 && diffDays <= 30;
     },
 
     onTrackText(s) {
-      if (!s || s?.exited) return '—';
+      if (!s) return 'n/a';
+      if (s?.exited) return '—';
+      if (this.isDone(s)) return 'Done';
+
       const v = this.isOnTrack(s);
       if (v === true) return 'Yes';
       if (v === false) return this.isAtRisk(s) ? 'At risk' : 'No';
@@ -407,6 +313,7 @@ Vue.component('reports-department-completion-diagnostic', {
 
     onTrackPillStyle(s) {
       if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
+      if (this.isDone(s)) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       const v = this.isOnTrack(s);
       if (v === true) return { backgroundColor: this.colors.green, color: this.colors.white };
@@ -421,6 +328,8 @@ Vue.component('reports-department-completion-diagnostic', {
 
     onTrackSortValue(s) {
       if (!s || s?.exited) return 9;
+      if (this.isDone(s)) return 8;
+
       const v = this.isOnTrack(s);
       if (v === true) return 1;
       if (this.isAtRisk(s)) return 2;
@@ -428,7 +337,23 @@ Vue.component('reports-department-completion-diagnostic', {
       return 4;
     },
 
-    // ---------- exited/completer display ----------
+    projectedFinishPillStyle(s) {
+      if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
+      if (this.isDone(s)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      const d = this.projectedFinishDate(s);
+      if (!d) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      const cutoff = this.cutoffDate;
+      if (!cutoff) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 0) return { backgroundColor: this.colors.green, color: this.colors.white };
+      if (diffDays <= 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.red, color: this.colors.white };
+    },
+
+    // ---------- exited/completer ----------
     completerIcon(s) {
       if (!s?.exited) return '—';
       return s?.is_completer ? '✅' : '❌';
@@ -439,8 +364,15 @@ Vue.component('reports-department-completion-diagnostic', {
       return s?.is_completer ? 1 : 0;
     },
 
+    // ---------- status ----------
     statusText(s) {
-      if (!!s?.exited) return s?.is_completer ? 'Exited (Completer)' : 'Exited (Non)';
+      if (!s) return 'n/a';
+
+      if (this.isDone(s)) {
+        if (s?.exited) return s?.is_completer ? 'Exited (Completer)' : 'Exited (Non)';
+        return 'Done (0 cr)';
+      }
+
       const ot = this.isOnTrack(s);
       if (ot === true) return 'Active (On track)';
       if (this.isAtRisk(s)) return 'Active (At risk)';
@@ -448,29 +380,15 @@ Vue.component('reports-department-completion-diagnostic', {
       return 'Active';
     },
 
-    projectedFinishPillStyle(s) {
-  if (!s || s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
-
-  const d = this.projectedFinishDate(s);
-  if (!d) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-  const cutoff = this.cutoffDate;
-  if (!cutoff) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-  const diffDays = Math.ceil((d.getTime() - cutoff.getTime()) / (1000 * 60 * 60 * 24));
-
-  // finish by cutoff => green
-  if (diffDays <= 0) return { backgroundColor: this.colors.green, color: this.colors.white };
-
-  // within 30 days after cutoff => yellow (at risk)
-  if (diffDays <= 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-
-  // beyond that => red
-  return { backgroundColor: this.colors.red, color: this.colors.white };
-},
-
-
     statusPillStyle(s) {
+      if (!s) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+      // Done but not exited: neutral gray (keeps "Exited" meaning distinct)
+      if (this.isDone(s) && !s?.exited) {
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
+      }
+
+      // Exited: green/red
       if (!!s?.exited) {
         return {
           backgroundColor: s?.is_completer ? this.colors.green : this.colors.red,
@@ -479,6 +397,7 @@ Vue.component('reports-department-completion-diagnostic', {
         };
       }
 
+      // Active: by track
       const ot = this.isOnTrack(s);
       if (ot === true) return { backgroundColor: this.colors.green, color: this.colors.white };
       if (this.isAtRisk(s)) return { backgroundColor: this.colors.yellow, color: this.colors.black };
@@ -487,33 +406,29 @@ Vue.component('reports-department-completion-diagnostic', {
     },
 
     statusSortValue(s) {
-      // bucket order: active risk (0), active ontrack (1), active offtrack (2), exited completer (3), exited non (4)
       return this.rowBucketWeight(s);
     },
 
+    // Sorting buckets:
+    // 0  = at-risk (top)
+    // 1  = on-track
+    // 2  = off-track
+    // 3  = unknown
+    // 85 = done (0 cr) but not exited
+    // 90 = exited completer
+    // 95 = exited non-completer
     rowBucketWeight(s) {
-  // DONE students always go to the bottom
-  if (this.isDone(s)) {
-    // exited completers above exited non-completers, but all below actives
-    if (s?.exited) return s?.is_completer ? 90 : 95;
-    return 85; // active but credits_remaining <= 0
-  }
+      if (this.isDone(s)) {
+        if (s?.exited) return s?.is_completer ? 90 : 95;
+        return 85;
+      }
 
-  // ACTIVE (not done yet)
-  const ot = this.isOnTrack(s);
-
-  // Highest priority: at-risk
-  if (ot === false && this.isAtRisk(s)) return 0;
-
-  // On track
-  if (ot === true) return 1;
-
-  // Off track
-  if (ot === false) return 2;
-
-  // Unknown / insufficient data
-  return 3;
-},
+      const ot = this.isOnTrack(s);
+      if (ot === false && this.isAtRisk(s)) return 0;
+      if (ot === true) return 1;
+      if (ot === false) return 2;
+      return 3;
+    },
 
     // ---------- bar helpers ----------
     pctPillStyleByPct(p) {
@@ -562,7 +477,7 @@ Vue.component('reports-department-completion-diagnostic', {
               :title="'Current completion: ' + pctNowText"
             ></div>
 
-            <!-- projected delta (striped-ish via opacity overlay) -->
+            <!-- projected delta -->
             <div
               v-if="barProjectedPct > barNowPct"
               :style="{
@@ -600,6 +515,10 @@ Vue.component('reports-department-completion-diagnostic', {
               Needed to hit 60%: {{ completersNeededToHit60 }}
             </span>
           </div>
+
+          <div class="btech-muted" style="font-size:.7rem; margin-top:8px;">
+            AY Window: {{ academicYearStart.toISOString().slice(0,10) }} → {{ cutoffDate.toISOString().slice(0,10) }}
+          </div>
         </div>
 
         <!-- Quick counts -->
@@ -615,10 +534,9 @@ Vue.component('reports-department-completion-diagnostic', {
             <span class="btech-pill" :style="{ backgroundColor: colors.green, color: colors.white }">
               On track: {{ activeOnTrack.length }}
             </span>
-          </div>
-
-          <div class="btech-muted" style="font-size:.7rem; margin-top:8px;">
-            Cutoff: {{ cutoffDate ? cutoffDate.toISOString().slice(0,10) : 'n/a' }}
+            <span class="btech-pill" :style="{ backgroundColor: colors.gray, color: colors.black }">
+              Done (not exited): {{ doneNotExited.length }}
+            </span>
           </div>
         </div>
       </div>
@@ -657,7 +575,7 @@ Vue.component('reports-department-completion-diagnostic', {
         :style="{
           'grid-template-columns': getColumnsWidthsString(),
           'background-color': (i % 2) ? 'white' : '#F8F8F8',
-          'opacity': s?.exited ? 0.55 : 1
+          'opacity': isDone(s) ? 0.55 : 1
         }"
       >
         <div
