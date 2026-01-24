@@ -584,11 +584,6 @@ whatIfPctText() {
         title="Add hypothetical exiter"
       >+</button>
     </span>
-
-    <span class="btech-pill" style="margin-left:8px;">
-      What-if rate: {{ whatIfPctText }}
-    </span>
-
       </div>
       </div>
 
