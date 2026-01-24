@@ -42,7 +42,6 @@ Vue.component('department-instructor-surveys', {
     </div>
 
     <!-- Likert Breakdown -->
-    <!-- Likert Breakdown -->
       <div class="btech-tile" style="margin-bottom:8px;" title="Breakdown of each Likert item">
         <div class="btech-row" style="margin-bottom:6px;">
           <div style="font-size:12px; color:#374151; font-weight:600;">Likert Breakdown</div>

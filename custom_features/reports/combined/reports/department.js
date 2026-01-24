@@ -22,6 +22,11 @@ Vue.component('reports-department', {
         :course-surveys="courseSurveys"
       ></reports-department-instructors>
 
+      <reports-department-completion-diagnostic
+        v-if="subMenu == 'completion-diagnostic'"
+        :year="year"
+      ></reports-department-completion-diagnostic>
+
       <reports-department-courses
         v-if="subMenu == 'courses'"
         :year="year"
