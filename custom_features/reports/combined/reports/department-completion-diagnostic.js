@@ -106,8 +106,7 @@ Vue.component('reports-department-completion-diagnostic', {
     this.tableActive.setColumns([
       this.makeStatusColumn('active'),
       this.makeStudentColumn(),
-      this.makeEndColumn('active', 'End (Projected)', 'Projected finish date (server-calculated).'),
-      this.makeChanceColumn()
+      this.makeEndColumn('active', 'End (Projected)', 'Projected finish date (server-calculated).')
     ]);
 
     // FINISHED TABLE
@@ -390,18 +389,6 @@ Vue.component('reports-department-completion-diagnostic', {
         s => this.displayName(s),
         null,
         s => (s?.name ?? '')
-      );
-    },
-
-    makeChanceColumn() {
-      return new window.ReportColumn(
-        'Chance', 'Probability of finishing this academic year (server).', '6rem', false, 'number',
-        s => {
-          const p = this.safeProb(s?.chance_to_finish_this_year);
-          return Number.isFinite(p) ? (p * 100).toFixed(0) + '%' : 'n/a';
-        },
-        s => this.chancePillStyle(s),
-        s => this.safeProb(s?.chance_to_finish_this_year)
       );
     },
 
