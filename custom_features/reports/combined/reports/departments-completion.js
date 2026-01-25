@@ -1,5 +1,5 @@
 // departments-completion-overview.js
-Vue.component('departments-completion-overview', {
+Vue.component('departments-completion', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
