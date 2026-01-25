@@ -10,21 +10,21 @@ Vue.component('reports-department-completion-diagnostic', {
       default: () => ([
         // --- FINISHED: COMPLETERS ---
         { name:"Fatima Noor", canvas_user_id:106, exited:null, is_completer:false, credits_remaining:6,
-          projected_end_date:"2026-04-25", projection_bucket:"green", is_finished_operational:false },
+          projected_end_date:"2026-04-25", projection_bucket:"green" },
 
         { name:"Hannah Lee", canvas_user_id:108, exited:null, is_completer:false, credits_remaining:10,
-          projected_end_date:"2026-06-25", projection_bucket:"yellow", is_finished_operational:false },
+          projected_end_date:"2026-06-25", projection_bucket:"yellow" },
 
         { name:"Jamal Washington", canvas_user_id:110, exited:null, is_completer:false, credits_remaining:20,
-          projected_end_date:"2026-11-10", projection_bucket:"red", is_finished_operational:false },
+          projected_end_date:"2026-11-10", projection_bucket:"red" },
 
 
         // --- EDGE CASES ---
         { name:"Liam Patel", canvas_user_id:112, exited:null, is_completer:false, credits_remaining:0,
-          projected_end_date:null, projection_bucket:"green", is_finished_operational:true },
+          projected_end_date:null, projection_bucket:"green" },
 
         { name:"Maya Rodriguez", canvas_user_id:113, exited:"2025-04-05", is_completer:false, credits_remaining:null,
-          projected_end_date:null, projection_bucket:null, is_finished_operational:true },
+          projected_end_date:null, projection_bucket:null },
 
       ])
     },
