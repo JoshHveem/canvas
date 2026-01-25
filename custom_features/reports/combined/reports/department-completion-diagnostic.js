@@ -9,29 +9,23 @@ Vue.component('reports-department-completion-diagnostic', {
       type: Array,
       default: () => ([
         // --- FINISHED: COMPLETERS ---
-        { name: "Alex Martinez",  canvas_user_id: 101, exited: "2025-02-15", is_completer: true,  credits_remaining: 0 },
-        { name: "Brianna Chen",   canvas_user_id: 102, exited: "2025-03-10", is_completer: true,  credits_remaining: 0 },
-        { name: "Carlos Rivera",  canvas_user_id: 103, exited: "2025-01-28", is_completer: true,  credits_remaining: 0 },
+        { name:"Fatima Noor", canvas_user_id:106, exited:null, is_completer:false, credits_remaining:6,
+          projected_end_date:"2026-04-25", projection_bucket:"green", is_finished_operational:false },
 
-        // --- FINISHED: NON-COMPLETERS ---
-        { name: "Danielle Foster", canvas_user_id: 104, exited: "2025-02-02", is_completer: false, credits_remaining: 5 },
-        { name: "Ethan Brooks",    canvas_user_id: 105, exited: "2025-03-01", is_completer: false, credits_remaining: 2 },
+        { name:"Hannah Lee", canvas_user_id:108, exited:null, is_completer:false, credits_remaining:10,
+          projected_end_date:"2026-06-25", projection_bucket:"yellow", is_finished_operational:false },
 
-        // --- ACTIVE: ON TRACK ---
-        { name: "Fatima Noor",    canvas_user_id: 106, exited: null, is_completer: false, credits_remaining: 6 },
-        { name: "Gavin Holt",     canvas_user_id: 107, exited: null, is_completer: false, credits_remaining: 13 },
+        { name:"Jamal Washington", canvas_user_id:110, exited:null, is_completer:false, credits_remaining:20,
+          projected_end_date:"2026-11-10", projection_bucket:"red", is_finished_operational:false },
 
-        // --- ACTIVE: AT RISK ---
-        { name: "Hannah Lee",     canvas_user_id: 108, exited: null, is_completer: false, credits_remaining: 10 },
-        { name: "Isaiah Turner",  canvas_user_id: 109, exited: null, is_completer: false, credits_remaining: 12 },
-
-        // --- ACTIVE: OFF TRACK ---
-        { name: "Jamal Washington", canvas_user_id: 110, exited: null, is_completer: false, credits_remaining: 20 },
-        { name: "Kara O'Neill",     canvas_user_id: 111, exited: null, is_completer: false, credits_remaining: 26 },
 
         // --- EDGE CASES ---
-        { name: "Liam Patel",     canvas_user_id: 112, exited: null, is_completer: false, credits_remaining: 0 },   // done but not exited (counts as "active done")
-        { name: "Maya Rodriguez", canvas_user_id: 113, exited: "2025-04-05", is_completer: false, credits_remaining: null } // bad/missing
+        { name:"Liam Patel", canvas_user_id:112, exited:null, is_completer:false, credits_remaining:0,
+          projected_end_date:null, projection_bucket:"green", is_finished_operational:true },
+
+        { name:"Maya Rodriguez", canvas_user_id:113, exited:"2025-04-05", is_completer:false, credits_remaining:null,
+          projected_end_date:null, projection_bucket:null, is_finished_operational:true },
+
       ])
     },
 
@@ -396,14 +390,9 @@ whatIfPctText() {
 
     // ---------- projection ----------
     projectedFinishDate(s) {
-      if (!s || s?.exited) return null;
-      const cr = Number(s?.credits_remaining);
-      if (!Number.isFinite(cr)) return null;
-
-      const days = Math.ceil((cr / 2) * 30); // ~2 credits/mo
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      return d;
+      if (!s?.projected_end_date) return null;
+      const d = new Date(s.projected_end_date);
+      return Number.isNaN(d.getTime()) ? null : d;
     },
 
     actualEndDate(s) {
@@ -414,24 +403,7 @@ whatIfPctText() {
 
     // ---------- bucket logic ----------
     projectionBucket(s) {
-      if (!s || s?.exited) return null;
-
-      const cr = Number(s?.credits_remaining);
-      if (Number.isFinite(cr) && cr <= 0) return 'green';
-
-      const d = this.projectedFinishDate(s);
-      const cutoff = this.cutoffDate;
-      if (!d || !cutoff) return null;
-
-      const y = cutoff.getFullYear();
-      const juneStart = new Date(y, 5, 1, 0, 0, 0);
-      const julyStart = new Date(y, 6, 1, 0, 0, 0);
-      const augStart  = new Date(y, 7, 1, 0, 0, 0);
-
-      if (d < juneStart) return 'green';
-      if (d < julyStart) return 'yellow';
-      if (d < augStart)  return 'orange';
-      return 'red';
+      return s?.projection_bucket ?? null;
     },
 
     // ---------- merged End column ----------
