@@ -62,7 +62,7 @@ Vue.component('reports-department-completion-diagnostic', {
           name: "Liam Patel",
           canvas_user_id: 112,
           end_date: null,
-          end_date_projected: null,
+          end_date_projected: "2025-02-01",
           chance_to_finish_this_year: 0.99, // operationally done but no end_date yet
           is_exiter: false,
           is_completer: false
