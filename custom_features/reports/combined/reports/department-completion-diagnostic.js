@@ -8,24 +8,74 @@ Vue.component('reports-department-completion-diagnostic', {
     students: {
       type: Array,
       default: () => ([
-        // --- FINISHED: COMPLETERS ---
-        { name:"Fatima Noor", canvas_user_id:106, exited:null, is_completer:false, credits_remaining:6,
-          projected_end_date:"2026-04-25", projection_bucket:"green" },
+        // --- ACTIVE (not exiters yet) ---
+        {
+          name: "Fatima Noor",
+          canvas_user_id: 106,
+          end_date: null,
+          end_date_projected: "2026-04-25",
+          chance_to_finish_this_year: 0.95,
+          is_exiter: false,
+          is_completer: false
+        },
+        {
+          name: "Hannah Lee",
+          canvas_user_id: 108,
+          end_date: null,
+          end_date_projected: "2026-06-25",
+          chance_to_finish_this_year: 0.62,
+          is_exiter: false,
+          is_completer: false
+        },
+        {
+          name: "Jamal Washington",
+          canvas_user_id: 110,
+          end_date: null,
+          end_date_projected: "2026-11-10",
+          chance_to_finish_this_year: 0.12,
+          is_exiter: false,
+          is_completer: false
+        },
 
-        { name:"Hannah Lee", canvas_user_id:108, exited:null, is_completer:false, credits_remaining:10,
-          projected_end_date:"2026-06-25", projection_bucket:"yellow" },
-
-        { name:"Jamal Washington", canvas_user_id:110, exited:null, is_completer:false, credits_remaining:20,
-          projected_end_date:"2026-11-10", projection_bucket:"red" },
-
+        // --- FINISHED / EXITERS ---
+        {
+          name: "Brianna Chen",
+          canvas_user_id: 102,
+          end_date: "2025-03-10",
+          end_date_projected: null,
+          chance_to_finish_this_year: null,
+          is_exiter: true,
+          is_completer: true
+        },
+        {
+          name: "Danielle Foster",
+          canvas_user_id: 104,
+          end_date: "2025-02-02",
+          end_date_projected: null,
+          chance_to_finish_this_year: null,
+          is_exiter: true,
+          is_completer: false
+        },
 
         // --- EDGE CASES ---
-        { name:"Liam Patel", canvas_user_id:112, exited:null, is_completer:false, credits_remaining:0,
-          projected_end_date:null, projection_bucket:"green" },
-
-        { name:"Maya Rodriguez", canvas_user_id:113, exited:"2025-04-05", is_completer:false, credits_remaining:null,
-          projected_end_date:null, projection_bucket:null },
-
+        {
+          name: "Liam Patel",
+          canvas_user_id: 112,
+          end_date: null,
+          end_date_projected: null,
+          chance_to_finish_this_year: 0.99, // operationally done but no end_date yet
+          is_exiter: false,
+          is_completer: false
+        },
+        {
+          name: "Maya Rodriguez",
+          canvas_user_id: 113,
+          end_date: "2025-04-05",
+          end_date_projected: null,
+          chance_to_finish_this_year: null,
+          is_exiter: true,
+          is_completer: false
+        }
       ])
     },
 
@@ -34,8 +84,8 @@ Vue.component('reports-department-completion-diagnostic', {
 
   data() {
     const colors = (window.bridgetools?.colors) || {
-      red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
-      green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
+      red: '#b20b0f', orange: '#f59e0b', yellow: '#eab308',
+      green: '#16a34a', gray: '#e5e7eb', black: '#111827', white: '#fff'
     };
 
     const makeTable = (sort_column, sort_dir = 1) =>
@@ -47,7 +97,7 @@ Vue.component('reports-department-completion-diagnostic', {
       tableFinished: makeTable("Student", 1),
       tableTickActive: 0,
       tableTickFinished: 0,
-      whatIfDrops: 0,
+      whatIfDrops: 0
     };
   },
 
@@ -56,72 +106,37 @@ Vue.component('reports-department-completion-diagnostic', {
     this.tableActive.setColumns([
       this.makeStatusColumn('active'),
       this.makeStudentColumn(),
-      this.makeEndColumn('active', 'End (Projected)', 'Projected finish date (~2 credits/month).'),
-      new window.ReportColumn(
-        'Cr Rem', 'Credits remaining (used for projection).', '5.5rem', false, 'number',
-        s => this.numOrNA(s?.credits_remaining, 0),
-        null,
-        s => Number(s?.credits_remaining ?? -1)
-      ),
+      this.makeEndColumn('active', 'End (Projected)', 'Projected finish date (server-calculated).'),
+      this.makeChanceColumn()
     ]);
 
     // FINISHED TABLE
     this.tableFinished.setColumns([
       this.makeStatusColumn('finished'),
       this.makeStudentColumn(),
-      this.makeEndColumn('finished', 'End', 'Actual end date (exit date).'),
+      this.makeEndColumn('finished', 'End', 'Actual end date (end_date).')
     ]);
   },
 
   computed: {
-    whatIfExitersTotal() {
-  return this.exiters.length + Math.max(0, this.whatIfDrops);
-},
-
-whatIfCompletersTotal() {
-  // drops are assumed NON-completers
-  return this.completerExiters.length;
-},
-
-whatIfCompletionRate() {
-  const denom = this.whatIfExitersTotal;
-  if (!denom) return null;
-  return this.whatIfCompletersTotal / denom;
-},
-
-whatIfPctText() {
-  const n = this.whatIfCompletionRate;
-  return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
-},
-
+    // ---------- base populations ----------
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
     },
 
-    // Academic year: Jul 1 -> Jun 30 (upcoming June 30)
-    cutoffDate() {
-      const now = new Date();
-      const endYear = (now.getMonth() >= 6) ? (now.getFullYear() + 1) : now.getFullYear();
-      return new Date(endYear, 5, 30, 23, 59, 59);
-    },
-
-    academicYearStart() {
-      const now = new Date();
-      const startYear = (now.getMonth() >= 6) ? now.getFullYear() : (now.getFullYear() - 1);
-      return new Date(startYear, 6, 1, 0, 0, 0);
-    },
-
-    finishedStudents() {
-      return this.studentsClean.filter(s => this.isFinished(s));
-    },
-
+    // Active = end_date null
     activeStudents() {
-      return this.studentsClean.filter(s => !this.isFinished(s));
+      return this.studentsClean.filter(s => !s?.end_date);
     },
 
-    // Exiters for completion KPI (official exited only)
+    // Finished (for table) = end_date present
+    finishedStudents() {
+      return this.studentsClean.filter(s => !!s?.end_date);
+    },
+
+    // Exiters for completion KPI = is_exiter true (explicit server flag)
     exiters() {
-      return this.studentsClean.filter(s => !!s?.exited);
+      return this.studentsClean.filter(s => !!s?.is_exiter);
     },
 
     completerExiters() {
@@ -133,23 +148,47 @@ whatIfPctText() {
       return denom ? (this.completerExiters.length / denom) : null;
     },
 
-    // Centralized candidate list for all “projection” calculations
+    pctNowText() {
+      const n = this.currentCompletionRate;
+      return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
+    },
+
+    // ---------- what-if drops ----------
+    whatIfExitersTotal() {
+      return this.exiters.length + Math.max(0, this.whatIfDrops);
+    },
+
+    whatIfCompletersTotal() {
+      // drops assumed non-completers
+      return this.completerExiters.length;
+    },
+
+    whatIfCompletionRate() {
+      const denom = this.whatIfExitersTotal;
+      if (!denom) return null;
+      return this.whatIfCompletersTotal / denom;
+    },
+
+    whatIfPctText() {
+      const n = this.whatIfCompletionRate;
+      return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
+    },
+
+    // ---------- projections (client uses server scores only) ----------
     projectionCandidates() {
-      // Active only, with bucket + projected timestamp
+      // Active only. Include if chance is present (0..1). Sort best->worst.
       return this.activeStudents
-        .filter(s => !s?.exited)
         .map(s => {
-          const b = this.projectionBucket(s);              // green/yellow/orange/red/null
-          const t = this.projectedFinishDate(s)?.getTime();
-          return { s, b, t: Number.isFinite(t) ? t : Infinity };
+          const p = this.safeProb(s?.chance_to_finish_this_year);
+          return { s, p };
         })
-        .filter(x => !!x.b && x.t !== Infinity)
+        .filter(x => Number.isFinite(x.p))
         .sort((a, b) => {
-          const w = bb => (bb === 'green' ? 0 : bb === 'yellow' ? 1 : bb === 'orange' ? 2 : 3);
-          const wa = w(a.b), wb = w(b.b);
-          if (wa !== wb) return wa - wb;
-          if (a.t !== b.t) return a.t - b.t;
-          return (this.safeName(a.s)).localeCompare(this.safeName(b.s));
+          if (a.p !== b.p) return b.p - a.p; // higher chance first
+          const da = this.projectedEndDate(a.s)?.getTime() ?? Infinity;
+          const db = this.projectedEndDate(b.s)?.getTime() ?? Infinity;
+          if (da !== db) return da - db;
+          return this.safeName(a.s).localeCompare(this.safeName(b.s));
         });
     },
 
@@ -159,16 +198,15 @@ whatIfPctText() {
 
       if (!baseE) return 0;
 
-      const greens = this.projectionCandidates.filter(x => x.b === 'green');
+      // Treat "green" as the high-confidence set; if that already gets us to 60%, divider sits after them.
+      const greens = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) === 'green');
 
       const rateIfAllGreens =
         (baseE + greens.length) ? ((baseC + greens.length) / (baseE + greens.length)) : null;
 
-      if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60) {
-        return greens.length;
-      }
+      if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60) return greens.length;
 
-      // min number of candidates required to hit 60 (treat each chosen as a completer)
+      // Otherwise, minimum number of candidates needed to hit 60, taking highest chance first
       let add = 0;
       for (let i = 0; i < this.projectionCandidates.length; i++) {
         add += 1;
@@ -179,11 +217,11 @@ whatIfPctText() {
       return this.projectionCandidates.length;
     },
 
-    // ACTIVE rows: sorted by projected date then name (ReportTable handles user-click sort afterward)
+    // ACTIVE rows: sorted by projected end date then name (ReportTable handles user sort afterward)
     visibleActiveRows() {
       const rows = this.activeStudents.slice().sort((a, b) => {
-        const da = this.projectedFinishDate(a)?.getTime() ?? Infinity;
-        const db = this.projectedFinishDate(b)?.getTime() ?? Infinity;
+        const da = this.projectedEndDate(a)?.getTime() ?? Infinity;
+        const db = this.projectedEndDate(b)?.getTime() ?? Infinity;
         if (da !== db) return da - db;
         return this.safeName(a).localeCompare(this.safeName(b));
       });
@@ -201,7 +239,7 @@ whatIfPctText() {
 
         const da = this.actualEndDate(a)?.getTime() ?? -Infinity;
         const db = this.actualEndDate(b)?.getTime() ?? -Infinity;
-        if (da !== db) return db - da;
+        if (da !== db) return db - da; // newest first
 
         return this.safeName(a).localeCompare(this.safeName(b));
       });
@@ -210,36 +248,32 @@ whatIfPctText() {
       return this.tableFinished.getSortedRows();
     },
 
-    pctNowText() {
-      const n = this.currentCompletionRate;
-      return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
-    },
-
     barSegmentsProjected() {
       const segs = [];
 
       const exitersCompleters = this.exiters.filter(s => !!s?.is_completer);
       const exitersNon = this.exiters.filter(s => !s?.is_completer);
 
-      // deterministic keys (no Math.random)
       const keyFor = (prefix, s, i) => `${prefix}-${s?.canvas_user_id ?? s?.id ?? i}`;
 
+      // Completer exiters (faded green)
       for (let i = 0; i < exitersCompleters.length; i++) {
         const s = exitersCompleters[i];
         segs.push({
           key: keyFor('done-ok', s, i),
           color: this.colors.green,
           opacity: 0.35,
-          title: `${this.displayName(s)}: Completed (exited)`
+          title: `${this.displayName(s)}: Completed (exiter)`
         });
       }
 
       const baseE = this.whatIfExitersTotal;
       const baseC = this.whatIfCompletersTotal;
 
-
-      const greens = this.projectionCandidates.filter(x => x.b === 'green');
-      const rest = this.projectionCandidates.filter(x => x.b !== 'green');
+      // Choose minimum # of likely completers needed to hit 60 (highest chance first),
+      // BUT if green-only set hits 60, show all greens and stop.
+      const greens = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) === 'green');
+      const rest = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) !== 'green');
 
       const rateIfAllGreens =
         (baseE + greens.length) ? ((baseC + greens.length) / (baseE + greens.length)) : null;
@@ -268,9 +302,12 @@ whatIfPctText() {
         }
       }
 
+      // Render chosen candidates as SOLID segments, colored by chance bucket
       for (let i = 0; i < chosen.length; i++) {
-        const { s, b } = chosen[i];
+        const s = chosen[i].s;
+        const p = chosen[i].p;
 
+        const b = this.bucketFromChance(p);
         const color =
           (b === 'green') ? this.colors.green :
           (b === 'yellow') ? this.colors.yellow :
@@ -281,21 +318,22 @@ whatIfPctText() {
           key: keyFor(`proj-${b}`, s, i),
           color,
           opacity: 1,
-          title: `${this.displayName(s)}: ${this.bucketLabel(b)}`
-        });
-      }
-      // Put actual non-completer exiters LAST (gray), always
-      for (let i = 0; i < exitersNon.length; i++) {
-        const s = exitersNon[i];
-        segs.push({
-          key: 'done-bad-' + (s?.canvas_user_id ?? s?.id ?? i),
-          color: this.colors.gray,
-          opacity: 1,
-          title: `${this.anonymous ? 'STUDENT' : (s?.name ?? 'Student')}: Did not complete (exited)`
+          title: `${this.displayName(s)}: ${this.bucketLabelFromChance(p)}`
         });
       }
 
-      // Add hypothetical drops as additional non-completer exiters (gray)
+      // Actual non-completer exiters LAST (gray)
+      for (let i = 0; i < exitersNon.length; i++) {
+        const s = exitersNon[i];
+        segs.push({
+          key: keyFor('done-bad', s, i),
+          color: this.colors.gray,
+          opacity: 1,
+          title: `${this.displayName(s)}: Did not complete (exiter)`
+        });
+      }
+
+      // Hypothetical drops as additional gray segments
       const drops = Math.max(0, Number(this.whatIfDrops) || 0);
       for (let i = 0; i < drops; i++) {
         segs.push({
@@ -307,8 +345,7 @@ whatIfPctText() {
       }
 
       return segs;
-
-    },
+    }
   },
 
   methods: {
@@ -316,15 +353,33 @@ whatIfPctText() {
     safeName(s) {
       return (s?.name ?? '').toLowerCase();
     },
+
     displayName(s) {
       return this.anonymous ? 'STUDENT' : (s?.name ?? 'Student');
     },
-    bucketLabel(b) {
+
+    safeProb(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : NaN;
+    },
+
+    // Chance->bucket mapping (client-side thresholds only)
+    bucketFromChance(p) {
+      const n = this.safeProb(p);
+      if (!Number.isFinite(n)) return null;
+      if (n >= 0.80) return 'green';
+      if (n >= 0.50) return 'yellow';
+      if (n >= 0.20) return 'orange';
+      return 'red';
+    },
+
+    bucketLabelFromChance(p) {
+      const b = this.bucketFromChance(p);
       return (
-        b === 'green'  ? 'Projected complete (safe)' :
-        b === 'yellow' ? 'Projected complete (June / fragile)' :
-        b === 'orange' ? 'Projected complete (July / too late)' :
-        'Projected complete (Aug+ / very late)'
+        b === 'green'  ? 'Likely complete this year' :
+        b === 'yellow' ? 'Possible complete this year' :
+        b === 'orange' ? 'Unlikely this year' :
+        'Very unlikely this year'
       );
     },
 
@@ -338,11 +393,23 @@ whatIfPctText() {
       );
     },
 
+    makeChanceColumn() {
+      return new window.ReportColumn(
+        'Chance', 'Probability of finishing this academic year (server).', '6rem', false, 'number',
+        s => {
+          const p = this.safeProb(s?.chance_to_finish_this_year);
+          return Number.isFinite(p) ? (p * 100).toFixed(0) + '%' : 'n/a';
+        },
+        s => this.chancePillStyle(s),
+        s => this.safeProb(s?.chance_to_finish_this_year)
+      );
+    },
+
     makeStatusColumn(mode) {
       const desc =
         (mode === 'active')
-          ? '● green = on-track, ● yellow = in danger; blank = not going to complete in-window.'
-          : '● green = completer, ● red = non-completer.';
+          ? '● green/yellow/orange/red based on chance_to_finish_this_year. Blank = no score.'
+          : '● green = completer, ● gray = non-completer exiter.';
 
       return new window.ReportColumn(
         'Status', desc, '3.5rem', false, 'string',
@@ -368,75 +435,66 @@ whatIfPctText() {
     getColumnsWidthsStringFinished() { return this.tableFinished.getColumnsWidthsString(); },
     setSortColumnFinished(name) { this.tableFinished.setSortColumn(name); this.tableTickFinished++; },
 
-    // ---------- finished logic ----------
-    isFinished(s) {
-      if (!s) return false;
-      if (s?.exited) return true;
-      const cr = Number(s?.credits_remaining);
-      return Number.isFinite(cr) && cr <= 0; // operationally finished
-    },
-
-    // ---------- formatting ----------
-    numOrNA(v, decimals = 2) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n.toFixed(decimals) : 'n/a';
-    },
-
+    // ---------- dates ----------
     dateOrDash(v) {
       if (!v) return '—';
       const d = new Date(v);
       return Number.isNaN(d.getTime()) ? '—' : d.toISOString().slice(0, 10);
     },
 
-    // ---------- projection ----------
-    projectedFinishDate(s) {
-      if (!s?.projected_end_date) return null;
-      const d = new Date(s.projected_end_date);
+    projectedEndDate(s) {
+      if (!s?.end_date_projected) return null;
+      const d = new Date(s.end_date_projected);
       return Number.isNaN(d.getTime()) ? null : d;
     },
 
     actualEndDate(s) {
-      if (!s?.exited) return null;
-      const d = new Date(s.exited);
+      if (!s?.end_date) return null;
+      const d = new Date(s.end_date);
       return Number.isNaN(d.getTime()) ? null : d;
-    },
-
-    // ---------- bucket logic ----------
-    projectionBucket(s) {
-      return s?.projection_bucket ?? null;
     },
 
     // ---------- merged End column ----------
     endDateText(s, { mode }) {
       if (!s) return 'n/a';
-      if (mode === 'finished') return s?.exited ? this.dateOrDash(s.exited) : '—';
-      const d = this.projectedFinishDate(s);
-      return d ? d.toISOString().slice(0, 10) : 'n/a';
+      if (mode === 'finished') return s?.end_date ? this.dateOrDash(s.end_date) : '—';
+      return s?.end_date_projected ? this.dateOrDash(s.end_date_projected) : 'n/a';
     },
 
     endDateSortValue(s, { mode }) {
       if (!s) return Infinity;
       if (mode === 'finished') return this.actualEndDate(s)?.getTime() ?? Infinity;
-      return this.projectedFinishDate(s)?.getTime() ?? Infinity;
+      return this.projectedEndDate(s)?.getTime() ?? Infinity;
     },
 
     endDatePillStyle(s, { mode }) {
       if (!s) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       if (mode === 'finished') {
-        if (!s?.exited) return { backgroundColor: 'transparent', color: this.colors.black };
+        if (!s?.end_date) return { backgroundColor: 'transparent', color: this.colors.black };
+        // finished rows: green for completers, gray for non-completers (per your new schema)
         return {
-          backgroundColor: s?.is_completer ? this.colors.green : this.colors.red,
-          color: this.colors.white,
+          backgroundColor: s?.is_completer ? this.colors.green : this.colors.gray,
+          color: s?.is_completer ? this.colors.white : this.colors.black,
           opacity: 0.85
         };
       }
 
-      const b = this.projectionBucket(s);
+      // active rows: tint by chance bucket if present
+      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
       return { backgroundColor: map[b], color: this.colors.white };
+    },
+
+    chancePillStyle(s) {
+      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
+      if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
+      // chance text is readable in black for yellow/orange
+      const fg = (b === 'yellow' || b === 'orange') ? this.colors.black : this.colors.white;
+      return { backgroundColor: map[b], color: fg };
     },
 
     // ---------- status dot ----------
@@ -444,11 +502,11 @@ whatIfPctText() {
       if (!s) return null;
 
       if (mode === 'finished') {
-        if (!s?.exited) return null;
-        return s?.is_completer ? this.colors.green : this.colors.red;
+        if (!s?.end_date) return null;
+        return s?.is_completer ? this.colors.green : this.colors.gray;
       }
 
-      const b = this.projectionBucket(s);
+      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
       if (!b) return null;
 
       const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
@@ -476,14 +534,23 @@ whatIfPctText() {
 
     statusSortValue(s, { mode }) {
       const c = this.statusDotColor(s, { mode });
-      if (c === this.colors.yellow) return 1;
+      // active: red first (worst), then orange, then yellow, then green, then blank
+      if (mode === 'active') {
+        if (c === this.colors.red) return 1;
+        if (c === this.colors.orange) return 2;
+        if (c === this.colors.yellow) return 3;
+        if (c === this.colors.green) return 4;
+        return 9;
+      }
+      // finished: non-completer (gray) first then green (or flip if you prefer)
+      if (c === this.colors.gray) return 1;
       if (c === this.colors.green) return 2;
-      if (c === this.colors.red) return 3;
       return 9;
     },
 
     finishedBucketWeight(s) {
-      if (!s?.exited) return 9;
+      // completers above non-completers; missing end_date bottom
+      if (!s?.end_date) return 9;
       return s?.is_completer ? 0 : 1;
     },
 
@@ -494,7 +561,7 @@ whatIfPctText() {
       if (!Array.isArray(rows) || rows.length === 0) return {};
       if (idx === n) return { borderTop: '4px solid rgba(0,0,0,0.75)' };
       return {};
-    },
+    }
   },
 
   template: `
@@ -540,33 +607,31 @@ whatIfPctText() {
             ></div>
           </div>
         </div>
-      <div>
-      <span
-      style="display:inline-flex; align-items:center; gap:6px;"
-    >
-      What-if drop:
-      <button
-        type="button"
-        style="width:22px;height:22px;border-radius:6px;"
-        @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
-        :disabled="whatIfDrops <= 0"
-        title="Remove hypothetical non-completor"
-      >−</button>
 
-      <b style="min-width:1.5rem; text-align:center;">
-        {{ whatIfDrops }}
-      </b>
+        <div>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            What-if drop:
+            <button
+              type="button"
+              style="width:22px;height:22px;border-radius:6px;"
+              @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
+              :disabled="whatIfDrops <= 0"
+              title="Remove hypothetical non-completer exiter"
+            >−</button>
 
-      <button
-        type="button"
-        style="width:22px;height:22px;border-radius:6px;"
-        @click="whatIfDrops++"
-        title="Add hypothetical exiter"
-      >+</button>
-    </span>
+            <b style="min-width:1.5rem; text-align:center;">
+              {{ whatIfDrops }}
+            </b>
+
+            <button
+              type="button"
+              style="width:22px;height:22px;border-radius:6px;"
+              @click="whatIfDrops++"
+              title="Add hypothetical exiter"
+            >+</button>
+          </span>
+        </div>
       </div>
-      </div>
-
 
       <!-- ACTIVE TABLE -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
@@ -623,7 +688,7 @@ whatIfPctText() {
         </div>
       </div>
 
-      <!-- ================= FINISHED TABLE ================= -->
+      <!-- FINISHED TABLE -->
       <div class="btech-row" style="align-items:center; margin: 14px 0 8px;">
         <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Finished students</h4>
         <div style="flex:1;"></div>
@@ -677,8 +742,9 @@ whatIfPctText() {
           ></span>
         </div>
       </div>
+
       <div class="btech-muted" style="font-size:.7rem; margin-top:10px;">
-        Projection uses a simple rule-of-thumb: <b>~2 credits/month</b> based on <code>credits_remaining</code>.
+        Score + projected dates are computed server-side. This view renders and simulates “what-if exiters.”
       </div>
     </div>
   </div>
