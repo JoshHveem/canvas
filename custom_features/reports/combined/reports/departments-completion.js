@@ -39,6 +39,12 @@ Vue.component('departments-completion', {
         null,
         d => (d?.name ?? '')
       ),
+      new window.ReportColumn(
+        'Completion', 'Current completion rate.', '16rem', false, 'string',
+        d => d?.cpl.completion,
+        null,
+        d => d?.cpl.completion,
+      ),
 
       new window.ReportColumn(
         'Needed', 'How many additional projected completers are required to reach 60%.', '5.5rem', false, 'number',
