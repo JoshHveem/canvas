@@ -38,9 +38,16 @@ Vue.component('reports-programs', {
 
   methods: {
     rebuildPrograms() {
-      const yr = this.yearNum;
+      const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
 
-      this.programsClean = this.programsRaw;
+      const year   = Number(this.year); // or this.settings.filters.year
+
+      let programs = (
+        list.find(p =>
+          Number(p?.academic_year) === year
+        ) || null
+      );
+      this.programsClean = programs;
     },
   }
 });
