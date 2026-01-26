@@ -38,6 +38,9 @@ Vue.component('reports-program', {
       const year   = Number(this.year); // or this.settings.filters.year
       const code   = String(this.programCode || this.program || '').trim(); // whatever prop holds the program code
       const campus = String(this.campus || '').trim();
+      console.log(code);
+      console.log(year);
+      console.log(campus);
 
       let program = (
         list.find(p =>
