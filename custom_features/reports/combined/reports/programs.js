@@ -39,6 +39,7 @@ Vue.component('reports-programs', {
   methods: {
     rebuildPrograms() {
       const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+      console.log(list);
 
       const year   = Number(this.year); // or this.settings.filters.year
 
