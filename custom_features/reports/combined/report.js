@@ -176,6 +176,7 @@
       return cached(cache, key, async () => {
         const url = `https://reports.bridgetools.dev/api/programs`;
         const resp = await bridgetools.req(url);
+        console.log(resp);
 
         // backend returns { meta, data }
         const payload = resp?.data;
@@ -674,6 +675,7 @@
             this.sharedLoading.programs = true;
 
             const raw = await window.ReportData.getProgramsRaw();
+            console.log(raw);
             this.programsRaw = Array.isArray(raw) ? raw : [];
           } catch (e) {
             console.warn('Failed to load programs', e);
