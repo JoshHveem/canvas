@@ -175,7 +175,8 @@
       const key = `programsRaw::all`;
       return cached(cache, key, async () => {
         const url = `https://reports.bridgetools.dev/api/programs`;
-        const programs = await bridgetools.req(url);
+        let data = await bridgetools.req(url);
+        let programs = data.filter(p => length(p?.students ?? []) > 0);
         return programs;
       });
     }
