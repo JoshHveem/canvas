@@ -4,79 +4,10 @@ Vue.component('reports-program-completion', {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
 
-    // Vue 2: Array defaults must be functions
+    // Real data now; no default test array.
     students: {
       type: Array,
-      default: () => ([
-        // --- ACTIVE (not exiters yet) ---
-        {
-          name: "Fatima Noor",
-          canvas_user_id: 106,
-          end_date: null,
-          end_date_projected: "2026-04-25",
-          chance_to_finish_this_year: 0.95,
-          is_exiter: false,
-          is_completer: false
-        },
-        {
-          name: "Hannah Lee",
-          canvas_user_id: 108,
-          end_date: null,
-          end_date_projected: "2026-06-25",
-          chance_to_finish_this_year: 0.62,
-          is_exiter: false,
-          is_completer: false
-        },
-        {
-          name: "Jamal Washington",
-          canvas_user_id: 110,
-          end_date: null,
-          end_date_projected: "2026-11-10",
-          chance_to_finish_this_year: 0.12,
-          is_exiter: false,
-          is_completer: false
-        },
-
-        // --- FINISHED / EXITERS ---
-        {
-          name: "Brianna Chen",
-          canvas_user_id: 102,
-          end_date: "2025-03-10",
-          end_date_projected: null,
-          chance_to_finish_this_year: null,
-          is_exiter: true,
-          is_completer: true
-        },
-        {
-          name: "Danielle Foster",
-          canvas_user_id: 104,
-          end_date: "2025-02-02",
-          end_date_projected: null,
-          chance_to_finish_this_year: null,
-          is_exiter: true,
-          is_completer: false
-        },
-
-        // --- EDGE CASES ---
-        {
-          name: "Liam Patel",
-          canvas_user_id: 112,
-          end_date: null,
-          end_date_projected: "2025-02-01",
-          chance_to_finish_this_year: 0.99, // operationally done but no end_date yet
-          is_exiter: false,
-          is_completer: false
-        },
-        {
-          name: "Maya Rodriguez",
-          canvas_user_id: 113,
-          end_date: "2025-04-05",
-          end_date_projected: null,
-          chance_to_finish_this_year: null,
-          is_exiter: true,
-          is_completer: false
-        }
-      ])
+      default: () => ([])
     },
 
     loading: { type: Boolean, default: false }
@@ -106,14 +37,14 @@ Vue.component('reports-program-completion', {
     this.tableActive.setColumns([
       this.makeStatusColumn('active'),
       this.makeStudentColumn(),
-      this.makeEndColumn('active', 'End (Projected)', 'Projected finish date (server-calculated).')
+      this.makeEndColumn('active', 'End (Projected)', 'Projected exit date (server-calculated).')
     ]);
 
     // FINISHED TABLE
     this.tableFinished.setColumns([
       this.makeStatusColumn('finished'),
       this.makeStudentColumn(),
-      this.makeEndColumn('finished', 'End', 'Actual end date (end_date).')
+      this.makeEndColumn('finished', 'End', 'Actual exit date (exit_date).')
     ]);
   },
 
@@ -123,19 +54,19 @@ Vue.component('reports-program-completion', {
       return Array.isArray(this.students) ? this.students : [];
     },
 
-    // Active = end_date null
+    // Active = not exited yet
     activeStudents() {
-      return this.studentsClean.filter(s => !s?.end_date);
+      return this.studentsClean.filter(s => !s?.is_exited);
     },
 
-    // Finished (for table) = end_date present
+    // Finished = exited
     finishedStudents() {
-      return this.studentsClean.filter(s => !!s?.end_date);
+      return this.studentsClean.filter(s => !!s?.is_exited);
     },
 
-    // Exiters for completion KPI = is_exiter true (explicit server flag)
+    // Exiters for completion KPI = is_exited true
     exiters() {
-      return this.studentsClean.filter(s => !!s?.is_exiter);
+      return this.studentsClean.filter(s => !!s?.is_exited);
     },
 
     completerExiters() {
@@ -178,7 +109,7 @@ Vue.component('reports-program-completion', {
       // Active only. Include if chance is present (0..1). Sort best->worst.
       return this.activeStudents
         .map(s => {
-          const p = this.safeProb(s?.chance_to_finish_this_year);
+          const p = this.safeProb(s?.chance_to_complete);
           return { s, p };
         })
         .filter(x => Number.isFinite(x.p))
@@ -197,7 +128,6 @@ Vue.component('reports-program-completion', {
 
       if (!baseE) return 0;
 
-      // Treat "green" as the high-confidence set; if that already gets us to 60%, divider sits after them.
       const greens = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) === 'green');
 
       const rateIfAllGreens =
@@ -205,7 +135,6 @@ Vue.component('reports-program-completion', {
 
       if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= 0.60) return greens.length;
 
-      // Otherwise, minimum number of candidates needed to hit 60, taking highest chance first
       let add = 0;
       for (let i = 0; i < this.projectionCandidates.length; i++) {
         add += 1;
@@ -216,7 +145,7 @@ Vue.component('reports-program-completion', {
       return this.projectionCandidates.length;
     },
 
-    // ACTIVE rows: sorted by projected end date then name (ReportTable handles user sort afterward)
+    // ACTIVE rows: sorted by projected end date then name
     visibleActiveRows() {
       const rows = this.activeStudents.slice().sort((a, b) => {
         const da = this.projectedEndDate(a)?.getTime() ?? Infinity;
@@ -253,7 +182,7 @@ Vue.component('reports-program-completion', {
       const exitersCompleters = this.exiters.filter(s => !!s?.is_completer);
       const exitersNon = this.exiters.filter(s => !s?.is_completer);
 
-      const keyFor = (prefix, s, i) => `${prefix}-${s?.canvas_user_id ?? s?.id ?? i}`;
+      const keyFor = (prefix, s, i) => `${prefix}-${s?.sis_user_id ?? s?.id ?? i}`;
 
       // Completer exiters (faded green)
       for (let i = 0; i < exitersCompleters.length; i++) {
@@ -269,8 +198,6 @@ Vue.component('reports-program-completion', {
       const baseE = this.whatIfExitersTotal;
       const baseC = this.whatIfCompletersTotal;
 
-      // Choose minimum # of likely completers needed to hit 60 (highest chance first),
-      // BUT if green-only set hits 60, show all greens and stop.
       const greens = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) === 'green');
       const rest = this.projectionCandidates.filter(x => this.bucketFromChance(x.p) !== 'green');
 
@@ -354,7 +281,9 @@ Vue.component('reports-program-completion', {
     },
 
     displayName(s) {
-      return this.anonymous ? 'STUDENT' : (s?.name ?? 'Student');
+      if (this.anonymous) return 'STUDENT';
+      // New schema may not include name; fall back to SIS id
+      return (s?.name ?? (s?.sis_user_id != null ? `SIS ${s.sis_user_id}` : 'Student'));
     },
 
     safeProb(v) {
@@ -385,17 +314,17 @@ Vue.component('reports-program-completion', {
     // ---------- column factories ----------
     makeStudentColumn() {
       return new window.ReportColumn(
-        'Student', 'Student name.', '16rem', false, 'string',
+        'Student', 'Student name (or SIS id if name not provided).', '16rem', false, 'string',
         s => this.displayName(s),
         null,
-        s => (s?.name ?? '')
+        s => (s?.name ?? String(s?.sis_user_id ?? ''))
       );
     },
 
     makeStatusColumn(mode) {
       const desc =
         (mode === 'active')
-          ? '● green/yellow/orange/red based on chance_to_finish_this_year. Blank = no score.'
+          ? '● green/yellow/orange/red based on chance_to_complete. Blank = no score.'
           : '● green = completer, ● gray = non-completer exiter.';
 
       return new window.ReportColumn(
@@ -430,22 +359,22 @@ Vue.component('reports-program-completion', {
     },
 
     projectedEndDate(s) {
-      if (!s?.end_date_projected) return null;
-      const d = new Date(s.end_date_projected);
+      if (!s?.projected_exit_date) return null;
+      const d = new Date(s.projected_exit_date);
       return Number.isNaN(d.getTime()) ? null : d;
     },
 
     actualEndDate(s) {
-      if (!s?.end_date) return null;
-      const d = new Date(s.end_date);
+      if (!s?.exit_date) return null;
+      const d = new Date(s.exit_date);
       return Number.isNaN(d.getTime()) ? null : d;
     },
 
     // ---------- merged End column ----------
     endDateText(s, { mode }) {
       if (!s) return 'n/a';
-      if (mode === 'finished') return s?.end_date ? this.dateOrDash(s.end_date) : '—';
-      return s?.end_date_projected ? this.dateOrDash(s.end_date_projected) : 'n/a';
+      if (mode === 'finished') return s?.exit_date ? this.dateOrDash(s.exit_date) : '—';
+      return s?.projected_exit_date ? this.dateOrDash(s.projected_exit_date) : 'n/a';
     },
 
     endDateSortValue(s, { mode }) {
@@ -458,8 +387,7 @@ Vue.component('reports-program-completion', {
       if (!s) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       if (mode === 'finished') {
-        if (!s?.end_date) return { backgroundColor: 'transparent', color: this.colors.black };
-        // finished rows: green for completers, gray for non-completers (per your new schema)
+        if (!s?.exit_date) return { backgroundColor: 'transparent', color: this.colors.black };
         return {
           backgroundColor: s?.is_completer ? this.colors.green : this.colors.gray,
           color: s?.is_completer ? this.colors.white : this.colors.black,
@@ -467,8 +395,7 @@ Vue.component('reports-program-completion', {
         };
       }
 
-      // active rows: tint by chance bucket if present
-      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
+      const b = this.bucketFromChance(s?.chance_to_complete);
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
 
       const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
@@ -476,10 +403,9 @@ Vue.component('reports-program-completion', {
     },
 
     chancePillStyle(s) {
-      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
+      const b = this.bucketFromChance(s?.chance_to_complete);
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
       const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
-      // chance text is readable in black for yellow/orange
       const fg = (b === 'yellow' || b === 'orange') ? this.colors.black : this.colors.white;
       return { backgroundColor: map[b], color: fg };
     },
@@ -489,11 +415,11 @@ Vue.component('reports-program-completion', {
       if (!s) return null;
 
       if (mode === 'finished') {
-        if (!s?.end_date) return null;
+        if (!s?.exit_date && !s?.is_exited) return null;
         return s?.is_completer ? this.colors.green : this.colors.gray;
       }
 
-      const b = this.bucketFromChance(s?.chance_to_finish_this_year);
+      const b = this.bucketFromChance(s?.chance_to_complete);
       if (!b) return null;
 
       const map = { green: this.colors.green, yellow: this.colors.yellow, orange: this.colors.orange, red: this.colors.red };
@@ -521,7 +447,6 @@ Vue.component('reports-program-completion', {
 
     statusSortValue(s, { mode }) {
       const c = this.statusDotColor(s, { mode });
-      // active: red first (worst), then orange, then yellow, then green, then blank
       if (mode === 'active') {
         if (c === this.colors.red) return 1;
         if (c === this.colors.orange) return 2;
@@ -529,15 +454,14 @@ Vue.component('reports-program-completion', {
         if (c === this.colors.green) return 4;
         return 9;
       }
-      // finished: non-completer (gray) first then green (or flip if you prefer)
       if (c === this.colors.gray) return 1;
       if (c === this.colors.green) return 2;
       return 9;
     },
 
     finishedBucketWeight(s) {
-      // completers above non-completers; missing end_date bottom
-      if (!s?.end_date) return 9;
+      // completers above non-completers; missing exit_date bottom
+      if (!s?.exit_date && !s?.is_exited) return 9;
       return s?.is_completer ? 0 : 1;
     },
 
@@ -652,7 +576,7 @@ Vue.component('reports-program-completion', {
 
       <div
         v-for="(s, i) in visibleActiveRows"
-        :key="'a-' + (s.canvas_user_id || s.id || i)"
+        :key="'a-' + (s.sis_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="Object.assign(
             {
@@ -709,7 +633,7 @@ Vue.component('reports-program-completion', {
 
       <div
         v-for="(s, i) in visibleFinishedRows"
-        :key="'f-' + (s.canvas_user_id || s.id || i)"
+        :key="'f-' + (s.sis_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
           'grid-template-columns': getColumnsWidthsStringFinished(),
