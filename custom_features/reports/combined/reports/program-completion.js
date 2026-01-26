@@ -106,21 +106,23 @@ Vue.component('reports-program-completion', {
 
     // ---------- projections (client uses server scores only) ----------
     projectionCandidates() {
-      // Active only. Include if chance is present (0..1). Sort best->worst.
-      return this.activeStudents
+    return this.activeStudents
         .map(s => {
-          const p = this.safeProb(s?.chance_to_complete);
-          return { s, p };
+        if (!s) return null;
+        const p = this.safeProb(s?.chance_to_complete);
+        if (!Number.isFinite(p)) return null;
+        return { s, p };
         })
-        .filter(x => Number.isFinite(x.p))
+        .filter(Boolean)
         .sort((a, b) => {
-          if (a.p !== b.p) return b.p - a.p; // higher chance first
-          const da = this.projectedEndDate(a.s)?.getTime() ?? Infinity;
-          const db = this.projectedEndDate(b.s)?.getTime() ?? Infinity;
-          if (da !== db) return da - db;
-          return this.safeName(a.s).localeCompare(this.safeName(b.s));
+        if (a.p !== b.p) return b.p - a.p;
+        const da = this.projectedEndDate(a.s)?.getTime() ?? Infinity;
+        const db = this.projectedEndDate(b.s)?.getTime() ?? Infinity;
+        if (da !== db) return da - db;
+        return this.safeName(a.s).localeCompare(this.safeName(b.s));
         });
     },
+
 
     neededActiveCountFor60() {
       const baseE = this.whatIfExitersTotal;
