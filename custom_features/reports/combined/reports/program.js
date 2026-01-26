@@ -39,13 +39,15 @@ Vue.component('reports-program', {
       const code   = String(this.programCode || this.program || '').trim(); // whatever prop holds the program code
       const campus = String(this.campus || '').trim();
 
-      return (
+      let program = (
         list.find(p =>
           Number(p?.academic_year) === year &&
           String(p?.program || '').trim() === code &&
           String(p?.campus || '').trim() === campus
         ) || null
       );
+      console.log(program);
+      return program;
     } 
   },
 
