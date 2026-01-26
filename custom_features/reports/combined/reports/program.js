@@ -7,7 +7,7 @@ Vue.component('reports-program', {
         :year="year"
         :campus="program.campus"
         :students="program.students"
-      ></reports-department-overview>
+      ></reports-program-completion>
     </div>
   `,
   props: {
