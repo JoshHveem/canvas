@@ -402,7 +402,7 @@ Vue.component('programs-completion', {
       <div
         v-for="(program, i) in visibleRows"
         :key="program.program_id || program.programId || program.id || program.account_id || i"
-        @click="onRowClick($event, program)"
+        @click="emitDrill(program)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
           'grid-template-columns': getColumnsWidthsString(),
