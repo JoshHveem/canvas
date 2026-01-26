@@ -31,14 +31,21 @@ Vue.component('reports-program', {
   },
 
   computed: {
-    // ✅ single source of truth: pull the one department from cached list
     program() {
-      const list = Array.isArray(this.programsRaw) ? this.programsRaw: [];
-      let program = list.filter() // year, program, and campus
+      const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
 
-      // departments/full returns either {dept: Number} or maybe dept is a string—handle both
-      return program || {};
-    },
+      const year   = Number(this.year); // or this.settings.filters.year
+      const code   = String(this.programCode || this.program || '').trim(); // whatever prop holds the program code
+      const campus = String(this.campus || '').trim();
+
+      return (
+        list.find(p =>
+          Number(p?.academic_year) === year &&
+          String(p?.program || '').trim() === code &&
+          String(p?.campus || '').trim() === campus
+        ) || null
+      );
+    } 
   },
 
   watch: {
