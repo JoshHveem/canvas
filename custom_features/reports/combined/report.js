@@ -403,7 +403,7 @@
             component: 'reports-program',
             title: 'Program Report',
             datasets: ['programs'],
-            selectors: [],
+            selectors: ['programs', 'campus'],
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion' },
