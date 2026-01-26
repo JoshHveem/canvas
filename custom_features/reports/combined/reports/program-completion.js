@@ -49,6 +49,11 @@ Vue.component('reports-program-completion', {
   },
 
   computed: {
+    barSegmentsProjectedSafe() {
+        const segs = Array.isArray(this.barSegmentsProjected) ? this.barSegmentsProjected : [];
+        // remove undefined/null and anything missing a key
+        return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
+    },
     // ---------- base populations ----------
     studentsClean() {
       return Array.isArray(this.students) ? this.students : [];
@@ -518,7 +523,7 @@ Vue.component('reports-program-completion', {
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
             <div style="position:absolute; inset:0; display:flex;">
             <div
-            v-for="seg in (barSegmentsProjected || []).filter(x => x && x.key)"
+            v-for="seg in (barSegmentsProjectedSafe || []).filter(x => x && x.key)"
             :key="seg.key"
             :title="seg.title"
             :style="{
