@@ -174,7 +174,7 @@
     async function getProgramsRaw() {
       const key = `programsRaw::all`;
       return cached(cache, key, async () => {
-        const url = `https://reports.bridgetools.dev/api/programs/full`;
+        const url = `https://reports.bridgetools.dev/api/programs`;
         const resp = await bridgetools.req(url);
 
         // backend returns { meta, data }
