@@ -131,6 +131,23 @@
             </select>
           </div>
 
+          <div  v-if="currentSelectors.includes('campus')" style="display:inline-block; min-width:120px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Year</label>
+            <select
+              v-model="settings.filters.year"
+              aria-label="Select campus"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option
+                value="L"
+              >Logan</option>
+              <option
+                value="B"
+              >Brigham City</option>
+            </select>
+          </div>
+
           <!-- Instructor selector (only when enabled) -->
           <div v-if="currentSelectors.includes('instructor')" style="display:inline-block; min-width:220px;">
             <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Instructor</label>
