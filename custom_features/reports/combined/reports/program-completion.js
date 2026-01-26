@@ -310,16 +310,40 @@ Vue.component('reports-program-completion', {
         'Very unlikely this year'
       );
     },
+    escapeHtml(str) {
+        return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    },
+
 
     // ---------- column factories ----------
     makeStudentColumn() {
-      return new window.ReportColumn(
-        'Student', 'Student name (or SIS id if name not provided).', '16rem', false, 'string',
-        s => this.displayName(s),
-        null,
-        s => (s?.name ?? String(s?.sis_user_id ?? ''))
-      );
-    },
+        return new window.ReportColumn(
+            'Student',
+            'Student name (or SIS id if name not provided).',
+            '16rem',
+            false,
+            'string',
+            s => {
+            const labelRaw = this.displayName(s);
+            const label = this.escapeHtml(labelRaw);
+
+            const id = s?.canvas_user_id; // or change to sis_user_id if that's what you have
+            if (!id) return label;
+
+            // open in new tab, and keep it safe
+            return `<a href="/users/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+            },
+            null,
+            s => (s?.name ?? String(s?.sis_user_id ?? '')) // sort value stays plain text
+        );
+        },
+
+    
 
     makeStatusColumn(mode) {
       const desc =
