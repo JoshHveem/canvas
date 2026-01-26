@@ -594,7 +594,6 @@
 
         programOptions() {
           const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
-          console.log(list);
           const year = Number(this.settings?.filters?.year);
 
           // Optional: if you want the dropdown to only show programs for the selected year:
@@ -668,7 +667,6 @@
             this.sharedLoading.programs = true;
 
             const raw = await window.ReportData.getProgramsRaw();
-            console.log(raw);
             this.programsRaw = Array.isArray(raw) ? raw : [];
           } catch (e) {
             console.warn('Failed to load programs', e);
