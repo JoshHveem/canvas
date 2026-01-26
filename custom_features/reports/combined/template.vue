@@ -352,7 +352,10 @@
 
         <!-- Dynamic report body -->
         <keep-alive>
-          <component :is="currentReportMeta.component" v-bind="currentReportProps" />
+          <component 
+            :is="currentReportMeta.component" 
+            @drill-program="drillToProgram"
+            v-bind="currentReportProps" />
         </keep-alive>
       </div>
     </div>

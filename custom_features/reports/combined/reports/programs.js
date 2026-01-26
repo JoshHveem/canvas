@@ -1,3 +1,4 @@
+// programs.js
 Vue.component('reports-programs', {
   template: `
     <div>
@@ -5,6 +6,7 @@ Vue.component('reports-programs', {
         v-if="subMenu == 'completion'"
         :year="year"
         :programs="programsClean"
+        @drill-program="$emit('drill-program', $event)"
       ></programs-completion>
  
     </div>

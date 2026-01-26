@@ -1,4 +1,4 @@
-// programs-completion-overview.js
+// programs-completion.js
 Vue.component('programs-completion', {
   props: {
     year: { type: [Number, String], required: true },
@@ -319,6 +319,15 @@ Vue.component('programs-completion', {
       `;
     },
 
+
+    emitDrill(p) {
+        this.$emit('drill-program', {
+        program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
+        campus: String(p?.campus ?? '').trim(),
+        // optionally pass full object too
+        row: p
+        });
+    },
     escapeHtml(str) {
       return String(str ?? '')
         .replaceAll('&', '&amp;')
@@ -326,7 +335,15 @@ Vue.component('programs-completion', {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
-    }
+    },
+    onRowClick(e, program) {
+    const el = e?.target?.closest?.('[data-action="drill-program"]');
+    if (!el) return;
+
+    // Use the actual row object (best), not the dataset strings (but either works)
+    this.emitDrill(program);
+    },
+
   },
 
   template: `
@@ -373,6 +390,7 @@ Vue.component('programs-completion', {
       <div
         v-for="(program, i) in visibleRows"
         :key="program.program_id || program.programId || program.id || program.account_id || i"
+        @click="onRowClick($event, program)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
           'grid-template-columns': getColumnsWidthsString(),
