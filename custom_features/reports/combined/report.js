@@ -591,7 +591,7 @@
           }
 
           if (sel.includes('campus')) {
-            base.campusOptions = this.campusOptions;
+            base.campuses = this.campuses;
             base.selectedCampus = this.settings?.filters?.campus || '';
           }
 
