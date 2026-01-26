@@ -600,6 +600,7 @@
 
         programOptions() {
           const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+          console.log(list);
           const year = Number(this.settings?.filters?.year);
 
           // Optional: if you want the dropdown to only show programs for the selected year:
