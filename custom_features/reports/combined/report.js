@@ -241,25 +241,6 @@
       };
     },
     methods: {
-      drillToProgram(payload) {
-        const program = String(payload?.program ?? '').trim();
-        const campus  = String(payload?.campus ?? '').trim();
-
-        // set filters
-        this.$set(this.settings.filters, 'program', program);
-        this.$set(this.settings.filters, 'campus', campus);
-
-        // switch report type
-        this.settings.reportType = 'program';
-
-        // optionally force submenu to completion for the program report
-        if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
-        this.$set(this.settings.subMenuByType, 'program', 'completion');
-
-        // persist + refresh data if needed
-        this.saveSettings(this.settings);
-        this.ensureSharedData();
-      },
 
       async loadAccounts() {
         try {
@@ -655,6 +636,25 @@
       },
 
       methods: {
+      drillToProgram(payload) {
+        const program = String(payload?.program ?? '').trim();
+        const campus  = String(payload?.campus ?? '').trim();
+
+        // set filters
+        this.$set(this.settings.filters, 'program', program);
+        this.$set(this.settings.filters, 'campus', campus);
+
+        // switch report type
+        this.settings.reportType = 'program';
+
+        // optionally force submenu to completion for the program report
+        if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
+        this.$set(this.settings.subMenuByType, 'program', 'completion');
+
+        // persist + refresh data if needed
+        this.saveSettings(this.settings);
+        this.ensureSharedData();
+      },
         onReportChange() {
           this.saveSettings(this.settings);
           // ensure shared data needed for the new report is loaded
