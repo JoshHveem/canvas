@@ -467,6 +467,11 @@
             filters: { year: '2025', course_tags: [] }
           },
 
+          campuses: [
+            { key: 'L', name: 'Logan' },
+            { key: 'B', name: 'Brigham City' }
+          ],
+
           accounts: [{ name: 'My Courses', id: '' + 0 }],
           loading: false,
 
@@ -580,9 +585,42 @@
             base.selectedCourseTags = this.settings?.filters?.course_tags || [];
           }
 
+          if (sel.includes('programs')) {
+            base.programOptions = this.programOptions;
+            base.selectedProgram = this.settings?.filters?.program || '';
+          }
+
+          if (sel.includes('campus')) {
+            base.campusOptions = this.campusOptions;
+            base.selectedCampus = this.settings?.filters?.campus || '';
+          }
+
+
 
           return base;
         },
+
+        programOptions() {
+          const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+          const year = Number(this.settings?.filters?.year);
+
+          // Optional: if you want the dropdown to only show programs for the selected year:
+          const filtered = Number.isFinite(year)
+            ? list.filter(p => Number(p?.academic_year) === year)
+            : list;
+
+          const map = new Map(); // key -> {key,name}
+          for (const p of filtered) {
+            const key = String(p?.program || '').trim();
+            if (!key) continue;
+            const name = String(p?.name || key).trim();
+            if (!map.has(key)) map.set(key, { key, name });
+          }
+
+          return Array.from(map.values()).sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true })
+          );
+        }
 
       },
  
@@ -638,7 +676,6 @@
 
             const raw = await window.ReportData.getProgramsRaw();
             this.programsRaw = Array.isArray(raw) ? raw : [];
-            console.log(this.programsRaw)
           } catch (e) {
             console.warn('Failed to load programs', e);
             this.programsRaw = [];

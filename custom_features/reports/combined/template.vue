@@ -132,21 +132,45 @@
           </div>
 
           <div  v-if="currentSelectors.includes('campus')" style="display:inline-block; min-width:120px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Year</label>
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Campus</label>
             <select
-              v-model="settings.filters.year"
+              v-model="settings.filters.campus"
               aria-label="Select campus"
               @change="saveSettings(settings)"
               style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
             >
+              <!--build-->
               <option
-                value="L"
-              >Logan</option>
-              <option
-                value="B"
-              >Brigham City</option>
+                v-for="c in campuses"
+                :key="c.key"
+                :value="c.key"
+              >
+                {{ c.name }}
+              </option>
             </select>
           </div>
+         
+          <!-- Program -->
+          <div v-if="currentSelectors.includes('programs')" style="display:inline-block; min-width:260px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+              Program
+            </label>
+            <select
+              v-model="settings.filters.program"
+              aria-label="Select program"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option
+                v-for="p in programOptions"
+                :key="p.key"
+                :value="p.key"
+              >
+                {{ p.name }}
+              </option>
+            </select>
+          </div>
+
 
           <!-- Instructor selector (only when enabled) -->
           <div v-if="currentSelectors.includes('instructor')" style="display:inline-block; min-width:220px;">
