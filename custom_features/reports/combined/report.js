@@ -638,6 +638,7 @@
 
             const raw = await window.ReportData.getProgramsRaw();
             this.programsRaw = Array.isArray(raw) ? raw : [];
+            console.log(this.programsRaw)
           } catch (e) {
             console.warn('Failed to load programs', e);
             this.programsRaw = [];
