@@ -37,10 +37,22 @@ Vue.component('programs-completion', {
 
       new window.ReportColumn(
         'Program', 'Program name.', '16rem', false, 'string',
-        p => this.anonymous ? 'PROGRAM' : (p?.name ?? ''),
+        p => {
+            const label = this.escapeHtml(this.anonymous ? 'PROGRAM' : (p?.name ?? ''));
+            // use a button-ish span so we can catch click + keep styling
+            return `
+            <span
+                class="btech-link"
+                style="cursor:pointer; text-decoration:underline;"
+                data-action="drill-program"
+                data-program="${this.escapeHtml(String(p?.program ?? p?.program_code ?? p?.name ?? ''))}"
+                data-campus="${this.escapeHtml(String(p?.campus ?? ''))}"
+            >${label}</span>
+            `;
+        },
         null,
         p => (p?.name ?? '')
-      ),
+        ),
 
       new window.ReportColumn(
         'Campus', 'Campus name.', '5rem', false, 'string',
