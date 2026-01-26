@@ -175,14 +175,7 @@
       const key = `programsRaw::all`;
       return cached(cache, key, async () => {
         const url = `https://reports.bridgetools.dev/api/programs`;
-        const resp = await bridgetools.req(url);
-        console.log(resp);
-
-        // backend returns { meta, data }
-        const payload = resp?.data;
-        const programs = Array.isArray(payload?.data) ? payload.data
-                      : Array.isArray(payload) ? payload
-                      : [];
+        const programs = await bridgetools.req(url);
         return programs;
       });
     }
