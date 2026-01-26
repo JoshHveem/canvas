@@ -242,24 +242,24 @@
     },
     methods: {
       drillToProgram(payload) {
-      const program = String(payload?.program ?? '').trim();
-      const campus  = String(payload?.campus ?? '').trim();
+        const program = String(payload?.program ?? '').trim();
+        const campus  = String(payload?.campus ?? '').trim();
 
-      // set filters
-      this.$set(this.settings.filters, 'program', program);
-      this.$set(this.settings.filters, 'campus', campus);
+        // set filters
+        this.$set(this.settings.filters, 'program', program);
+        this.$set(this.settings.filters, 'campus', campus);
 
-      // switch report type
-      this.settings.reportType = 'program';
+        // switch report type
+        this.settings.reportType = 'program';
 
-      // optionally force submenu to completion for the program report
-      if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
-      this.$set(this.settings.subMenuByType, 'program', 'completion');
+        // optionally force submenu to completion for the program report
+        if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
+        this.$set(this.settings.subMenuByType, 'program', 'completion');
 
-      // persist + refresh data if needed
-      this.saveSettings(this.settings);
-      this.ensureSharedData();
-    },
+        // persist + refresh data if needed
+        this.saveSettings(this.settings);
+        this.ensureSharedData();
+      },
 
       async loadAccounts() {
         try {
