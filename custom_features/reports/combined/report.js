@@ -176,7 +176,7 @@
       return cached(cache, key, async () => {
         const url = `https://reports.bridgetools.dev/api/programs`;
         let data = await bridgetools.req(url);
-        let programs = data.filter(p => length(p?.students ?? []) > 0);
+        let programs = data.filter(p => (p?.students ?? []).length > 0);
         return programs;
       });
     }
