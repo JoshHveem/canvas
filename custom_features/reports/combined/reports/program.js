@@ -6,7 +6,7 @@ Vue.component('reports-program', {
         v-if="subMenu == 'completion'"
         :year="year"
         :campus="campus"
-        :students="program.students"
+        :students="selectedProgram.students"
       ></reports-department-overview>
     </div>
   `,
@@ -31,7 +31,7 @@ Vue.component('reports-program', {
   },
 
   computed: {
-    program() {
+    selectedProgram() {
       const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
       console.log(list);
 
