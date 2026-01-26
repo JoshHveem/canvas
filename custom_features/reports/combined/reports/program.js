@@ -12,8 +12,8 @@ Vue.component('reports-program', {
   `,
   props: {
     year: { type: [Number], required: true },
-    program: { type: [String], required: true },
-    campus: { type: [String], required: true },
+    selectedProgram: { type: [String], required: true },
+    selectedCampus: { type: [String], required: true },
     subMenu: { type: [Number, String], required: true },
     programsRaw: { type: Array, default: () => [] }, // big list of all programs, need to get the one 
 
@@ -31,13 +31,13 @@ Vue.component('reports-program', {
   },
 
   computed: {
-    selectedProgram() {
+    program() {
       const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
       console.log(list);
 
       const year   = Number(this.year); // or this.settings.filters.year
-      const code   = String(this.programCode || this.program || '').trim(); // whatever prop holds the program code
-      const campus = String(this.campus || '').trim();
+      const code   = String(this.selectedProgram || '').trim(); // whatever prop holds the program code
+      const campus = String(this.selectedCampus || '').trim();
       console.log(code);
       console.log(year);
       console.log(campus);

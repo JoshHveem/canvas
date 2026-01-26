@@ -456,7 +456,7 @@
             reportType: 'instructor',
             subMenuByType: {},
             sort_dir: 1,
-            filters: { year: '2025', course_tags: [], programs: '', campus: ''}
+            filters: { year: '2025', course_tags: [], program: '', campus: ''}
           },
 
           campuses: [
