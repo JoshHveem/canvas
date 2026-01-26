@@ -43,11 +43,14 @@ Vue.component('programs-completion', {
       ),
 
       new window.ReportColumn(
-        'Completion', 'Current completion rate.', '16rem', false, 'string',
-        p => p?.cpl?.completion ?? p?.completion ?? '—',
+        'Completion', 'Current completion rate (computed from exited students).', '16rem', false, 'string',
+        p => {
+            const r = this.currentRateForProgram(p);
+            return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : '—';
+        },
         null,
-        p => p?.cpl?.completion ?? p?.completion ?? ''
-      ),
+        p => this.currentRateForProgram(p) ?? -1
+        ),
 
       new window.ReportColumn(
         'Needed', 'How many additional projected completers are required to reach 60%.', '5.5rem', false, 'number',
@@ -136,28 +139,40 @@ Vue.component('programs-completion', {
       return { exiters, completers, nonCompleters };
     },
 
+    currentRateForProgram(p) {
+    // Use the SAME base used by Needed/Status: exited students only.
+    const { exiters, completers } = this.exiterCountsForProgram(p);
+    const denom = exiters.length;
+    return denom ? (completers.length / denom) : null;
+    },
+
+
     // ---- core business: how many needed ----
     neededCountForProgram(p) {
-      const { exiters, completers } = this.exiterCountsForProgram(p);
-      const baseE = exiters.length;
-      const baseC = completers.length;
+    const { exiters, completers } = this.exiterCountsForProgram(p);
+    const baseE = exiters.length;
+    const baseC = completers.length;
 
-      // If there are no exiters, KPI undefined; treat as 0 needed.
-      if (!baseE) return 0;
+    // If there are no exiters, KPI undefined; treat as 0 needed.
+    if (!baseE) return 0;
 
-      const candidates = this.projectionCandidatesForProgram(p);
-      if (!candidates.length) return 0;
+    // ✅ IMPORTANT: if already meeting 60%, need 0.
+    const current = baseC / baseE;
+    if (current >= 0.60) return 0;
 
-      let add = 0;
-      for (let i = 0; i < candidates.length; i++) {
+    const candidates = this.projectionCandidatesForProgram(p);
+    if (!candidates.length) return 0;
+
+    // Minimum add such that (baseC + add) / (baseE + add) >= 0.60
+    let add = 0;
+    for (let i = 0; i < candidates.length; i++) {
         add += 1;
         const denom = baseE + add;
         const num = baseC + add;
         if (denom > 0 && (num / denom) >= 0.60) return add;
-      }
+    }
 
-      // Even adding everyone doesn't clear it
-      return candidates.length;
+    return candidates.length;
     },
 
     statusBucketForProgram(p) {
