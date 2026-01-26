@@ -38,18 +38,14 @@ Vue.component('reports-programs', {
 
   methods: {
     rebuildPrograms() {
-      const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
-      console.log(list);
+        const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+        const year = this.yearNum;
 
-      const year   = this.yearNum; // or this.settings.filters.year
+        const programs = list.filter(p => Number(p?.academic_year) === Number(year));
+        this.programsClean = programs;
 
-      let programs = (
-        list.find(p =>
-          Number(p?.academic_year) === year
-        ) || null
-      );
-      console.log(programs);
-      this.programsClean = programs;
-    },
+        console.log({ year, total: list.length, matched: programs.length });
+        }
+
   }
 });
