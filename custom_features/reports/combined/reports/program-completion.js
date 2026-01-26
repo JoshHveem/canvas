@@ -51,6 +51,7 @@ Vue.component('reports-program-completion', {
   computed: {
     barSegmentsProjectedSafe() {
         const segs = Array.isArray(this.barSegmentsProjected) ? this.barSegmentsProjected : [];
+        console.log(segs);
         // remove undefined/null and anything missing a key
         return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
     },
