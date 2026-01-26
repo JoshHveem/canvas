@@ -6,7 +6,7 @@ Vue.component('reports-program', {
         v-if="subMenu == 'completion'"
         :year="year"
         :campus="campus"
-        :students="students"
+        :students="program.students"
       ></reports-department-overview>
     </div>
   `,
