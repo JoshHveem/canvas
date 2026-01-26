@@ -515,17 +515,18 @@ Vue.component('reports-program-completion', {
         <div>
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
             <div style="position:absolute; inset:0; display:flex;">
-              <div
-                v-for="seg in barSegmentsProjected"
-                :key="seg.key"
-                :title="seg.title"
-                :style="{
-                  flex: '1 1 0',
-                  background: seg.color,
-                  opacity: seg.opacity,
-                  borderRight: '1px solid rgba(255,255,255,0.6)'
-                }"
-              ></div>
+            <div
+            v-for="seg in (barSegmentsProjected || []).filter(x => x && x.key)"
+            :key="seg.key"
+            :title="seg.title"
+            :style="{
+                flex: '1 1 0',
+                background: seg.color,
+                opacity: seg.opacity,
+                borderRight: '1px solid rgba(255,255,255,0.6)'
+            }"
+            ></div>
+
             </div>
 
             <div
