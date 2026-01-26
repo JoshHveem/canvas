@@ -48,6 +48,7 @@ Vue.component('reports-programs', {
           Number(p?.academic_year) === year
         ) || null
       );
+      console.log(programs);
       this.programsClean = programs;
     },
   }
