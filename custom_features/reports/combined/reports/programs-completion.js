@@ -43,14 +43,14 @@ Vue.component('programs-completion', {
       ),
 
       new window.ReportColumn(
-        'Campus', 'Campus name.', '16rem', false, 'string',
+        'Campus', 'Campus name.', '5rem', false, 'string',
         p => p?.campus,
         null,
         p => (p?.campus ?? '')
       ),
 
       new window.ReportColumn(
-        'Completion', 'Current completion rate (computed from exited students).', '16rem', false, 'string',
+        'Completion', 'Current completion rate (computed from exited students).', '4rem', false, 'string',
         p => {
             const r = this.currentRateForProgram(p);
             return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : '—';
