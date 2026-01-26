@@ -161,15 +161,13 @@
               @change="saveSettings(settings)"
               style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
             >
-              <option
-                v-for="p in programOptions"
-                :key="p.key"
-                :value="p.key"
-              >
+              <option value="">All</option>
+              <option v-for="p in programOptions" :key="p.key" :value="p.key">
                 {{ p.name }}
               </option>
             </select>
           </div>
+            
 
 
           <!-- Instructor selector (only when enabled) -->

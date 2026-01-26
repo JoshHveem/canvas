@@ -357,9 +357,7 @@
 
         this.loading = false;
 
-        // NEW: after initial load, fetch shared datasets only if needed
         await this.ensureSharedData();
-        await this.loadDepartmentsRaw();
       },
 
       data: function () {
@@ -464,7 +462,7 @@
             reportType: 'instructor',
             subMenuByType: {},
             sort_dir: 1,
-            filters: { year: '2025', course_tags: [] }
+            filters: { year: '2025', course_tags: [], programs: '', campus: ''}
           },
 
           campuses: [
