@@ -5,8 +5,8 @@ Vue.component('reports-program', {
       <reports-program-completion
         v-if="subMenu == 'completion'"
         :year="year"
-        :campus="program.campus"
-        :students="program.students"
+        :campus="program?.campus ?? ''"
+        :students="program?.students ?? []"
       ></reports-program-completion>
     </div>
   `,
