@@ -171,6 +171,21 @@
         return depts;
       });
     }
+    async function getProgramsRaw() {
+      const key = `programsRaw::all`;
+      return cached(cache, key, async () => {
+        const url = `https://reports.bridgetools.dev/api/programs/full`;
+        const resp = await bridgetools.req(url);
+
+        // backend returns { meta, data }
+        const payload = resp?.data;
+        const programs = Array.isArray(payload?.data) ? payload.data
+                      : Array.isArray(payload) ? payload
+                      : [];
+        return programs;
+      });
+    }
+
 
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
@@ -209,6 +224,7 @@
 
     window.ReportData = {
       getCanvasUser,
+      getProgramsRaw,
       getInstructorsRaw,
       getCoursesRaw,
       getDepartmentsRaw,
@@ -382,6 +398,18 @@
             ]
           },
           {
+            value: 'program',
+            label: 'Program',
+            component: 'reports-program',
+            title: 'Program Report',
+            datasets: ['programs'],
+            selectors: [],
+            subMenus: [
+              { value: 'overview',    label: 'Overview' },
+              { value: 'completion',    label: 'Completion' },
+            ]
+          },
+          {
             value: 'instructors',
             label: 'Instructors',
             component: 'reports-instructors',
@@ -446,7 +474,8 @@
           instructorsRaw: [],
           coursesRaw: [],
           departmentsRaw: [],
-          sharedLoading: { departments: false, instructors: false, courses: false, students: false },
+          programsRaw: [],
+          sharedLoading: { departments: false, programs: false, instructors: false, courses: false, students: false },
 
           menu: '',
           section_names: ['All'],
@@ -530,6 +559,7 @@
           if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
           if (ds.includes('courses'))     base.coursesRaw = this.coursesRaw;
           if (ds.includes('departments')) base.departmentsRaw = this.departmentsRaw;
+          if (ds.includes('programs')) base.programsRaw = this.programsRaw;
 
 
           if (ds.length) base.sharedLoading = this.sharedLoading;
@@ -589,8 +619,31 @@
 
           if (ds.includes('departments')) {
             await this.loadDepartmentsRaw(account, year);
+          } else {
+            this.departmentsRaw = [];
           }
 
+          if (ds.includes('programs')) {
+            await this.loadProgramsRaw();
+          } else {
+            this.programsRaw = [];
+          }
+
+
+        },
+
+        async loadProgramsRaw() {
+          try {
+            this.sharedLoading.programs = true;
+
+            const raw = await window.ReportData.getProgramsRaw();
+            this.programsRaw = Array.isArray(raw) ? raw : [];
+          } catch (e) {
+            console.warn('Failed to load programs', e);
+            this.programsRaw = [];
+          } finally {
+            this.sharedLoading.programs = false;
+          }
         },
 
         async loadDepartmentsRaw() {
