@@ -1,5 +1,16 @@
 // reports/combined/report.js
 (async function () {
+  function httpGetJson(url) {
+    return $.ajax({
+      url,
+      method: "GET",
+      dataType: "json",
+      xhrFields: {
+        withCredentials: true, // 🔑 THIS is the key
+      },
+    });
+  }
+
 
   function _numStudents(c) {
     // treat any of these as “students”
@@ -160,6 +171,16 @@
         return depts;
       });
     }
+    async function getProgramsRaw() {
+      const key = `programsRaw::all`;
+      return cached(cache, key, async () => {
+        const url = `https://reports.bridgetools.dev/api/programs`;
+        let data = await bridgetools.req(url);
+        let programs = data.filter(p => (p?.students ?? []).length > 0);
+        return programs;
+      });
+    }
+
 
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
@@ -198,6 +219,7 @@
 
     window.ReportData = {
       getCanvasUser,
+      getProgramsRaw,
       getInstructorsRaw,
       getCoursesRaw,
       getDepartmentsRaw,
@@ -219,6 +241,7 @@
       };
     },
     methods: {
+
       async loadAccounts() {
         try {
           this.accountsLoading = true;
@@ -330,9 +353,7 @@
 
         this.loading = false;
 
-        // NEW: after initial load, fetch shared datasets only if needed
         await this.ensureSharedData();
-        await this.loadDepartmentsRaw();
       },
 
       data: function () {
@@ -366,6 +387,30 @@
               { value: 'occupations', label: 'Occupations' },
               { value: 'completion',  label: 'Completions' },
               { value: 'coe',         label: 'COE' },
+            ]
+          },
+          {
+            value: 'programs',
+            label: 'Programs',
+            component: 'reports-programs',
+            title: 'Programs Report',
+            datasets: ['programs'],
+            selectors: [],
+            subMenus: [
+              // { value: 'overview',    label: 'Overview' },
+              { value: 'completion',    label: 'Completion' },
+            ]
+          },
+          {
+            value: 'program',
+            label: 'Program',
+            component: 'reports-program',
+            title: 'Program Report',
+            datasets: ['programs'],
+            selectors: ['programs', 'campus'],
+            subMenus: [
+              // { value: 'overview',    label: 'Overview' },
+              { value: 'completion',    label: 'Completion' },
             ]
           },
           {
@@ -423,8 +468,13 @@
             reportType: 'instructor',
             subMenuByType: {},
             sort_dir: 1,
-            filters: { year: '2025', course_tags: [] }
+            filters: { year: '2025', course_tags: [], program: '', campus: ''}
           },
+
+          campuses: [
+            { key: 'L', name: 'Logan' },
+            { key: 'B', name: 'Brigham City' }
+          ],
 
           accounts: [{ name: 'My Courses', id: '' + 0 }],
           loading: false,
@@ -433,7 +483,8 @@
           instructorsRaw: [],
           coursesRaw: [],
           departmentsRaw: [],
-          sharedLoading: { departments: false, instructors: false, courses: false, students: false },
+          programsRaw: [],
+          sharedLoading: { departments: false, programs: false, instructors: false, courses: false, students: false },
 
           menu: '',
           section_names: ['All'],
@@ -517,6 +568,7 @@
           if (ds.includes('instructors')) base.instructorsRaw = this.instructorsRaw;
           if (ds.includes('courses'))     base.coursesRaw = this.coursesRaw;
           if (ds.includes('departments')) base.departmentsRaw = this.departmentsRaw;
+          if (ds.includes('programs')) base.programsRaw = this.programsRaw;
 
 
           if (ds.length) base.sharedLoading = this.sharedLoading;
@@ -537,9 +589,42 @@
             base.selectedCourseTags = this.settings?.filters?.course_tags || [];
           }
 
+          if (sel.includes('programs')) {
+            base.programOptions = this.programOptions;
+            base.selectedProgram = this.settings?.filters?.program || '';
+          }
+
+          if (sel.includes('campus')) {
+            base.campuses = this.campuses;
+            base.selectedCampus = this.settings?.filters?.campus || '';
+          }
+
+
 
           return base;
         },
+
+        programOptions() {
+          const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+          const year = Number(this.settings?.filters?.year);
+
+          // Optional: if you want the dropdown to only show programs for the selected year:
+          const filtered = Number.isFinite(year)
+            ? list.filter(p => Number(p?.academic_year) === year)
+            : list;
+
+          const map = new Map(); // key -> {key,name}
+          for (const p of filtered) {
+            const key = String(p?.program || '').trim();
+            if (!key) continue;
+            const name = String(p?.name || key).trim();
+            if (!map.has(key)) map.set(key, { key, name });
+          }
+
+          return Array.from(map.values()).sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true })
+          );
+        }
 
       },
  
@@ -551,6 +636,25 @@
       },
 
       methods: {
+      drillToProgram(payload) {
+        const program = String(payload?.program ?? '').trim();
+        const campus  = String(payload?.campus ?? '').trim();
+
+        // set filters
+        this.$set(this.settings.filters, 'program', program);
+        this.$set(this.settings.filters, 'campus', campus);
+
+        // switch report type
+        this.settings.reportType = 'program';
+
+        // optionally force submenu to completion for the program report
+        if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
+        this.$set(this.settings.subMenuByType, 'program', 'completion');
+
+        // persist + refresh data if needed
+        this.saveSettings(this.settings);
+        this.ensureSharedData();
+      },
         onReportChange() {
           this.saveSettings(this.settings);
           // ensure shared data needed for the new report is loaded
@@ -576,8 +680,31 @@
 
           if (ds.includes('departments')) {
             await this.loadDepartmentsRaw(account, year);
+          } else {
+            this.departmentsRaw = [];
           }
 
+          if (ds.includes('programs')) {
+            await this.loadProgramsRaw();
+          } else {
+            this.programsRaw = [];
+          }
+
+
+        },
+
+        async loadProgramsRaw() {
+          try {
+            this.sharedLoading.programs = true;
+
+            const raw = await window.ReportData.getProgramsRaw();
+            this.programsRaw = Array.isArray(raw) ? raw : [];
+          } catch (e) {
+            console.warn('Failed to load programs', e);
+            this.programsRaw = [];
+          } finally {
+            this.sharedLoading.programs = false;
+          }
         },
 
         async loadDepartmentsRaw() {
@@ -878,6 +1005,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
+    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
@@ -887,7 +1015,11 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-completion.js");
+    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-completion.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses.js");

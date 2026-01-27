@@ -102,7 +102,7 @@
           style="align-items:flex-start; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
         >
           <!-- Account -->
-          <div style="display:inline-block; min-width:200px;">
+          <div v-if="currentSelectors.includes('departments')" style="display:inline-block; min-width:200px;">
             <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Account</label>
             <select
               v-model="settings.account"
@@ -130,6 +130,45 @@
               >{{ year }}</option>
             </select>
           </div>
+
+          <div  v-if="currentSelectors.includes('campus')" style="display:inline-block; min-width:120px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Campus</label>
+            <select
+              v-model="settings.filters.campus"
+              aria-label="Select campus"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <!--build-->
+              <option
+                v-for="c in campuses"
+                :key="c.key"
+                :value="c.key"
+              >
+                {{ c.name }}
+              </option>
+            </select>
+          </div>
+         
+          <!-- Program -->
+          <div v-if="currentSelectors.includes('programs')" style="display:inline-block; min-width:260px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
+              Program
+            </label>
+            <select
+              v-model="settings.filters.program"
+              aria-label="Select program"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option value="">All</option>
+              <option v-for="p in programOptions" :key="p.key" :value="p.key">
+                {{ p.name }}
+              </option>
+            </select>
+          </div>
+            
+
 
           <!-- Instructor selector (only when enabled) -->
           <div v-if="currentSelectors.includes('instructor')" style="display:inline-block; min-width:220px;">
@@ -313,7 +352,10 @@
 
         <!-- Dynamic report body -->
         <keep-alive>
-          <component :is="currentReportMeta.component" v-bind="currentReportProps" />
+          <component 
+            :is="currentReportMeta.component" 
+            @drill-program="drillToProgram"
+            v-bind="currentReportProps" />
         </keep-alive>
       </div>
     </div>

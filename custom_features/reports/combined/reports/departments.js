@@ -8,6 +8,12 @@ Vue.component('reports-departments', {
         :tags="allSurveyTags"
       ></departments-overview>
 
+      <departments-completion
+        v-if="subMenu == 'completion'"
+        :year="year"
+        :departments="departmentsClean"
+      ></departments-completion>
+
       <departments-canvas
         v-if="subMenu == 'canvas'"
         :year="year"
