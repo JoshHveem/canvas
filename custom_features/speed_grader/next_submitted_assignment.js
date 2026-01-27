@@ -17,12 +17,30 @@ function showSuccessToast(message) {
 
 function createNextButton(student_id) {
   const btn = $(`
-    <button id="next-assignment-button"
-            class="Button Button--icon-action gradebookMoveToNext next"
-            type="button"
-            aria-label="Next Assignment">
-      <i class="icon-assignment next" aria-hidden="true">Next</i>
-    </button>
+<button
+  id="next-assignment-button"
+  aria-label="Next Assignment"
+  style="
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: white;
+  "
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 16 16"
+    width="16"
+    height="16"
+    aria-hidden="true"
+    fill="currentColor"
+  >
+    <path d="M16 1V15H9V13H14V3H9V1L16 1Z"/>
+    <path d="M6 4V7L0 7L0 9H6V12H7L11 8L7 4H6Z"/>
+  </svg>
+</button>
+
   `);
 
   // Click handler computes the next destination *at click time*
