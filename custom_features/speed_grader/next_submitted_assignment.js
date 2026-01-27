@@ -70,7 +70,7 @@ async function postLoad() {
   const student_id = Number(pieces[3]);
 
   // Container to place the button
-  const container = $('#gradebook_header .studentSelection');
+  const container = $('[data-testid="student-navigation-flex"]');
   if (container.length === 0) return;
 
   // Render button immediately (it will toast until we load submissions)
