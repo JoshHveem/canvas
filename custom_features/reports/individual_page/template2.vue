@@ -96,6 +96,12 @@
             :tree="tree"
           ></student-courses-report-2>
         </div>
+        <div v-show="settings.reportType === 'student-grades'">
+          <show-student-grades
+            v-if="user != undefined"
+            :user="user"
+          ></show-student-grades>
+        </div>
         <div v-show="settings.reportType === 'hs-grades'">
           <grades-between-dates-2
             v-if="enrollmentData != undefined"
@@ -107,11 +113,16 @@
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
         </div>
-        <div v-show="settings.reportType === 'student-grades'">
-          <show-student-grades
-            v-if="user != undefined"
+        <div v-show="settings.reportType === 'hs-grades-old'">
+          <grades-between-dates
+            v-if="enrollmentData != undefined"
             :user="user"
-          ></show-student-grades>
+            :enrollments="enrollmentData"
+            :user-id="userId"
+            :terms="user.hs_terms"
+            :colors="colors"
+            :IS-TEACHER="IS_TEACHER"
+          ></grades-between-dates>
         </div>
       </div>
     </div>

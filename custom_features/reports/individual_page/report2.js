@@ -336,6 +336,7 @@
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/showStudentGrades.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDates.js");
     await $.getScript("https://d3js.org/d3.v6.min.js");
     /*
     //libraries
