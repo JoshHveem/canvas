@@ -213,6 +213,121 @@
     return list.length;
   };
 
+  COMPLETION.minNeededToHitTarget = function minNeededToHitTarget(baseE, baseC, candidates, opts) {
+    const options = opts || {};
+    const target = Number.isFinite(Number(options.target)) ? Number(options.target) : 0.60;
+
+    const E = Number(baseE) || 0;
+    const C = Number(baseC) || 0;
+
+    if (!E) return 0;
+    if ((C / E) >= target) return 0;
+
+    const list = Array.isArray(candidates) ? candidates : [];
+    let add = 0;
+
+    for (let i = 0; i < list.length; i++) {
+      add += 1;
+      const denom = E + add;
+      const num = C + add;
+      if (denom > 0 && (num / denom) >= target) return add;
+    }
+
+    return list.length; // even everyone doesn't get you there -> "needed" is all
+  };
+
+  // ✅ bar selection rule you described
+  COMPLETION.chooseForBar = function chooseForBar(baseE, baseC, candidates, opts) {
+    const options = opts || {};
+    const target = Number.isFinite(Number(options.target)) ? Number(options.target) : 0.60;
+
+    const E = Number(baseE) || 0;
+    const C = Number(baseC) || 0;
+
+    const list = Array.isArray(candidates) ? candidates : [];
+    if (!E || !list.length) return [];
+
+    const current = (E > 0) ? (C / E) : null;
+
+    // If already >= target: show greens (on-track forecast) rather than "minimum"
+    // (change this if you’d prefer bar = 0 candidates when already compliant)
+    const greens = list.filter(x => COMPLETION.bucketFromChance(x?.prob) === "green");
+    const rateIfAllGreens =
+      (E + greens.length) ? ((C + greens.length) / (E + greens.length)) : null;
+
+    if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= target) {
+      // “If on-track gets you across threshold, show all green”
+      return greens;
+    }
+
+    // Otherwise, show minimum candidates (across buckets) until hit target,
+    // or all candidates if cannot hit.
+    const chosen = [];
+    let add = 0;
+
+    for (const x of list) {
+      chosen.push(x);
+      add += 1;
+      const denom = E + add;
+      const num = C + add;
+      if (denom > 0 && (num / denom) >= target) return chosen;
+    }
+
+    return chosen; // all candidates (still not enough)
+  };
+
+  // ---- computeStudents updated return payload ----
+  const _oldComputeStudents = COMPLETION.computeStudents;
+
+  COMPLETION.computeStudents = function computeStudents(students, opts) {
+    const options = opts || {};
+    const target = Number.isFinite(Number(options.target)) ? Number(options.target) : 0.60;
+
+    const { exiters, completers, nonCompleters } = COMPLETION.getExiterCounts(students);
+    const baseE = exiters.length;
+    const baseC = completers.length;
+
+    const currentRate = baseE ? (baseC / baseE) : null;
+
+    const candidates = COMPLETION.getCandidates(students, options);
+
+    const neededMin = COMPLETION.minNeededToHitTarget(baseE, baseC, candidates, { target });
+    const chosenMin = candidates.slice(0, neededMin);
+
+    const barChosen = COMPLETION.chooseForBar(baseE, baseC, candidates, { target });
+
+    const statusBucket =
+      (!baseE) ? "green" :
+      (Number.isFinite(currentRate) && currentRate >= target) ? "green" :
+      (chosenMin.length ? (COMPLETION.bucketFromChance(chosenMin[chosenMin.length - 1]?.prob) || "red") : "red");
+
+    return {
+      target,
+      baseE,
+      baseC,
+      currentRate,
+      exiters,
+      completers,
+      nonCompleters,
+      candidates,
+
+      // ✅ new: minimum needed for the Needed column / Status
+      neededMin,
+      chosenMin,
+
+      // ✅ new: what the BAR should render (selection only; colors still by bucket)
+      barChosen,
+
+      statusBucket
+    };
+  };
+
+  // convenience wrapper stays the same
+  COMPLETION.computeProgram = function computeProgram(program, opts) {
+    const students = COMPLETION.getStudentsFromProgram(program);
+    return COMPLETION.computeStudents(students, opts);
+  };
+
 
   // export
   w.COMPLETION = COMPLETION;
