@@ -611,6 +611,7 @@
           }
         }
         this.selectedTerm = term;
+        console.log(term);
         this.submissionDatesStart = this.dateToHTMLDate(term.startDate);
         this.submissionDatesEnd = this.dateToHTMLDate(term.endDate);
         this.estimatedHoursEnrolled = term.hours;
