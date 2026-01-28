@@ -1,11 +1,6 @@
 Vue.component('show-student-grades', {
   template: ` 
     <div>
-      <div style="margin-bottom: 1rem;">
-        <span style="font-size: 2rem;">{{user.name}} ({{user.sis_id}})</span>
-        <span style="float: right;">Date Generated: <i>{{dateToString(new Date())}}</i></span>
-      </div>
-
       <!--CONTRACTED HOURS-->
       <div 
         style="margin-block-end: 2rem; display: grid; grid-template-columns: 18rem 7rem 7rem 7rem; gap: 1rem;" 
