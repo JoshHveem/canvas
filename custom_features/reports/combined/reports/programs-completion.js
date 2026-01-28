@@ -53,7 +53,7 @@ Vue.component('programs-completion', {
           const r = this.currentRateForProgram(p);
           return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : '—';
         },
-        null,
+        p => this.completionPillStyleForProgram(p),
         p => this.currentRateForProgram(p) ?? -1
       ),
 
@@ -112,6 +112,16 @@ Vue.component('programs-completion', {
 
     bucketColor(b) {
       return window.COMPLETION.bucketColor(b, this.colors);
+    },
+
+    completionPillStyleForProgram(p) {
+      const r = this.currentRateForProgram(p);
+      if (!Number.isFinite(r)) return { backgroundColor: 'transparent', color: this.colors.black };
+
+      // thresholds: <60 red, <70 yellow, >=70 green
+      if (r < 0.60) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (r < 0.70) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.green, color: this.colors.white };
     },
 
     statusSortValueForProgram(p) {
