@@ -83,9 +83,12 @@ Vue.component('show-student-grades', {
 
   watch: {
     // Watch specifically for when canvas_id appears/changes
-    'user.canvas_id': {
+    'user': {
       immediate: true,
-      handler(newCanvasId, oldCanvasId) {
+      handler(newUser, oldUser) {
+        console.log(newUser);
+        let newCanvasId = newUser.canvas_id;
+        let oldCanvasId = oldUser.canvas_id;
         if (!newCanvasId) {
           // No canvas_id yet; clear state and wait.
           this.enrollments = [];
