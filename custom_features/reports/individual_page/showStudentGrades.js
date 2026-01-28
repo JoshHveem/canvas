@@ -1,7 +1,6 @@
 Vue.component('show-student-grades', {
   template: ` 
     <div>
-      <!--CONTRACTED HOURS-->
       <div 
         style="margin-block-end: 2rem; display: grid; grid-template-columns: 18rem 7rem 7rem 7rem; gap: 1rem;" 
       >
@@ -72,8 +71,6 @@ Vue.component('show-student-grades', {
   },
 
   mounted() {
-    // If canvas_id already exists at mount, watcher (immediate) will fetch right away.
-    console.log("Mounted user:", this.user);
   },
 
   watch: {
@@ -81,7 +78,6 @@ Vue.component('show-student-grades', {
     'user': {
       immediate: true,
       handler(newUser, oldUser) {
-        console.log(newUser);
         let newCanvasId = newUser?.canvas_id;
         let oldCanvasId = oldUser?.canvas_id;
         if (!newCanvasId) {
@@ -106,7 +102,6 @@ Vue.component('show-student-grades', {
   methods: {
     async fetchEnrollments() {
       const canvasId = this.user && this.user.canvas_id;
-      console.log(canvasId);
       if (!canvasId) return;
 
       const myToken = ++this._fetchToken;
@@ -117,11 +112,9 @@ Vue.component('show-student-grades', {
         const courses = await canvasGet(
           `/api/v1/users/${canvasId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term`
         );
-        console.log(courses);
 
         // If a newer request started, ignore this result
         if (myToken < this._fetchToken) return;
-        console.log("MADE IT")
 
         let enrollments = [];
         (courses || []).forEach(course => {
