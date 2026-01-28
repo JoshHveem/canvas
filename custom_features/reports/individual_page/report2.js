@@ -64,7 +64,6 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
-          console.log(this.user);
         } catch(err) {
           console.error(err);
           this.user = {};

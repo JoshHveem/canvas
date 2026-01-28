@@ -126,7 +126,6 @@
         });
       }
     }
-    console.log(out);
     return out;
   }
 
@@ -238,15 +237,12 @@
           )}`;
           const payload = await this.U.httpGetJson(url);
           const autos = extractAutomations(payload);
-          console.log(autos);
 
           // ✅ ONLY processing here: attach _metrics
           const processed = autos.map(RA.metrics.computeAutomationMetrics);
 
           this.automations = processed;
-          console.log(this.automations);
           this.runs = flattenRuns(processed);
-          console.log(this.runs);
         } catch (e) {
           this.error = String(e?.message || e);
           this.automations = [];

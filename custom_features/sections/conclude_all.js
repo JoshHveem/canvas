@@ -1,4 +1,3 @@
-console.log("CONCLUDE ALL")
 $(document).ready(function() {
   // Add the "Conclude All Students" button to aside#right-side
   $('#right-side').append('<a href="#" id="conclude-all-btn" class="btn button-sidebar-wide"><i class="icon-user"></i> Conclude All Students</a>');
@@ -47,8 +46,6 @@ async function concludeStudent(courseId, enrollmentId) {
         task: 'conclude'
       }
     });
-    
-    console.log(`Concluded enrollment with ID: ${enrollmentId} from course: ${courseId}`);
 }
 
 // Function to update the button text with the current progress

@@ -148,7 +148,6 @@
             this.courseData = data;
           });
           let courseCode = this.courseData.course_code;
-          console.log(courseCode);
           await $.get("/api/v1/courses/" + this.courseId + "/assignment_groups?include[]=assignments&per_page=100").done((data) => {
             for (let i = 0; i < data.length; i++) {
               let group = data[i];
@@ -185,7 +184,6 @@
               }
             }
           }
-          console.log(sections);
         },
         data: function () {
           return {
@@ -401,13 +399,10 @@
             if (types.includes("online_upload")) {
               let url = "/api/v1/courses/" + app.courseId + "/assignments/" + assignment.id + "/submissions/" + submission.user.id;
               let assignmentsData = (await canvasGet(url))[0];
-              console.log(assignmentsData);
               for (let i = 0; i < assignmentsData.attachments.length; i++) {
                 let attachment = assignmentsData.attachments[i];
-                console.log(attachment);
                 // the remove has to happen in the passed function otherwise it removes before the iframe has had a chance to download the submission.
                 let iframe = await app.createIframe(attachment.url, (iframe) => { iframe.remove();}, {});
-                console.log(iframe); 
               }
             }
             //check if nothing has been gotten

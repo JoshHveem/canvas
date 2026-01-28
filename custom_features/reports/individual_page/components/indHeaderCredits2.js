@@ -154,7 +154,6 @@ Vue.component('ind-header-credits-2', {
     user: {
       handler (newVal, oldVal) {
         if (!newVal) return;
-        console.log(newVal);
       },
       deep: true,     // needed if the parent mutates properties inside `tree`
       immediate: true // optional: also run once on component creation

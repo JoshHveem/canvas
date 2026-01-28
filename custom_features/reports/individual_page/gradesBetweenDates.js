@@ -611,7 +611,6 @@
           }
         }
         this.selectedTerm = term;
-        console.log(term);
         this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
         this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
         this.estimatedHoursEnrolled = term.hours;
@@ -1049,7 +1048,7 @@
             course.points = "N/A";
           }
         } catch (err) {
-          console.log(err);
+          console.error(err);
         }
       },
 

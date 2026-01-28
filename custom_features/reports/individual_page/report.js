@@ -6,7 +6,6 @@
 */
 (async function () {
   //Confirm with Instructional Team before going live
-  console.log(CURRENT_DEPARTMENT_ID);
   if (true) {
       if (/[0-9]+\/grades/.test(window.location.pathname)) {
         let loadedWarning = false;
@@ -123,10 +122,9 @@
 
         try {
           let user = await app.loadUser(this.userId);
-          console.log(user);
           this.user = user;
         } catch(err) {
-          console.log(err);
+          console.error(err);
           app.user = {};
         }
         app.loadingProgress += 10;

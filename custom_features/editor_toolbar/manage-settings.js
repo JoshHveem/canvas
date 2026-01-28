@@ -77,7 +77,7 @@
           settings = await $.get(`/api/v1/users/self/custom_data/toolbarsettings?ns=com.btech`);
           settings = settings.data;
         } catch (err) {
-          console.log(err);
+          console.error(err);
         }
         settings = await this.parseCanvasData(settings);
         await $.put(`/api/v1/users/self/custom_data/toolbarsettings?ns=com.btech`, {

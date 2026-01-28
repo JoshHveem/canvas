@@ -41,7 +41,6 @@
         let body = editor.getBody();
         this.initFormattedContent();
         let wrapper = $($(body).find('.btech-formatted-content-wrapper')[0]);
-        console.log(this.color);
         wrapper.prepend(`
           <div
             class="

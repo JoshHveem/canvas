@@ -63,7 +63,7 @@ transferNavigation.click(async function () {
                       hidden: tab.hidden ?? false
                   })
                 } catch (err) {
-                  console.log(err);
+                  console.error(err);
                 }
             }
         }

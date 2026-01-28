@@ -1,16 +1,13 @@
 (async function() {
-  console.log("PACING!")
   var observeDOM = (function(){
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
     return function( obj, callback ){
-      console.log(obj);
       if( !obj || obj.nodeType !== 1 ) return; 
 
       if( MutationObserver ){
         // define a new observer
         var mutationObserver = new MutationObserver(callback)
-        console.log("MUTATE?")
 
         // have the observer observe for changes in children
         mutationObserver.observe( obj, { attributes :true , childList: true, subtree: true})
@@ -19,7 +16,6 @@
       
       // browser support fallback
       else if( window.addEventListener ){
-        console.log("MUTATE???")
         obj.addEventListener('DOMNodeInserted', callback, false)
         obj.addEventListener('DOMNodeRemoved', callback, false)
       }
@@ -71,11 +67,9 @@
     let enrollments = await canvasGet(`/api/v1/courses/${ENV.COURSE_ID}/enrollments`, {state: ['active'], type: ['StudentEnrollment']});
     for (let e in enrollments) {
       let enrollment = enrollments[e];
-        if (users?.[enrollment.user.name] == undefined) {
+      if (users?.[enrollment.user.name] == undefined) {
         users[enrollment.user.name] = enrollment;
-        } else {
-            console.log("DUP");
-        }
+      } 
     }
   }
   await updateUsers();

@@ -204,7 +204,6 @@
         if (contentReview?.type == 'Discussions') {
           ignoreItem(contentReview.course_id, 'discussions', contentReview.discussion_id, !contentReview.ignore);
         }
-        console.log(contentReview);
       }},
       // { id: 'clearReview', text: 'Clear Review', func: () => {}}
     ], 'absolute');
@@ -222,7 +221,6 @@
 
     for (let m in courseReviewData.modules) {
       let moduleReview = courseReviewData.modules[m];
-      console.log(moduleReview);
       let $scoreEl = $(`#${moduleReview.module_id} span.ig-btech-evaluation-score`);
       initContentIcon($scoreEl, $vueApp, $modal, 'Module', moduleReview, criteria.Modules);
     }
@@ -243,7 +241,6 @@
 
     for (let d in courseReviewData.discussions) {
       let discussion = courseReviewData.discussions[d];
-      console.log(discussion);
       discussion.name = $(`.DiscussionTopic_${discussion.discussion_id} span.item_name a.title`).text().trim();
       let $scoreEl = $(`.DiscussionTopic_${discussion.discussion_id} span.ig-btech-evaluation-score`);
       initContentIcon($scoreEl, $vueApp, $modal, 'Discussion', discussion, criteria.Discussions);

@@ -1,7 +1,6 @@
 /*
 */
 (async function () {
-  console.log("APPEND");
   function loadCSS(url) {
     var style = document.createElement('link'),
       head = document.head || document.getElementsByTagName('head')[0];
@@ -140,7 +139,7 @@
         let user = await this.loadUser(this.userId);
         this.user = user;
       } catch(err) {
-        console.log("FAILED TO LOAD USER");
+        console.error("FAILED TO LOAD USER");
       }
       let today = new Date();
       let year = today.getFullYear();
