@@ -122,6 +122,7 @@ Vue.component('show-student-grades', {
         const courses = await canvasGet(
           `/api/v1/users/${canvasId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term`
         );
+        console.log(courses);
 
         // If a newer request started, ignore this result
         if (myToken !== this._fetchToken) return;
