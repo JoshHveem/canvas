@@ -111,6 +111,7 @@ Vue.component('show-student-grades', {
   methods: {
     async fetchEnrollments() {
       const canvasId = this.user && this.user.canvas_id;
+      console.log(canvasId);
       if (!canvasId) return;
 
       const myToken = ++this._fetchToken;
