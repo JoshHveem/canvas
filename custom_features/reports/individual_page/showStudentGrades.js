@@ -132,7 +132,7 @@ Vue.component('show-student-grades', {
         this.error = e;
         this.enrollments = [];
       } finally {
-        if (myToken !== this._fetchToken) return;
+        if (myToken < this._fetchToken) return;
         this.loading = false;
       }
     },
