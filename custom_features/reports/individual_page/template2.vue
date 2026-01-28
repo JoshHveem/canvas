@@ -96,7 +96,7 @@
             :tree="tree"
           ></student-courses-report-2>
         </div>
-        <div v-show="settings.reportType === 'student-grades'">
+        <div v-show="settings.reportType === 'hs-grades'">
           <grades-between-dates-2
             v-if="enrollmentData != undefined"
             :user="user"
