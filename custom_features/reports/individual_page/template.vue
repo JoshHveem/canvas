@@ -13,7 +13,7 @@
         </ul>
       </div>
       <div class='btech-modal-content-inner'>
-          <div><p><b>WARNING:</b> This report is deprecated and data is not updating. This report will remain available through February and will then be removed. Please refer to Student Report 2. If you see issues with Student Report 2, email isd@btech.edu.</p></div>
+          <div><p><span class="btech-pill-text" style="background-color: #d22232; color: #FFFFFF;"><b>WARNING:</b></span> This report is deprecated and data is not updating. This report will remain available through February and will then be removed. Please refer to Student Report 2. If you see issues with Student Report 2, email isd@btech.edu.</p></div>
           <div v-if="(accessDenied && menu!=='report')">
             <p>
               <b>ERROR:</b> You are not authorized to see all of this student's courses. This often occurs when the
