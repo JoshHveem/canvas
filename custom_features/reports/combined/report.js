@@ -999,6 +999,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
 
     // Reports
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/utils/completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-surveys.js");

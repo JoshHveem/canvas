@@ -25,8 +25,6 @@ Vue.component('programs-completion', {
   },
 
   created() {
-    console.log(this.programs);
-
     this.table.setColumns([
       new window.ReportColumn(
         'Status', 'Worst-case color of the last student needed to get above 60%.', '3.5rem', false, 'string',
@@ -52,12 +50,12 @@ Vue.component('programs-completion', {
       new window.ReportColumn(
         'Completion', 'Current completion rate (computed from exited students).', '6rem', false, 'string',
         p => {
-            const r = this.currentRateForProgram(p);
-            return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : '—';
+          const r = this.currentRateForProgram(p);
+          return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : '—';
         },
         null,
         p => this.currentRateForProgram(p) ?? -1
-        ),
+      ),
 
       new window.ReportColumn(
         'Needed', 'How many additional projected completers are required to reach 60%.', '5.5rem', false, 'number',
@@ -73,7 +71,7 @@ Vue.component('programs-completion', {
       ),
 
       new window.ReportColumn(
-        'Completion Bar', 'Exiters + minimal projected completers needed to clear 60%.', '24rem', false, 'string',
+        'Completion Bar', 'Exiters + projected completers chosen to clear 60%.', '24rem', false, 'string',
         p => this.completionBarHtmlForProgram(p),
         null,
         p => this.statusSortValueForProgram(p)
@@ -94,105 +92,26 @@ Vue.component('programs-completion', {
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
-    // ---- helpers (students) ----
-    programStudents(p) {
-      // No fallback sample data anymore; real data only.
-      const s = p?.completion?.students ?? p?.students ?? [];
-      return Array.isArray(s) ? s : [];
-    },
-
-    safeProb(v) {
-      const n = Number(v);
-      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : NaN;
-    },
-
-    bucketFromChance(prob) {
-      const n = this.safeProb(prob);
-      if (!Number.isFinite(n)) return null;
-      if (n >= 0.80) return 'green';
-      if (n >= 0.50) return 'yellow';
-      if (n >= 0.20) return 'orange';
-      return 'red';
-    },
-
-    bucketColor(b) {
-      if (b === 'green') return this.colors.green;
-      if (b === 'yellow') return this.colors.yellow;
-      if (b === 'orange') return this.colors.orange;
-      if (b === 'red') return this.colors.red;
-      return this.colors.gray;
-    },
-
-    // Candidates are actives with a usable probability score (NEW schema)
-    projectionCandidatesForProgram(p) {
-      const students = this.programStudents(p);
-
-      return students
-        .filter(s => !s?.is_exited) // active only (new schema)
-        .map(s => {
-          const prob = this.safeProb(s?.chance_to_complete);
-          return { s, prob };
-        })
-        .filter(x => Number.isFinite(x.prob))
-        .sort((a, b) => b.prob - a.prob); // highest chance first
-    },
-
-    // KPI base counts come from explicit flags (NEW schema)
-    exiterCountsForProgram(p) {
-      const students = this.programStudents(p);
-      const exiters = students.filter(s => !!s?.is_exited);
-      const completers = exiters.filter(s => !!s?.is_completer);
-      const nonCompleters = exiters.filter(s => !s?.is_completer);
-      return { exiters, completers, nonCompleters };
+    // ---- COMPLETION ----
+    computeForProgram(p) {
+      return window.COMPLETION.computeProgram(p, { target: 0.60 });
     },
 
     currentRateForProgram(p) {
-    // Use the SAME base used by Needed/Status: exited students only.
-    const { exiters, completers } = this.exiterCountsForProgram(p);
-    const denom = exiters.length;
-    return denom ? (completers.length / denom) : null;
+      const info = this.computeForProgram(p);
+      return Number.isFinite(info?.currentRate) ? info.currentRate : null;
     },
 
-
-    // ---- core business: how many needed ----
     neededCountForProgram(p) {
-    const { exiters, completers } = this.exiterCountsForProgram(p);
-    const baseE = exiters.length;
-    const baseC = completers.length;
-
-    // If there are no exiters, KPI undefined; treat as 0 needed.
-    if (!baseE) return 0;
-
-    // ✅ IMPORTANT: if already meeting 60%, need 0.
-    const current = baseC / baseE;
-    if (current >= 0.60) return 0;
-
-    const candidates = this.projectionCandidatesForProgram(p);
-    if (!candidates.length) return 0;
-
-    // Minimum add such that (baseC + add) / (baseE + add) >= 0.60
-    let add = 0;
-    for (let i = 0; i < candidates.length; i++) {
-        add += 1;
-        const denom = baseE + add;
-        const num = baseC + add;
-        if (denom > 0 && (num / denom) >= 0.60) return add;
-    }
-
-    return candidates.length;
+      return this.computeForProgram(p).needed ?? 0;
     },
 
     statusBucketForProgram(p) {
-      const needed = this.neededCountForProgram(p);
-      if (!Number.isFinite(needed) || needed <= 0) return 'green';
+      return this.computeForProgram(p).statusBucket ?? 'red';
+    },
 
-      const candidates = this.projectionCandidatesForProgram(p);
-      if (!candidates.length) return 'red';
-
-      // bucket of the LAST student you need to include
-      const last = candidates[Math.min(needed, candidates.length) - 1];
-      const b = this.bucketFromChance(last?.prob);
-      return b || 'red';
+    bucketColor(b) {
+      return window.COMPLETION.bucketColor(b, this.colors);
     },
 
     statusSortValueForProgram(p) {
@@ -223,20 +142,19 @@ Vue.component('programs-completion', {
       `;
     },
 
-    // ---- bar rendering per program ----
     completionSegmentsForProgram(p) {
       const segs = [];
-      const { completers, nonCompleters, exiters } = this.exiterCountsForProgram(p);
+      const info = this.computeForProgram(p);
+
+      const { completers = [], nonCompleters = [], chosen = [] } = info;
 
       const studentLabel = (s) => {
         if (this.anonymous) return 'STUDENT';
-        // new schema may not include name
         return s?.name ?? (s?.sis_user_id != null ? `SIS ${s.sis_user_id}` : 'Student');
       };
 
       const keyFor = (prefix, s, i) => `${prefix}-${s?.sis_user_id ?? s?.id ?? i}`;
 
-      // Completer exiters: faded green
       for (let i = 0; i < completers.length; i++) {
         const s = completers[i];
         segs.push({
@@ -247,13 +165,9 @@ Vue.component('programs-completion', {
         });
       }
 
-      const candidates = this.projectionCandidatesForProgram(p);
-      const needed = this.neededCountForProgram(p);
-
-      // chosen projected completers (needed count), colored by chance bucket
-      for (let i = 0; i < Math.min(needed, candidates.length); i++) {
-        const { s, prob } = candidates[i];
-        const b = this.bucketFromChance(prob);
+      for (let i = 0; i < chosen.length; i++) {
+        const { s, prob } = chosen[i];
+        const b = window.COMPLETION.bucketFromChance(prob);
         segs.push({
           key: keyFor('proj', s, i),
           color: this.bucketColor(b),
@@ -267,7 +181,6 @@ Vue.component('programs-completion', {
         });
       }
 
-      // Non-completer exiters LAST: gray
       for (let i = 0; i < nonCompleters.length; i++) {
         const s = nonCompleters[i];
         segs.push({
@@ -319,15 +232,14 @@ Vue.component('programs-completion', {
       `;
     },
 
-
     emitDrill(p) {
-        this.$emit('drill-program', {
+      this.$emit('drill-program', {
         program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
         campus: String(p?.campus ?? '').trim(),
-        // optionally pass full object too
         row: p
-        });
+      });
     },
+
     escapeHtml(str) {
       return String(str ?? '')
         .replaceAll('&', '&amp;')
@@ -335,15 +247,7 @@ Vue.component('programs-completion', {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
-    },
-    onRowClick(e, program) {
-    const el = e?.target?.closest?.('[data-action="drill-program"]');
-    if (!el) return;
-
-    // Use the actual row object (best), not the dataset strings (but either works)
-    this.emitDrill(program);
-    },
-
+    }
   },
 
   template: `
@@ -360,7 +264,6 @@ Vue.component('programs-completion', {
     </div>
 
     <div v-else>
-      <!-- Column headers -->
       <div
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
         :style="{ 'grid-template-columns': getColumnsWidthsString() }"
@@ -386,7 +289,6 @@ Vue.component('programs-completion', {
         </div>
       </div>
 
-      <!-- Rows -->
       <div
         v-for="(program, i) in visibleRows"
         :key="program.program_id || program.programId || program.id || program.account_id || i"
