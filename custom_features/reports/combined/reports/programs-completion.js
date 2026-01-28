@@ -103,7 +103,7 @@ Vue.component('programs-completion', {
     },
 
     neededCountForProgram(p) {
-      return this.computeForProgram(p).needed ?? 0;
+      return this.computeForProgram(p).neededMin ?? 0;
     },
 
     statusBucketForProgram(p) {

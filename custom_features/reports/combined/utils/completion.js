@@ -154,14 +154,20 @@
     const currentRate = baseE ? (baseC / baseE) : null;
 
     const candidates = COMPLETION.getCandidates(students, options);
-    const chosen = COMPLETION.chooseToHitTarget(baseE, baseC, candidates, { target });
 
-    const needed = chosen.length;
+    // ✅ forecast for the bar (your “on track” definition)
+    const predicted = candidates.filter(x => COMPLETION.bucketFromChance(x?.prob) === "green");
 
+    // ✅ true minimum needed to hit target
+    const neededMin = COMPLETION.minNeededToHitTarget(baseE, baseC, candidates, { target });
+
+    // status should still reflect the *minimum-needed last student*, not the forecast
+    const chosenMin = candidates.slice(0, neededMin);
     const statusBucket =
       (!baseE) ? "green" :
       (Number.isFinite(currentRate) && currentRate >= target) ? "green" :
-      COMPLETION.statusBucketFromChosen(chosen);
+      (neededMin <= 0) ? "green" :
+      (COMPLETION.bucketFromChance(chosenMin[chosenMin.length - 1]?.prob) || "red");
 
     return {
       target,
@@ -172,9 +178,10 @@
       completers,
       nonCompleters,
       candidates,
-      chosen,
-      needed,
-      statusBucket,
+
+      predicted,   // bar uses this
+      neededMin,   // Needed column uses this
+      statusBucket // status uses minimum-needed last student
     };
   };
 
@@ -183,6 +190,29 @@
     const students = COMPLETION.getStudentsFromProgram(program);
     return COMPLETION.computeStudents(students, opts);
   };
+
+  COMPLETION.minNeededToHitTarget = function minNeededToHitTarget(baseE, baseC, candidates, opts) {
+    const options = opts || {};
+    const target = Number.isFinite(Number(options.target)) ? Number(options.target) : 0.60;
+
+    const E = Number(baseE) || 0;
+    const C = Number(baseC) || 0;
+
+    if (!E) return 0;
+    if ((C / E) >= target) return 0;
+
+    const list = Array.isArray(candidates) ? candidates : [];
+    let add = 0;
+
+    for (let i = 0; i < list.length; i++) {
+      add += 1;
+      const denom = E + add;
+      const num = C + add;
+      if (denom > 0 && (num / denom) >= target) return add;
+    }
+    return list.length;
+  };
+
 
   // export
   w.COMPLETION = COMPLETION;
