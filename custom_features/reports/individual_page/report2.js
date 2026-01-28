@@ -64,6 +64,7 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
+          console.log(this.user);
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -146,7 +147,6 @@
 
           // If you eventually process user-course info based on tree:
           this.user = this.updateUserCourseInfo(this.user, tree);
-          console.log(this.user);
         },
 
         // you can keep your existing watchers here (if any)
