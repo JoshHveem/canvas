@@ -288,6 +288,11 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript(SOURCE_URL + "/course_data/course_hours.js");
     //GENERAL FEATURES
     if (!IS_TEACHER) {
+      feature("reports/individual_page/report2", [
+        /^\/$/,
+        /^\/courses\/[0-9]+\/grades$/,
+        /^\/courses\/[0-9]+\/grades\/[0-9]+$/
+      ]);
       feature("reports/individual_page/report", [
         /^\/$/,
         /^\/courses\/[0-9]+\/grades$/,
