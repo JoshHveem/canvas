@@ -71,6 +71,7 @@ function createNextButton(student_id) {
 }
 
 function ensureNextButton(container, student_id, submittedIds) {
+  console.log('Ensuring Next Assignment button exists');
   let btn = $('#next-assignment-button');
   if (btn.length === 0) {
     btn = createNextButton(student_id).appendTo(container);
