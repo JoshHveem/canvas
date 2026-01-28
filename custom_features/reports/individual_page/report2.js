@@ -81,6 +81,7 @@
             { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
             { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Course Grades' },
             { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
+            { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
           currentDegreeId: null,
           enrollmentData:  undefined,
