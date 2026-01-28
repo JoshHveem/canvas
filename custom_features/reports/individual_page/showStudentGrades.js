@@ -126,6 +126,7 @@ Vue.component('show-student-grades', {
 
         // If a newer request started, ignore this result
         if (myToken !== this._fetchToken) return;
+        console.log("MADE IT")
 
         let enrollments = [];
         (courses || []).forEach(course => {
