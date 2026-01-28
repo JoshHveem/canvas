@@ -27,7 +27,7 @@
           <div class='btech-report-submission-dates'>
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
-              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.startDate) + " to " + dateToHTMLDate(term.endDate)}} ({{term.hours}} hrs)</option>
+              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} ({{term.hours}} hrs)</option>
             </select>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change='getIncludedAssignmentsBetweenDates()'>
@@ -612,11 +612,11 @@
         }
         this.selectedTerm = term;
         console.log(term);
-        this.submissionDatesStart = this.dateToHTMLDate(term.startDate);
-        this.submissionDatesEnd = this.dateToHTMLDate(term.endDate);
+        this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
+        this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
         this.estimatedHoursEnrolled = term.hours;
         this.getIncludedAssignmentsBetweenDates();
-        this.drawSubmissionsGraph(new Date(term.startDate), new Date(term.endDate));
+        this.drawSubmissionsGraph(new Date(term.entry_date), new Date(term.exit_date));
       },
       sumProgressBetweenDates() {
         let sum = 0;
