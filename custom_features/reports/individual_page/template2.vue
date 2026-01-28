@@ -107,6 +107,11 @@
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
         </div>
+        <div v-show="settings.reportType === 'student-grades'">
+          <show-student-grades
+            :user="user"
+          ></show-student-grades>
+        </div>
       </div>
     </div>
   </div>

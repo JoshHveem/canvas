@@ -78,7 +78,8 @@
           },
           reportTypes: [
             { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
-            { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Grades Between Dates' },
+            { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Course Grades' },
+            { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
           ],
           currentDegreeId: null,
           enrollmentData:  undefined,
@@ -333,6 +334,7 @@
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits2.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/showStudentGrades.js");
     await $.getScript("https://d3js.org/d3.v6.min.js");
     /*
     //libraries

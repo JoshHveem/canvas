@@ -26,20 +26,6 @@ Vue.component('show-student-grades', {
     </div>
   `,
   props: {
-    manualHoursPerc: {
-      type: Boolean,
-      default: false
-    },
-    colors: {
-      type: Object,
-      default: () => ({
-        type: 'someType'
-      })
-    },
-    scroll: {
-      type: Boolean,
-      default: false
-    },
     settings: {
       type: Object,
       default: () => ({})
@@ -47,12 +33,6 @@ Vue.component('show-student-grades', {
     user: {
       type: Object,
       default: () => ({})
-    },
-    studentTree: {
-      type: Object,
-      default: () => ({
-        type: 'someType'
-      })
     }
   },
   computed: {},
