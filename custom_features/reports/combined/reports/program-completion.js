@@ -1,4 +1,4 @@
-// program-completion.js (condensed, uses window.COMPLETION)
+// program-completion.js (slim, uses window.COMPLETION)
 Vue.component('reports-program-completion', {
   props: {
     year: { type: [Number, String], required: true },
@@ -8,11 +8,7 @@ Vue.component('reports-program-completion', {
   },
 
   data() {
-    const colors = (window.bridgetools?.colors) || {
-      red: '#b20b0f', orange: '#f59e0b', yellow: '#eab308',
-      green: '#16a34a', gray: '#e5e7eb', black: '#111827', white: '#fff'
-    };
-
+    const colors = window.COMPLETION.getColors();
     const makeTable = (sort_column, sort_dir = 1) =>
       new window.ReportTable({ rows: [], columns: [], sort_column, sort_dir, colors });
 
@@ -41,32 +37,22 @@ Vue.component('reports-program-completion', {
   },
 
   computed: {
-    studentsClean() {
-      return Array.isArray(this.students) ? this.students : [];
-    },
+    studentsClean() { return Array.isArray(this.students) ? this.students : []; },
+    activeStudents() { return this.studentsClean.filter(s => !s?.is_exited); },
+    finishedStudents() { return this.studentsClean.filter(s => !!s?.is_exited); },
 
-    activeStudents() {
-      return this.studentsClean.filter(s => !s?.is_exited);
-    },
-
-    finishedStudents() {
-      return this.studentsClean.filter(s => !!s?.is_exited);
-    },
-
-    // What-if counts (drops treated as non-completer exiters)
-    whatIfExitersTotal() {
-      const info = window.COMPLETION.computeStudents(this.studentsClean, { target: 0.60 });
-      return info.baseE + Math.max(0, Number(this.whatIfDrops) || 0);
-    },
-
-    whatIfCompletersTotal() {
-      const info = window.COMPLETION.computeStudents(this.studentsClean, { target: 0.60 });
-      return info.baseC;
+    // one compute, with your tie-breakers
+    info() {
+      return window.COMPLETION.computeStudents(this.studentsClean, {
+        target: 0.60,
+        projectedEndDateFn: this.projectedEndDate,
+        safeNameFn: this.safeName
+      });
     },
 
     currentCompletionRate() {
-      const info = window.COMPLETION.computeStudents(this.studentsClean, { target: 0.60 });
-      return Number.isFinite(info.currentRate) ? info.currentRate : null;
+      const r = this.info?.currentRate;
+      return Number.isFinite(r) ? r : null;
     },
 
     pctNowText() {
@@ -74,10 +60,14 @@ Vue.component('reports-program-completion', {
       return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
     },
 
+    // what-if base counts
+    whatIfE() { return (this.info?.baseE || 0) + Math.max(0, Number(this.whatIfDrops) || 0); },
+    whatIfC() { return (this.info?.baseC || 0); },
+
     whatIfCompletionRate() {
-      const denom = this.whatIfExitersTotal;
+      const denom = this.whatIfE;
       if (!denom) return null;
-      return this.whatIfCompletersTotal / denom;
+      return this.whatIfC / denom;
     },
 
     whatIfPctText() {
@@ -85,23 +75,16 @@ Vue.component('reports-program-completion', {
       return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : 'n/a';
     },
 
-    // Candidates (active w/ prob), sorted using your single-program tie-breakers
-    projectionCandidates() {
-      return window.COMPLETION.getCandidates(this.studentsClean, {
-        projectedEndDateFn: this.projectedEndDate,
-        safeNameFn: this.safeName
-      });
-    },
-
-    // Needed uses COMPLETION chooser but with what-if baseE/baseC
+    // minimum-needed divider (what-if)
     neededActiveCountFor60() {
-      const baseE = this.whatIfExitersTotal;
-      const baseC = this.whatIfCompletersTotal;
-      const chosen = window.COMPLETION.chooseToHitTarget(baseE, baseC, this.projectionCandidates, { target: 0.60 });
-      return chosen.length;
+      return this.minNeeded(this.whatIfE, this.whatIfC, this.info?.candidates, 0.60);
     },
 
-    // ACTIVE rows: projected end date then name
+    // bar selection (what-if)
+    barChosen() {
+      return this.chooseForBar(this.whatIfE, this.whatIfC, this.info?.candidates, 0.60);
+    },
+
     visibleActiveRows() {
       const rows = this.activeStudents.slice().sort((a, b) => {
         const da = this.projectedEndDate(a)?.getTime() ?? Infinity;
@@ -113,7 +96,6 @@ Vue.component('reports-program-completion', {
       return this.tableActive.getSortedRows();
     },
 
-    // FINISHED rows: completers first, then newest end date
     visibleFinishedRows() {
       const rows = this.finishedStudents.slice().sort((a, b) => {
         const wa = this.finishedBucketWeight(a);
@@ -130,18 +112,16 @@ Vue.component('reports-program-completion', {
       return this.tableFinished.getSortedRows();
     },
 
-    // Bar segments: exiters completers (faded green) + chosen projected + exiters non (gray) + what-if drops (gray)
+    // bar segments: completer exiters (faded green) + chosen (bucket colors) + noncompleter exiters + drops
     barSegmentsProjected() {
       const segs = [];
-
-      const base = window.COMPLETION.computeStudents(this.studentsClean, { target: 0.60 });
-      const exitersCompleters = base.completers || [];
-      const exitersNon = base.nonCompleters || [];
+      const { completers = [], nonCompleters = [] } = this.info || {};
+      const chosen = Array.isArray(this.barChosen) ? this.barChosen : [];
 
       const keyFor = (prefix, s, i) => `${prefix}-${s?.sis_user_id ?? s?.id ?? i}`;
 
-      for (let i = 0; i < exitersCompleters.length; i++) {
-        const s = exitersCompleters[i];
+      for (let i = 0; i < completers.length; i++) {
+        const s = completers[i];
         segs.push({
           key: keyFor('done-ok', s, i),
           color: this.colors.green,
@@ -149,11 +129,6 @@ Vue.component('reports-program-completion', {
           title: `${this.displayName(s)}: Completed (exiter)`
         });
       }
-
-      const baseE = this.whatIfExitersTotal;
-      const baseC = this.whatIfCompletersTotal;
-
-      const chosen = window.COMPLETION.chooseToHitTarget(baseE, baseC, this.projectionCandidates, { target: 0.60 });
 
       for (let i = 0; i < chosen.length; i++) {
         const { s, prob } = chosen[i];
@@ -166,8 +141,8 @@ Vue.component('reports-program-completion', {
         });
       }
 
-      for (let i = 0; i < exitersNon.length; i++) {
-        const s = exitersNon[i];
+      for (let i = 0; i < nonCompleters.length; i++) {
+        const s = nonCompleters[i];
         segs.push({
           key: keyFor('done-bad', s, i),
           color: this.colors.gray,
@@ -196,6 +171,51 @@ Vue.component('reports-program-completion', {
   },
 
   methods: {
+    // --- ONLY "duplicated" logic: what-if versions of completion.js internals ---
+    minNeeded(E, C, candidates, target) {
+      const e = Number(E) || 0;
+      const c = Number(C) || 0;
+      const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+      if (!e) return 0;
+      if ((c / e) >= t) return 0;
+
+      const list = Array.isArray(candidates) ? candidates : [];
+      let add = 0;
+      for (let i = 0; i < list.length; i++) {
+        add += 1;
+        const denom = e + add;
+        const num = c + add;
+        if (denom > 0 && (num / denom) >= t) return add;
+      }
+      return list.length;
+    },
+
+    chooseForBar(E, C, candidates, target) {
+      const e = Number(E) || 0;
+      const c = Number(C) || 0;
+      const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+
+      const list = Array.isArray(candidates) ? candidates : [];
+      if (!e || !list.length) return [];
+
+      const greens = list.filter(x => window.COMPLETION.bucketFromChance(x?.prob) === 'green');
+      const rateIfAllGreens =
+        (e + greens.length) ? ((c + greens.length) / (e + greens.length)) : null;
+
+      if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= t) return greens;
+
+      const chosen = [];
+      let add = 0;
+      for (const x of list) {
+        chosen.push(x);
+        add += 1;
+        const denom = e + add;
+        const num = c + add;
+        if (denom > 0 && (num / denom) >= t) break;
+      }
+      return chosen;
+    },
+
     // ---------- tiny helpers ----------
     safeName(s) { return (s?.name ?? '').toLowerCase(); },
 
@@ -232,11 +252,11 @@ Vue.component('reports-program-completion', {
         false,
         'string',
         s => {
-          const labelRaw = this.displayName(s);
-          const label = this.escapeHtml(labelRaw);
+          const label = this.escapeHtml(this.displayName(s));
           const id = s?.canvas_user_id;
-          if (!id) return label;
-          return `<a href="/users/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+          return id
+            ? `<a href="/users/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+            : label;
         },
         null,
         s => (s?.name ?? String(s?.sis_user_id ?? ''))
@@ -300,8 +320,9 @@ Vue.component('reports-program-completion', {
 
     endDateSortValue(s, { mode }) {
       if (!s) return Infinity;
-      if (mode === 'finished') return this.actualEndDate(s)?.getTime() ?? Infinity;
-      return this.projectedEndDate(s)?.getTime() ?? Infinity;
+      return (mode === 'finished')
+        ? (this.actualEndDate(s)?.getTime() ?? Infinity)
+        : (this.projectedEndDate(s)?.getTime() ?? Infinity);
     },
 
     endDatePillStyle(s, { mode }) {
@@ -318,7 +339,6 @@ Vue.component('reports-program-completion', {
 
       const b = window.COMPLETION.bucketFromChance(s?.chance_to_complete);
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
       return { backgroundColor: window.COMPLETION.bucketColor(b, this.colors), color: this.colors.white };
     },
 
@@ -332,28 +352,17 @@ Vue.component('reports-program-completion', {
       }
 
       const b = window.COMPLETION.bucketFromChance(s?.chance_to_complete);
-      if (!b) return null;
-
-      return window.COMPLETION.bucketColor(b, this.colors);
+      return b ? window.COMPLETION.bucketColor(b, this.colors) : null;
     },
 
     statusDotHtml(s, { mode }) {
       const c = this.statusDotColor(s, { mode });
-      if (!c) return '';
-      return `
-        <span
-          title="status"
-          style="
-            display:inline-block;
-            width:10px;
-            height:10px;
-            border-radius:999px;
-            background:${c};
-            box-shadow: 0 0 0 1px rgba(0,0,0,.12);
-            vertical-align:middle;
-          "
-        ></span>
-      `;
+      return c ? `
+        <span title="status" style="
+          display:inline-block;width:10px;height:10px;border-radius:999px;
+          background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
+        "></span>
+      ` : '';
     },
 
     statusSortValue(s, { mode }) {
@@ -375,7 +384,6 @@ Vue.component('reports-program-completion', {
       return s?.is_completer ? 0 : 1;
     },
 
-    // divider: keep your existing behavior
     activeRowDividerStyle(_s, idx, rows) {
       const n = Number(this.neededActiveCountFor60);
       if (!Number.isFinite(n) || n <= 0) return {};
@@ -402,54 +410,25 @@ Vue.component('reports-program-completion', {
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
             <div style="position:absolute; inset:0; display:flex;">
               <div
-                v-for="seg in (barSegmentsProjectedSafe || []).filter(x => x && x.key)"
+                v-for="seg in barSegmentsProjectedSafe"
                 :key="seg.key"
                 :title="seg.title"
-                :style="{
-                  flex: '1 1 0',
-                  background: seg.color,
-                  opacity: seg.opacity,
-                  borderRight: '1px solid rgba(255,255,255,0.6)'
-                }"
+                :style="{ flex:'1 1 0', background:seg.color, opacity:seg.opacity, borderRight:'1px solid rgba(255,255,255,0.6)' }"
               ></div>
             </div>
-
-            <div
-              :style="{
-                position:'absolute',
-                left:'60%',
-                top:'-3px',
-                bottom:'-3px',
-                width:'2px',
-                background: colors.black,
-                opacity: 0.6
-              }"
-              title="60% requirement"
-            ></div>
+            <div :style="{ position:'absolute', left:'60%', top:'-3px', bottom:'-3px', width:'2px', background:colors.black, opacity:0.6 }" title="60% requirement"></div>
           </div>
         </div>
 
         <div>
           <span style="display:inline-flex; align-items:center; gap:6px;">
             What-if drop:
-            <button
-              type="button"
-              style="width:22px;height:22px;border-radius:6px;"
-              @click="whatIfDrops = Math.max(0, whatIfDrops - 1)"
-              :disabled="whatIfDrops <= 0"
-              title="Remove hypothetical non-completer exiter"
-            >−</button>
-
-            <b style="min-width:1.5rem; text-align:center;">
-              {{ whatIfDrops }}
-            </b>
-
-            <button
-              type="button"
-              style="width:22px;height:22px;border-radius:6px;"
-              @click="whatIfDrops++"
-              title="Add hypothetical exiter"
-            >+</button>
+            <button type="button" style="width:22px;height:22px;border-radius:6px;"
+              @click="whatIfDrops = Math.max(0, whatIfDrops - 1)" :disabled="whatIfDrops <= 0"
+              title="Remove hypothetical non-completer exiter">−</button>
+            <b style="min-width:1.5rem; text-align:center;">{{ whatIfDrops }}</b>
+            <button type="button" style="width:22px;height:22px;border-radius:6px;"
+              @click="whatIfDrops++" title="Add hypothetical exiter">+</button>
           </span>
         </div>
       </div>
@@ -459,17 +438,10 @@ Vue.component('reports-program-completion', {
         <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Active students</h4>
       </div>
 
-      <div
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
-        :style="{ 'grid-template-columns': getColumnsWidthsStringActive() }"
-      >
-        <div
-          v-for="col in tableActive.getVisibleColumns()"
-          :key="col.name"
-          :title="col.description"
-          style="display:inline-block; cursor:pointer;"
-          @click="setSortColumnActive(col.name)"
-        >
+      <div style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringActive() }">
+        <div v-for="col in tableActive.getVisibleColumns()" :key="col.name" :title="col.description"
+          style="display:inline-block; cursor:pointer;" @click="setSortColumnActive(col.name)">
           <span><b>{{ col.name }}</b></span>
           <span style="margin-left:.25rem;">
             <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
@@ -484,28 +456,15 @@ Vue.component('reports-program-completion', {
         </div>
       </div>
 
-      <div
-        v-for="(s, i) in visibleActiveRows"
-        :key="'a-' + (s.sis_user_id || s.id || i)"
+      <div v-for="(s, i) in visibleActiveRows" :key="'a-' + (s.sis_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="Object.assign(
-          {
-            'grid-template-columns': getColumnsWidthsStringActive(),
-            'background-color': (i % 2) ? 'white' : '#F8F8F8'
-          },
+          { 'grid-template-columns': getColumnsWidthsStringActive(), 'background-color': (i % 2) ? 'white' : '#F8F8F8' },
           activeRowDividerStyle(s, i, visibleActiveRows)
-        )"
-      >
-        <div
-          v-for="col in tableActive.getVisibleColumns()"
-          :key="col.name"
-          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
-        >
-          <span
-            :class="col.style_formula ? 'btech-pill-text' : ''"
-            :style="col.get_style(s)"
-            v-html="col.getContent(s)"
-          ></span>
+        )">
+        <div v-for="col in tableActive.getVisibleColumns()" :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+          <span :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(s)" v-html="col.getContent(s)"></span>
         </div>
       </div>
 
@@ -516,17 +475,10 @@ Vue.component('reports-program-completion', {
         <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleFinishedRows.length }}</span>
       </div>
 
-      <div
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
-        :style="{ 'grid-template-columns': getColumnsWidthsStringFinished() }"
-      >
-        <div
-          v-for="col in tableFinished.getVisibleColumns()"
-          :key="col.name"
-          :title="col.description"
-          style="display:inline-block; cursor:pointer;"
-          @click="setSortColumnFinished(col.name)"
-        >
+      <div style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+        :style="{ 'grid-template-columns': getColumnsWidthsStringFinished() }">
+        <div v-for="col in tableFinished.getVisibleColumns()" :key="col.name" :title="col.description"
+          style="display:inline-block; cursor:pointer;" @click="setSortColumnFinished(col.name)">
           <span><b>{{ col.name }}</b></span>
           <span style="margin-left:.25rem;">
             <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
@@ -541,26 +493,12 @@ Vue.component('reports-program-completion', {
         </div>
       </div>
 
-      <div
-        v-for="(s, i) in visibleFinishedRows"
-        :key="'f-' + (s.sis_user_id || s.id || i)"
+      <div v-for="(s, i) in visibleFinishedRows" :key="'f-' + (s.sis_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
-        :style="{
-          'grid-template-columns': getColumnsWidthsStringFinished(),
-          'background-color': (i % 2) ? 'white' : '#F8F8F8',
-          'opacity': 0.65
-        }"
-      >
-        <div
-          v-for="col in tableFinished.getVisibleColumns()"
-          :key="col.name"
-          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
-        >
-          <span
-            :class="col.style_formula ? 'btech-pill-text' : ''"
-            :style="col.get_style(s)"
-            v-html="col.getContent(s)"
-          ></span>
+        :style="{ 'grid-template-columns': getColumnsWidthsStringFinished(), 'background-color': (i % 2) ? 'white' : '#F8F8F8', 'opacity': 0.65 }">
+        <div v-for="col in tableFinished.getVisibleColumns()" :key="col.name"
+          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+          <span :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(s)" v-html="col.getContent(s)"></span>
         </div>
       </div>
 
