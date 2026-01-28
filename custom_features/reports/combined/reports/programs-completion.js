@@ -156,7 +156,7 @@ Vue.component('programs-completion', {
       const segs = [];
       const info = this.computeForProgram(p);
 
-      const { completers = [], nonCompleters = [], chosen = [] } = info;
+      const { completers = [], nonCompleters = [], barChosen = [] } = info;
 
       const studentLabel = (s) => {
         if (this.anonymous) return 'STUDENT';
@@ -175,8 +175,8 @@ Vue.component('programs-completion', {
         });
       }
 
-      for (let i = 0; i < chosen.length; i++) {
-        const { s, prob } = chosen[i];
+      for (let i = 0; i < barChosen.length; i++) {
+        const { s, prob } = barChosen[i];
         const b = window.COMPLETION.bucketFromChance(prob);
         segs.push({
           key: keyFor('proj', s, i),
