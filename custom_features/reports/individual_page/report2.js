@@ -146,6 +146,7 @@
 
           // If you eventually process user-course info based on tree:
           this.user = this.updateUserCourseInfo(this.user, tree);
+          console.log(this.user);
         },
 
         // you can keep your existing watchers here (if any)

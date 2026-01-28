@@ -109,6 +109,7 @@
         </div>
         <div v-show="settings.reportType === 'student-grades'">
           <show-student-grades
+            v-if="user != undefined"
             :user="user"
           ></show-student-grades>
         </div>
