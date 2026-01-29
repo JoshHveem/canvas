@@ -793,52 +793,154 @@
       },
 
       async getCourseData() {
-        const base = `/api/v1/users/${this.userId}/courses?enrollment_Type=student&include[]=total_scores&include[]=current_grading_period_scores&include[]=term`;
-        const queries = [
-          `${base}&enrollment_state=active&state[]=available&state[]=completed`,
-          `${base}&enrollment_state=completed&state[]=active`,
-          `${base}&enrollment_state=completed&state[]=available&state[]=completed`,
-        ];
+          // 1) Pull the student (user) via the CURRENT course context,
+          //    then enumerate *all* their enrollments (courses).
+          const courseId = typeof CURRENT_COURSE_ID !== "undefined"
+            ? String(CURRENT_COURSE_ID)
+            : String(this.courseId || this.course_id || "");
 
-        // Fetch all three lists in parallel
-        const results = await Promise.all(queries.map(q => canvasGet(q)));
-
-        // Deduplicate by id
-        const coursesById = new Map();
-        results.flat().forEach(course => {
-          if (!coursesById.has(course.id)) coursesById.set(course.id, course);
-        });
-
-        const courses = Array.from(coursesById.values());
-
-        for (let c in courses) {
-          let course = courses[c];
-          course.course_id = course.id;
-          this.loadingMessage = "Loading Course Data for Course " + course.course_id;
-          let year = this.extractYear(course.term.name);
-          if (year) {
-            let active = false;
-            let completed = false;
-            course.enrollments.forEach(enrollment => {
-              if (enrollment.enrollment_state == 'active') active = true;
-              if (enrollment.enrollment_state == 'completed') completed = true;
-            });
-            let state = active ? 'Active' : completed ? 'Completed' : 'N/A';
-            let courseRow = this.newCourse(course.id, state, course.name, year, course.course_code);
-            course.hours = courseRow.hours;
-            course.credits = courseRow.hours / 30;
+          if (!courseId) {
+            console.error("Missing CURRENT_COURSE_ID (or fallback course id).");
+            return [];
           }
-          this.loadingProgress += (50 / courses.length) * 0.5;
 
-          this.loadingMessage = "Loading Assignment Data for Course " + course.id;
-          let additionalData = await this.getGraphQLData(course);
-          // let additionalDataOld = await this.getGraphQLDataOld(course);
-          course.additionalData = additionalData;
-          course.assignments = additionalData.submissions;
-          this.loadingProgress += (50 / courses.length) * 0.5;
-        }
-        return courses;
-      },
+          const studentId = String(this.userId);
+          if (!studentId) {
+            console.error("Missing this.userId (student id).");
+            return [];
+          }
+
+          const coursesQuery = `
+            query CoursesForStudent {
+              course(id: "${courseId}") {
+                _id
+                name
+                enrollmentsConnection(filter: {userIds: "${studentId}"}) {
+                  nodes {
+                    user {
+                      _id
+                      name
+                      enrollments {
+                        enrollmentState
+                        type
+                        course {
+                          _id
+                          name
+                          courseCode
+                          term { name }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+
+          let enrollments = [];
+          try {
+            const res = await $.post("/api/graphql", { query: coursesQuery });
+            const nodes = res?.data?.course?.enrollmentsConnection?.nodes || [];
+            const user = nodes?.[0]?.user;
+
+            // If the teacher can't see this student in this course, this can be empty.
+            enrollments = user?.enrollments || [];
+          } catch (err) {
+            console.error("Failed fetching courses via GraphQL:", err);
+            return [];
+          }
+
+          // 2) Filter to student enrollments only (matches your REST enrollment_Type=student)
+          // Canvas commonly uses "StudentEnrollment" here.
+          const studentEnrollments = enrollments.filter(e => {
+            const t = (e?.type || "").toLowerCase();
+            return t.includes("student");
+          });
+
+          // 3) Build "courses" in the same shape your downstream code expects
+          // - id (numeric-ish)
+          // - course_code
+          // - term.name
+          // - enrollments[] with enrollment_state
+          const coursesById = new Map();
+
+          for (const e of studentEnrollments) {
+            const c = e?.course;
+            if (!c?._id) continue;
+
+            // Normalize course id to number when possible (your URLs assume numeric ids)
+            const numericId = Number(c._id);
+            const courseIdVal = Number.isFinite(numericId) ? numericId : c._id;
+
+            const enrollment_state =
+              (e.enrollmentState || "").toString().toLowerCase(); // "active"/"completed"/etc
+
+            // Create or update the course entry
+            if (!coursesById.has(String(courseIdVal))) {
+              coursesById.set(String(courseIdVal), {
+                id: courseIdVal,
+                course_id: courseIdVal,
+                name: c.name,
+                course_code: c.courseCode, // REST name expected by newCourse/COURSE_HOURS
+                term: { name: c.term?.name || "" },
+                enrollments: [{ enrollment_state, type: e.type }],
+              });
+            } else {
+              // If there are multiple enrollments pointing at the same course,
+              // keep them (your old REST code iterated them).
+              coursesById.get(String(courseIdVal)).enrollments.push({
+                enrollment_state,
+                type: e.type,
+              });
+            }
+          }
+
+          const courses = Array.from(coursesById.values());
+
+          // 4) Preserve your existing per-course loading + GraphQL assignment/submission pulls
+          for (let i = 0; i < courses.length; i++) {
+            const course = courses[i];
+
+            course.course_id = course.id;
+            this.loadingMessage = "Loading Course Data for Course " + course.course_id;
+
+            const termName = course?.term?.name || "";
+            const year = this.extractYear(termName);
+
+            if (year) {
+              let active = false;
+              let completed = false;
+
+              (course.enrollments || []).forEach(enrollment => {
+                if (enrollment.enrollment_state === "active") active = true;
+                if (enrollment.enrollment_state === "completed") completed = true;
+              });
+
+              const state = active ? "Active" : completed ? "Completed" : "N/A";
+              const courseRow = this.newCourse(
+                course.id,
+                state,
+                course.name,
+                year,
+                course.course_code
+              );
+              course.hours = courseRow.hours;
+              course.credits = courseRow.hours / 30;
+            }
+
+            this.loadingProgress += (50 / courses.length) * 0.5;
+
+            this.loadingMessage = "Loading Assignment Data for Course " + course.id;
+            const additionalData = await this.getGraphQLData(course);
+            course.additionalData = additionalData;
+            course.assignments = additionalData.submissions;
+
+            this.loadingProgress += (50 / courses.length) * 0.5;
+          }
+
+          return courses;
+        },
+
       updateDatesToSelectedTerm() {
         const term = this.terms.find(t => t._id === this.selectedTermId);
         if (!term) return;
