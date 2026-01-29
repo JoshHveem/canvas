@@ -256,6 +256,7 @@
           }
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
+          console.log(user.degrees);
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
           user.canvas_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
