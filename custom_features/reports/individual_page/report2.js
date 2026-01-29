@@ -165,7 +165,6 @@
           return base;
         },
 
-        // NEW: derive currentDegree from user.degrees + currentDegreeId
         currentDegree() {
           const degrees = this.user?.degrees || [];
           if (!degrees.length) return {major_code: '', academic_year: 0}; // fallback if you still set it elsewhere
@@ -306,7 +305,6 @@
 
           let tree;
           if (this.currentDegreeId) {
-            // FIX: depts -> degrees
             tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.academic_year);
           } else {
             tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
