@@ -1,6 +1,14 @@
 Vue.component('student-courses-report-2', {
   template:` 
     <div>
+    <div style="margin-bottom: 10px;">
+      <button
+        class="btn"
+        @click="useCurrentScore = !useCurrentScore"
+      >
+        Using: {{ useCurrentScore ? 'Current Score' : 'Final Score' }}
+      </button>
+    </div>
 
       <!-- courses -->
       <div>
@@ -10,7 +18,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -28,7 +36,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -46,7 +54,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -168,7 +176,8 @@ Vue.component('student-courses-report-2', {
   data() {
     return {
       colors: bridgetools.colors,
-      donut: {}
+      donut: {},
+      useCurrentScore: false,
     }
   },
   watch: {
@@ -181,6 +190,11 @@ Vue.component('student-courses-report-2', {
   },
 
   methods: {
+    getDisplayScore(course) {
+      return this.useCurrentScore
+        ? course?.current_score
+        : course?.final_score;
+    },
     updateHeader () {
       let donut = this.donut;
       try {
