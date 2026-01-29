@@ -186,7 +186,7 @@ Vue.component('student-courses-report-2', {
     return {
       colors: bridgetools.colors,
       donut: {},
-      treatUngradedAsZero: false,
+      treatUngradedAsZero: true,
     }
   },
   watch: {
@@ -200,7 +200,7 @@ Vue.component('student-courses-report-2', {
 
   methods: {
     getDisplayScore(course) {
-      let score = this.treatUngradedAsZero ? course?.current_score : course?.final_score;
+      let score = this.treatUngradedAsZero ? course?.final_score : course?.current_score;
       return score;
     },
     updateHeader () {
