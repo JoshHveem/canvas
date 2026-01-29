@@ -2,16 +2,21 @@ Vue.component('student-courses-report-2', {
   template:` 
     <div>
       <div style="margin-bottom: 5px;">
-  <label style="cursor: pointer; display: flex; align-items: center; line-height: 1;">
-
-    <input
-      type="checkbox"
-      v-model="useCurrentScore"
-      style="margin-right: 6px;"
-    />
-    Treat Ungraded as 0
-  </label>
-</div>
+        <div style="display: flex; align-items: center;">
+          <input
+            type="checkbox"
+            v-model="useCurrentScore"
+            id="treat-ungraded"
+            style="margin: 0 6px 0 0;"
+          />
+          <label
+            for="treat-ungraded"
+            style="cursor: pointer; margin: 0; line-height: 1;"
+          >
+            Treat Ungraded as 0
+          </label>
+        </div>
+      </div>
  
 
       <!-- courses -->
