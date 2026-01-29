@@ -561,7 +561,7 @@
         let courseId = String(CURRENT_COURSE_ID || "");
         console.log(studentId);
         if (courseId === "") {
-          let data = await canvasGet($`/api/v1/users/${studentId}/graded_submissions?include[]=assignment`);
+          let data = await canvasGet(`/api/v1/users/${studentId}/graded_submissions?include[]=assignment`);
           if (data.length > 0) courseId = data[0].assignment.course_id;
         }
         if (!courseId || !studentId) return [];
