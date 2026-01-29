@@ -5,7 +5,7 @@ Vue.component('student-courses-report-2', {
         <div style="display: flex; align-items: center;">
           <input
             type="checkbox"
-            v-model="useCurrentScore"
+            v-model="treatUngradedAsZero"
             id="treat-ungraded"
             style="margin: 0 6px 0 0;"
           />
@@ -186,7 +186,7 @@ Vue.component('student-courses-report-2', {
     return {
       colors: bridgetools.colors,
       donut: {},
-      useCurrentScore: false,
+      treatUngradedAsZero: false,
     }
   },
   watch: {
@@ -200,9 +200,8 @@ Vue.component('student-courses-report-2', {
 
   methods: {
     getDisplayScore(course) {
-      return this.useCurrentScore
-        ? course?.current_score
-        : course?.final_score;
+      let score = this.treatUngradedAsZero ? course?.current_score : course?.final_score;
+      return score;
     },
     updateHeader () {
       let donut = this.donut;
