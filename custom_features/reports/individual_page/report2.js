@@ -273,18 +273,35 @@
           let maxyear = date.getFullYear();
           if ((date.getMonth() + 1) <= 6) maxyear -= 1;
 
-          user.degrees = (user.degrees || []).filter(d => Number(d?.academic_year) <= maxyear);
+          user.degrees = (user.degrees || [])
+            .filter(d => Number(d?.academic_year) <= maxyear);
 
+          // 1) pick "current" degree by max academic_year, then max graded_hours
+          const current = [...user.degrees].sort((a, b) => {
+            const ay = Number(a?.academic_year) || 0;
+            const by = Number(b?.academic_year) || 0;
+            if (ay !== by) return by - ay; // DESC academic_year
+
+            const ah = Number(a?.graded_hours) || 0;
+            const bh = Number(b?.graded_hours) || 0;
+            if (ah !== bh) return bh - ah; // DESC graded_hours
+
+            return 0;
+          })[0];
+
+          this.currentDegreeId = current?._id ?? 0;
+
+          // 2) sort dropdown by year, then alphabetically (major_code here)
           user.degrees.sort((a, b) => {
-            if (a.academic_year=== b.academic_year) {
-              const ad = String(a.major_code || '').toLowerCase();
-              const bd = String(b.major_code || '').toLowerCase();
-              return ad > bd ? 1 : ad < bd ? -1 : 0;
-            }
-            return a.academic_year > b.academic_year ? -1 : 1;
-          });
+            const ay = Number(a?.academic_year) || 0;
+            const by = Number(b?.academic_year) || 0;
+            if (ay !== by) return by - ay; // DESC academic_year
 
-          this.currentDegreeId = user?.degrees?.[0]?._id ?? 0;
+            const ad = String(a?.major_code || '').toLowerCase();
+            const bd = String(b?.major_code || '').toLowerCase();
+            return ad.localeCompare(bd);
+          });
+ 
 
 
           let tree;
