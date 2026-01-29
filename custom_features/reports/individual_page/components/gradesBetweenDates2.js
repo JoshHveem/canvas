@@ -793,99 +793,103 @@
       },
 
       async getCourseData() {
-  const courseId = String(CURRENT_COURSE_ID || "");
-  const studentId = String(this.userId || "");
-  if (!courseId || !studentId) return [];
+        let courseId = String(CURRENT_COURSE_ID || "");
+        if (courseId === "") {
+          let data = await canvasGet('/api/v1/users/2234414/graded_submissions?include[]=assignment');
+          if (data.length > 0) courseId = data[0].assignment.course_id;
+        }
+        const studentId = String(this.userId || "");
+        if (!courseId || !studentId) return [];
 
-  // --- 1) Fetch the student via current course, then all their enrollments ---
-  const query = `
-    query CoursesForStudent {
-      course(id: "${courseId}") {
-        enrollmentsConnection(filter: {userIds: "${studentId}"}) {
-          nodes {
-            user {
-              enrollments {
-                enrollmentState
-                type
-                course { _id name courseCode term { name } }
+        // --- 1) Fetch the student via current course, then all their enrollments ---
+        const query = `
+          query CoursesForStudent {
+            course(id: "${courseId}") {
+              enrollmentsConnection(filter: {userIds: "${studentId}"}) {
+                nodes {
+                  user {
+                    enrollments {
+                      enrollmentState
+                      type
+                      course { _id name courseCode term { name } }
+                    }
+                  }
+                }
               }
             }
           }
+        `;
+
+        let enrollments = [];
+        try {
+          const res = await $.post("/api/graphql", { query });
+          enrollments =
+            res?.data?.course?.enrollmentsConnection?.nodes?.[0]?.user?.enrollments || [];
+        } catch (e) {
+          console.error("Failed fetching course enrollments via GraphQL:", e);
+          return [];
         }
-      }
-    }
-  `;
 
-  let enrollments = [];
-  try {
-    const res = await $.post("/api/graphql", { query });
-    enrollments =
-      res?.data?.course?.enrollmentsConnection?.nodes?.[0]?.user?.enrollments || [];
-  } catch (e) {
-    console.error("Failed fetching course enrollments via GraphQL:", e);
-    return [];
-  }
+        // --- 2) Build REST-shaped courses[] (deduped) ---
+        const courses = Array.from(
+          enrollments
+            .filter(e => (e?.type || "").toLowerCase().includes("student"))
+            .reduce((m, e) => {
+              const c = e?.course;
+              if (!c?._id) return m;
 
-  // --- 2) Build REST-shaped courses[] (deduped) ---
-  const courses = Array.from(
-    enrollments
-      .filter(e => (e?.type || "").toLowerCase().includes("student"))
-      .reduce((m, e) => {
-        const c = e?.course;
-        if (!c?._id) return m;
+              const id = Number(c._id);
+              const key = String(Number.isFinite(id) ? id : c._id);
 
-        const id = Number(c._id);
-        const key = String(Number.isFinite(id) ? id : c._id);
+              const course = m.get(key) || {
+                id: Number.isFinite(id) ? id : c._id,
+                course_id: Number.isFinite(id) ? id : c._id,
+                name: c.name,
+                course_code: c.courseCode,
+                term: { name: c.term?.name || "" },
+                enrollments: [],
+              };
 
-        const course = m.get(key) || {
-          id: Number.isFinite(id) ? id : c._id,
-          course_id: Number.isFinite(id) ? id : c._id,
-          name: c.name,
-          course_code: c.courseCode,
-          term: { name: c.term?.name || "" },
-          enrollments: [],
+              course.enrollments.push({
+                enrollment_state: String(e.enrollmentState || "").toLowerCase(),
+                type: e.type,
+              });
+
+              m.set(key, course);
+              return m;
+            }, new Map())
+            .values()
+        );
+
+        // Small helper: decorate + fetch assignments/submissions
+        const hydrate = async (course, idx, total) => {
+          this.loadingMessage = `Loading Course Data for Course ${course.course_id}`;
+
+          const year = this.extractYear(course.term?.name || "");
+          if (year) {
+            const states = new Set((course.enrollments || []).map(e => e.enrollment_state));
+            const state = states.has("active") ? "Active" : states.has("completed") ? "Completed" : "N/A";
+            const row = this.newCourse(course.id, state, course.name, year, course.course_code);
+            course.hours = row.hours;
+            course.credits = row.hours / 30;
+          }
+
+          this.loadingProgress += (50 / total) * 0.5;
+
+          this.loadingMessage = `Loading Assignment Data for Course ${course.id}`;
+          const additionalData = await this.getGraphQLData(course);
+          course.additionalData = additionalData;
+          course.assignments = additionalData.submissions;
+
+          this.loadingProgress += (50 / total) * 0.5;
         };
 
-        course.enrollments.push({
-          enrollment_state: String(e.enrollmentState || "").toLowerCase(),
-          type: e.type,
-        });
+        for (let i = 0; i < courses.length; i++) {
+          await hydrate(courses[i], i, courses.length);
+        }
 
-        m.set(key, course);
-        return m;
-      }, new Map())
-      .values()
-  );
-
-  // Small helper: decorate + fetch assignments/submissions
-  const hydrate = async (course, idx, total) => {
-    this.loadingMessage = `Loading Course Data for Course ${course.course_id}`;
-
-    const year = this.extractYear(course.term?.name || "");
-    if (year) {
-      const states = new Set((course.enrollments || []).map(e => e.enrollment_state));
-      const state = states.has("active") ? "Active" : states.has("completed") ? "Completed" : "N/A";
-      const row = this.newCourse(course.id, state, course.name, year, course.course_code);
-      course.hours = row.hours;
-      course.credits = row.hours / 30;
-    }
-
-    this.loadingProgress += (50 / total) * 0.5;
-
-    this.loadingMessage = `Loading Assignment Data for Course ${course.id}`;
-    const additionalData = await this.getGraphQLData(course);
-    course.additionalData = additionalData;
-    course.assignments = additionalData.submissions;
-
-    this.loadingProgress += (50 / total) * 0.5;
-  };
-
-  for (let i = 0; i < courses.length; i++) {
-    await hydrate(courses[i], i, courses.length);
-  }
-
-  return courses;
-},
+        return courses;
+      },
 
       updateDatesToSelectedTerm() {
         const term = this.terms.find(t => t._id === this.selectedTermId);
