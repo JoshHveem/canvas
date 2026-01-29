@@ -307,7 +307,7 @@
           let tree;
           if (this.currentDegreeId) {
             // FIX: depts -> degrees
-            tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].academic_year);
+            tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.academic_year);
           } else {
             tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
           }
