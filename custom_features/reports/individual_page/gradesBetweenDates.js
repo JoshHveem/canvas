@@ -558,6 +558,7 @@
 
       async getCourseData() {
         let courseId = String(CURRENT_COURSE_ID || "");
+        console.log(this.userId);
         if (courseId === "") {
           let data = await canvasGet($`/api/v1/users/${this.userId}/graded_submissions?include[]=assignment`);
           if (data.length > 0) courseId = data[0].assignment.course_id;
