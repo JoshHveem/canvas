@@ -10,7 +10,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="course?.current_score"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -114,6 +114,7 @@ Vue.component('student-courses-report-2', {
           data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
+          data.current_score = userData.current_score;
           data.credits_per_day = userData.credits_per_day;
           data.days_in_course = userData.time_in_course / (60 * 60 * 24);
         }
