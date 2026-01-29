@@ -308,7 +308,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("reports/individual_page/report2", [
         /^\/courses\/[0-9]+\/users\/[0-9]+$/,
         /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-        /^\/users\/[0-9]+$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/
       ]);
       // delete after march 1
@@ -316,7 +315,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         feature("reports/individual_page/report", [
           /^\/courses\/[0-9]+\/users\/[0-9]+$/,
           /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-          /^\/users\/[0-9]+$/,
           /^\/courses\/[0-9]+\/grades\/[0-9]+$/
         ]);
       }
