@@ -2,7 +2,8 @@ Vue.component('student-courses-report-2', {
   template:` 
     <div>
       <div style="margin-bottom: 5px;">
-  <label style="cursor: pointer; display: flex; align-items: center;">
+  <label style="cursor: pointer; display: flex; align-items: center; line-height: 1;">
+
     <input
       type="checkbox"
       v-model="useCurrentScore"
