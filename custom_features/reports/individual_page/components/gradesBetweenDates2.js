@@ -798,6 +798,7 @@
           let data = await canvasGet('/api/v1/users/2234414/graded_submissions?include[]=assignment');
           if (data.length > 0) courseId = data[0].assignment.course_id;
         }
+        console.log(courseId);
         const studentId = String(this.userId || "");
         if (!courseId || !studentId) return [];
 
