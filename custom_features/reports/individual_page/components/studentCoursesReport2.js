@@ -1,6 +1,23 @@
 Vue.component('student-courses-report-2', {
   template:` 
     <div>
+      <div style="margin-bottom: 5px;">
+        <div style="display: flex; align-items: center;">
+          <input
+            type="checkbox"
+            v-model="treatUngradedAsZero"
+            id="treat-ungraded"
+            style="margin: 0 6px 0 0;"
+          />
+          <label
+            for="treat-ungraded"
+            style="cursor: pointer; margin: 0; line-height: 1;"
+          >
+            Treat Ungraded as 0
+          </label>
+        </div>
+      </div>
+ 
 
       <!-- courses -->
       <div>
@@ -10,7 +27,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -28,7 +45,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -46,7 +63,7 @@ Vue.component('student-courses-report-2', {
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
             :credits="course?.credits"
-            :score="course?.final_score"
+            :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
             :course-id="course.course_id"
@@ -84,6 +101,7 @@ Vue.component('student-courses-report-2', {
           if (data.state == '' && data.is_transfer) data.state = 'transfer';
           data.course_id = userData.course_id;
           data.progress = userData.progress;
+          data.current_score = userData.current_score;
           data.final_score = userData.final_score;
           data.credits_per_day = userData.credits_per_day;
           data.days_in_course = userData.time_in_course / (60 * 60 * 24);
@@ -113,6 +131,7 @@ Vue.component('student-courses-report-2', {
           data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
+          data.current_score = userData.current_score;
           data.credits_per_day = userData.credits_per_day;
           data.days_in_course = userData.time_in_course / (60 * 60 * 24);
         }
@@ -166,7 +185,8 @@ Vue.component('student-courses-report-2', {
   data() {
     return {
       colors: bridgetools.colors,
-      donut: {}
+      donut: {},
+      treatUngradedAsZero: true,
     }
   },
   watch: {
@@ -179,6 +199,10 @@ Vue.component('student-courses-report-2', {
   },
 
   methods: {
+    getDisplayScore(course) {
+      let score = this.treatUngradedAsZero ? course?.final_score : course?.current_score;
+      return score;
+    },
     updateHeader () {
       let donut = this.donut;
       try {

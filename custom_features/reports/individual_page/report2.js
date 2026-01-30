@@ -32,7 +32,7 @@
       gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-2-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     }
-    gen_report_button.append('Student Report 2 (beta)');
+    gen_report_button.append('Student Report 2');
     gen_report_button.appendTo(menu_bar);
     let modal = $('#canvas-individual-report-2-vue');
     modal.hide();
@@ -78,7 +78,9 @@
           },
           reportTypes: [
             { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
-            { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Grades Between Dates' },
+            // { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Course Grades' },
+            { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
+            { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
           currentDegreeId: null,
           enrollmentData:  undefined,
@@ -163,7 +165,6 @@
           return base;
         },
 
-        // NEW: derive currentDegree from user.degrees + currentDegreeId
         currentDegree() {
           const degrees = this.user?.degrees || [];
           if (!degrees.length) return {major_code: '', academic_year: 0}; // fallback if you still set it elsewhere
@@ -254,6 +255,7 @@
           }
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
+          console.log(user.degrees);
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
           user.canvas_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
@@ -270,24 +272,41 @@
           let maxyear = date.getFullYear();
           if ((date.getMonth() + 1) <= 6) maxyear -= 1;
 
-          user.degrees = (user.degrees || []).filter(d => Number(d?.academic_year) <= maxyear);
+          user.degrees = (user.degrees || [])
+            .filter(d => Number(d?.academic_year) <= maxyear);
 
+          // 1) pick "current" degree by max academic_year, then max graded_hours
+          const current = [...user.degrees].sort((a, b) => {
+            const ay = Number(a?.academic_year) || 0;
+            const by = Number(b?.academic_year) || 0;
+            if (ay !== by) return by - ay; // DESC academic_year
+
+            const ah = Number(a?.graded_hours) || 0;
+            const bh = Number(b?.graded_hours) || 0;
+            if (ah !== bh) return bh - ah; // DESC graded_hours
+
+            return 0;
+          })[0];
+
+          this.currentDegreeId = current?._id ?? 0;
+
+          // 2) sort dropdown by year, then alphabetically (major_code here)
           user.degrees.sort((a, b) => {
-            if (a.academic_year=== b.academic_year) {
-              const ad = String(a.major_code || '').toLowerCase();
-              const bd = String(b.major_code || '').toLowerCase();
-              return ad > bd ? 1 : ad < bd ? -1 : 0;
-            }
-            return a.academic_year > b.academic_year ? -1 : 1;
-          });
+            const ay = Number(a?.academic_year) || 0;
+            const by = Number(b?.academic_year) || 0;
+            if (ay !== by) return by - ay; // DESC academic_year
 
-          this.currentDegreeId = user?.degrees?.[0]?._id ?? 0;
+            const ad = String(a?.major_code || '').toLowerCase();
+            const bd = String(b?.major_code || '').toLowerCase();
+            return ad.localeCompare(bd);
+          });
+ 
 
 
           let tree;
           if (this.currentDegreeId) {
-            // FIX: depts -> degrees
-            tree = await this.loadTree(user.degrees[0].major_code, user.degrees[0].academic_year);
+            const selected = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
+            tree = await this.loadTree(selected.major_code, selected.academic_year);
           } else {
             tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
           }
@@ -333,6 +352,7 @@
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits2.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDates.js");
     await $.getScript("https://d3js.org/d3.v6.min.js");
     /*
     //libraries
@@ -348,7 +368,6 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
-    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js');
     */
     postLoad();
   } catch (err) {

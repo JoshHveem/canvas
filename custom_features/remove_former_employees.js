@@ -35,7 +35,7 @@
                 try {
                   await $.delete("/api/v1/courses/" + enrollment.course_id + "/enrollments/" + enrollment.id +"?task=deactivate");
                 } catch(err) {
-                  console.log(err);
+                  console.error(err);
                 }
                 finishedCount += 1;
                 $("#unenroll-progress-bar").progressbar({
@@ -49,7 +49,7 @@
               try {
                 await $.delete(`/api/v1/accounts/${account}/admins/${ENV.USER_ID}`);
               } catch(e) {
-                console.log(`Probably not really in this account ${account}`);
+                console.error(`Probably not really in this account ${account}`);
               }
               finishedCount += 1;
               $("#unenroll-progress-bar").progressbar({

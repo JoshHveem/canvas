@@ -6,7 +6,6 @@
 */
 (async function () {
   //Confirm with Instructional Team before going live
-  console.log(CURRENT_DEPARTMENT_ID);
   if (true) {
       if (/[0-9]+\/grades/.test(window.location.pathname)) {
         let loadedWarning = false;
@@ -91,7 +90,7 @@
       gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     }
-    gen_report_button.append('Student Report');
+    gen_report_button.append('Student Report (Deprecated)');
     gen_report_button.appendTo(menu_bar);
     let modal = $('#canvas-individual-report-vue');
     modal.hide();
@@ -123,10 +122,9 @@
 
         try {
           let user = await app.loadUser(this.userId);
-          console.log(user);
           this.user = user;
         } catch(err) {
-          console.log(err);
+          console.error(err);
           app.user = {};
         }
         app.loadingProgress += 10;

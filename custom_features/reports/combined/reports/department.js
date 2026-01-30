@@ -92,7 +92,6 @@ Vue.component('reports-department', {
         list.find(d => Number(d?.dept) === deptId) ||
         list.find(d => String(d?.dept) === String(this.account));
 
-      console.log(dep);
       return dep || {};
     },
 

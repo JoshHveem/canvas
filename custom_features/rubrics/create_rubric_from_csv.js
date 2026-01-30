@@ -267,7 +267,7 @@
         $('#jj_rubric_dialog').dialog('open');
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -511,7 +511,7 @@
         }
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
     return isValid && criteria.length > 0 ? criteria : isMethod;
   }
@@ -668,7 +668,7 @@
         }
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
     return isValid ? criteria : false;
   }

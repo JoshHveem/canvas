@@ -31,7 +31,6 @@ if (/^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/.test(window.location.pathname)) 
     },
 
     addFilterButton: function() {
-      console.log('add button')
       let filterButton = $(`<a href="javascript:void(0)">This Course</a>`);
       let showButton = $(`<a href="javascript:void(0)">All Courses</a>`);
       let filterButtonContainer = $('<div style="display: inline-block; float: left; padding-right: 5px; line-height: 2.5em;"></div>');
@@ -97,10 +96,8 @@ if (/^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/.test(window.location.pathname)) 
       let lis = $("#find_question_dialog table.side_tabs_table td.left ul.bank_list li.bank");
       
       lis.each(function() {
-        console.log(bankIds);
         let li = $(this);
         let id = li.find('.id').text().trim(); // get the id text and trim whitespace
-        console.log(id);
         if (!bankIds.includes(id)) {
           li.hide();
         }

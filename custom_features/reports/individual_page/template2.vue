@@ -44,9 +44,6 @@
             {{ rt.label }}
           </button>
         </div>
-        <div style="font-size: 0.75rem;">
-          <strong>Disclaimer:</strong> With the transition to Defined Exit, there have been reports of inaccurate progress information in the original Student Report. This is a Beta version of a new Student Report built on the defined exit structure. However, it is still under active development. HS student data and Grades (grades between dates) in particular are not fully functional. However, the student progress in individual courses here should be more update. Once this tool has reached parity with the original Student Report, we'll shut the old report off.
-        </div>
 
         <!-- Degree selector sub-menu -->
         <div
@@ -97,6 +94,12 @@
           ></student-courses-report-2>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
+          <show-student-grades
+            v-if="user != undefined"
+            :user="user"
+          ></show-student-grades>
+        </div>
+        <div v-show="settings.reportType === 'hs-grades'">
           <grades-between-dates-2
             v-if="enrollmentData != undefined"
             :user="user"
@@ -106,6 +109,17 @@
             :colors="colors"
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
+        </div>
+        <div v-show="settings.reportType === 'hs-grades-old'">
+          <show-grades-between-dates
+            v-if="enrollmentData != undefined"
+            :user="user"
+            :enrollments="enrollmentData"
+            :user-id="userId"
+            :terms="user.hs_terms"
+            :colors="colors"
+            :IS-TEACHER="IS_TEACHER"
+          ></show-grades-between-dates>
         </div>
       </div>
     </div>

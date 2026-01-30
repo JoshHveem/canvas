@@ -174,13 +174,11 @@
                   if (section.name == existingSection.name) exists = true;
                 }
                 if (exists) continue;
-                console.log(section);
                 let newSec = await $.post(`/api/v1/courses/${course.id}/sections`, {
                   course_section: {
                     name: section.name
                   }
                 });
-                console.log(newSec);
               }
               this.processProgress = (parseInt(c) + 1) / courses.length;
             }

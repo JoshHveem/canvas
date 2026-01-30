@@ -6,11 +6,9 @@
         $($(".submission-details-header div")[0]).after(speed_grader_link);
     } else {
         let attempts = (await $.get(`/api/v1/courses/${ENV.current_context.id}/students/submissions?assignment_ids[]=${ENV.SUBMISSION.assignment_id}&student_ids[]=${ENV.SUBMISSION.user_id}&include[]=submission_history`))[0].submission_history;
-        console.log(attempts);
         let div = $(`<div></div>`);
         for (let a in attempts) {
             let attempt = attempts[a];
-            console.log(attempt);
             div.append(`<div><a href="${attempt.preview_url}" target="_blank">Attempt ${parseInt(a) + 1}</a>: <span style="width: 3rem; display: inline-block;">${attempt.grade ? attempt.grade + '%' : 'N/A'}</span> Submitted: ${attempt.submitted_at ?? attempt.posted_at ?? attempt.graded_at}</div>`);
         }
         $(`.ic-Action-header`).after(div);;

@@ -36,7 +36,7 @@
         try {
           assignmentReviewData = await bridgetoolsReq(`https://reports.bridgetools.dev/api/reviews/courses/${ENV.COURSE_ID}/quizzes/${ENV.ASSIGNMENT.id}`);
         } catch (err) {
-          console.log(err);
+          console.error(err);
           return false;
         }
         assignmentCriteria = (await getCriteria('Quizzes'))['Quizzes'];
@@ -53,14 +53,14 @@
         try {
           assignmentReviewData = await bridgetoolsReq(`https://reports.bridgetools.dev/api/reviews/courses/${ENV.COURSE_ID}/assignments/${ENV.ASSIGNMENT_ID}`);
         } catch (err) {
-          console.log(err);
+          console.error(err);
           return false;
         }
         try {
           rubricReviewData = await bridgetoolsReq(`https://reports.bridgetools.dev/api/reviews/courses/${ENV.COURSE_ID}/assignments/${ENV.ASSIGNMENT_ID}/rubric`);
         } catch (err) {
           rubricReviewData = undefined;
-          console.log(err);
+          console.error(err);
         }
       }
 
@@ -75,7 +75,7 @@
         objectivesData = await bridgetoolsReq(`https://reports.bridgetools.dev/api/reviews/courses/${courseCode}/year/${year}/objectives`);
       } catch (err) {
         objectivesData = [];
-        console.log(err);
+        console.error(err);
       }
 
       return true;

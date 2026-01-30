@@ -1,7 +1,6 @@
 (function () {
   let originalTables = $(".btech-tabs-table");
   originalTables.each(function () {
-    console.log("TABS");
     let originalTable = $(this);
     let newTable = $("<div class='btech-tabs-container'></div>");
     let newTableTabsContainer = $("<div class='btech-tabs'></div>");

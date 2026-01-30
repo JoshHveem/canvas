@@ -31,7 +31,7 @@ Vue.component('reports-programs', {
 
   watch: {
     year: 'rebuildPrograms',
-    programsRaw: 'rebuildPrograms' // ✅ FIX
+    programsRaw: 'rebuildPrograms'
   },
 
   mounted() {
@@ -40,14 +40,11 @@ Vue.component('reports-programs', {
 
   methods: {
     rebuildPrograms() {
-        const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
-        const year = this.yearNum;
+      const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+      const year = this.yearNum;
 
-        const programs = list.filter(p => Number(p?.academic_year) === Number(year));
-        this.programsClean = programs;
-
-        console.log({ year, total: list.length, matched: programs.length });
-        }
-
+      const programs = list.filter(p => Number(p?.academic_year) === Number(year));
+      this.programsClean = programs;
+    }
   }
 });

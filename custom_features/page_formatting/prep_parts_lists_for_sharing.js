@@ -39,7 +39,6 @@ syncButton.click(async () => {
             rowRef[key] = row;
         });
     })
-    console.log(rowRef);
     let pages = await canvasGet(`/api/v1/courses/${ENV.COURSE_ID}/pages`);
     for (let p in pages) {
         let pData = pages[p];

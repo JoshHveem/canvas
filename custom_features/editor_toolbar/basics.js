@@ -329,7 +329,6 @@ function overrideAccessibility() {
   //    (This creates the "remove from some, add to others" behavior.)
   const toWrapBase = selected.filter(el => !wrappedSelectedSet.has(el));
   if (!toWrapBase.length) {
-    console.log("selection was all wrapped -> unwrapped");
     return;
   }
  
@@ -338,8 +337,6 @@ function overrideAccessibility() {
  
   // Wrap targets
   targets.forEach(wrap);
- 
-  console.log("complete");
 }
   
   // // SLIGHTLY MORE CONDENSE CALLOUT BOX THAT ALSO USES COLOR
@@ -513,43 +510,6 @@ function overrideAccessibility() {
     }
   }
 
-  // DOESN'T CURRENTLY WORK. MEANT TO BE AN AUTOMATIC WAY OF FINDING 
-  function replaceExternalFiles() {
-    let body = tinyMCE.activeEditor.getBody();
-    let bodyText = $(body).html();
-    let externalLinks = [...bodyText.matchAll(/src=\"(.)+?courses\/([0-9]+)\/files\/([0-9]+)/g)];
-    let courseId = parseInt(window.location.pathname.match(/courses\/([0-9]+)/)[1]);
-    $.get("/api/v1/courses/" + courseId + "/folders").done(function (data) {
-      for (let d = 0; d < data.length; d++) {
-        let folderData = data[d];
-        if (folderData.name == "course files") {
-
-          url = "/api/v1/folders/" + data[d].id + "/copy_file?source_file_id=" + 95008571 + "&on_duplicate=rename";
-          $.post(url).done(function (data) {
-          });
-          break;
-        }
-      }
-    });
-  }
-
-  function sidebarCallout() {
-    console.log("COMMENT");
-    let editor = tinymce.activeEditor;
-    let node = $(editor.selection.getNode());
-    let customColor = $("#btech-custom-editor-buttons-color").val();
-    // need to add in a check to see if there is an existing comment here and delete if there. If no comment exists, then create a comment. 
-    // get classes, if btech-sidebar-content exists
-    //// then delete that class, get the btech-sidebar-content-<id> and delete that class and use the id to delete the comment div
-    // if btech-sidebar-comment is the class, then do nothing, because don't want comments on comments
-    // if neither exists, then create the comment
-    let commentId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    node.addClass(`btech-sidebar-content-${commentId}`);
-    node.addClass('btech-sidebar-content');
-    let comment = $(`<div class="btech-sidebar-comment btech-sidebar-comment-${commentId}" style="border: 1px solid ${customColor}; padding: 5px;">comment</div>`);
-    node.after(comment);
-  }
-
   // EDITOR SOMETIMES TAKES A MINUTE TO LOAD, THIS WAITS UNTIL IT'S ALL READY
   await TOOLBAR.checkReady(0);
 
@@ -573,5 +533,5 @@ function overrideAccessibility() {
   TOOLBAR.addButtonIcon("icon-compose", "Citation", "Insert a citation.", citation);
   TOOLBAR.addButtonIcon("icon-materials-required", "Auto Format", "Auto format the page to break the page into sections. Sections are determined by the top level heading.", formatPage);
   TOOLBAR.addButtonIcon("icon-calendar-month", "Auto Format Table into List", "Auto format a table used for isntructions into an ordered list.", convertActiveTableInTinyMCE);
-  // if (IS_ISD) {TOOLBAR.addButtonIcon("icon-eye", "Override Accessiblity Tracker", "Accessiblity tracker will ignore this content", overrideAccessibility);}
+  if (IS_ISD) {TOOLBAR.addButtonIcon("icon-eye", "Override Accessiblity Tracker", "Accessiblity tracker will ignore this content", overrideAccessibility);}
 })();

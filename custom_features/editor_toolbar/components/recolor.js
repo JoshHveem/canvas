@@ -33,14 +33,10 @@
       // CREATES A COMMENT THAT APPEARS IN THE RIGHT MARGIN (PADDING) OF THE PAGE AND MOVES TO THE TOP OF THE ASSOCIATED ELEMENT EVEN ON PAGE RESIZE
     // FORMATS A CITATION
       recolorSubmit: function (bg) {
-        let editor = tinymce.activeEditor;
         let existingColor = this.hexToRgb($("#btech-recolor-existing-color").val());
         let newColor = this.hexToRgb($("#btech-recolor-new-color").val());
-        let body = tinyMCE.activeEditor.getBody();
         let content = tinyMCE.activeEditor.getContent();
         let updatedContent = $(`<div>${content}</div>`);
-        console.log(existingColor);
-        console.log(newColor);
         $(updatedContent).find('*').each(function() {
           // Check each element's CSS properties
           if ($(this).css('color') === existingColor) { 
