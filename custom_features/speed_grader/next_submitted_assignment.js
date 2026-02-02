@@ -1,99 +1,192 @@
 // == Next Assignment Button (Observer Format) ==
 
-// Simple green toast
-function showSuccessToast(message) {
-  const toast = $(`
-    <div role="alert" aria-live="polite"
-         style="position: fixed; right: 16px; bottom: 16px; z-index: 9999;
-                background: #2e7d32; color: #fff; padding: 12px 16px;
-                border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
-                font-size: 14px;">
-      ${message}
-    </div>
-  `);
-  $('body').append(toast);
-  setTimeout(() => toast.fadeOut(200, () => toast.remove()), 3000);
-}
+// // Simple green toast
+// function showSuccessToast(message) {
+//   const toast = $(`
+//     <div role="alert" aria-live="polite"
+//          style="position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+//                 background: #2e7d32; color: #fff; padding: 12px 16px;
+//                 border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+//                 font-size: 14px;">
+//       ${message}
+//     </div>
+//   `);
+//   $('body').append(toast);
+//   setTimeout(() => toast.fadeOut(200, () => toast.remove()), 3000);
+// }
 
-function createNextButton(student_id) {
-  const btn = $(`
-<button
-  id="next-assignment-button"
-  aria-label="Next Assignment"
-  style="
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: white;
-  "
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 16 16"
-    width="16"
-    height="16"
-    aria-hidden="true"
-    fill="currentColor"
-  >
-    <path d="M16 1V15H9V13H14V3H9V1L16 1Z"/>
-    <path d="M6 4V7L0 7L0 9H6V12H7L11 8L7 4H6Z"/>
-  </svg>
-</button>
+// function createNextButton(student_id) {
+//   const btn = $(`
+// <button
+//   id="next-assignment-button"
+//   aria-label="Next Assignment"
+//   style="
+//     background: none;
+//     border: none;
+//     padding: 0;
+//     cursor: pointer;
+//     color: white;
+//   "
+// >
+//   <svg
+//     xmlns="http://www.w3.org/2000/svg"
+//     viewBox="0 0 16 16"
+//     width="16"
+//     height="16"
+//     aria-hidden="true"
+//     fill="currentColor"
+//   >
+//     <path d="M16 1V15H9V13H14V3H9V1L16 1Z"/>
+//     <path d="M6 4V7L0 7L0 9H6V12H7L11 8L7 4H6Z"/>
+//   </svg>
+// </button>
 
-  `);
+//   `);
 
-  // Click handler computes the next destination *at click time*
-  btn.on('click', function () {
-    const submittedIds = $(this).data('submittedIds') || [];
-    if (!Array.isArray(submittedIds) || submittedIds.length === 0) {
-      // No submitted items at all → toast
-      showSuccessToast('All current submissions graded');
-      return;
+//   // Click handler computes the next destination *at click time*
+//   btn.on('click', function () {
+//     const submittedIds = $(this).data('submittedIds') || [];
+//     if (!Array.isArray(submittedIds) || submittedIds.length === 0) {
+//       // No submitted items at all → toast
+//       showSuccessToast('All current submissions graded');
+//       return;
+//     }
+
+//     // Current assignment
+//     const currId = Number(ENV.assignment_id);
+//     const len = submittedIds.length;
+
+//     // Find current index; if not in list, start at 0
+//     const idx = submittedIds.indexOf(currId);
+//     const nextIdx = idx >= 0 ? (idx + 1) % len : 0;
+
+//     const nextAssignmentId = submittedIds[nextIdx];
+//     const nextUrl =
+//       `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignmentId}&student_id=${student_id}`;
+
+//     window.location.href = nextUrl;
+//   });
+
+//   return btn;
+// }
+
+// function ensureNextButton(container, student_id, submittedIds) {
+//   console.log('Ensuring Next Assignment button exists');
+//   let btn = $('#next-assignment-button');
+//   if (btn.length === 0) {
+//     btn = createNextButton(student_id).appendTo(container);
+//   }
+//   // Always keep the latest submittedIds on the button (can be empty array)
+//   btn.data('submittedIds', Array.isArray(submittedIds) ? submittedIds : []);
+// }
+
+// async function postLoad() {
+//   // Parse student_id from SpeedGrader URL
+//   const rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
+//   const pieces = window.location.href.match(rUrl);
+//   if (!pieces) return;
+
+//   const student_id = Number(pieces[3]);
+
+//   // Container to place the button
+//   const container = $('[data-testid="student-navigation-flex"]');
+//   if (container.length === 0) return;
+
+//   // Render button immediately (it will toast until we load submissions)
+//   ensureNextButton(container, student_id, []);
+
+//   // Fetch submitted items for this student
+//   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
+//     student_ids: [student_id],
+//     workflow_state: 'submitted',
+//     per_page: 100
+//   });
+
+//   // Normalize + sort deterministically
+//   let submittedIds = [];
+//   if (Array.isArray(submissions) && submissions.length > 0) {
+//     submissions.sort((a, b) => {
+//       const sa = new Date(a.submitted_at || 0).getTime();
+//       const sb = new Date(b.submitted_at || 0).getTime();
+//       if (sa !== sb) return sa - sb;
+//       return Number(a.assignment_id || 0) - Number(b.assignment_id || 0);
+//     });
+//     submittedIds = submissions
+//       .map(s => Number(s.assignment_id))
+//       .filter(id => Number.isFinite(id));
+//   }
+
+//   // Update button with the latest list (empty => toast)
+//   ensureNextButton(container, student_id, submittedIds);
+
+//   // Keep it present as the DOM changes
+//   const observer = new MutationObserver((mutationsList) => {
+//     for (const mutation of mutationsList) {
+//       if (mutation.type === 'childList') {
+//         // Re-attach with current data
+//         ensureNextButton(container, student_id, submittedIds);
+//       }
+//     }
+//   });
+//   observer.observe(container[0], { childList: true, subtree: false });
+// }
+
+// // Kick it off
+// (async function () {
+//   try {
+//     await postLoad();
+//   } catch (e) {
+//     console.error('Next Assignment observer init failed:', e);
+//   }
+// })();
+
+
+
+// ---- Helpers ----
+function waitForElement(selector, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const el = document.querySelector(selector);
+    if (el) return resolve(el);
+
+    const obs = new MutationObserver(() => {
+      const elNow = document.querySelector(selector);
+      if (elNow) {
+        obs.disconnect();
+        resolve(elNow);
+      }
+    });
+
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+
+    if (timeoutMs) {
+      setTimeout(() => {
+        obs.disconnect();
+        reject(new Error(`Timed out waiting for ${selector}`));
+      }, timeoutMs);
     }
-
-    // Current assignment
-    const currId = Number(ENV.assignment_id);
-    const len = submittedIds.length;
-
-    // Find current index; if not in list, start at 0
-    const idx = submittedIds.indexOf(currId);
-    const nextIdx = idx >= 0 ? (idx + 1) % len : 0;
-
-    const nextAssignmentId = submittedIds[nextIdx];
-    const nextUrl =
-      `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignmentId}&student_id=${student_id}`;
-
-    window.location.href = nextUrl;
   });
-
-  return btn;
 }
 
-function ensureNextButton(container, student_id, submittedIds) {
-  console.log('Ensuring Next Assignment button exists');
-  let btn = $('#next-assignment-button');
-  if (btn.length === 0) {
-    btn = createNextButton(student_id).appendTo(container);
-  }
-  // Always keep the latest submittedIds on the button (can be empty array)
-  btn.data('submittedIds', Array.isArray(submittedIds) ? submittedIds : []);
-}
-
+// ---- Main ----
 async function postLoad() {
-  // Parse student_id from SpeedGrader URL
   const rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
   const pieces = window.location.href.match(rUrl);
   if (!pieces) return;
 
   const student_id = Number(pieces[3]);
 
-  // Container to place the button
-  const container = $('[data-testid="student-navigation-flex"]');
-  if (container.length === 0) return;
+  // Always wait for the container (Canvas often renders it after your JS runs)
+  const containerSelector = '[data-testid="student-navigation-flex"]';
+  let containerEl;
+  try {
+    containerEl = await waitForElement(containerSelector, 20000);
+  } catch (e) {
+    console.warn('Next Assignment: container never appeared', e);
+    return;
+  }
 
-  // Render button immediately (it will toast until we load submissions)
-  ensureNextButton(container, student_id, []);
+  // Render immediately with empty list
+  ensureNextButton($(containerEl), student_id, []);
 
   // Fetch submitted items for this student
   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
@@ -102,7 +195,6 @@ async function postLoad() {
     per_page: 100
   });
 
-  // Normalize + sort deterministically
   let submittedIds = [];
   if (Array.isArray(submissions) && submissions.length > 0) {
     submissions.sort((a, b) => {
@@ -111,31 +203,38 @@ async function postLoad() {
       if (sa !== sb) return sa - sb;
       return Number(a.assignment_id || 0) - Number(b.assignment_id || 0);
     });
+
     submittedIds = submissions
       .map(s => Number(s.assignment_id))
-      .filter(id => Number.isFinite(id));
+      .filter(Number.isFinite);
   }
 
-  // Update button with the latest list (empty => toast)
-  ensureNextButton(container, student_id, submittedIds);
+  // Update button data
+  ensureNextButton($(containerEl), student_id, submittedIds);
 
-  // Keep it present as the DOM changes
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        // Re-attach with current data
-        ensureNextButton(container, student_id, submittedIds);
-      }
-    }
+  // 🔥 Resilient observer: watches for the container being re-rendered/replaced
+  const docObserver = new MutationObserver(() => {
+    const freshContainer = document.querySelector(containerSelector);
+    if (!freshContainer) return;
+
+    // Ensure button is present in the *current* container
+    ensureNextButton($(freshContainer), student_id, submittedIds);
   });
-  observer.observe(container[0], { childList: true, subtree: false });
+
+  docObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Optional: extra safety net (cheap, runs rarely)
+  setInterval(() => {
+    const freshContainer = document.querySelector(containerSelector);
+    if (freshContainer) ensureNextButton($(freshContainer), student_id, submittedIds);
+  }, 2000);
 }
 
-// Kick it off
+// Kick it off (and re-run if Canvas is SPA-navigating)
 (async function () {
   try {
     await postLoad();
   } catch (e) {
-    console.error('Next Assignment observer init failed:', e);
+    console.error('Next Assignment init failed:', e);
   }
 })();
