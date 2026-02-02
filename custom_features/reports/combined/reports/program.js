@@ -6,6 +6,7 @@ Vue.component('reports-program', {
         v-if="subMenu == 'completion'"
         :year="year"
         :campus="program?.campus ?? ''"
+        :projected-non-completers="program?.projected_non_completers ?? 0"
         :students="program?.students ?? []"
       ></reports-program-completion>
     </div>
@@ -33,14 +34,10 @@ Vue.component('reports-program', {
   computed: {
     program() {
       const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
-      console.log(list);
 
       const year   = Number(this.year); // or this.settings.filters.year
       const code   = String(this.selectedProgram || '').trim(); // whatever prop holds the program code
       const campus = String(this.selectedCampus || '').trim();
-      console.log(code);
-      console.log(year);
-      console.log(campus);
 
       let program = (
         list.find(p =>

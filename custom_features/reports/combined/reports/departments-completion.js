@@ -25,7 +25,6 @@ Vue.component('departments-completion', {
   },
 
   created() {
-    console.log(departments);
     this.table.setColumns([
       new window.ReportColumn(
         'Status', 'Worst-case color of the last student needed to get above 60%.', '3.5rem', false, 'string',

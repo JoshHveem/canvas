@@ -31,7 +31,6 @@
 (async function() {
   // load tweenmax, used for the countdown timer
   await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js");
-  console.log("LIBRARY LOADED");
 
   // add in style
   function loadStyle() {

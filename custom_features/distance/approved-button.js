@@ -19,7 +19,7 @@
   try {
     await $.get("https://distance.bridgetools.dev/api/courses/" + ENV.COURSE_ID + "/approval", data => {approvals = data});
   } catch (err) {
-    console.log("NO APPROVALS")
+    console.error("NO APPROVALS")
   }
 
   //get all module items in current course

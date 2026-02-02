@@ -30,12 +30,10 @@ Vue.component('reports-instructors', {
   computed: {
     yearNum() { return Number(this.year) || new Date().getFullYear(); },
     normalizedInstructors() {
-        console.log(this.instructors);
         let instructors = (Array.isArray(this.instructors) ? this.instructors : [])
-        .map(i => this._forYear(i, this.yearNum))
-        .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
+          .map(i => this._forYear(i, this.yearNum))
+          .filter(i => (Number(i?.grading?.assignments_graded) > 0 || Number(i?.surveys?.num_surveys) > 0))
         ;
-        console.log(instructors);
         return instructors;
     },
   },
@@ -66,8 +64,6 @@ Vue.component('reports-instructors', {
           }
         }
         this.instructors = incoming;
-        console.log(this.instructors);
-
         // if exactly one, auto-select it
         if (this.normalizedInstructors.length === 1) {
           this.selected = this.normalizedInstructors[0];

@@ -24,7 +24,6 @@
     methods: {
       // CREATES A COMMENT THAT APPEARS IN THE RIGHT MARGIN (PADDING) OF THE PAGE AND MOVES TO THE TOP OF THE ASSOCIATED ELEMENT EVEN ON PAGE RESIZE
       create() {
-        console.log("COMMENT");
         let editor = tinymce.activeEditor;
         let node = $(editor.selection.getNode());
         // need to add in a check to see if there is an existing comment here and delete if there. If no comment exists, then create a comment. 

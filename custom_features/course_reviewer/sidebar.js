@@ -472,12 +472,9 @@
         this.raterId = ENV.current_user_id;
         this.year = year;
       } catch (err) {
-        console.log(err);
+        console.error(err);
         return;
       }
-
-      let courseData = await bridgetools.req(`https://reports.bridgetools.dev/api/courses?course_code=${this.courseCode}&year=${this.year}`)
-      console.log(courseData);
 
       this.loadReviews(init=true);
 
@@ -666,8 +663,6 @@
         this.updating = false;
       },
       setISDImprovement: async function (reviewId, isISDImprovement) {
-        console.log(reviewId);
-        console.log(this.activeReview);
         this.updating = true;
         await bridgetools.req(`https://reports.bridgetools.dev/api/reviews/review/${reviewId}`, {
           isd_improvement: isISDImprovement 
@@ -684,7 +679,6 @@
         this.loadReviews();
       },
       newReview: async function () {
-        console.log(this.courseCode);
         let review = await bridgetools.req(`https://reports.bridgetools.dev/api/reviews/scores/${this.courseCode.replace(" ", "%20")}/new`, {
           year: this.year,
           course_id: this.courseId,
@@ -709,7 +703,6 @@
         )
       },
       deleteReview: async function (reviewId) {
-        console.log(reviewId);
         await bridgetools.req(
             `https://reports.bridgetools.dev/api/reviews/review/${reviewId}`
             , {}
@@ -742,7 +735,7 @@
               let user =(await canvasGet('/api/v1/users/' + raterId))[0];
               this.raterNames[raterId] = user.name;
             } catch (err) {
-              console.log("Could not load");
+              console.error("Could not load");
               this.raterNames[raterId] = `Unknown (${raterId})`;
             }
           }
@@ -755,7 +748,6 @@
             }
           }
           if (!review.submitted && raterId == this.raterId) {
-            console.log(review);
             this.activeReview = review;
             if (init) {
               this.currentMenu = 'new';
@@ -786,8 +778,6 @@
         let surveys = await this.bridgetools.req('https://surveys.bridgetools.dev/api/survey_data', {
             course_code: this.courseCode 
         }, 'POST');
-
-        console.log(surveys);
 
         // ITERATE OVER EACH QUESTION AND CREATE AN OBJECT FOR THE SUMMARY DATA OF EACH QUESTION (WHAT WILL BE USED IN REPORT)
         let questions = {};

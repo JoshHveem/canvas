@@ -6,14 +6,14 @@ if (checked) {
   try {
     currentGrade = parseFloat(gradesEl.text().match(/([0-9]+(\.[0-9]+){0,1})%/)[1]);
   } catch(e) {
-    console.log(e);
+    console.error(e);
   }
   checkbox.click();
   let finalGrade = 0;
   try {
     finalGrade = parseFloat(gradesEl.text().match(/([0-9]+(\.[0-9]+){0,1})%/)[1]);
   } catch(e) {
-    console.log(e);
+    console.error(e);
   }
   let progress = 0;
   if (currentGrade > 0) {

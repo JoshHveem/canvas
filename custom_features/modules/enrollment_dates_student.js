@@ -177,7 +177,6 @@ var Countdown = {
       $("#countdown-block-minutes").hide();
       $("#countdown-block-seconds").hide();
     } else {
-      console.log('hide')
       // $("#countdown-block-days span.count-title").html("DAYS REMAINING");
       $("#countdown-block-hours").show();
       $("#countdown-block-minutes").show();

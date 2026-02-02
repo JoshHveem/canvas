@@ -16,7 +16,6 @@
     } else {
       nextTerm = term;
     }
-    console.log(nextTerm)
     const newCourse = await $.post(`/api/v1/accounts/${course.account_id}/courses`, {
       course: {
           name: course.name,
@@ -64,8 +63,6 @@
       confirmInstructors(modal, oldCourseId, newCourseId);
     });
     $("#copy-course-buttons button.yes").click(async function() {
-      console.log(newCourseId);
-      console.log(oldCourseId);
       await $.post(`/api/v1/courses/${newCourseId}/content_migrations`, {
         migration_type: 'course_copy_importer',
         settings: {
@@ -90,7 +87,6 @@
       $("#copy-course-message").html("Adding instructors.");
       for (let t in teachers) {
         let teacher = teachers[t];
-        console.log(teacher);
         await $.post(`/api/v1/courses/${newCourseId}/enrollments`, {
           enrollment: {
             user_id: teacher.user.id,
