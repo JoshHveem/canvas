@@ -200,7 +200,6 @@ Vue.component('programs-completion', {
           title: `${studentLabel(s)}: Did not complete (exiter)`
         });
       }
-
       // Add projected non-completer exiters (from server/program row)
       const drops = Math.max(0, Number(p?.projected_non_completers) || 0);
       const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.program ?? p?.name ?? 'p');
