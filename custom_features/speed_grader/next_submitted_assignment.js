@@ -139,62 +139,100 @@
 //   }
 // })();
 
+// == Next Assignment Button (Stable Root Observer) ==
 
-
-// ---- Helpers ----
-function waitForElement(selector, timeoutMs = 15000) {
-  return new Promise((resolve, reject) => {
-    const el = document.querySelector(selector);
-    if (el) return resolve(el);
-
-    const obs = new MutationObserver(() => {
-      const elNow = document.querySelector(selector);
-      if (elNow) {
-        obs.disconnect();
-        resolve(elNow);
-      }
-    });
-
-    obs.observe(document.documentElement, { childList: true, subtree: true });
-
-    if (timeoutMs) {
-      setTimeout(() => {
-        obs.disconnect();
-        reject(new Error(`Timed out waiting for ${selector}`));
-      }, timeoutMs);
-    }
-  });
+// Simple green toast
+function showSuccessToast(message) {
+  const toast = $(`
+    <div role="alert" aria-live="polite"
+         style="position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+                background: #2e7d32; color: #fff; padding: 12px 16px;
+                border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+                font-size: 14px;">
+      ${message}
+    </div>
+  `);
+  $('body').append(toast);
+  setTimeout(() => toast.fadeOut(200, () => toast.remove()), 3000);
 }
 
-// ---- Main ----
-async function postLoad() {
+function createNextButton(student_id) {
+  const btn = $(`
+    <button
+      id="next-assignment-button"
+      aria-label="Next Assignment"
+      style="background:none;border:none;padding:0;cursor:pointer;color:white;"
+      class="Button"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+           width="16" height="16" aria-hidden="true" fill="currentColor">
+        <path d="M16 1V15H9V13H14V3H9V1L16 1Z"/>
+        <path d="M6 4V7L0 7L0 9H6V12H7L11 8L7 4H6Z"/>
+      </svg>
+    </button>
+  `);
+
+  btn.on('click', function () {
+    const submittedIds = $(this).data('submittedIds') || [];
+    if (!Array.isArray(submittedIds) || submittedIds.length === 0) {
+      showSuccessToast('All current submissions graded');
+      return;
+    }
+
+    const currId = Number(ENV.assignment_id);
+    const len = submittedIds.length;
+    const idx = submittedIds.indexOf(currId);
+    const nextIdx = idx >= 0 ? (idx + 1) % len : 0;
+
+    const nextAssignmentId = submittedIds[nextIdx];
+    const nextUrl =
+      `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignmentId}&student_id=${student_id}`;
+
+    window.location.href = nextUrl;
+  });
+
+  return btn;
+}
+
+function ensureNextButton(submittedIds, student_id) {
+  const container = $('[data-testid="student-navigation-flex"]'); // <-- re-find every time
+  if (container.length === 0) return;
+
+  // IMPORTANT: scope lookup to container so we don’t rely on stale DOM
+  let btn = container.find('#next-assignment-button');
+
+  if (btn.length === 0) {
+    btn = createNextButton(student_id);
+
+    // You can control placement by appending to a wrapper if needed:
+    // const wrapper = $('<span style="display:inline-flex;align-items:center;"></span>');
+    // wrapper.append(btn);
+    // container.append(wrapper);
+
+    container.append(btn);
+  }
+
+  btn.data('submittedIds', Array.isArray(submittedIds) ? submittedIds : []);
+}
+
+async function initNextAssignmentButton() {
   const rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
   const pieces = window.location.href.match(rUrl);
   if (!pieces) return;
 
   const student_id = Number(pieces[3]);
 
-  // Always wait for the container (Canvas often renders it after your JS runs)
-  const containerSelector = '[data-testid="student-navigation-flex"]';
-  let containerEl;
-  try {
-    containerEl = await waitForElement(containerSelector, 20000);
-  } catch (e) {
-    console.warn('Next Assignment: container never appeared', e);
-    return;
-  }
+  // Mount immediately (empty -> toast behavior)
+  let submittedIds = [];
+  ensureNextButton(submittedIds, student_id);
 
-  // Render immediately with empty list
-  ensureNextButton($(containerEl), student_id, []);
-
-  // Fetch submitted items for this student
+  // Fetch submitted items
   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
     student_ids: [student_id],
     workflow_state: 'submitted',
     per_page: 100
   });
 
-  let submittedIds = [];
   if (Array.isArray(submissions) && submissions.length > 0) {
     submissions.sort((a, b) => {
       const sa = new Date(a.submitted_at || 0).getTime();
@@ -208,31 +246,37 @@ async function postLoad() {
       .filter(Number.isFinite);
   }
 
-  // Update button data
-  ensureNextButton($(containerEl), student_id, submittedIds);
+  // Update with real list
+  ensureNextButton(submittedIds, student_id);
 
-  // 🔥 Resilient observer: watches for the container being re-rendered/replaced
-  const docObserver = new MutationObserver(() => {
-    const freshContainer = document.querySelector(containerSelector);
-    if (!freshContainer) return;
-
-    // Ensure button is present in the *current* container
-    ensureNextButton($(freshContainer), student_id, submittedIds);
+  // Observer on a stable root (like your working example)
+  let rafScheduled = false;
+  const observer = new MutationObserver(() => {
+    // debounce hard to avoid running hundreds of times per render
+    if (rafScheduled) return;
+    rafScheduled = true;
+    requestAnimationFrame(() => {
+      rafScheduled = false;
+      ensureNextButton(submittedIds, student_id);
+    });
   });
 
-  docObserver.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-  // Optional: extra safety net (cheap, runs rarely)
-  setInterval(() => {
-    const freshContainer = document.querySelector(containerSelector);
-    if (freshContainer) ensureNextButton($(freshContainer), student_id, submittedIds);
-  }, 2000);
+  // Extra safety: short “boot loop” for first few seconds
+  // (helps when Canvas does multiple initial renders)
+  let attempts = 0;
+  const boot = setInterval(() => {
+    attempts++;
+    ensureNextButton(submittedIds, student_id);
+    if ($('#next-assignment-button').length > 0 || attempts >= 20) clearInterval(boot);
+  }, 250);
 }
 
-// Kick it off (and re-run if Canvas is SPA-navigating)
+// Kick it off
 (async function () {
   try {
-    await postLoad();
+    await initNextAssignmentButton();
   } catch (e) {
     console.error('Next Assignment init failed:', e);
   }
