@@ -88,14 +88,95 @@ Vue.component('programs-completion', {
   },
 
   methods: {
+    minNeeded(E, C, candidates, target) {
+  const e = Number(E) || 0;
+  const c = Number(C) || 0;
+  const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+  if (!e) return 0;
+  if ((c / e) >= t) return 0;
+
+  const list = Array.isArray(candidates) ? candidates : [];
+  let add = 0;
+  for (let i = 0; i < list.length; i++) {
+    add += 1;
+    const denom = e + add;
+    const num = c + add;
+    if (denom > 0 && (num / denom) >= t) return add;
+  }
+  return list.length;
+},
+
+chooseForBar(E, C, candidates, target) {
+  const e = Number(E) || 0;
+  const c = Number(C) || 0;
+  const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+
+  const list = Array.isArray(candidates) ? candidates : [];
+  if (!e || !list.length) return [];
+
+  const greens = list.filter(x => window.COMPLETION.bucketFromChance(x?.prob) === 'green');
+  const rateIfAllGreens =
+    (e + greens.length) ? ((c + greens.length) / (e + greens.length)) : null;
+
+  if (Number.isFinite(rateIfAllGreens) && rateIfAllGreens >= t) return greens;
+
+  const chosen = [];
+  let add = 0;
+  for (const x of list) {
+    chosen.push(x);
+    add += 1;
+    const denom = e + add;
+    const num = c + add;
+    if (denom > 0 && (num / denom) >= t) break;
+  }
+  return chosen;
+},
+
     // ---- ReportTable plumbing ----
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
     // ---- COMPLETION ----
     computeForProgram(p) {
-      return window.COMPLETION.computeProgram(p, { target: 0.60 });
-    },
+  const target = 0.60;
+
+  // base compute
+  const info = window.COMPLETION.computeProgram(p, { target });
+
+  // incorporate projected non-completer exiters
+  const drops = Math.max(0, Number(p?.projected_non_completers) || 0);
+
+  const baseE = Number(info?.baseE) || 0;
+  const baseC = Number(info?.baseC) || 0;
+  const candidates = Array.isArray(info?.candidates) ? info.candidates : [];
+
+  const E = baseE + drops;
+  const C = baseC;
+
+  const neededMin = this.minNeeded(E, C, candidates, target);
+  const barChosen = this.chooseForBar(E, C, candidates, target);
+
+  // status = bucket of the last student needed to clear 60%
+  let statusBucket = 'red';
+  if ((E > 0) && (C / E) >= target) {
+    statusBucket = 'green';
+  } else if (barChosen.length) {
+    const last = barChosen[barChosen.length - 1];
+    statusBucket = window.COMPLETION.bucketFromChance(last?.prob) || 'red';
+  } else {
+    statusBucket = 'red';
+  }
+
+  return Object.assign({}, info, {
+    projectedDrops: drops,
+    whatIfE: E,
+    whatIfC: C,
+    neededMin,
+    barChosen,
+    statusBucket
+  });
+},
+
 
     currentRateForProgram(p) {
       const info = this.computeForProgram(p);
@@ -198,6 +279,18 @@ Vue.component('programs-completion', {
           color: this.colors.gray,
           opacity: 1,
           title: `${studentLabel(s)}: Did not complete (exiter)`
+        });
+      }
+      // Add projected non-completer exiters (from server/program row)
+      const drops = Math.max(0, Number(p?.projected_non_completers) || 0);
+      const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.program ?? p?.name ?? 'p');
+
+      for (let i = 0; i < drops; i++) {
+        segs.push({
+          key: `proj-drop-${progKey}-${i}`,
+          color: this.colors.darkGray,
+          opacity: 0.9,
+          title: `Projected non-completer exiter`
         });
       }
 
