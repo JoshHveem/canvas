@@ -201,6 +201,19 @@ Vue.component('programs-completion', {
         });
       }
 
+      // Add projected non-completer exiters (from server/program row)
+      const drops = Math.max(0, Number(p?.projected_non_completers) || 0);
+      const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.program ?? p?.name ?? 'p');
+
+      for (let i = 0; i < drops; i++) {
+        segs.push({
+          key: `proj-drop-${progKey}-${i}`,
+          color: this.colors.darkGray,
+          opacity: 0.9,
+          title: `Projected non-completer exiter #${i + 1}`
+        });
+      }
+
       return segs;
     },
 
