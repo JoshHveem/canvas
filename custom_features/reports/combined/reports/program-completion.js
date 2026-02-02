@@ -3,7 +3,7 @@ Vue.component('reports-program-completion', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
-    program: { type: Object, default: () => ({}) },
+    projectedNonCompleters: { type: [Number], default: 0 },
     students: { type: Array, default: () => ([]) },
     loading: { type: Boolean, default: false }
   },
@@ -19,8 +19,18 @@ Vue.component('reports-program-completion', {
       tableFinished: makeTable("Student", 1),
       tableTickActive: 0,
       tableTickFinished: 0,
-      whatIfDrops: 0
+      whatIfDrops: Math.max(0, Number(this.projectedNonCompleters) || 0)
+
     };
+  },
+
+  watch: {
+    // change in students is effectively a change in the program selected
+    students(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.whatIfDrops = Math.max(0, Number(this.projectedNonCompleters) || 0);
+      }
+    }
   },
 
   created() {
