@@ -3,6 +3,7 @@ Vue.component('reports-program-completion', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
+    program: { type: Object, default: () => ({}) },
     students: { type: Array, default: () => ([]) },
     loading: { type: Boolean, default: false }
   },

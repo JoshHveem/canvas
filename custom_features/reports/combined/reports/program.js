@@ -6,6 +6,7 @@ Vue.component('reports-program', {
         v-if="subMenu == 'completion'"
         :year="year"
         :campus="program?.campus ?? ''"
+        :program="program ?? {}"
         :students="program?.students ?? []"
       ></reports-program-completion>
     </div>
@@ -45,6 +46,7 @@ Vue.component('reports-program', {
           String(p?.campus || '').trim() === campus
         ) || null
       );
+      console.log(program);
       return program;
     } 
   },
