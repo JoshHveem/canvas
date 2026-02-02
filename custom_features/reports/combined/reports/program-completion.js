@@ -166,7 +166,7 @@ Vue.component('reports-program-completion', {
       for (let i = 0; i < drops; i++) {
         segs.push({
           key: 'whatif-drop-' + i,
-          color: this.colors.gray,
+          color: this.colors.darkGray,
           opacity: 0.9,
           title: `What-if exiter (non-completer) #${i + 1}`
         });
