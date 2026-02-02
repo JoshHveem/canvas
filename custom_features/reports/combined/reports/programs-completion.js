@@ -290,7 +290,7 @@ chooseForBar(E, C, candidates, target) {
           key: `proj-drop-${progKey}-${i}`,
           color: this.colors.darkGray,
           opacity: 0.9,
-          title: `Projected non-completer exiter #${i + 1}`
+          title: `Projected non-completer exiter`
         });
       }
 
