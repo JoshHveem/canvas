@@ -230,8 +230,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     feature('modules/enrollment_dates_student_external', /^\/courses\/[0-9]+(\/modules){0,1}$/);
     feature("login_page", /^\/login/);
-    // feature("editor_toolbar/manage-settings", /^\/btech-toolbar/);
-    // if (IS_ME) feature("editor_toolbar/main", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(.+?)\/edit/);
     feature("page_formatting/content_image_zoom", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(?!.+?\/edit$)(.+?)/);
     feature("img-zoom", /users/);
 
@@ -245,9 +243,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
     if (IS_ME) feature("reports/logan_test", /^\/$/); // test for logan to build out a dashboard
     if (rCheckInCourse.test(window.location.pathname)) {
-      //I'm putting concluding students in here as well vvv
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
-      // feature("external_assignments_fullscreen", /^\/courses\/[0-9]+\/(assignments)/);
       feature("kaltura/showInfo", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
       feature('modules/module_weight', /^\/courses\/[0-9]+(\/modules){0,1}$/);
       if (IS_TEACHER) {
@@ -344,11 +340,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
       feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Primarily used by Drafting / Digital Design. Possibly others
       feature('speed_grader/answer_key', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Not sure if this is used.
-      feature('speed_grader/assignment_page_link', /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/)
-      // feature("rubrics/sortable", [/\/rubrics/, /\/assignments\//]); // Canvas built their own thing
-      // feature("calendar/signup", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/); // was kind of an IT only thing that they aren't using and will be replaced by tools like Acuity
       feature("highlight_comments_same_date", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
-      // feature('modules/convert_to_page'); //useful, but not necessary, and a good place to start with cleanup
       feature("report_broken_content", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
       feature("grades_page/highlighted_grades_page_items", /^\/courses\/[0-9]+\/grades\/[0-9]+/); // how to make this visible for students?
       feature("grades_page/attempts", /^\/courses\/[0-9]+\/grades\/[0-9]+/);
@@ -361,7 +353,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
       featureISD("modules/delete_module_items", /^\/courses\/[0-9]+(\/modules){0,1}$/);
 
-      //COURSE SPECIFIC FEATURES
       //DEPARTMENT SPECIFIC IMPORTS
       if (IS_TEACHER) {
         feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
