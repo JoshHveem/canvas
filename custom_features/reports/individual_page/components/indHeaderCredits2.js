@@ -104,7 +104,7 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Contracted Hours</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.gray, 'color': '#000000' }">
-            {{ user?.contracted_hours_total }}
+            {{ user?.contracted_hours_total ?? 0 }}
           </span>
         </div>
 
