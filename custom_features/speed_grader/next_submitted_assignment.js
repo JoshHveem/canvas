@@ -183,12 +183,15 @@ function createNextButton(student_id) {
     const len = submittedIds.length;
     const idx = submittedIds.indexOf(currId);
     const nextIdx = idx >= 0 ? (idx + 1) % len : 0;
+    console.log({currId, idx, nextIdx, len});
 
     const nextAssignmentId = submittedIds[nextIdx];
+    console.log(submittedIds);
     const nextUrl =
       `/courses/${ENV.course_id}/gradebook/speed_grader?assignment_id=${nextAssignmentId}&student_id=${student_id}`;
 
-    window.location.href = nextUrl;
+    console.log(nextUrl);
+      // window.location.href = nextUrl;
   });
 
   return btn;
@@ -249,7 +252,7 @@ async function initNextAssignmentButton() {
   // Update with real list
   ensureNextButton(submittedIds, student_id);
 
-  // Observer on a stable root (like your working example)
+  // Observer on a stable root 
   let rafScheduled = false;
   const observer = new MutationObserver(() => {
     // debounce hard to avoid running hundreds of times per render
