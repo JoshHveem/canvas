@@ -16,6 +16,7 @@
               <option selected disabled value=''>-select term-</option>
               <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}}</option>
             </select>
+            <span>Concurrent Terms: {{selectedTerm?.concurrent_count ?? 1}}</span>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change="getIncludedAssignmentsBetweenDates()">
 
