@@ -264,7 +264,11 @@
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.hs_terms = this.bridgetoolsUser.hs_terms;
-          user.contracted_hours = this.bridgetoolsUser.contracted_hours;
+          let contractedHours = 0;
+          for (let day in this.bridgetoolsUser.contract_days) {
+            contractedHours += this.bridgetoolsUser.contract_days[day];
+          }
+          user.contracted_hours = contractedHours;
           user.transfer_courses = [];
 
           // Guard degree ops
