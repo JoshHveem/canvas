@@ -266,7 +266,7 @@
           user.hs_terms = this.bridgetoolsUser.hs_terms;
           user.contracted_hours = this.bridgetoolsUser.contracted_hours;
           let contractedHoursTotal = 0;
-          for (let day in this.bridgetoolsUser.contract_days) {
+          for (let day in this.bridgetoolsUser.contracted_hours) {
             console.log(day);
             contractedHoursTotal += this.bridgetoolsUser.contracted_hours[day];
           }
