@@ -103,8 +103,8 @@ Vue.component('ind-header-credits-2', {
 
           <span class="btech-ind-header__label">Contracted Hours</span>
           <span class="btech-pill-text btech-ind-header__pill"
-            :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-            {{ Math.round((contractedHours ?? 0) * 10) / 10 }} / {{ tree.hours }}
+            :style="{ 'background-color': colors.gray, 'color': '#000000' }">
+            {{ contractedHours }}
           </span>
         </div>
 
