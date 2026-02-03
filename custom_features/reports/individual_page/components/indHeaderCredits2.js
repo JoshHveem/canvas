@@ -145,6 +145,7 @@ Vue.component('ind-header-credits-2', {
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
     },
     contractedHours: function() {
+      console.log(this.user)
       let contractedHours = this.user?.contracted_hours;
       console.log(contractedHours)
       return 0;
