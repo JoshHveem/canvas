@@ -269,7 +269,9 @@
         if (!start || !end || end <= start) return 0;
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        return Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
+        let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
+        if (this.selectedTerm.concurrent_count > 1) credits *= this.selectedTerm.concurrent_count;
+        return credits;
       },
       weightedGradeForTerm() {
         const requiredCredits = this.estimatedCreditsRequired;
@@ -1165,7 +1167,6 @@
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
         //this value can be edited by the instructor
         let estimatedCreditsRequired = Math.round(this.estimatedCreditsEnrolled * midtermPercentCompleted * 100) / 100;
-        if (this.selectedTerm.concurrent_count > 1) estimatedCreditsRequired *= this.selectedTerm.concurrent_count;
         if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
         this.estimatedCreditsRequired = estimatedCreditsRequired;
       },
