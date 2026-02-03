@@ -411,6 +411,7 @@
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion' },
+              { value: 'placements',    label: 'Placements' },
             ]
           },
           {
@@ -1018,6 +1019,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
     if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-placements.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-completion.js");
