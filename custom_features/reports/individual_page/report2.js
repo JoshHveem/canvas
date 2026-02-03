@@ -268,7 +268,7 @@
           let contractedHoursTotal = 0;
           for (let day in this.bridgetoolsUser.contract_days) {
             console.log(day);
-            contractedHoursTotal += this.bridgetoolsUser.contract_days[day];
+            contractedHoursTotal += this.bridgetoolsUser.contracted_hours[day];
           }
           user.contracted_hours_total = contractedHoursTotal;
           user.transfer_courses = [];
