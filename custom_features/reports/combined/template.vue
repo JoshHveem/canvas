@@ -102,6 +102,7 @@
           style="align-items:flex-start; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
         >
           <!-- Account -->
+           <div>{{ currentSelectors }}</div>
           <div style="display:inline-block; min-width:200px;">
             <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Account</label>
             <select
