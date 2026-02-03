@@ -101,19 +101,6 @@
           class="btech-row"
           style="align-items:flex-start; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
         >
-          <!-- Account -->
-          <div v-if="currentSelectors.includes('departments')" style="display:inline-block; min-width:200px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Account</label>
-            <select
-              v-model="settings.account"
-              aria-label="Select account"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
-            </select>
-          </div>
-
           <!-- Year -->
           <div style="display:inline-block; min-width:120px;">
             <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Year</label>
@@ -128,6 +115,19 @@
                 :key="year"
                 :value="year"
               >{{ year }}</option>
+            </select>
+          </div>
+
+          <!-- Account -->
+          <div v-if="currentSelectors.includes('departments')" style="display:inline-block; min-width:200px;">
+            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Account</label>
+            <select
+              v-model="settings.account"
+              aria-label="Select account"
+              @change="saveSettings(settings)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
             </select>
           </div>
 
