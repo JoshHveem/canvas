@@ -30,8 +30,7 @@ Vue.component('reports-program-placements', {
     this.tableAction.setColumns([
       this.makeStatusColumn('action'),
       this.makeStudentColumn(),
-      this.makeEndColumn('projected', 'Exited', 'Projected exit date (server-calculated).'),
-      this.makeExitColumn(),
+      this.makeEndColumn('actual', 'Exited', 'Projected exit date (server-calculated).'),
     ]);
 
     // Placed (middle)
@@ -39,7 +38,6 @@ Vue.component('reports-program-placements', {
       this.makeStatusColumn('placed'),
       this.makeStudentColumn(),
       this.makeEndColumn('actual', 'Exited', 'Actual exit date (exit_date).'),
-      this.makeExcusedColumn() // usually blank, but harmless if present
     ]);
 
     // Excused (bottom)
