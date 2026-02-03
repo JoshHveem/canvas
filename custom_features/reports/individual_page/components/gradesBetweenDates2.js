@@ -898,6 +898,7 @@
         if (!term) return;
 
         this.selectedTerm = term;
+        console.log("Selected term:", term);
 
         const start = this.dateToHTMLDate(term.entry_date);
         const end   = this.dateToHTMLDate(term.exit_date);
