@@ -79,14 +79,6 @@ if (window.location.pathname == "/grades") {
 }
 
 
-//this adds a link to speed grader on the canvas assignment grading page to make it easier to access
-if (/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/.test(window.location.pathname)) {
-  let pieces = window.location.pathname.match(/^\/courses\/([0-9]+)\/assignments\/([0-9]+)\/submissions\/([0-9]+)/);
-  let speed_grader_link = '<div style="text-align: right;"><a class="assess_submission_link Button Button--small Button--link" href="/courses/' + pieces[1] + '/gradebook/speed_grader?assignment_id=' + pieces[2] + '&student_id=' + pieces[3] + '"><i class="icon-rubric" aria-hidden="true"></i> Speed Grader</a></div>';
-  $($(".submission-details-header div")[0]).after(speed_grader_link);
-}
-//END SPEED GRADER LINK
-
 //Specific to Animal Sciences, this is hiding certain modules that students who are in specific sections do not need to see
 if (/^\/courses\/[0-9]+\/modules$/.test(window.location.pathname)) {
   if (ENV.course_id === "488475") {

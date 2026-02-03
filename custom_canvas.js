@@ -344,7 +344,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
       feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Primarily used by Drafting / Digital Design. Possibly others
       feature('speed_grader/answer_key', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Not sure if this is used.
-      feature('speed_grader/assignment_page_link', /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/)
+      // feature('speed_grader/assignment_page_link', /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/)
       // feature("rubrics/sortable", [/\/rubrics/, /\/assignments\//]); // Canvas built their own thing
       // feature("calendar/signup", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/); // was kind of an IT only thing that they aren't using and will be replaced by tools like Acuity
       feature("highlight_comments_same_date", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
