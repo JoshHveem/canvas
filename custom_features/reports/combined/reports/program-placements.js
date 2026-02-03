@@ -15,7 +15,7 @@ Vue.component('reports-program-placements', {
     return {
       colors,
 
-      tableAction: makeTable("End (Projected)", 1),
+      tableAction: makeTable("Action", 1),
       tablePlaced: makeTable("Student", 1),
       tableExcused: makeTable("Excused", 1),
 
@@ -30,7 +30,7 @@ Vue.component('reports-program-placements', {
     this.tableAction.setColumns([
       this.makeStatusColumn('action'),
       this.makeStudentColumn(),
-      this.makeEndColumn('projected', 'End (Projected)', 'Projected exit date (server-calculated).'),
+      this.makeEndColumn('projected', 'Exited', 'Projected exit date (server-calculated).'),
       this.makeExitColumn(),
     ]);
 
@@ -38,7 +38,7 @@ Vue.component('reports-program-placements', {
     this.tablePlaced.setColumns([
       this.makeStatusColumn('placed'),
       this.makeStudentColumn(),
-      this.makeEndColumn('actual', 'Exit', 'Actual exit date (exit_date).'),
+      this.makeEndColumn('actual', 'Exited', 'Actual exit date (exit_date).'),
       this.makeExcusedColumn() // usually blank, but harmless if present
     ]);
 
@@ -46,7 +46,7 @@ Vue.component('reports-program-placements', {
     this.tableExcused.setColumns([
       this.makeStatusColumn('excused'),
       this.makeStudentColumn(),
-      this.makeEndColumn('actual', 'Exit', 'Actual exit date (exit_date).'),
+      this.makeEndColumn('actual', 'Exited', 'Actual exit date (exit_date).'),
       this.makeExcusedColumn()
     ]);
   },
