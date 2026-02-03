@@ -1007,7 +1007,6 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
-    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
@@ -1017,7 +1016,6 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
-    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-placements.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
