@@ -100,6 +100,12 @@ Vue.component('ind-header-credits-2', {
             }">
             {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
           </span>
+
+          <span class="btech-ind-header__label">Contracted Hours</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
+            {{ Math.round((contractedHours ?? 0) * 10) / 10 }} / {{ tree.hours }}
+          </span>
         </div>
 
       </div>
@@ -137,6 +143,11 @@ Vue.component('ind-header-credits-2', {
       let code = prob?.code ?? '';
       let colors = this.colors;
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
+    },
+    contractedHours: function() {
+      let contractedHours = this.user?.contracted_hours;
+      console.log(contractedHours)
+      return 0;
     }
   },
   watch: {
