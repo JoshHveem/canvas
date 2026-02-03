@@ -379,7 +379,7 @@
             component: 'reports-department',
             title: 'Department Report',
             datasets: ['departments'],
-            selectors: [],
+            selectors: ['departments'],
             subMenus: [
               { value: 'overview',    label: 'Overview' },
               { value: 'instructors', label: 'Instructors' },
@@ -420,6 +420,7 @@
             component: 'reports-instructors',
             title: 'Instructors Report',
             datasets: ['instructors'],
+            selectors: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
               { value: 'surveys',  label: 'Surveys' },
@@ -430,7 +431,7 @@
             label: 'Instructor',
             component: 'reports-instructor',
             title: 'Instructor Report',
-            selectors: ['instructor'],
+            selectors: ['instructor', 'departments'],
             datasets: ['instructors'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
@@ -442,6 +443,7 @@
             component: 'reports-courses',
             title: 'Courses Report',
             datasets: ['courses'],
+            selectors: ['departments'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
               { value: 'surveys',  label: 'Surveys' },
@@ -452,7 +454,7 @@
             label: 'Course',
             component: 'reports-course',
             title: 'Course Report',
-            selectors: ['course'],
+            selectors: ['course', 'departments'],
             datasets: ['courses'],
             subMenus: [
               { value: 'overview', label: 'Overview' },
