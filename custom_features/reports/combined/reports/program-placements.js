@@ -89,6 +89,7 @@ Vue.component('reports-program-placements', {
       return this.includedStudents.filter(s =>
         !s.is_placement &&
         !s.excused_status &&
+        !!s.is_exited &&
         (inYear(s) || !!s.is_completer || !!s.exit_date || !!s.is_exited)
       );
     },
