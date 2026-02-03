@@ -255,7 +255,6 @@
           }
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
-          console.log(user.degrees);
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
           user.canvas_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
@@ -265,6 +264,7 @@
           user.avatar_url = this.canvasUser.avatar_url;
           user.sis_id = this.bridgetoolsUser.sis_id;
           user.hs_terms = this.bridgetoolsUser.hs_terms;
+          user.contracted_hours = this.bridgetoolsUser.contracted_hours;
           user.transfer_courses = [];
 
           // Guard degree ops
