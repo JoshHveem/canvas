@@ -104,7 +104,7 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Contracted Hours</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.gray, 'color': '#000000' }">
-            {{ user?.contracted_hours_total ?? 0 }}
+            {{ contractedHoursTotal }} hrs
           </span>
         </div>
 
@@ -144,9 +144,9 @@ Vue.component('ind-header-credits-2', {
       let colors = this.colors;
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
     },
-    contractedHours: function() {
+    contractedHoursTotal: function() {
       console.log(this.user)
-      let contractedHours = this.user?.contracted_hours;
+      let contractedHours = this.user?.contracted_hours_total;
       console.log(contractedHours)
       return 0;
     }
