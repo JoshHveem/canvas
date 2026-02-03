@@ -179,7 +179,7 @@ function createNextButton(student_id) {
       return;
     }
 
-    const currId = Number(ENV.assignment_id);
+    const currId = Number((window.location.search.match(/(?:\?|&)assignment_id=(\d+)/) || [])[1]);
     const len = submittedIds.length;
     const idx = submittedIds.indexOf(currId);
     const nextIdx = idx >= 0 ? (idx + 1) % len : 0;
