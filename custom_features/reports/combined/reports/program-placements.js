@@ -390,18 +390,6 @@ Vue.component('reports-program-placements', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      <h4 class="btech-card-title" style="margin:0;">Placement Roster</h4>
-      <div style="flex:1;"></div>
-      <span class="btech-pill" style="margin-left:8px;">Placed: {{ kpi.placed }} / Eligible: {{ kpi.eligible }} ({{ pctText }})</span>
-      <span class="btech-pill" style="margin-left:8px;">Action: {{ kpi.action }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Excused: {{ kpi.excused }}</span>
-    </div>
-
-    <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
-      Loading students…
-    </div>
-
-    <div v-else>
       <div style="display:grid; grid-template-columns: auto 14rem; gap:10px; align-items:center;">
         <div>
           <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
@@ -424,12 +412,16 @@ Vue.component('reports-program-placements', {
         </div>
 
         <div style="text-align:right;">
-          <span class="btech-pill">Placed: {{ placedCount }}</span>
-          <span class="btech-pill" style="margin-left:6px;">Completer not placed: {{ completerNotPlacedCount }}</span>
           <span class="btech-pill" style="margin-left:6px;">Rate: {{ placementPctText }}</span>
         </div>
       </div>
+    </div>
 
+    <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
+      Loading students…
+    </div>
+
+    <div v-else>
       <!-- ACTION NEEDED -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
         <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Action needed</h4>
