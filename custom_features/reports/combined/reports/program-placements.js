@@ -292,7 +292,7 @@ placementStatusColor(s) {
   if (k === 'placed') return this.colors.green;
   if (k === 'stale-completer') return this.colors.red;
   if (k === 'completer') return this.colors.orange;
-  if (k === 'projected-soon') return this.colors.yellow;
+  if (k === 'projected-soon') return this.colors.gray;
   // excused + not-completer
   if (k === 'excused') return this.colors.gray;
   if (k === 'not-completer') return this.colors.gray;
@@ -315,7 +315,7 @@ placementStatusSortValue(s) {
   const k = this.placementStatusKey(s);
   if (k === 'stale-completer') return 1;   // red
   if (k === 'completer') return 2;         // orange
-  if (k === 'projected-soon') return 3;    // yellow
+  if (k === 'projected-soon') return 3;    // gray 
   if (k === 'not-completer') return 4;     // gray
   if (k === 'placed') return 5;            // green (or move earlier if you want)
   if (k === 'excused') return 6;           // gray but separate
