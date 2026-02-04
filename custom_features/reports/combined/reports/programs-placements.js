@@ -156,7 +156,7 @@ Vue.component('reports-programs-placements', {
 
   // fade only locked-in completers
   placementStatusOpacityFromKey(k) {
-    if (k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
+    if (k === 'placed' || k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
     return 1;
   },
 
