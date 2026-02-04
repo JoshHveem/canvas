@@ -262,10 +262,10 @@ Vue.component('reports-programs-placements', {
     statusSortValueForProgram(p) {
       const k = this.statusKeyForProgram(p);
       if (k === 'stale-completer') return 1;
-      if (k === 'completer') return 2;
-      if (k === 'projected-soon') return 3;
-      if (k === 'not-completer') return 4;
-      if (k === 'placed') return 5;
+      if (k === 'completer') return 5;
+      if (k === 'projected-soon') return 4;
+      if (k === 'not-completer') return 3;
+      if (k === 'placed') return 2;
       return 9;
     },
 
