@@ -399,6 +399,7 @@
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion' },
+              { value: 'placements',    label: 'Placements' },
             ]
           },
           {

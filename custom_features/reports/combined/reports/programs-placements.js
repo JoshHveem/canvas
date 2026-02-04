@@ -1,5 +1,5 @@
 // programs-placements.js
-Vue.component('programs-placements', {
+Vue.component('reports-programs-placements', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
