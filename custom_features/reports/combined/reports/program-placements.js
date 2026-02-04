@@ -540,7 +540,7 @@ statusSortValue(s, { mode }) {
         :style="Object.assign(
           { 'grid-template-columns': getColumnsWidthsStringAction(), 'background-color': (i % 2) ? 'white' : '#F8F8F8' },
           actionRowDividerStyle(s, i, visibleActionRows)
-        )"
+        )">
 
         <div v-for="col in tableAction.getVisibleColumns()" :key="'ac-' + col.name"
           style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
