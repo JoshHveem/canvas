@@ -82,16 +82,9 @@ Vue.component('reports-program-placements', {
     },
 
     groupActionNeeded() {
-      // included AND not placed AND not excused
-      const inYear = this.isInAcademicYear;
-      return this.includedStudents.filter(s =>
-        !s.is_placement &&
-        !s.excused_status &&
-        !!s.is_exited &&
-        (inYear(s) || !!s.is_completer || !!s.exit_date || !!s.is_exited)
-      );
+      // yellow blocks in the bar == “eligible but not placed”
+      return this.eligibleNotPlaced;
     },
-
     groupPlaced() {
       return this.includedStudents.filter(s => !!s.is_placement);
     },
