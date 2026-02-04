@@ -275,20 +275,11 @@ Vue.component('reports-program-placements', {
         name, description, '8rem', false, 'string',
         s => {
           if (mode === 'actual') return s?.exit_date ? this.dateOrDash(s.exit_date) : '—';
+          // projected
           return s?.projected_exit_date ? this.dateOrDash(s.projected_exit_date) : 'n/a';
         },
-        s => {
-          if (mode === 'actual') {
-            if (!s?.exit_date) return { backgroundColor: 'transparent', color: this.colors.black };
-            return {
-              backgroundColor: s?.is_placement ? this.colors.green : (s?.excused_status ? this.colors.gray : this.colors.yellow),
-              color: this.colors.black,
-              opacity: 0.85
-            };
-          }
-          // projected
-          return { backgroundColor: this.colors.gray, color: this.colors.black, opacity: 0.25 };
-        },
+        // style + sort can stay as you have it (just treat projected separately if you want)
+        null,
         s => {
           const t = (mode === 'actual')
             ? (this.actualEndDate(s)?.getTime() ?? Infinity)
