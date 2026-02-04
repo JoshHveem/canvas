@@ -97,6 +97,75 @@ Vue.component('reports-programs-placements', {
   },
 
   methods: {
+    // --- time helpers ---
+monthsSince(d) {
+  if (!d) return null;
+  const now = new Date();
+  const ms = now.getTime() - d.getTime();
+  return ms / (1000 * 60 * 60 * 24 * 30.4375);
+},
+
+// Key for *bar coloring*, includes "recent/mid/old completer" buckets
+placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate } = {}) {
+  if (!s) return 'none';
+
+  if (s.excused_status) return 'excused';
+  if (s.is_placement) return 'placed';
+
+  const ad = actualEndDate ? actualEndDate(s) : null;
+  const pd = projectedEndDate ? projectedEndDate(s) : null;
+
+  // locked-in completers (not placed)
+  if (s.is_completer && (s.is_exited || s.exit_date)) {
+    const m = this.monthsSince(ad);
+    if (!Number.isFinite(m)) return 'comp-old'; // safest
+    if (m < 3) return 'comp-recent';  // yellow (faded)
+    if (m < 6) return 'comp-mid';     // orange (faded)
+    return 'comp-old';                // red (faded)
+  }
+
+  // on-track-to-finish (actionable)
+  if (!s.is_completer && cutoff && pd && pd.getTime() < cutoff.getTime()) {
+    return 'on-track'; // yellow (NOT faded)
+  }
+
+  return 'other'; // gray (NOT faded)
+},
+
+placementStatusColorFromKey(k) {
+  if (k === 'placed') return this.colors.green;
+
+  // completers: color encodes recency buckets
+  if (k === 'comp-recent') return this.colors.yellow; // <3mo
+  if (k === 'comp-mid') return this.colors.orange;    // <6mo
+  if (k === 'comp-old') return this.colors.red;       // >=6mo
+
+  // actionable on-track
+  if (k === 'on-track') return this.colors.yellow;
+
+  // other non-completers
+  if (k === 'other') return this.colors.gray;
+
+  // excused/none
+  return this.colors.gray;
+},
+
+// fade only locked-in completers
+placementStatusOpacityFromKey(k) {
+  if (k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
+  return 1;
+},
+
+placementStatusTitleFromKey(k) {
+  if (k === 'placed') return 'Placed';
+  if (k === 'comp-recent') return 'Completed < 3 months ago (not placed)';
+  if (k === 'comp-mid') return 'Completed < 6 months ago (not placed)';
+  if (k === 'comp-old') return 'Completed ≥ 6 months ago (not placed)';
+  if (k === 'on-track') return 'On track to finish before July 1 (not a completer yet)';
+  if (k === 'other') return 'Not a completer (later / unknown finish)';
+  return '—';
+},
+
     // ---- ReportTable plumbing ----
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
@@ -175,24 +244,47 @@ Vue.component('reports-programs-placements', {
         return 9;
       };
 
-      const neededCandidates = notPlaced.slice().sort((a, b) => {
-        const sa = severity(a), sb = severity(b);
-        if (sa !== sb) return sa - sb;
-        return (a?.name ?? '').localeCompare((b?.name ?? ''));
-      });
+      // Only candidates who could become placed (i.e. not already placed)
+const notPlaced = barStudents.filter(s => !s.is_placement);
 
-      const barChosen = neededCandidates.slice(0, neededMin);
+// Needed placements to reach 70% (unchanged)
+const neededMin = denom
+  ? Math.max(0, Math.min(notPlaced.length, Math.ceil((target * denom) - num)))
+  : 0;
 
-      // status bucket = color of the last student needed to hit 70%
-      let statusKey = 'not-completer';
-      if (denom && (num / denom) >= target) {
-        statusKey = 'placed';
-      } else if (barChosen.length) {
-        statusKey = this.placementStatusKey(barChosen[barChosen.length - 1], { cutoff, actualEndDate, projectedEndDate });
-      } else {
-        // if denom>0 but no candidates, treat as worst-case gray
-        statusKey = 'not-completer';
-      }
+// Choose candidates in an order that makes sense for "on track":
+// Prefer "on-track" first, then "other" (because those are riskier).
+const kFor = (s) => this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+
+const candWeight = (s) => {
+  const k = kFor(s);
+  if (k === 'on-track') return 1;
+  if (k === 'other') return 2;
+  // completers should not really be in notPlaced for the denominator (they are in barStudents),
+  // but if they are, shove them to the end.
+  if (k.startsWith('comp-')) return 9;
+  return 9;
+};
+
+const neededCandidates = notPlaced.slice().sort((a, b) => {
+  const wa = candWeight(a), wb = candWeight(b);
+  if (wa !== wb) return wa - wb;
+  return (a?.name ?? '').localeCompare((b?.name ?? ''));
+});
+
+const barChosen = neededCandidates.slice(0, neededMin);
+
+// Program status = what is the worst-case *actionable* key among chosen
+let statusKey = 'placed';
+if (denom && (num / denom) >= target) {
+  statusKey = 'placed';
+} else if (barChosen.length) {
+  // if any chosen is "other" => gray, else => yellow
+  const worst = barChosen.some(s => kFor(s) === 'other') ? 'other' : 'on-track';
+  statusKey = worst;
+} else {
+  statusKey = 'other';
+}
 
       return {
         included,
@@ -260,33 +352,34 @@ Vue.component('reports-programs-placements', {
     },
 
     statusSortValueForProgram(p) {
-      const k = this.statusKeyForProgram(p);
-      if (k === 'stale-completer') return 1;
-      if (k === 'completer') return 5;
-      if (k === 'projected-soon') return 4;
-      if (k === 'not-completer') return 3;
-      if (k === 'placed') return 2;
-      return 9;
+        const k = this.statusKeyForProgram(p);
+        // Top = "needs attention" first
+        if (k === 'other') return 1;      // gray risk
+        if (k === 'on-track') return 2;   // yellow on-track
+        if (k === 'placed') return 3;     // green already >=70
+        return 9;
     },
 
     statusDotHtmlForProgram(p) {
-      const k = this.statusKeyForProgram(p);
-      const c = this.placementStatusColorFromKey(k);
-      return `
-        <span
-          title="status"
-          style="
-            display:inline-block;
-            width:10px;
-            height:10px;
-            border-radius:999px;
-            background:${c};
-            box-shadow: 0 0 0 1px rgba(0,0,0,.12);
-            vertical-align:middle;
-          "
-        ></span>
-      `;
-    },
+  const k = this.statusKeyForProgram(p);
+
+  const c =
+    (k === 'placed') ? this.colors.green :
+    (k === 'on-track') ? this.colors.yellow :
+    this.colors.gray;
+
+  const title =
+    (k === 'placed') ? 'At/above 70% placement' :
+    (k === 'on-track') ? 'On track to reach 70% with projected finishers' :
+    'Needs attention: would require non-on-track students to reach 70%';
+
+  return `
+    <span title="${this.escapeHtml(title)}" style="
+      display:inline-block;width:10px;height:10px;border-radius:999px;
+      background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
+    "></span>
+  `;
+},
 
     // ---- pill style for placement rate ----
     placementPillStyleForProgram(p) {
@@ -320,44 +413,53 @@ Vue.component('reports-programs-placements', {
 
       const cutoff = info?.cutoff || null;
 
-      const orderWeight = (s) => {
-        const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
-        // Same “reads nicely” ordering as your placements bar
-        if (k === 'placed') return 1;
-        if (k === 'stale-completer') return 5;
-        if (k === 'completer') return 4;
-        if (k === 'projected-soon') return 3;
-        if (k === 'not-completer') return 2;
-        return 9;
-      };
+    const orderWeight = (s) => {
+  const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+  if (k === 'placed') return 1;
+  if (k === 'on-track') return 2;
+  if (k === 'other') return 3;
+  if (k === 'comp-recent') return 4;
+  if (k === 'comp-mid') return 5;
+  if (k === 'comp-old') return 6;
+  return 9;
+};
+ 
+    const sorted = list.slice().sort((a, b) => {
+  const ka = this.placementStatusKey(a, { cutoff, actualEndDate, projectedEndDate });
+  const kb = this.placementStatusKey(b, { cutoff, actualEndDate, projectedEndDate });
 
-      const sorted = list.slice().sort((a, b) => {
-        const wa = orderWeight(a), wb = orderWeight(b);
-        if (wa !== wb) return wa - wb;
-        return (a?.name ?? '').localeCompare((b?.name ?? ''));
-      });
+  const wa = orderWeight(a), wb = orderWeight(b);
+  if (wa !== wb) return wa - wb;
+
+  const aIsComp = ka && ka.startsWith('comp-');
+  const bIsComp = kb && kb.startsWith('comp-');
+
+  if (aIsComp && bIsComp) {
+    const da = actualEndDate(a)?.getTime() ?? -Infinity;
+    const db = actualEndDate(b)?.getTime() ?? -Infinity;
+    if (da !== db) return db - da; // NEWEST first
+  }
+
+  return (a?.name ?? '').localeCompare((b?.name ?? ''));
+});
 
       const segs = [];
       const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.name ?? 'p');
 
-      for (let i = 0; i < sorted.length; i++) {
-        const s = sorted[i];
-        const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
-        const color = this.placementStatusColorFromKey(k);
-        const title =
-          (k === 'placed') ? 'Placed' :
-          (k === 'stale-completer') ? 'Completed > 3 months ago (not placed)' :
-          (k === 'completer') ? 'Completed (not placed)' :
-          (k === 'projected-soon') ? 'Projected to finish before July 1 (not a completer yet)' :
-          'Not a completer (later / unknown finish)';
+        for (let i = 0; i < sorted.length; i++) {
+  const s = sorted[i];
+  const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+  const color = this.placementStatusColorFromKey(k);
+  const opacity = this.placementStatusOpacityFromKey(k);
+  const title = this.placementStatusTitleFromKey(k);
 
-        segs.push({
-          key: `pl-${progKey}-${s?.sis_user_id ?? s?.id ?? i}`,
-          color,
-          opacity: 1,
-          title: `${studentLabel(s)}: ${title}`
-        });
-      }
+  segs.push({
+    key: `pl-${progKey}-${s?.sis_user_id ?? s?.id ?? i}`,
+    color,
+    opacity,
+    title: `${studentLabel(s)}: ${title}`
+  });
+}
 
       return segs;
     },
