@@ -2,19 +2,19 @@
 Vue.component('reports-programs', {
   template: `
     <div>
-      <programs-completion
+      <reports-programs-completion
         v-if="subMenu == 'completion'"
         :year="year"
         :programs="programsClean"
         @drill-program="$emit('drill-program', $event)"
-      ></programs-completion>
+      ></reports-programs-completion>
 
-      <programs-placements
+      <reports-programs-placements
         v-if="subMenu == 'placements'"
         :year="year"
         :programs="programsClean"
         @drill-program="$emit('drill-program', $event)"
-      ></programs-placements>
+      ></reports-programs-placements>
  
     </div>
   `,
