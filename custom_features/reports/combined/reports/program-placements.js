@@ -134,6 +134,66 @@ Vue.component('reports-program-placements', {
       this.tableExcused.setRows(rows);
       return this.tableExcused.getSortedRows();
     },
+    // --- placement numerator/denominator for bar ---
+  placedCount() {
+    // Placed always counts in numerator.
+    return this.includedStudents.filter(s => !!s?.is_placement).length;
+  },
+
+  completerNotPlacedCount() {
+    // Denominator add-on: completer but NOT placed, excluding excused
+    return this.includedStudents.filter(s =>
+      !!s?.is_completer &&
+      !s?.is_placement &&
+      !s?.excused_status
+    ).length;
+  },
+
+  placementDenom() {
+    return this.placedCount + this.completerNotPlacedCount;
+  },
+
+  placementRate() {
+    const d = this.placementDenom;
+    return d ? (this.placedCount / d) : null;
+  },
+
+  placementPctText() {
+    const r = this.placementRate;
+    return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
+  },
+
+  barSegmentsPlacement() {
+    const segs = [];
+    const placed = this.placedCount;
+    const compNo = this.completerNotPlacedCount;
+
+    for (let i = 0; i < placed; i++) {
+      segs.push({
+        key: 'placed-' + i,
+        color: this.colors.green,
+        opacity: 1,
+        title: 'Placed'
+      });
+    }
+
+    for (let i = 0; i < compNo; i++) {
+      segs.push({
+        key: 'comp-not-placed-' + i,
+        color: this.colors.gray,
+        opacity: 1,
+        title: 'Completer (not placed)'
+      });
+    }
+
+    return segs;
+  },
+
+  barSegmentsPlacementSafe() {
+    const segs = Array.isArray(this.barSegmentsPlacement) ? this.barSegmentsPlacement : [];
+    return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
+  },
+
 
     // simple KPI counts
     kpi() {
@@ -193,6 +253,11 @@ Vue.component('reports-program-placements', {
       return Number.isNaN(d.getTime()) ? null : d;
     },
 
+    rateMarkerLeftPct() {
+      const r = this.placementRate;
+      if (!Number.isFinite(r)) return null;
+      return (Math.max(0, Math.min(1, r)) * 100) + '%';
+    },
     // ---------- columns ----------
     makeStudentColumn() {
       return new window.ReportColumn(
@@ -337,6 +402,33 @@ Vue.component('reports-program-placements', {
     </div>
 
     <div v-else>
+      <div style="display:grid; grid-template-columns: auto 14rem; gap:10px; align-items:center;">
+        <div>
+          <div style="position:relative; height:18px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
+            <div style="position:absolute; inset:0; display:flex;">
+              <div
+                v-for="seg in barSegmentsPlacementSafe"
+                :key="seg.key"
+                :title="seg.title"
+                :style="{ flex:'1 1 0', background:seg.color, opacity:seg.opacity, borderRight:'1px solid rgba(255,255,255,0.6)' }"
+              ></div>
+            </div>
+
+            <!-- current placement rate marker -->
+            <div
+              v-if="rateMarkerLeftPct()"
+              :style="{ position:'absolute', left: rateMarkerLeftPct(), top:'-3px', bottom:'-3px', width:'2px', background:colors.black, opacity:0.6 }"
+              :title="'Placement rate: ' + placementPctText"
+            ></div>
+          </div>
+        </div>
+
+        <div style="text-align:right;">
+          <span class="btech-pill">Placed: {{ placedCount }}</span>
+          <span class="btech-pill" style="margin-left:6px;">Completer not placed: {{ completerNotPlacedCount }}</span>
+          <span class="btech-pill" style="margin-left:6px;">Rate: {{ placementPctText }}</span>
+        </div>
+      </div>
 
       <!-- ACTION NEEDED -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
