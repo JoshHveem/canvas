@@ -145,7 +145,7 @@ Vue.component('reports-programs-placements', {
     if (k === 'comp-old') return this.colors.red;       // >=6mo
 
     // actionable on-track
-    if (k === 'on-track') return this.colors.yellow;
+    if (k === 'on-track') return this.colors.gray;
 
     // other non-completers
     if (k === 'other') return this.colors.gray;
@@ -156,7 +156,7 @@ Vue.component('reports-programs-placements', {
 
   // fade only locked-in completers
   placementStatusOpacityFromKey(k) {
-    if (k === 'placed' || k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
+    if (k === 'placed') return 0.38;
     return 1;
   },
 
@@ -357,11 +357,11 @@ Vue.component('reports-programs-placements', {
     const orderWeight = (s) => {
       const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
       if (k === 'placed') return 1;
-      if (k === 'on-track') return 2;
-      if (k === 'other') return 3;
-      if (k === 'comp-recent') return 4;
-      if (k === 'comp-mid') return 5;
-      if (k === 'comp-old') return 6;
+      if (k === 'comp-recent') return 2;
+      if (k === 'comp-mid') return 3;
+      if (k === 'comp-old') return 4;
+      if (k === 'on-track') return 5;
+      if (k === 'other') return 6;
       return 9;
     };
 
