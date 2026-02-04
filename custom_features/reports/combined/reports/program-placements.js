@@ -149,16 +149,6 @@ eligibleStudents() {
   barSegmentsPlacement() {
     const segs = [];
 
-    // Yellow = eligible not placed (action-needed within eligible)
-    for (let i = 0; i < this.eligibleNotPlaced.length; i++) {
-      const s = this.eligibleNotPlaced[i];
-      segs.push({
-        key: `elig-not-placed-${s?.sis_user_id ?? i}`,
-        color: this.colors.yellow,
-        opacity: 1,
-        title: `${this.displayName(s)}: Eligible, not placed`
-      });
-    }
 
     // Green = eligible placed
     for (let i = 0; i < this.eligiblePlaced.length; i++) {
@@ -168,6 +158,17 @@ eligibleStudents() {
         color: this.colors.green,
         opacity: 1,
         title: `${this.displayName(s)}: Placed`
+      });
+    }
+
+    // Yellow = eligible not placed (action-needed within eligible)
+    for (let i = 0; i < this.eligibleNotPlaced.length; i++) {
+      const s = this.eligibleNotPlaced[i];
+      segs.push({
+        key: `elig-not-placed-${s?.sis_user_id ?? i}`,
+        color: this.colors.yellow,
+        opacity: 1,
+        title: `${this.displayName(s)}: Eligible, not placed`
       });
     }
 
