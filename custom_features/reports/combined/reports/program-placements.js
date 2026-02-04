@@ -72,6 +72,8 @@ Vue.component('reports-program-placements', {
       const inYear = this.isInAcademicYear;
       return this.studentsClean.filter(s => {
         if (!s) return false;
+        if (!!s.is_exited && !s.is_completer) return false;
+
         return (
           !!s.is_completer ||
           !!s.is_placement ||
