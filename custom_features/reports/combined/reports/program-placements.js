@@ -135,54 +135,41 @@ Vue.component('reports-program-placements', {
       return this.tableExcused.getSortedRows();
     },
     // --- placement numerator/denominator for bar ---
-  placedCount() {
-    // Placed always counts in numerator.
-    return this.includedStudents.filter(s => !!s?.is_placement).length;
+    eligibleStudents() {
+    // server already computes this (and excludes refused/unavailable/pending licensure)
+    return this.includedStudents.filter(s => !!s?.is_placement_eligible);
   },
 
-  completerNotPlacedCount() {
-    // Denominator add-on: completer but NOT placed, excluding excused
-    return this.includedStudents.filter(s =>
-      !!s?.is_completer &&
-      !s?.is_placement &&
-      !s?.excused_status
-    ).length;
+  eligiblePlaced() {
+    return this.eligibleStudents.filter(s => !!s?.is_placement);
   },
 
-  placementDenom() {
-    return this.placedCount + this.completerNotPlacedCount;
-  },
-
-  placementRate() {
-    const d = this.placementDenom;
-    return d ? (this.placedCount / d) : null;
-  },
-
-  placementPctText() {
-    const r = this.placementRate;
-    return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
+  eligibleNotPlaced() {
+    return this.eligibleStudents.filter(s => !s?.is_placement);
   },
 
   barSegmentsPlacement() {
     const segs = [];
-    const placed = this.placedCount;
-    const compNo = this.completerNotPlacedCount;
 
-    for (let i = 0; i < placed; i++) {
+    // Yellow = eligible not placed (action-needed within eligible)
+    for (let i = 0; i < this.eligibleNotPlaced.length; i++) {
+      const s = this.eligibleNotPlaced[i];
       segs.push({
-        key: 'placed-' + i,
-        color: this.colors.green,
+        key: `elig-not-placed-${s?.sis_user_id ?? i}`,
+        color: this.colors.yellow,
         opacity: 1,
-        title: 'Placed'
+        title: `${this.displayName(s)}: Eligible, not placed`
       });
     }
 
-    for (let i = 0; i < compNo; i++) {
+    // Green = eligible placed
+    for (let i = 0; i < this.eligiblePlaced.length; i++) {
+      const s = this.eligiblePlaced[i];
       segs.push({
-        key: 'comp-not-placed-' + i,
-        color: this.colors.gray,
+        key: `elig-placed-${s?.sis_user_id ?? i}`,
+        color: this.colors.green,
         opacity: 1,
-        title: 'Completer (not placed)'
+        title: `${this.displayName(s)}: Placed`
       });
     }
 
@@ -194,7 +181,19 @@ Vue.component('reports-program-placements', {
     return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
   },
 
+  // KPI for the bar
+  eligibleCount() { return this.eligibleStudents.length; },
+  placedCount() { return this.eligiblePlaced.length; },
+  actionEligibleCount() { return this.eligibleNotPlaced.length; },
 
+  placementRate() {
+    return this.eligibleCount ? (this.placedCount / this.eligibleCount) : null;
+  },
+
+  placementPctText() {
+    const r = this.placementRate;
+    return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
+  },
     // simple KPI counts
     kpi() {
       const total = this.includedStudents.length;
@@ -409,13 +408,12 @@ Vue.component('reports-program-placements', {
               ></div>
             </div>
 
-            <!-- current placement rate marker -->
+            <!-- 70% goal marker -->
             <div
-              v-if="rateMarkerLeftPct()"
-              :style="{ position:'absolute', left: rateMarkerLeftPct(), top:'-3px', bottom:'-3px', width:'2px', background:colors.black, opacity:0.6 }"
-              :title="'Placement rate: ' + placementPctText"
+              :style="{ position:'absolute', left:'70%', top:'-3px', bottom:'-3px', width:'2px', background:colors.black, opacity:0.6 }"
+              title="70% placement goal"
             ></div>
-          </div>
+          </div> 
         </div>
 
         <div style="text-align:right;">
