@@ -134,6 +134,7 @@ eligibleStudents() {
   // - false => not eligible
   return this.includedStudents.filter(s => {
     if (!s) return false;
+    return true;
     return (!!s.is_placement || !!s.is_completer) && !s.excused_status;
   });
 },
