@@ -128,10 +128,15 @@ Vue.component('reports-program-placements', {
       return this.tableExcused.getSortedRows();
     },
     // --- placement numerator/denominator for bar ---
-    eligibleStudents() {
-    // server already computes this (and excludes refused/unavailable/pending licensure)
-    return this.includedStudents.filter(s => !!s?.is_placement_eligible);
-  },
+eligibleStudents() {
+  // If you later add server field, respect it:
+  // - true => eligible
+  // - false => not eligible
+  return this.includedStudents.filter(s => {
+    if (!s) return false;
+    return (!!s.is_placement || !!s.is_completer) && !s.excused_status;
+  });
+},
 
   eligiblePlaced() {
     return this.eligibleStudents.filter(s => !!s?.is_placement);
