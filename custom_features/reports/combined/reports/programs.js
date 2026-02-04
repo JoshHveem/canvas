@@ -8,6 +8,7 @@ Vue.component('reports-programs', {
         :programs="programsClean"
         @drill-program="$emit('drill-program', $event)"
       ></programs-completion>
+
       <programs-placements
         v-if="subMenu == 'placements'"
         :year="year"
