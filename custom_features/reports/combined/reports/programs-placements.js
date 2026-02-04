@@ -324,10 +324,10 @@ Vue.component('reports-programs-placements', {
         const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
         // Same “reads nicely” ordering as your placements bar
         if (k === 'placed') return 1;
-        if (k === 'stale-completer') return 2;
-        if (k === 'completer') return 3;
-        if (k === 'projected-soon') return 4;
-        if (k === 'not-completer') return 5;
+        if (k === 'stale-completer') return 5;
+        if (k === 'completer') return 4;
+        if (k === 'projected-soon') return 3;
+        if (k === 'not-completer') return 2;
         return 9;
       };
 
