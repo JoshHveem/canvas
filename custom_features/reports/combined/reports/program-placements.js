@@ -30,7 +30,7 @@ Vue.component('reports-program-placements', {
     this.tableAction.setColumns([
       this.makeStatusColumn('action'),
       this.makeStudentColumn(),
-      this.makeEndColumn('actual', 'Exited', 'Projected exit date (server-calculated).'),
+      this.makeEndColumn('projected', 'Exited', 'Projected exit date (server-calculated).'),
     ]);
 
     // Placed (middle)
@@ -215,6 +215,87 @@ eligibleStudents() {
   },
 
   methods: {
+    // July 1 cutoff for "projected to finish this AY"
+ayCutoffDate() {
+  const y = Number(this.year) || null;
+  if (!y) return null;
+  // July 1 of (year + 1) in UTC
+  return new Date(Date.UTC(y + 1, 6, 1));
+},
+
+monthsSinceExit(s) {
+  const d = this.actualEndDate(s);
+  if (!d) return null;
+  const now = new Date();
+  // 3 months ~= 90 days is fine; if you want calendar months, I can swap it
+  const ms = now.getTime() - d.getTime();
+  return ms / (1000 * 60 * 60 * 24 * 30.4375);
+},
+
+projectedBeforeAyCutoff(s) {
+  const cutoff = this.ayCutoffDate();
+  if (!cutoff) return false;
+  const d = this.projectedEndDate(s);
+  if (!d) return false;
+  return d.getTime() < cutoff.getTime();
+},
+
+// Returns a semantic status key you can reuse everywhere
+placementStatusKey(s) {
+  if (!s) return 'none';
+
+  if (s.excused_status) return 'excused';
+  if (s.is_placement) return 'placed';
+
+  // completed but not placed
+  if (s.is_completer && (s.is_exited || s.exit_date)) {
+    const m = this.monthsSinceExit(s);
+    if (Number.isFinite(m) && m > 3) return 'stale-completer'; // red
+    return 'completer'; // orange
+  }
+
+  // projected to finish by July 1 (year+1), but not a completer yet
+  if (!s.is_completer && this.projectedBeforeAyCutoff(s)) return 'projected-soon'; // yellow
+
+  // everything else
+  return 'not-completer'; // gray
+},
+
+placementStatusColor(s) {
+  const k = this.placementStatusKey(s);
+  if (k === 'placed') return this.colors.green;
+  if (k === 'stale-completer') return this.colors.red;
+  if (k === 'completer') return this.colors.orange;
+  if (k === 'projected-soon') return this.colors.yellow;
+  // excused + not-completer
+  if (k === 'excused') return this.colors.gray;
+  if (k === 'not-completer') return this.colors.gray;
+  return null;
+},
+
+placementStatusTitle(s) {
+  const k = this.placementStatusKey(s);
+  if (k === 'placed') return 'Placed';
+  if (k === 'stale-completer') return 'Completed > 3 months ago (not placed)';
+  if (k === 'completer') return 'Completed (not placed)';
+  if (k === 'projected-soon') return 'Projected to finish before July 1 (not a completer yet)';
+  if (k === 'excused') return `Excused: ${s?.excused_status ?? ''}`;
+  if (k === 'not-completer') return 'Not a completer (later / unknown finish)';
+  return '—';
+},
+
+placementStatusSortValue(s) {
+  // lower comes first
+  const k = this.placementStatusKey(s);
+  if (k === 'stale-completer') return 1;   // red
+  if (k === 'completer') return 2;         // orange
+  if (k === 'projected-soon') return 3;    // yellow
+  if (k === 'not-completer') return 4;     // gray
+  if (k === 'placed') return 5;            // green (or move earlier if you want)
+  if (k === 'excused') return 6;           // gray but separate
+  return 9;
+},
+
     // ---------- tiny helpers ----------
     safeName(s) { return (s?.name ?? '').toLowerCase(); },
 
@@ -326,11 +407,9 @@ eligibleStudents() {
 
     makeStatusColumn(mode) {
       const desc =
-        mode === 'placed'
-          ? '● green = placed.'
-          : mode === 'excused'
-          ? '● gray = excused (not placed).'
-          : '● yellow = action needed.';
+        '● green=placed, ● orange=completed (not placed), ● red=completed >3mo (not placed), ' +
+        '● yellow=projected to finish before Jul 1 (not a completer yet), ● gray=other non-completers; ' +
+        'excused shown separately.';
 
       return new window.ReportColumn(
         'Status', desc, '3.5rem', false, 'string',
@@ -341,29 +420,33 @@ eligibleStudents() {
     },
 
     statusDotColor(s, { mode }) {
-      if (!s) return null;
-      if (mode === 'placed') return this.colors.green;
-      if (mode === 'excused') return this.colors.gray;
-      // action
-      return this.colors.yellow;
-    },
+  if (!s) return null;
 
-    statusDotHtml(s, { mode }) {
-      const c = this.statusDotColor(s, { mode });
-      return c ? `
-        <span title="status" style="
-          display:inline-block;width:10px;height:10px;border-radius:999px;
-          background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
-        "></span>
-      ` : '';
-    },
+  // If you want excused to ALWAYS be gray in the excused table, keep this:
+  if (mode === 'excused') return this.colors.gray;
 
-    statusSortValue(_s, { mode }) {
-      if (mode === 'action') return 1;
-      if (mode === 'placed') return 2;
-      if (mode === 'excused') return 3;
-      return 9;
-    },
+  // Otherwise, use the unified logic (works for action + placed tables too)
+  return this.placementStatusColor(s);
+},
+
+statusDotHtml(s, { mode }) {
+  const c = this.statusDotColor(s, { mode });
+  if (!c) return '';
+  const title = this.escapeHtml(this.placementStatusTitle(s));
+  return `
+    <span title="${title}" style="
+      display:inline-block;width:10px;height:10px;border-radius:999px;
+      background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
+    "></span>
+  `;
+},
+
+statusSortValue(s, { mode }) {
+  // Keep excused grouped consistently if you want:
+  if (mode === 'excused') return 99;
+  return this.placementStatusSortValue(s);
+},
+ 
 
     // --- sort handlers ---
     getColumnsWidthsStringAction() { return this.tableAction.getColumnsWidthsString(); },
