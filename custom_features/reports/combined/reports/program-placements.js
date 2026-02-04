@@ -82,9 +82,9 @@ Vue.component('reports-program-placements', {
     },
 
     groupActionNeeded() {
-      // yellow blocks in the bar == “eligible but not placed”
-      return this.eligibleNotPlaced;
+      return this.barNotPlaced;
     },
+
     groupPlaced() {
       return this.includedStudents.filter(s => !!s.is_placement);
     },
@@ -128,72 +128,76 @@ Vue.component('reports-program-placements', {
       return this.tableExcused.getSortedRows();
     },
     // --- placement numerator/denominator for bar ---
-eligibleStudents() {
-  // If you later add server field, respect it:
-  // - true => eligible
-  // - false => not eligible
-  return this.includedStudents.filter(s => {
-    if (!s) return false;
-    return true;
-    return (!!s.is_placement || !!s.is_completer) && !s.excused_status;
-  });
+    // --- placement numerator/denominator + bar (now uses the new status buckets) ---
+
+barStudents() {
+  // everyone we’re “considering” except excused
+  return this.includedStudents.filter(s => !!s && !s.excused_status);
 },
 
-  eligiblePlaced() {
-    return this.eligibleStudents.filter(s => !!s?.is_placement);
-  },
+barPlaced() {
+  return this.barStudents.filter(s => !!s.is_placement);
+},
 
-  eligibleNotPlaced() {
-    return this.eligibleStudents.filter(s => !s?.is_placement);
-  },
+barNotPlaced() {
+  return this.barStudents.filter(s => !s.is_placement);
+},
 
-  barSegmentsPlacement() {
-    const segs = [];
+placementRate() {
+  const denom = this.barStudents.length;
+  return denom ? (this.barPlaced.length / denom) : null;
+},
 
+placementPctText() {
+  const r = this.placementRate;
+  return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
+},
 
-    // Green = eligible placed
-    for (let i = 0; i < this.eligiblePlaced.length; i++) {
-      const s = this.eligiblePlaced[i];
-      segs.push({
-        key: `elig-placed-${s?.sis_user_id ?? i}`,
-        color: this.colors.green,
-        opacity: 1,
-        title: `${this.displayName(s)}: Placed`
-      });
-    }
+barSegmentsPlacement() {
+  const segs = [];
+  const list = Array.isArray(this.barStudents) ? this.barStudents : [];
 
-    // Yellow = eligible not placed (action-needed within eligible)
-    for (let i = 0; i < this.eligibleNotPlaced.length; i++) {
-      const s = this.eligibleNotPlaced[i];
-      segs.push({
-        key: `elig-not-placed-${s?.sis_user_id ?? i}`,
-        color: this.colors.yellow,
-        opacity: 1,
-        title: `${this.displayName(s)}: Eligible, not placed`
-      });
-    }
+  // optional: order segments so the bar “reads” nicely
+  // (placed first, then orange/red completers, then yellow projected, then gray)
+  const orderWeight = (s) => {
+    const k = this.placementStatusKey(s);
+    if (k === 'placed') return 1;
+    if (k === 'stale-completer') return 2; // red
+    if (k === 'completer') return 3;       // orange
+    if (k === 'projected-soon') return 4;  // yellow
+    if (k === 'not-completer') return 5;   // gray
+    return 9;
+  };
 
-    return segs;
-  },
+  const sorted = list.slice().sort((a, b) => {
+    const wa = orderWeight(a);
+    const wb = orderWeight(b);
+    if (wa !== wb) return wa - wb;
+    return this.safeName(a).localeCompare(this.safeName(b));
+  });
 
-  barSegmentsPlacementSafe() {
-    const segs = Array.isArray(this.barSegmentsPlacement) ? this.barSegmentsPlacement : [];
-    return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
-  },
+  for (let i = 0; i < sorted.length; i++) {
+    const s = sorted[i];
+    const key = `bar-${s?.sis_user_id ?? s?.canvas_user_id ?? i}`;
+    const color = this.placementStatusColor(s);
+    const title = `${this.displayName(s)}: ${this.placementStatusTitle(s)}`;
 
-  // KPI for the bar
-  eligibleCount() { return this.eligibleStudents.length; },
-  placedCount() { return this.eligiblePlaced.length; },
-  actionEligibleCount() { return this.eligibleNotPlaced.length; },
+    segs.push({
+      key,
+      color: color || this.colors.gray,
+      opacity: 1,
+      title
+    });
+  }
 
-  placementRate() {
-    return this.eligibleCount ? (this.placedCount / this.eligibleCount) : null;
-  },
+  return segs;
+},
 
-  placementPctText() {
-    const r = this.placementRate;
-    return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
-  },
+barSegmentsPlacementSafe() {
+  const segs = Array.isArray(this.barSegmentsPlacement) ? this.barSegmentsPlacement : [];
+  return segs.filter(seg => seg && typeof seg.key === 'string' && seg.key.length);
+},
+
     // simple KPI counts
     kpi() {
       const total = this.includedStudents.length;
