@@ -194,12 +194,15 @@ barSegmentsPlacement() {
     const color = this.placementStatusColor(s);
     const title = `${this.displayName(s)}: ${this.placementStatusTitle(s)}`;
 
+    const opacity = this.placementStatusOpacityForBar(s);
+
     segs.push({
       key,
       color: color || this.colors.gray,
-      opacity: 1,
+      opacity,
       title
     });
+
   }
 
   return segs;
@@ -273,15 +276,17 @@ placementStatusKey(s) {
   if (s.excused_status) return 'excused';
   if (s.is_placement) return 'placed';
 
-  // completed but not placed
+  // completed but not placed (bucket by age)
   if (s.is_completer && (s.is_exited || s.exit_date)) {
     const m = this.monthsSinceExit(s);
-    if (Number.isFinite(m) && m > 3) return 'stale-completer'; // red
-    return 'completer'; // orange
+    if (!Number.isFinite(m)) return 'completer-old'; // safest
+    if (m < 3) return 'completer-recent'; // yellow
+    if (m < 6) return 'completer-mid';    // orange
+    return 'completer-old';               // red
   }
 
   // projected to finish by July 1 (year+1), but not a completer yet
-  if (!s.is_completer && this.projectedBeforeAyCutoff(s)) return 'projected-soon'; // yellow
+  if (!s.is_completer && this.projectedBeforeAyCutoff(s)) return 'projected-soon'; // (you currently color this gray)
 
   // everything else
   return 'not-completer'; // gray
@@ -289,38 +294,58 @@ placementStatusKey(s) {
 
 placementStatusColor(s) {
   const k = this.placementStatusKey(s);
+
   if (k === 'placed') return this.colors.green;
-  if (k === 'stale-completer') return this.colors.red;
-  if (k === 'completer') return this.colors.orange;
+
+  if (k === 'completer-recent') return this.colors.yellow; // <3mo
+  if (k === 'completer-mid') return this.colors.orange;    // <6mo
+  if (k === 'completer-old') return this.colors.red;       // >=6mo
+
+  // keep these gray per your current decision
   if (k === 'projected-soon') return this.colors.gray;
-  // excused + not-completer
   if (k === 'excused') return this.colors.gray;
   if (k === 'not-completer') return this.colors.gray;
+
   return null;
 },
 
 placementStatusTitle(s) {
   const k = this.placementStatusKey(s);
+
   if (k === 'placed') return 'Placed';
-  if (k === 'stale-completer') return 'Completed > 3 months ago (not placed)';
-  if (k === 'completer') return 'Completed (not placed)';
+
+  if (k === 'completer-recent') return 'Completed < 3 months ago (not placed)';
+  if (k === 'completer-mid') return 'Completed < 6 months ago (not placed)';
+  if (k === 'completer-old') return 'Completed ≥ 6 months ago (not placed)';
+
   if (k === 'projected-soon') return 'Projected to finish before July 1 (not a completer yet)';
   if (k === 'excused') return `Excused: ${s?.excused_status ?? ''}`;
   if (k === 'not-completer') return 'Not a completer (later / unknown finish)';
+
   return '—';
 },
 
-placementStatusSortValue(s) {
-  // lower comes first
+// Bar-only opacity rules:
+// - fade placed (green) because it's locked-in
+// - keep everyone else solid (unless you want to also fade completers later)
+placementStatusOpacityForBar(s) {
   const k = this.placementStatusKey(s);
-  if (k === 'stale-completer') return 1;   // red
-  if (k === 'completer') return 2;         // orange
-  if (k === 'projected-soon') return 3;    // gray 
-  if (k === 'not-completer') return 4;     // gray
-  if (k === 'placed') return 5;            // green (or move earlier if you want)
-  if (k === 'excused') return 6;           // gray but separate
-  return 9;
+  if (k === 'placed') return 0.35; // locked-in green fade (like completion report)
+  return 1;
 },
+
+  placementStatusSortValue(s) {
+  const k = this.placementStatusKey(s);
+  if (k === 'completer-old') return 1;     // red
+  if (k === 'completer-mid') return 2;     // orange
+  if (k === 'completer-recent') return 3;  // yellow
+  if (k === 'projected-soon') return 4;    // gray
+  if (k === 'not-completer') return 5;     // gray
+  if (k === 'placed') return 6;            // green
+  if (k === 'excused') return 99;
+  return 999;
+},
+
 
     // ---------- tiny helpers ----------
     safeName(s) { return (s?.name ?? '').toLowerCase(); },
@@ -433,9 +458,10 @@ placementStatusSortValue(s) {
 
     makeStatusColumn(mode) {
       const desc =
-        '● green=placed, ● orange=completed (not placed), ● red=completed >3mo (not placed), ' +
-        '● yellow=projected to finish before Jul 1 (not a completer yet), ● gray=other non-completers; ' +
-        'excused shown separately.';
+      '● green=placed (faded in bar), ● yellow=completed <3mo (not placed), ' +
+      '● orange=completed <6mo (not placed), ● red=completed ≥6mo (not placed), ' +
+      '● gray=not placed / projected / other; excused shown separately.';
+
 
       return new window.ReportColumn(
         'Status', desc, '3.5rem', false, 'string',
