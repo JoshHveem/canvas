@@ -1,5 +1,5 @@
 // programs-completion.js
-Vue.component('programs-completion', {
+Vue.component('reports-programs-completion', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
