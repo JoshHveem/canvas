@@ -97,428 +97,361 @@ Vue.component('reports-programs-placements', {
   },
 
   methods: {
-    // --- time helpers ---
-monthsSince(d) {
-  if (!d) return null;
-  const now = new Date();
-  const ms = now.getTime() - d.getTime();
-  return ms / (1000 * 60 * 60 * 24 * 30.4375);
-},
+  // ---- ReportTable plumbing ----
+  getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
+  setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
-// Key for *bar coloring*, includes "recent/mid/old completer" buckets
-placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate } = {}) {
-  if (!s) return 'none';
+  // --- time helpers ---
+  monthsSince(d) {
+    if (!d) return null;
+    const now = new Date();
+    const ms = now.getTime() - d.getTime();
+    return ms / (1000 * 60 * 60 * 24 * 30.4375);
+  },
 
-  if (s.excused_status) return 'excused';
-  if (s.is_placement) return 'placed';
+  // Key for *bar coloring*, includes "recent/mid/old completer" buckets
+  placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate } = {}) {
+    if (!s) return 'none';
 
-  const ad = actualEndDate ? actualEndDate(s) : null;
-  const pd = projectedEndDate ? projectedEndDate(s) : null;
+    if (s.excused_status) return 'excused';
+    if (s.is_placement) return 'placed';
 
-  // locked-in completers (not placed)
-  if (s.is_completer && (s.is_exited || s.exit_date)) {
-    const m = this.monthsSince(ad);
-    if (!Number.isFinite(m)) return 'comp-old'; // safest
-    if (m < 3) return 'comp-recent';  // yellow (faded)
-    if (m < 6) return 'comp-mid';     // orange (faded)
-    return 'comp-old';                // red (faded)
-  }
+    const ad = actualEndDate ? actualEndDate(s) : null;
+    const pd = projectedEndDate ? projectedEndDate(s) : null;
 
-  // on-track-to-finish (actionable)
-  if (!s.is_completer && cutoff && pd && pd.getTime() < cutoff.getTime()) {
-    return 'on-track'; // yellow (NOT faded)
-  }
+    // locked-in completers (not placed)
+    if (s.is_completer && (s.is_exited || s.exit_date)) {
+      const m = this.monthsSince(ad);
+      if (!Number.isFinite(m)) return 'comp-old';
+      if (m < 3) return 'comp-recent';  // yellow (faded)
+      if (m < 6) return 'comp-mid';     // orange (faded)
+      return 'comp-old';                // red (faded)
+    }
 
-  return 'other'; // gray (NOT faded)
-},
+    // on-track-to-finish (actionable)
+    if (!s.is_completer && cutoff && pd && pd.getTime() < cutoff.getTime()) {
+      return 'on-track'; // yellow (NOT faded)
+    }
 
-placementStatusColorFromKey(k) {
-  if (k === 'placed') return this.colors.green;
+    return 'other'; // gray (NOT faded)
+  },
 
-  // completers: color encodes recency buckets
-  if (k === 'comp-recent') return this.colors.yellow; // <3mo
-  if (k === 'comp-mid') return this.colors.orange;    // <6mo
-  if (k === 'comp-old') return this.colors.red;       // >=6mo
+  placementStatusColorFromKey(k) {
+    if (k === 'placed') return this.colors.green;
 
-  // actionable on-track
-  if (k === 'on-track') return this.colors.yellow;
+    // completers: color encodes recency buckets
+    if (k === 'comp-recent') return this.colors.yellow; // <3mo
+    if (k === 'comp-mid') return this.colors.orange;    // <6mo
+    if (k === 'comp-old') return this.colors.red;       // >=6mo
 
-  // other non-completers
-  if (k === 'other') return this.colors.gray;
+    // actionable on-track
+    if (k === 'on-track') return this.colors.yellow;
 
-  // excused/none
-  return this.colors.gray;
-},
+    // other non-completers
+    if (k === 'other') return this.colors.gray;
 
-// fade only locked-in completers
-placementStatusOpacityFromKey(k) {
-  if (k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
-  return 1;
-},
+    // excused/none
+    return this.colors.gray;
+  },
 
-placementStatusTitleFromKey(k) {
-  if (k === 'placed') return 'Placed';
-  if (k === 'comp-recent') return 'Completed < 3 months ago (not placed)';
-  if (k === 'comp-mid') return 'Completed < 6 months ago (not placed)';
-  if (k === 'comp-old') return 'Completed ≥ 6 months ago (not placed)';
-  if (k === 'on-track') return 'On track to finish before July 1 (not a completer yet)';
-  if (k === 'other') return 'Not a completer (later / unknown finish)';
-  return '—';
-},
+  // fade only locked-in completers
+  placementStatusOpacityFromKey(k) {
+    if (k === 'comp-recent' || k === 'comp-mid' || k === 'comp-old') return 0.38;
+    return 1;
+  },
 
-    // ---- ReportTable plumbing ----
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
+  placementStatusTitleFromKey(k) {
+    if (k === 'placed') return 'Placed';
+    if (k === 'comp-recent') return 'Completed < 3 months ago (not placed)';
+    if (k === 'comp-mid') return 'Completed < 6 months ago (not placed)';
+    if (k === 'comp-old') return 'Completed ≥ 6 months ago (not placed)';
+    if (k === 'on-track') return 'On track to finish before July 1 (not a completer yet)';
+    if (k === 'other') return 'Not a completer (later / unknown finish)';
+    return '—';
+  },
 
-    // ---- placements compute (aligned with reports-program-placements) ----
-    computeForProgram(p) {
-      const target = 0.70;
+  // ---- placements compute (aligned with reports-program-placements) ----
+  computeForProgram(p) {
+    const target = 0.70;
 
-      // Expectation: program row includes a students array (like completion computeProgram does).
-      // If yours uses a different key, swap here.
-      const students = Array.isArray(p?.students) ? p.students : [];
+    const students = Array.isArray(p?.students) ? p.students : [];
 
-      const y = Number(this.year) || null;
-      const start = y ? new Date(Date.UTC(y, 6, 1)) : null;       // Jul 1, y
-      const end = y ? new Date(Date.UTC(y + 1, 6, 1)) : null;     // Jul 1, y+1 (exclusive)
-      const cutoff = y ? new Date(Date.UTC(y + 1, 6, 1)) : null;  // Jul 1, y+1
+    const y = Number(this.year) || null;
+    const start = y ? new Date(Date.UTC(y, 6, 1)) : null;       // Jul 1, y
+    const end = y ? new Date(Date.UTC(y + 1, 6, 1)) : null;     // Jul 1, y+1 (exclusive)
+    const cutoff = y ? new Date(Date.UTC(y + 1, 6, 1)) : null;  // Jul 1, y+1
 
-      const projectedEndDate = (s) => {
-        if (!s?.projected_exit_date) return null;
-        const d = new Date(s.projected_exit_date);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
-      const actualEndDate = (s) => {
-        if (!s?.exit_date) return null;
-        const d = new Date(s.exit_date);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
+    const projectedEndDate = (s) => {
+      if (!s?.projected_exit_date) return null;
+      const d = new Date(s.projected_exit_date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const actualEndDate = (s) => {
+      if (!s?.exit_date) return null;
+      const d = new Date(s.exit_date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
 
-      const isInAcademicYear = (s) => {
-        if (!start || !end) return false;
-        const d = projectedEndDate(s);
-        if (!d) return false;
-        const t = d.getTime();
-        return t >= start.getTime() && t < end.getTime();
-      };
+    const isInAcademicYear = (s) => {
+      if (!start || !end) return false;
+      const d = projectedEndDate(s);
+      if (!d) return false;
+      const t = d.getTime();
+      return t >= start.getTime() && t < end.getTime();
+    };
 
-      // includedStudents (same gate as your placements component)
-      const included = students.filter(s => {
-        if (!s) return false;
+    // includedStudents (same gate as your placements component)
+    const included = students.filter(s => {
+      if (!s) return false;
 
-        // Filter out: exited but NOT a completer (your newest requirement)
-        if (!!s.is_exited && !s.is_completer) return false;
+      // Filter out: exited but NOT a completer
+      if (!!s.is_exited && !s.is_completer) return false;
 
-        return (
-          !!s.is_completer ||
-          !!s.is_placement ||
-          !!s.excused_status ||
-          isInAcademicYear(s)
-        );
-      });
+      return (
+        !!s.is_completer ||
+        !!s.is_placement ||
+        !!s.excused_status ||
+        isInAcademicYear(s)
+      );
+    });
 
-      // barStudents = included minus excused
-      const barStudents = included.filter(s => !!s && !s.excused_status);
+    // barStudents = included minus excused
+    const barStudents = included.filter(s => !!s && !s.excused_status);
 
-      const placed = barStudents.filter(s => !!s.is_placement);
-      const notPlaced = barStudents.filter(s => !s.is_placement);
+    const placed = barStudents.filter(s => !!s.is_placement);
+    const notPlaced = barStudents.filter(s => !s.is_placement);
 
-      const denom = barStudents.length;
-      const num = placed.length;
-      const currentRate = denom ? (num / denom) : null;
+    const denom = barStudents.length;
+    const num = placed.length;
+    const currentRate = denom ? (num / denom) : null;
 
-      // needed placements to reach >= 70%
-      const neededMin = denom
-        ? Math.max(0, Math.min(notPlaced.length, Math.ceil((target * denom) - num)))
-        : 0;
+    // needed placements to reach >= 70%
+    const neededMin = denom
+      ? Math.max(0, Math.min(notPlaced.length, Math.ceil((target * denom) - num)))
+      : 0;
 
-      // Choose the “first N” notPlaced that represent the needed placements,
-      // using the same ordering idea as the placements bar (worst-case-ish).
-      // We’ll rank by status severity first, then name.
-      const severity = (s) => {
-        const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
-        if (k === 'stale-completer') return 1; // red
-        if (k === 'completer') return 2;       // orange
-        if (k === 'projected-soon') return 3;  // yellow
-        if (k === 'not-completer') return 4;   // gray
-        return 9;
-      };
+    // Choose candidates for “needed” in a way that communicates confidence:
+    // on-track first, then other (risk).
+    const kFor = (s) => this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
 
-      // Only candidates who could become placed (i.e. not already placed)
-const notPlaced = barStudents.filter(s => !s.is_placement);
+    const candWeight = (s) => {
+      const k = kFor(s);
+      if (k === 'on-track') return 1;
+      if (k === 'other') return 2;
+      // shove completers to end if they ever appear here
+      if (k.startsWith('comp-')) return 9;
+      return 9;
+    };
 
-// Needed placements to reach 70% (unchanged)
-const neededMin = denom
-  ? Math.max(0, Math.min(notPlaced.length, Math.ceil((target * denom) - num)))
-  : 0;
+    const neededCandidates = notPlaced.slice().sort((a, b) => {
+      const wa = candWeight(a), wb = candWeight(b);
+      if (wa !== wb) return wa - wb;
+      return (a?.name ?? '').localeCompare((b?.name ?? ''));
+    });
 
-// Choose candidates in an order that makes sense for "on track":
-// Prefer "on-track" first, then "other" (because those are riskier).
-const kFor = (s) => this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+    const barChosen = neededCandidates.slice(0, neededMin);
 
-const candWeight = (s) => {
-  const k = kFor(s);
-  if (k === 'on-track') return 1;
-  if (k === 'other') return 2;
-  // completers should not really be in notPlaced for the denominator (they are in barStudents),
-  // but if they are, shove them to the end.
-  if (k.startsWith('comp-')) return 9;
-  return 9;
-};
+    // Program status for dot: actionable risk signal
+    let statusKey = 'placed';
+    if (denom && (num / denom) >= target) {
+      statusKey = 'placed';
+    } else if (barChosen.length) {
+      statusKey = barChosen.some(s => kFor(s) === 'other') ? 'other' : 'on-track';
+    } else {
+      statusKey = 'other';
+    }
 
-const neededCandidates = notPlaced.slice().sort((a, b) => {
-  const wa = candWeight(a), wb = candWeight(b);
-  if (wa !== wb) return wa - wb;
-  return (a?.name ?? '').localeCompare((b?.name ?? ''));
-});
+    return {
+      included,
+      barStudents,
+      placed,
+      notPlaced,
+      currentRate,
+      neededMin,
+      barChosen,
+      statusKey,
+      cutoff
+    };
+  },
 
-const barChosen = neededCandidates.slice(0, neededMin);
+  currentRateForProgram(p) {
+    const info = this.computeForProgram(p);
+    return Number.isFinite(info?.currentRate) ? info.currentRate : null;
+  },
 
-// Program status = what is the worst-case *actionable* key among chosen
-let statusKey = 'placed';
-if (denom && (num / denom) >= target) {
-  statusKey = 'placed';
-} else if (barChosen.length) {
-  // if any chosen is "other" => gray, else => yellow
-  const worst = barChosen.some(s => kFor(s) === 'other') ? 'other' : 'on-track';
-  statusKey = worst;
-} else {
-  statusKey = 'other';
-}
+  neededCountForProgram(p) {
+    return this.computeForProgram(p).neededMin ?? 0;
+  },
 
-      return {
-        included,
-        barStudents,
-        placed,
-        notPlaced,
-        currentRate,
-        neededMin,
-        barChosen,
-        statusKey,
-        cutoff
-      };
-    },
+  // ---- program-level status (dot + sorting) ----
+  statusKeyForProgram(p) {
+    return this.computeForProgram(p).statusKey ?? 'other';
+  },
 
-    currentRateForProgram(p) {
-      const info = this.computeForProgram(p);
-      return Number.isFinite(info?.currentRate) ? info.currentRate : null;
-    },
+  statusSortValueForProgram(p) {
+    const k = this.statusKeyForProgram(p);
+    if (k === 'other') return 1;      // needs attention
+    if (k === 'on-track') return 2;   // likely ok
+    if (k === 'placed') return 3;     // already >=70
+    return 9;
+  },
 
-    neededCountForProgram(p) {
-      return this.computeForProgram(p).neededMin ?? 0;
-    },
+  statusDotHtmlForProgram(p) {
+    const k = this.statusKeyForProgram(p);
 
-    // ---- placement status logic (same semantics as placements component) ----
-    monthsSince(d) {
-      if (!d) return null;
-      const now = new Date();
-      const ms = now.getTime() - d.getTime();
-      return ms / (1000 * 60 * 60 * 24 * 30.4375);
-    },
+    const c =
+      (k === 'placed') ? this.colors.green :
+      (k === 'on-track') ? this.colors.yellow :
+      this.colors.gray;
 
-    placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate } = {}) {
-      if (!s) return 'none';
+    const title =
+      (k === 'placed') ? 'At/above 70% placement' :
+      (k === 'on-track') ? 'On track to reach 70% with projected finishers' :
+      'Needs attention: would require non-on-track students to reach 70%';
 
-      if (s.excused_status) return 'excused';
-      if (s.is_placement) return 'placed';
+    return `
+      <span title="${this.escapeHtml(title)}" style="
+        display:inline-block;width:10px;height:10px;border-radius:999px;
+        background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
+      "></span>
+    `;
+  },
 
-      // completed but not placed
-      if (s.is_completer && (s.is_exited || s.exit_date)) {
-        const d = actualEndDate ? actualEndDate(s) : null;
-        const m = this.monthsSince(d);
-        if (Number.isFinite(m) && m > 3) return 'stale-completer'; // red
-        return 'completer'; // orange
-      }
+  // ---- pill style for placement rate ----
+  placementPillStyleForProgram(p) {
+    const r = this.currentRateForProgram(p);
+    if (!Number.isFinite(r)) return { backgroundColor: 'transparent', color: this.colors.black };
 
-      // projected before cutoff, not a completer yet
-      const cd = cutoff || null;
-      const pd = projectedEndDate ? projectedEndDate(s) : null;
-      if (!s.is_completer && cd && pd && pd.getTime() < cd.getTime()) return 'projected-soon'; // yellow
+    // optional: make truly “bad” look bad
+    if (r < 0.70 && this.statusKeyForProgram(p) === 'other') {
+      return { backgroundColor: this.colors.red, color: this.colors.white };
+    }
 
-      return 'not-completer'; // gray
-    },
+    if (r < 0.70) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+    return { backgroundColor: this.colors.green, color: this.colors.white };
+  },
 
-    placementStatusColorFromKey(k) {
-      if (k === 'placed') return this.colors.green;
-      if (k === 'stale-completer') return this.colors.red;
-      if (k === 'completer') return this.colors.orange;
-      if (k === 'projected-soon') return this.colors.yellow;
-      return this.colors.gray;
-    },
+  // ---- bar segments ----
+  placementSegmentsForProgram(p) {
+    const info = this.computeForProgram(p);
+    const list = Array.isArray(info?.barStudents) ? info.barStudents : [];
 
-    // ---- program-level status (dot + sorting) ----
-    statusKeyForProgram(p) {
-      return this.computeForProgram(p).statusKey ?? 'not-completer';
-    },
+    const studentLabel = (s) => {
+      if (this.anonymous) return 'STUDENT';
+      return s?.name ?? (s?.sis_user_id != null ? `SIS ${s.sis_user_id}` : 'Student');
+    };
 
-    statusSortValueForProgram(p) {
-        const k = this.statusKeyForProgram(p);
-        // Top = "needs attention" first
-        if (k === 'other') return 1;      // gray risk
-        if (k === 'on-track') return 2;   // yellow on-track
-        if (k === 'placed') return 3;     // green already >=70
-        return 9;
-    },
+    const projectedEndDate = (s) => {
+      if (!s?.projected_exit_date) return null;
+      const d = new Date(s.projected_exit_date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const actualEndDate = (s) => {
+      if (!s?.exit_date) return null;
+      const d = new Date(s.exit_date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
 
-    statusDotHtmlForProgram(p) {
-  const k = this.statusKeyForProgram(p);
-
-  const c =
-    (k === 'placed') ? this.colors.green :
-    (k === 'on-track') ? this.colors.yellow :
-    this.colors.gray;
-
-  const title =
-    (k === 'placed') ? 'At/above 70% placement' :
-    (k === 'on-track') ? 'On track to reach 70% with projected finishers' :
-    'Needs attention: would require non-on-track students to reach 70%';
-
-  return `
-    <span title="${this.escapeHtml(title)}" style="
-      display:inline-block;width:10px;height:10px;border-radius:999px;
-      background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;
-    "></span>
-  `;
-},
-
-    // ---- pill style for placement rate ----
-    placementPillStyleForProgram(p) {
-      const r = this.currentRateForProgram(p);
-      if (!Number.isFinite(r)) return { backgroundColor: 'transparent', color: this.colors.black };
-
-      if (r < 0.70) return { backgroundColor: this.colors.yellow, color: this.colors.black };
-      return { backgroundColor: this.colors.green, color: this.colors.white };
-    },
-
-    // ---- bar segments ----
-    placementSegmentsForProgram(p) {
-      const info = this.computeForProgram(p);
-      const list = Array.isArray(info?.barStudents) ? info.barStudents : [];
-
-      const studentLabel = (s) => {
-        if (this.anonymous) return 'STUDENT';
-        return s?.name ?? (s?.sis_user_id != null ? `SIS ${s.sis_user_id}` : 'Student');
-      };
-
-      const projectedEndDate = (s) => {
-        if (!s?.projected_exit_date) return null;
-        const d = new Date(s.projected_exit_date);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
-      const actualEndDate = (s) => {
-        if (!s?.exit_date) return null;
-        const d = new Date(s.exit_date);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
-
-      const cutoff = info?.cutoff || null;
+    const cutoff = info?.cutoff || null;
 
     const orderWeight = (s) => {
-  const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
-  if (k === 'placed') return 1;
-  if (k === 'on-track') return 2;
-  if (k === 'other') return 3;
-  if (k === 'comp-recent') return 4;
-  if (k === 'comp-mid') return 5;
-  if (k === 'comp-old') return 6;
-  return 9;
-};
- 
+      const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+      if (k === 'placed') return 1;
+      if (k === 'on-track') return 2;
+      if (k === 'other') return 3;
+      if (k === 'comp-recent') return 4;
+      if (k === 'comp-mid') return 5;
+      if (k === 'comp-old') return 6;
+      return 9;
+    };
+
     const sorted = list.slice().sort((a, b) => {
-  const ka = this.placementStatusKey(a, { cutoff, actualEndDate, projectedEndDate });
-  const kb = this.placementStatusKey(b, { cutoff, actualEndDate, projectedEndDate });
+      const ka = this.placementStatusKey(a, { cutoff, actualEndDate, projectedEndDate });
+      const kb = this.placementStatusKey(b, { cutoff, actualEndDate, projectedEndDate });
 
-  const wa = orderWeight(a), wb = orderWeight(b);
-  if (wa !== wb) return wa - wb;
+      const wa = orderWeight(a), wb = orderWeight(b);
+      if (wa !== wb) return wa - wb;
 
-  const aIsComp = ka && ka.startsWith('comp-');
-  const bIsComp = kb && kb.startsWith('comp-');
+      const aIsComp = ka && ka.startsWith('comp-');
+      const bIsComp = kb && kb.startsWith('comp-');
 
-  if (aIsComp && bIsComp) {
-    const da = actualEndDate(a)?.getTime() ?? -Infinity;
-    const db = actualEndDate(b)?.getTime() ?? -Infinity;
-    if (da !== db) return db - da; // NEWEST first
-  }
+      // completers: newest first
+      if (aIsComp && bIsComp) {
+        const da = actualEndDate(a)?.getTime() ?? -Infinity;
+        const db = actualEndDate(b)?.getTime() ?? -Infinity;
+        if (da !== db) return db - da;
+      }
 
-  return (a?.name ?? '').localeCompare((b?.name ?? ''));
-});
+      return (a?.name ?? '').localeCompare((b?.name ?? ''));
+    });
 
-      const segs = [];
-      const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.name ?? 'p');
+    const segs = [];
+    const progKey = String(p?.program_id ?? p?.programId ?? p?.id ?? p?.account_id ?? p?.name ?? 'p');
 
-        for (let i = 0; i < sorted.length; i++) {
-  const s = sorted[i];
-  const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
-  const color = this.placementStatusColorFromKey(k);
-  const opacity = this.placementStatusOpacityFromKey(k);
-  const title = this.placementStatusTitleFromKey(k);
+    for (let i = 0; i < sorted.length; i++) {
+      const s = sorted[i];
+      const k = this.placementStatusKey(s, { cutoff, actualEndDate, projectedEndDate });
+      const color = this.placementStatusColorFromKey(k);
+      const opacity = this.placementStatusOpacityFromKey(k);
+      const title = this.placementStatusTitleFromKey(k);
 
-  segs.push({
-    key: `pl-${progKey}-${s?.sis_user_id ?? s?.id ?? i}`,
-    color,
-    opacity,
-    title: `${studentLabel(s)}: ${title}`
-  });
-}
-
-      return segs;
-    },
-
-    placementBarHtmlForProgram(p) {
-      const segs = this.placementSegmentsForProgram(p);
-
-      const marker = `
-        <div
-          style="
-            position:absolute;
-            left:70%;
-            top:-3px;
-            bottom:-3px;
-            width:2px;
-            background:${this.colors.black};
-            opacity:0.6;
-          "
-          title="70% placement goal"
-        ></div>
-      `;
-
-      const inner = segs.map(seg => `
-        <div
-          title="${this.escapeHtml(seg.title)}"
-          style="
-            flex:1 1 0;
-            background:${seg.color};
-            opacity:${seg.opacity};
-            border-right:1px solid rgba(255,255,255,0.6);
-          "
-        ></div>
-      `).join('');
-
-      return `
-        <div style="position:relative; height:14px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
-          <div style="position:absolute; inset:0; display:flex;">${inner}</div>
-          ${marker}
-        </div>
-      `;
-    },
-
-    emitDrill(p) {
-      this.$emit('drill-program', {
-        program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
-        campus: String(p?.campus ?? '').trim(),
-        row: p
+      segs.push({
+        key: `pl-${progKey}-${s?.sis_user_id ?? s?.id ?? i}`,
+        color,
+        opacity,
+        title: `${studentLabel(s)}: ${title}`
       });
-    },
-
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
+
+    return segs;
   },
+
+  placementBarHtmlForProgram(p) {
+    const segs = this.placementSegmentsForProgram(p);
+
+    const marker = `
+      <div style="
+        position:absolute; left:70%;
+        top:-3px; bottom:-3px;
+        width:2px; background:${this.colors.black}; opacity:0.6;
+      " title="70% placement goal"></div>
+    `;
+
+    const inner = segs.map(seg => `
+      <div title="${this.escapeHtml(seg.title)}" style="
+        flex:1 1 0;
+        background:${seg.color};
+        opacity:${seg.opacity};
+        border-right:1px solid rgba(255,255,255,0.6);
+      "></div>
+    `).join('');
+
+    return `
+      <div style="position:relative; height:14px; border-radius:10px; overflow:hidden; background:#F2F2F2;">
+        <div style="position:absolute; inset:0; display:flex;">${inner}</div>
+        ${marker}
+      </div>
+    `;
+  },
+
+  emitDrill(p) {
+    this.$emit('drill-program', {
+      program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
+      campus: String(p?.campus ?? '').trim(),
+      row: p
+    });
+  },
+
+  escapeHtml(str) {
+    return String(str ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+},
+
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
