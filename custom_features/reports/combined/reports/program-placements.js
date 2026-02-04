@@ -171,15 +171,24 @@ barSegmentsPlacement() {
 
   // optional: order segments so the bar “reads” nicely
   // (placed first, then orange/red completers, then yellow projected, then gray)
-  const orderWeight = (s) => {
-    const k = this.placementStatusKey(s);
-    if (k === 'placed') return 1;
-    if (k === 'stale-completer') return 2; // red
-    if (k === 'completer') return 3;       // orange
-    if (k === 'projected-soon') return 4;  // yellow
-    if (k === 'not-completer') return 5;   // gray
-    return 9;
-  };
+const orderWeight = (s) => {
+  const k = this.placementStatusKey(s);
+
+  // bar read order:
+  // placed (faded green) first,
+  // then completers (by age severity),
+  // then projected / not-completer gray last.
+  if (k === 'placed') return 1;
+
+  if (k === 'completer-old') return 2;     // red
+  if (k === 'completer-mid') return 3;     // orange
+  if (k === 'completer-recent') return 4;  // yellow
+
+  if (k === 'projected-soon') return 5;    // gray
+  if (k === 'not-completer') return 6;     // gray
+
+  return 9;
+};
 
   const sorted = list.slice().sort((a, b) => {
     const wa = orderWeight(a);
