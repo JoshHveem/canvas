@@ -82,6 +82,16 @@ Vue.component('reports-program-placements', {
         );
       });
     },
+    neededActionCountFor70() {
+      const denom = this.barStudents.length;
+      const placed = this.barPlaced.length;
+      const t = 0.70;
+
+      if (!denom) return 0;
+      const need = Math.ceil((t * denom) - placed);
+      return Math.max(0, Math.min(need, this.visibleActionRows.length)); // clamp to rows
+    },
+
 
     groupActionNeeded() {
       return this.barNotPlaced;
@@ -222,6 +232,15 @@ barSegmentsPlacementSafe() {
   },
 
   methods: {
+    actionRowDividerStyle(_s, idx, rows) {
+  const n = Number(this.neededActionCountFor70);
+  if (!Number.isFinite(n) || n <= 0) return {};
+  if (!Array.isArray(rows) || rows.length === 0) return {};
+  // border *before* row n => line after the first n rows
+  if (idx === n) return { borderTop: '4px solid rgba(0,0,0,0.75)' };
+  return {};
+},
+
     // July 1 cutoff for "projected to finish this AY"
 ayCutoffDate() {
   const y = Number(this.year) || null;
@@ -518,7 +537,11 @@ statusSortValue(s, { mode }) {
 
       <div v-for="(s, i) in visibleActionRows" :key="'a-' + (s.sis_user_id || s.id || i)"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
-        :style="{ 'grid-template-columns': getColumnsWidthsStringAction(), 'background-color': (i % 2) ? 'white' : '#F8F8F8' }">
+        :style="Object.assign(
+          { 'grid-template-columns': getColumnsWidthsStringAction(), 'background-color': (i % 2) ? 'white' : '#F8F8F8' },
+          actionRowDividerStyle(s, i, visibleActionRows)
+        )"
+
         <div v-for="col in tableAction.getVisibleColumns()" :key="'ac-' + col.name"
           style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
           <span :class="col.style_formula ? 'btech-pill-text' : ''" :style="col.get_style(s)" v-html="col.getContent(s)"></span>
