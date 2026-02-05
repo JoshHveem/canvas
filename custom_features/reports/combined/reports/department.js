@@ -172,6 +172,7 @@ Vue.component('reports-department', {
     departmentsRaw: {
       immediate: true,
       handler(v) {
+        console.log(this.departmentsRaw);
         this.loading = !Array.isArray(v) || v.length === 0;
       }
     }
