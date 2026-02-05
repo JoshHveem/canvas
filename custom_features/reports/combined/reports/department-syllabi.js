@@ -37,7 +37,7 @@ Vue.component('reports-department-syllabi', {
     this.table.setColumns([
       new window.ReportColumn(
         'Course', 'Course code + name.', '22rem', false, 'string',
-        s => `<a href="">${this.courseText(s)}</a>`,
+        s => `<a href="https://btech.instructure.com/courses/${s?.canvas_course_id}/external_tools/106228" target="_blank">${this.courseText(s)}</a>`,
         null,
         s => this.courseSortKey(s)
       ),
