@@ -23,7 +23,7 @@ Vue.component('reports-departments', {
       ></departments-canvas>
 
       <reports-departments-syllabi
-        v-if="subMenu == 'canvas'"
+        v-if="subMenu == 'syllabi'"
         :year="year"
         :departments="departmentsClean"
         :allCourseTags="allCourseTags"
