@@ -168,7 +168,6 @@
         const depts = Array.isArray(payload?.data) ? payload.data
                     : Array.isArray(payload) ? payload
                     : [];
-        console.log('Fetched departmentsRaw', depts);
         return depts;
       });
     }
@@ -1013,6 +1012,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
