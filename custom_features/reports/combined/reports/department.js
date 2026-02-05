@@ -116,6 +116,13 @@ Vue.component('reports-department', {
       return list.filter(d => Number(d.academic_year) === yr) || [];
     },
 
+    syllabi() {
+      let list = this.department_metrics?.syllabi ?? [];
+      if (!list.length) return [];
+      const yr = Number(this.year) || new Date().getFullYear();
+      return list.filter(d => Number(d.academic_year) === yr) || [];
+    },
+
     instructorMetrics() {
       let list = this.department_metrics?.instructor_metrics ?? [];
       if (!list.length) return {};

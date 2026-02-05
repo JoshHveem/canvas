@@ -99,6 +99,7 @@ Vue.component('reports-departments', {
       out.interactions        = this.pickYearOne(dept?.interactions, yr);
       out.grading             = this.pickYearOne(dept?.grading, yr);
       out.support_hours       = this.pickYearOne(dept?.support_hours, yr);
+      out.syllabi             = this.pickYearMany(dept?.syllabi, yr);
 
       out.occupations         = this.pickYearMany(dept?.occupations, yr);
       out.cpl                 = this.pickYearMany(dept?.cpl, yr);
