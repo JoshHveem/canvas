@@ -52,6 +52,12 @@ Vue.component('reports-department', {
         :coe="coe"
       ></reports-department-coe>
 
+      <reports-department-syllabi
+        v-if="subMenu == 'syllabi'"
+        :year="year"
+        :syllabi="syllabi"
+      ></reports-department-syllabi>
+
       <reports-department-completion
         v-if="subMenu == 'completion'"
         :year="year"
@@ -116,6 +122,14 @@ Vue.component('reports-department', {
       return list.filter(d => Number(d.academic_year) === yr) || [];
     },
 
+    syllabi() {
+      console.log(this.department_metrics)
+      let list = this.department_metrics?.syllabi ?? [];
+      if (!list.length) return [];
+      const yr = Number(this.year) || new Date().getFullYear();
+      return list.filter(d => Number(d.academic_year) === yr) || [];
+    },
+
     instructorMetrics() {
       let list = this.department_metrics?.instructor_metrics ?? [];
       if (!list.length) return {};
@@ -172,6 +186,7 @@ Vue.component('reports-department', {
     departmentsRaw: {
       immediate: true,
       handler(v) {
+        console.log(this.departmentsRaw);
         this.loading = !Array.isArray(v) || v.length === 0;
       }
     }

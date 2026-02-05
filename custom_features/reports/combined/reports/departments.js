@@ -22,6 +22,14 @@ Vue.component('reports-departments', {
         :selectedCourseTags="selectedCourseTags"
       ></departments-canvas>
 
+      <reports-departments-syllabi
+        v-if="subMenu == 'syllabi'"
+        :year="year"
+        :departments="departmentsClean"
+        :allCourseTags="allCourseTags"
+        :selectedCourseTags="selectedCourseTags"
+      ></reports-departments-syllabi>
+
       <departments-instructors
         v-if="subMenu == 'instructors'"
         :year="year"
@@ -99,6 +107,7 @@ Vue.component('reports-departments', {
       out.interactions        = this.pickYearOne(dept?.interactions, yr);
       out.grading             = this.pickYearOne(dept?.grading, yr);
       out.support_hours       = this.pickYearOne(dept?.support_hours, yr);
+      out.syllabi             = this.pickYearMany(dept?.syllabi, yr);
 
       out.occupations         = this.pickYearMany(dept?.occupations, yr);
       out.cpl                 = this.pickYearMany(dept?.cpl, yr);
