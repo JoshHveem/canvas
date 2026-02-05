@@ -42,6 +42,13 @@ Vue.component('reports-departments-syllabi', {
       ),
 
       new window.ReportColumn(
+        'Published Courses', 'Count: is_published_course = true.', '7rem', false, 'number',
+        d => String(this.publishedCount(d)),
+        null,
+        d => this.publishedCount(d)
+      ),
+
+      new window.ReportColumn(
         'Syllabi', 'Total syllabi rows provided.', '6rem', false, 'number',
         d => String(this.syllabiTotal(d)),
         null,
@@ -60,13 +67,6 @@ Vue.component('reports-departments-syllabi', {
         d => String(this.needsApproval(d)),
         d => this.countPillStyle(this.needsApproval(d)),
         d => this.needsApproval(d)
-      ),
-
-      new window.ReportColumn(
-        'Published Courses', 'Count: is_published_course = true.', '7rem', false, 'number',
-        d => String(this.publishedCount(d)),
-        null,
-        d => this.publishedCount(d)
       ),
 
       new window.ReportColumn(
