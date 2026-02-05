@@ -1,5 +1,5 @@
 // departments-syllabi-overview.js
-Vue.component('departments-syllabi', {
+Vue.component('reports-departments-syllabi', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },

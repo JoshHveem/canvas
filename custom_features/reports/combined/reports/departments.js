@@ -22,6 +22,14 @@ Vue.component('reports-departments', {
         :selectedCourseTags="selectedCourseTags"
       ></departments-canvas>
 
+      <reports-departments-syllabi
+        v-if="subMenu == 'canvas'"
+        :year="year"
+        :departments="departmentsClean"
+        :allCourseTags="allCourseTags"
+        :selectedCourseTags="selectedCourseTags"
+      ></reports-departments-syllabi>
+
       <departments-instructors
         v-if="subMenu == 'instructors'"
         :year="year"
