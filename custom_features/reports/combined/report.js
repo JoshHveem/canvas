@@ -168,6 +168,7 @@
         const depts = Array.isArray(payload?.data) ? payload.data
                     : Array.isArray(payload) ? payload
                     : [];
+        console.log('Fetched departmentsRaw', depts);
         return depts;
       });
     }
