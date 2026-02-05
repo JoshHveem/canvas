@@ -123,6 +123,7 @@ Vue.component('reports-department', {
     },
 
     syllabi() {
+      console.log(this.department_metrics)
       let list = this.department_metrics?.syllabi ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
