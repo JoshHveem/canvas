@@ -37,7 +37,7 @@ Vue.component('reports-department-syllabi', {
     this.table.setColumns([
       new window.ReportColumn(
         'Course', 'Course code + name.', '22rem', false, 'string',
-        s => this.courseText(s),
+        s => `<a href="">${this.courseText(s)}</a>`,
         null,
         s => this.courseSortKey(s)
       ),
