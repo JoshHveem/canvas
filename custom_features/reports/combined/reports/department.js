@@ -52,6 +52,12 @@ Vue.component('reports-department', {
         :coe="coe"
       ></reports-department-coe>
 
+      <reports-department-syllabi
+        v-if="subMenu == 'syllabi'"
+        :year="year"
+        :syllabi="syllabi"
+      ></reports-department-syllabi>
+
       <reports-department-completion
         v-if="subMenu == 'completion'"
         :year="year"
