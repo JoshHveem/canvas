@@ -401,6 +401,7 @@
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion' },
               { value: 'placements',    label: 'Placements' },
+              { value: 'employment-skills',    label: 'Employment Skills' },
             ]
           },
           {
@@ -414,6 +415,7 @@
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion' },
               { value: 'placements',    label: 'Placements' },
+              { value: 'employment-skills',    label: 'Employment Skills' },
             ]
           },
           {
@@ -1027,6 +1029,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-completion.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-employment-skills.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-placements.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-overview.js");
