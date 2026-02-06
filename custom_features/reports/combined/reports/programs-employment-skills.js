@@ -70,11 +70,11 @@ Vue.component('reports-programs-employment-skills', {
       ),
 
       new window.ReportColumn(
-        'Evals/Qtr', 'Evals per quarter.', '5.5rem', false, 'number',
+        'Evals/Qtr', 'Evals per quarter. Must be at least 1.0.', '5.5rem', false, 'number',
         p => this.f(p?.employment_skills?.evals_per_quarter, 2),
-        null,
+        p => this.evalsPerQuarterPillStyle(p),
         p => Number(p?.employment_skills?.evals_per_quarter ?? -1)
-      ),
+        ),
 
       new window.ReportColumn(
         '% Graded', 'Percent of submitted evals that were graded (0–1).', '5.5rem', false, 'string',
@@ -111,6 +111,18 @@ Vue.component('reports-programs-employment-skills', {
       const v = Number(x);
       return Number.isFinite(v) ? v.toFixed(digits) : '—';
     },
+
+    evalsPerQuarterPillStyle(p) {
+        const v = Number(p?.employment_skills?.evals_per_quarter);
+        if (!Number.isFinite(v)) {
+            return { backgroundColor: 'transparent', color: this.colors.black };
+        }
+
+        if (v < 0.9) return { backgroundColor: this.colors.red, color: this.colors.white };
+        if (v < 1.0) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+        return { backgroundColor: this.colors.green, color: this.colors.white };
+    },
+
 
     gradedPillStyle(p) {
       const r = Number(p?.employment_skills?.perc_submitted_graded);
