@@ -148,8 +148,9 @@ if (!pieces) {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Extra safety: short “boot loop” for first few seconds
-  // (helps when Canvas does multiple initial renders)
+  // === TIMING EDITION: Aggressive retry polling for initial load ===
+  // This ensures button mounts even if container isn't ready at init time
+  // Polls every 250ms for ~5 seconds until button appears
   let attempts = 0;
   const boot = setInterval(() => {
     attempts++;
