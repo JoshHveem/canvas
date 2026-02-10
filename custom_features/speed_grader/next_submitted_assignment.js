@@ -89,8 +89,8 @@ function ensureNextButton(submittedIds, student_id) {
 }
 
 async function initNextAssignmentButton() {
-  let rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
-let pieces = window.location.href.match(rUrl);
+  const rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
+const pieces = window.location.href.match(rUrl);
 
 // Fallback: if strict regex didn't match, use flexible extraction
 if (!pieces) {
@@ -148,9 +148,8 @@ if (!pieces) {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // === TIMING EDITION: Aggressive retry polling for initial load ===
-  // This ensures button mounts even if container isn't ready at init time
-  // Polls every 250ms for ~5 seconds until button appears
+  // Extra safety: short “boot loop” for first few seconds
+  // (helps when Canvas does multiple initial renders)
   let attempts = 0;
   const boot = setInterval(() => {
     attempts++;
