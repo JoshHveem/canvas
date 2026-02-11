@@ -94,6 +94,8 @@ async function initNextAssignmentButton() {
   let pieces = window.location.href.match(rUrl);
 
   // Fallback: if strict regex didn't match, use flexible extraction
+  console.log(pieces);
+  console.log(JSON.stringify(window.location.href));
   if (!pieces) {
     const assignmentMatch = window.location.href.match(/[?&]assignment_id=([0-9]+)/);
     const studentMatch = window.location.href.match(/[?&]student_id=([0-9]+)/);
