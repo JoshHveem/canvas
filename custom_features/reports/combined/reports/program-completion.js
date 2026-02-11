@@ -467,15 +467,16 @@ ratePctText(rate, digits = 1) {
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-  <div class="btech-row" style="align-items:center; gap:8px; margin-bottom:10px;">
+  <div style="align-items:center; gap:8px; margin-bottom:10px;">
+    Current:
     <span class="btech-pill"
           :style="ratePillStyle(currentRateForPill)">
-      Current: {{ ratePctText(currentRateForPill, 0) }}
+      {{ ratePctText(currentRateForPill, 0) }}
     </span>
-
+    Projected: 
     <span class="btech-pill"
           :style="ratePillStyle(projectedCompletionRateGreen)">
-      Projected: {{ ratePctText(projectedCompletionRateGreen, 1) }}
+      {{ ratePctText(projectedCompletionRateGreen, 1) }}
     </span>
   </div>
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
