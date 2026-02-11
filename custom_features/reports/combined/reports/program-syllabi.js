@@ -2,6 +2,7 @@
 Vue.component('reports-program-syllabi', {
   props: {
     year: { type: [Number, String], required: true }, // kept for UI, but not used to filter (no academic_year in items now)
+    syllabiData: { type: Object, required: false, default: () => ({}) }, // kept for possible future use (e.g. summary cards), but not used in current table
     syllabi: { type: Array, required: true },         // you pass program.syllabi.syllabi here
     loading: { type: Boolean, default: false },
     anonymous: { type: Boolean, default: false }
