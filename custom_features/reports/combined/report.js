@@ -659,7 +659,6 @@
 
       methods: {
         drillToReport(payload) {
-          console.log(payload);
           const report = String(payload?.report ?? '').trim();
           const subMenu = String(payload?.subMenu ?? '').trim();
           const instructor = String(payload?.instructor ?? '').trim();

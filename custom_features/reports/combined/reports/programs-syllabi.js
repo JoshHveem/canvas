@@ -99,6 +99,15 @@ Vue.component('reports-programs-syllabi', {
   },
 
   methods: {
+  emitDrill(p) {
+    this.$emit('drill-report', {
+      report: 'program',
+      subMenu: 'syllabi',
+      program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
+      campus: String(p?.campus ?? '').trim(),
+      row: p
+    });
+  },
   getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
   setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
@@ -221,8 +230,9 @@ Vue.component('reports-programs-syllabi', {
 
       <!-- Rows -->
       <div
-        v-for="(dept, i) in visibleRows"
-        :key="dept.deptId || dept.account_id || dept.id || i"
+        v-for="(program, i) in visibleRows"
+        @click="emitDrill(program)"
+        :key="i"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
           'grid-template-columns': getColumnsWidthsString(),
@@ -236,8 +246,8 @@ Vue.component('reports-programs-syllabi', {
         >
           <span
             :class="col.style_formula ? 'btech-pill-text' : ''"
-            :style="col.get_style(dept)"
-            v-html="col.getContent(dept)"
+            :style="col.get_style(program)"
+            v-html="col.getContent(program)"
           ></span>
         </div>
       </div>
