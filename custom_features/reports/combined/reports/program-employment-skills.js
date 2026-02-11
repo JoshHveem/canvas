@@ -2,6 +2,7 @@
 Vue.component('reports-program-employment-skills', {
   props: {
     year: { type: [Number, String], required: true },
+    campus: { type: [String], required: true },
     anonymous: { type: Boolean, default: false },
     students: { type: Array, default: () => ([]) },
     loading: { type: Boolean, default: false }
@@ -62,11 +63,9 @@ Vue.component('reports-program-employment-skills', {
     // If your server is already sending only the chosen academic_year+program+campus cohort, you can skip this.
     // Otherwise: keep only students whose record matches the selected year.
     includedStudents() {
-      const y = this.y;
-      if (!y) return [];
-      return this.studentsClean.filter(s => Number(s?.academic_year) === y);
+        const rows = this.studentsClean;
+        return rows;
     },
-
     visibleRows() {
       const rows = this.includedStudents.slice().sort((a, b) => {
         // default stable-ish ordering before table sorting:
