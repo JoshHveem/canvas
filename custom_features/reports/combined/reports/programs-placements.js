@@ -435,7 +435,9 @@ Vue.component('reports-programs-placements', {
   },
 
   emitDrill(p) {
-    this.$emit('drill-program', {
+    this.$emit('drill-report', {
+      report: 'programs',
+      subMenu: 'placements',
       program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
       campus: String(p?.campus ?? '').trim(),
       row: p

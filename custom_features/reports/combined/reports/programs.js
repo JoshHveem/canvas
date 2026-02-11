@@ -6,28 +6,28 @@ Vue.component('reports-programs', {
         v-if="subMenu == 'completion'"
         :year="year"
         :programs="programsClean"
-        @drill-program="$emit('drill-program', $event)"
+        @drill-report="$emit('drill-report', $event)"
       ></reports-programs-completion>
 
       <reports-programs-placements
         v-if="subMenu == 'placements'"
         :year="year"
         :programs="programsClean"
-        @drill-program="$emit('drill-program', $event)"
+        @drill-report="$emit('drill-report', $event)"
       ></reports-programs-placements>
 
       <reports-programs-syllabi
         v-if="subMenu == 'syllabi'"
         :year="year"
         :programs="programsClean"
-        @drill-program="$emit('drill-program', $event)"
+        @drill-report="$emit('drill-report', $event)"
       ></reports-programs-syllabi>
 
       <reports-programs-employment-skills
         v-if="subMenu == 'employment-skills'"
         :year="year"
         :programs="programsClean"
-        @drill-program="$emit('drill-program', $event)"
+        @drill-report="$emit('drill-report', $event)"
       ></reports-programs-employment-skills>
  
     </div>

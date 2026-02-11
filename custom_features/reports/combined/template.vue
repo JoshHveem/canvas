@@ -354,7 +354,7 @@
         <keep-alive>
           <component 
             :is="currentReportMeta.component" 
-            @drill-program="drillToProgram"
+            @drill-report="drillToReport"
             v-bind="currentReportProps" />
         </keep-alive>
       </div>

@@ -658,25 +658,31 @@
       },
 
       methods: {
-      drillToProgram(payload) {
-        const program = String(payload?.program ?? '').trim();
-        const campus  = String(payload?.campus ?? '').trim();
+        drillToReport(payload) {
+          const report = String(payload?.report ?? '').trim();
+          const subMenu = String(payload?.subMenu ?? '').trim();
+          const instructor = String(payload?.instructor ?? '').trim();
+          const course = String(payload?.course ?? '').trim();
+          const program = String(payload?.program ?? '').trim();
+          const campus  = String(payload?.campus ?? '').trim();
+          const account= String(payload?.account ?? '').trim();
 
-        // set filters
-        this.$set(this.settings.filters, 'program', program);
-        this.$set(this.settings.filters, 'campus', campus);
+          // set filters
+          if (course) this.$set(this.settings.filters, 'course', course);
+          if (instructor) this.$set(this.settings.filters, 'instructor', instructor);
+          if (program) this.$set(this.settings.filters, 'program', program);
+          if (campus) this.$set(this.settings.filters, 'campus', campus);
+          if (account) this.$set(this.settings.filters, 'account', account);
 
-        // switch report type
-        this.settings.reportType = 'program';
+          // switch report type
+          this.settings.reportType = report;
+          if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
+          this.$set(this.settings.subMenuByType, report, subMenu);
 
-        // optionally force submenu to completion for the program report
-        if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
-        this.$set(this.settings.subMenuByType, 'program', 'completion');
-
-        // persist + refresh data if needed
-        this.saveSettings(this.settings);
-        this.ensureSharedData();
-      },
+          // persist + refresh data if needed
+          this.saveSettings(this.settings);
+          this.ensureSharedData();
+        },
         onReportChange() {
           this.saveSettings(this.settings);
           // ensure shared data needed for the new report is loaded
