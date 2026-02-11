@@ -53,7 +53,7 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
-        'Status', 'Needs submission / needs approval / completed.', '10rem', false, 'string',
+        'Status', 'Needs submission / needs approval / completed.', '8rem', false, 'string',
         s => this.statusText(s),
         s => this.statusPillStyle(s),
         s => this.statusSort(s)
