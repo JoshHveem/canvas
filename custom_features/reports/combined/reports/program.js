@@ -21,7 +21,7 @@ Vue.component('reports-program', {
         :campus="program?.campus ?? ''"
         :syllabi-data="program?.syllabi ?? {}"
         :syllabi="program?.syllabi?.syllabi ?? []"
-      ></reports-program-employment-skills>
+      ></reports-program-syllabi>
       <reports-program-placements
          v-if="subMenu == 'placements'"
          :year="year"
