@@ -337,7 +337,7 @@ chooseForBar(E, C, candidates, target) {
 
     emitDrill(p) {
       this.$emit('drill-report', {
-        report: 'programs',
+        report: 'program',
         subMenu: 'completion',
         program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
         campus: String(p?.campus ?? '').trim(),
