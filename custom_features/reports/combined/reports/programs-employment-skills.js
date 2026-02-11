@@ -142,14 +142,6 @@ Vue.component('reports-programs-employment-skills', {
       if (r < 0.60) return { backgroundColor: this.colors.yellow, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
     },
-
-    emitDrill(p) {
-      this.$emit('drill-program', {
-        program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
-        campus: String(p?.campus ?? '').trim(),
-        row: p
-      });
-    }
   },
 
   template: `
