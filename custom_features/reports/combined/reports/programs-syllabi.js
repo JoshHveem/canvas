@@ -1,4 +1,4 @@
-// departments-syllabi-overview.js
+// programs-syllabi.js
 Vue.component('reports-programs-syllabi', {
   props: {
     year: { type: [Number, String], required: true },

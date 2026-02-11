@@ -1,8 +1,8 @@
-// department-syllabi.js
+// program-syllabi.js
 Vue.component('reports-program-syllabi', {
   props: {
-    year: { type: [Number, String], required: true },
-    syllabi: { type: Array, required: true },
+    year: { type: [Number, String], required: true }, // kept for UI, but not used to filter (no academic_year in items now)
+    syllabi: { type: Array, required: true },         // you pass program.syllabi.syllabi here
     loading: { type: Boolean, default: false },
     anonymous: { type: Boolean, default: false }
   },
@@ -16,8 +16,8 @@ Vue.component('reports-program-syllabi', {
     const table = new window.ReportTable({
       rows: [],
       columns: [],
-      sort_column: "Last Edited",
-      sort_dir: -1,
+      sort_column: "Course",
+      sort_dir: 1,
       colors
     });
 
@@ -26,9 +26,10 @@ Vue.component('reports-program-syllabi', {
       table,
       tableTick: 0,
       filters: {
-        // optional client-side filters if you want later
         submitted: '', // '', true, false
         approved: '',  // '', true, false
+        published_course: '', // '', true, false
+        active: '' // '', true, false
       }
     };
   },
@@ -36,21 +37,21 @@ Vue.component('reports-program-syllabi', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Course', 'Course code + name.', '22rem', false, 'string',
-        s => `<a href="https://btech.instructure.com/courses/${s?.canvas_course_id}/external_tools/106228" target="_blank">${this.courseText(s)}</a>`,
+        'Course', 'Course code (links to Simple Syllabus in Canvas).', '16rem', false, 'string',
+        s => this.courseLinkHtml(s),
         null,
         s => this.courseSortKey(s)
       ),
 
       new window.ReportColumn(
-        'Canvas', 'Canvas course id.', '6rem', false, 'number',
-        s => (s?.canvas_course_id ?? ''),
-        null,
-        s => Number(s?.canvas_course_id ?? -1)
+        'Status', 'Needs submission / needs approval / completed.', '10rem', false, 'string',
+        s => this.statusText(s),
+        s => this.statusPillStyle(s),
+        s => this.statusSort(s)
       ),
 
       new window.ReportColumn(
-        'Submitted', 'Submitted to approvals (awaiting_approval or completed).', '6rem', false, 'string',
+        'Submitted', 'Submitted to approvals.', '6rem', false, 'string',
         s => this.boolText(s?.is_submitted),
         s => this.boolPillStyle(s?.is_submitted),
         s => this.boolSort(s?.is_submitted)
@@ -64,24 +65,31 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
-        'Published', 'Canvas course published.', '6rem', false, 'string',
+        'Published Course', 'Canvas course published.', '8rem', false, 'string',
         s => this.boolText(s?.is_published_course),
         s => this.boolPillStyle(s?.is_published_course),
         s => this.boolSort(s?.is_published_course)
       ),
 
       new window.ReportColumn(
-        'Last Edited', 'Last edited timestamp from Simple Syllabus.', '10rem', false, 'string',
-        s => this.dateText(s?.last_edited_at),
-        null,
-        s => this.dateSort(s?.last_edited_at)
+        'Published Syllabus', 'Simple Syllabus published.', '9rem', false, 'string',
+        s => this.boolText(s?.is_published_syllabus),
+        s => this.boolPillStyle(s?.is_published_syllabus),
+        s => this.boolSort(s?.is_published_syllabus)
       ),
 
       new window.ReportColumn(
-        'AY', 'Academic year.', '4rem', false, 'number',
-        s => (s?.academic_year ?? ''),
+        'Active', 'Course active.', '6rem', false, 'string',
+        s => this.boolText(s?.is_active),
+        s => this.boolPillStyle(s?.is_active),
+        s => this.boolSort(s?.is_active)
+      ),
+
+      new window.ReportColumn(
+        'Canvas ID', 'Canvas course id.', '7rem', false, 'number',
+        s => (s?.canvas_course_id ?? ''),
         null,
-        s => Number(s?.academic_year ?? -1)
+        s => Number(s?.canvas_course_id ?? -1)
       ),
     ]);
   },
@@ -90,21 +98,23 @@ Vue.component('reports-program-syllabi', {
     visibleRows() {
       const rows = Array.isArray(this.syllabi) ? this.syllabi : [];
 
-      // Optional: slice to the selected year if you sometimes pass mixed years
-      const y = Number(this.year);
-      const yearFiltered = Number.isFinite(y)
-        ? rows.filter(r => Number(r?.academic_year) === y)
-        : rows;
-
-      // Optional filters (client side)
-      const filtered = yearFiltered.filter(r => {
+      // Client-side filters
+      const filtered = rows.filter(r => {
         if (this.filters.submitted !== '') {
           const want = this.filters.submitted === true || this.filters.submitted === 'true';
-          if (!!r?.is_submitted !== want) return false;
+          if ((r?.is_submitted === true) !== want) return false;
         }
         if (this.filters.approved !== '') {
           const want = this.filters.approved === true || this.filters.approved === 'true';
-          if (!!r?.is_approved !== want) return false;
+          if ((r?.is_approved === true) !== want) return false;
+        }
+        if (this.filters.published_course !== '') {
+          const want = this.filters.published_course === true || this.filters.published_course === 'true';
+          if ((r?.is_published_course === true) !== want) return false;
+        }
+        if (this.filters.active !== '') {
+          const want = this.filters.active === true || this.filters.active === 'true';
+          if ((r?.is_active === true) !== want) return false;
         }
         return true;
       });
@@ -118,13 +128,32 @@ Vue.component('reports-program-syllabi', {
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
-    // -------- formatting helpers --------
+    // ---------- status bucket ----------
+    statusText(s) {
+      if (s?.is_submitted !== true) return 'Needs submission';
+      if (s?.is_approved !== true) return 'Needs approval';
+      return 'Completed';
+    },
+    statusSort(s) {
+      // Completed first, then needs approval, then needs submission
+      if (s?.is_submitted === true && s?.is_approved === true) return 2;
+      if (s?.is_submitted === true && s?.is_approved !== true) return 1;
+      return 0;
+    },
+    statusPillStyle(s) {
+      const t = this.statusText(s);
+      if (t === 'Completed') return { backgroundColor: this.colors.green, color: this.colors.white };
+      if (t === 'Needs approval') return { backgroundColor: this.colors.yellow, color: this.colors.white };
+      return { backgroundColor: this.colors.red, color: this.colors.white };
+    },
+
+    // ---------- bool helpers ----------
     boolText(v) {
       if (v === undefined || v === null) return 'n/a';
       return v ? 'Yes' : 'No';
     },
     boolSort(v) {
-      if (v === undefined || v === null) return -1; // push unknowns down
+      if (v === undefined || v === null) return -1;
       return v ? 1 : 0;
     },
     boolPillStyle(v) {
@@ -134,28 +163,24 @@ Vue.component('reports-program-syllabi', {
         : { backgroundColor: this.colors.red, color: this.colors.white };
     },
 
-    dateSort(v) {
-      const t = Date.parse(v);
-      return Number.isFinite(t) ? t : -1;
-    },
-    dateText(v) {
-      const t = Date.parse(v);
-      if (!Number.isFinite(t)) return 'n/a';
-      // keep it simple; adjust to your preferred format
-      const d = new Date(t);
-      return d.toLocaleString();
-    },
-
+    // ---------- course formatting ----------
     courseText(s) {
       const code = (s?.course_code ?? '').trim();
-      const name = (s?.course_name ?? '').trim();
-      if (code && name) return `${this.escapeHtml(code)} — ${this.escapeHtml(name)}`;
-      return this.escapeHtml(code || name || '');
+      return this.escapeHtml(code || '(no course code)');
     },
     courseSortKey(s) {
-      const code = (s?.course_code ?? '').trim();
-      const name = (s?.course_name ?? '').trim();
-      return `${code} ${name}`.trim().toLowerCase();
+      return String(s?.course_code ?? '').trim().toLowerCase();
+    },
+
+    courseLinkHtml(s) {
+      const id = s?.canvas_course_id;
+      const code = this.courseText(s);
+
+      // If missing ID, just show text
+      if (id === undefined || id === null || id === '') return code;
+
+      const url = `https://btech.instructure.com/courses/${encodeURIComponent(id)}/external_tools/106228`;
+      return `<a href="${url}" target="_blank" rel="noopener">${code}</a>`;
     },
 
     escapeHtml(str) {
@@ -171,15 +196,13 @@ Vue.component('reports-program-syllabi', {
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <!-- Header -->
     <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;">Syllabi</h4>
+      <h4 class="btech-card-title" style="margin:0;">Program — Syllabi</h4>
       <div style="flex:1;"></div>
       <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
     </div>
 
-    <!-- Optional quick filters -->
     <div class="btech-row" style="gap:8px; margin-bottom:8px;">
       <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
       <select v-model="filters.submitted" style="font-size:.75rem;">
@@ -194,6 +217,20 @@ Vue.component('reports-program-syllabi', {
         <option :value="true">Yes</option>
         <option :value="false">No</option>
       </select>
+
+      <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Published</label>
+      <select v-model="filters.published_course" style="font-size:.75rem;">
+        <option value="">All</option>
+        <option :value="true">Yes</option>
+        <option :value="false">No</option>
+      </select>
+
+      <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Active</label>
+      <select v-model="filters.active" style="font-size:.75rem;">
+        <option value="">All</option>
+        <option :value="true">Yes</option>
+        <option :value="false">No</option>
+      </select>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
@@ -201,7 +238,6 @@ Vue.component('reports-program-syllabi', {
     </div>
 
     <div v-else>
-      <!-- Column headers -->
       <div
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
         :style="{ 'grid-template-columns': getColumnsWidthsString() }"
@@ -227,10 +263,9 @@ Vue.component('reports-program-syllabi', {
         </div>
       </div>
 
-      <!-- Rows -->
       <div
         v-for="(syl, i) in visibleRows"
-        :key="syl.doc_code || syl.canvas_course_id || i"
+        :key="syl.course_code || syl.canvas_course_id || i"
         style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
         :style="{
           'grid-template-columns': getColumnsWidthsString(),
