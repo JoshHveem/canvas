@@ -33,6 +33,7 @@ Vue.component('reports-programs-syllabi', {
   },
 
   created() {
+    console.log(this.programs);
     this.table.setColumns([
       new window.ReportColumn(
         'Department', 'Department name.', '16rem', false, 'string',
