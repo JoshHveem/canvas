@@ -408,7 +408,7 @@ Vue.component('reports-program-completion', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      {{completionRate}}
+      Current Completion Rate: {{Math.round(completionRate * 100)}}%
     </div>
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading students…
