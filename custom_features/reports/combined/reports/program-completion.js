@@ -442,6 +442,8 @@ Vue.component('reports-program-completion', {
       <!-- ACTIVE TABLE -->
       <div class="btech-row" style="align-items:center; margin: 8px 0;">
         <h4 class="btech-card-title" style="margin:0; font-size: .95rem;">Active students</h4>
+        <div style="flex:1;"></div>
+        <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleActiveRows.length }}</span>
       </div>
 
       <div style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
