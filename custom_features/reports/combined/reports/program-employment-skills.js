@@ -60,7 +60,7 @@ Vue.component('reports-program-employment-skills', {
         'Avg score',
         'Mean of all average skill scores. Click for details.',
         '7rem',
-        s => s?.employment_skills_average,
+        s => s?.employment_skills_averages,
         { mode: 'avg' }
     )
     ]);
