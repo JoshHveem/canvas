@@ -9,6 +9,12 @@ Vue.component('reports-program', {
         :projected-non-completers="program?.projected_non_completers ?? 0"
         :students="program?.students ?? []"
       ></reports-program-completion>
+      <reports-program-employment-skills
+        v-if="subMenu == 'employment-skills'"
+        :year="year"
+        :campus="program?.campus ?? ''"
+        :students="program?.students ?? []"
+      ></reports-program-employment-skills>
       <reports-program-placements
          v-if="subMenu == 'placements'"
          :year="year"
