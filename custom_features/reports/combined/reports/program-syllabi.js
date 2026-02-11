@@ -30,7 +30,6 @@ Vue.component('reports-program-syllabi', {
         submitted: '', // '', true, false
         approved: '',  // '', true, false
         published_course: '', // '', true, false
-        active: '' // '', true, false
       }
     };
   },
@@ -86,13 +85,6 @@ Vue.component('reports-program-syllabi', {
         s => this.boolPillStyle(s?.is_published_syllabus),
         s => this.boolSort(s?.is_published_syllabus)
       ),
-
-      new window.ReportColumn(
-        'Active', 'Course active.', '6rem', false, 'string',
-        s => this.boolText(s?.is_active),
-        s => this.boolPillStyle(s?.is_active),
-        s => this.boolSort(s?.is_active)
-      ),
     ]);
   },
 
@@ -113,10 +105,6 @@ Vue.component('reports-program-syllabi', {
         if (this.filters.published_course !== '') {
           const want = this.filters.published_course === true || this.filters.published_course === 'true';
           if ((r?.is_published_course === true) !== want) return false;
-        }
-        if (this.filters.active !== '') {
-          const want = this.filters.active === true || this.filters.active === 'true';
-          if ((r?.is_active === true) !== want) return false;
         }
         return true;
       });
@@ -229,13 +217,6 @@ Vue.component('reports-program-syllabi', {
 
       <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Published</label>
       <select v-model="filters.published_course" style="font-size:.75rem;">
-        <option value="">All</option>
-        <option :value="true">Yes</option>
-        <option :value="false">No</option>
-      </select>
-
-      <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Active</label>
-      <select v-model="filters.active" style="font-size:.75rem;">
         <option value="">All</option>
         <option :value="true">Yes</option>
         <option :value="false">No</option>
