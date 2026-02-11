@@ -10,7 +10,7 @@ Vue.component('reports-program', {
         :students="program?.students ?? []"
       ></reports-program-completion>
       <reports-program-employment-skills
-        v-if="subMenu == 'employment_skills'"
+        v-if="subMenu == 'employment-skills'"
         :year="year"
         :campus="program?.campus ?? ''"
         :students="program?.students ?? []"
