@@ -26,6 +26,7 @@ Vue.component('reports-program-placements', {
   },
 
   created() {
+    console.log(this.students);
     // Action Needed (top)
     this.tableAction.setColumns([
       this.makeStatusColumn('action'),
