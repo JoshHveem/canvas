@@ -166,10 +166,12 @@ async function initNextAssignmentButton() {
 }
 
 // Kick it off
-(async function () {
-  try {
-    await initNextAssignmentButton();
-  } catch (e) {
-    console.error('Next Assignment init failed:', e);
-  }
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  (async function () {
+    try {
+      await initNextAssignmentButton();
+    } catch (e) {
+      console.error('Next Assignment init failed:', e);
+    }
+  })();
+});
