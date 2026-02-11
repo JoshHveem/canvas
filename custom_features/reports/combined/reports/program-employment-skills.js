@@ -50,7 +50,7 @@ Vue.component('reports-program-employment-skills', {
 
       // Optional: show a compact preview of "average" skills (top 2 by score)
       this.makeSkillsPreviewColumn('Top skills (avg)', 'Top 2 skill averages across all submissions.', '18rem',
-        s => s?.employment_skills_average,
+        s => s?.employment_skills_averages,
         { maxItems: 2 }
       )
     ]);
