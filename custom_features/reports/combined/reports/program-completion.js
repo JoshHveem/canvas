@@ -468,7 +468,7 @@ ratePctText(rate, digits = 1) {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
   <div style="align-items:center; gap:8px; margin-bottom:10px;">
-    Current:
+    Current Completion Rate:
     <span class="btech-pill"
           :style="ratePillStyle(currentRateForPill)">
       {{ ratePctText(currentRateForPill, 0) }}
