@@ -406,11 +406,6 @@ Vue.component('reports-program-completion', {
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      <h4 class="btech-card-title" style="margin:0;">Completion Diagnostic</h4>
-      <div style="flex:1;"></div>
-    </div>
-
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading students…
     </div>
