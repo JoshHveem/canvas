@@ -90,15 +90,13 @@ function ensureNextButton(submittedIds, student_id) {
 
 async function initNextAssignmentButton() {
   console.log("START");
-    let pieces;
-    const assignmentMatch = window.location.search.match(/[?&]assignment_id=([0-9]+)/);
-    const studentMatch = window.location.search.match(/[?&]student_id=([0-9]+)/);
-    const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
-    
-    if (assignmentMatch && studentMatch && courseMatch) {
-      // Build a synthetic pieces array to match the format of the strict regex
-      pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
-    }
+  let pieces;
+  const assignmentMatch = window.location.search.match(/[?&]assignment_id=([0-9]+)/);
+  const studentMatch = window.location.search.match(/[?&]student_id=([0-9]+)/);
+  const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
+  
+  // Build a synthetic pieces array to match the format of the strict regex
+  pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
 
   console.log(pieces);
   console.log(JSON.stringify(window.location));
