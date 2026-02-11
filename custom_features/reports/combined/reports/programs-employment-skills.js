@@ -97,6 +97,15 @@ Vue.component('reports-programs-employment-skills', {
   },
 
   methods: {
+    emitDrill(p) {
+      this.$emit('drill-report', {
+        report: 'program',
+        subMenu: 'employment-skills',
+        program: String(p?.program ?? p?.program_code ?? p?.name ?? '').trim(),
+        campus: String(p?.campus ?? '').trim(),
+        row: p
+      });
+    },
     // ---- ReportTable plumbing ----
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
