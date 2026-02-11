@@ -49,6 +49,28 @@ Vue.component('reports-program-completion', {
   },
 
   computed: {
+    projectedGreenCount() {
+  const list = Array.isArray(this.info?.candidates) ? this.info.candidates : [];
+  return list.filter(x => window.COMPLETION.bucketFromChance(x?.prob) === 'green').length;
+},
+
+projectedCompletionRateGreen() {
+  const baseE = Number(this.info?.baseE) || 0;
+  const baseC = Number(this.info?.baseC) || 0;
+
+  const greens = Number(this.projectedGreenCount) || 0;
+  const drops  = Math.max(0, Number(this.whatIfDrops) || 0);
+
+  const denom = baseE + greens + drops;
+  const num   = baseC + greens;
+
+  return denom ? (num / denom) : null;
+},
+
+projectedGreenPctText() {
+  const r = this.projectedCompletionRateGreen;
+  return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
+},
     studentsClean() { return Array.isArray(this.students) ? this.students : []; },
     activeStudents() { return this.studentsClean.filter(s => !s?.is_exited); },
     finishedStudents() { return this.studentsClean.filter(s => !!s?.is_exited); },
@@ -408,8 +430,12 @@ Vue.component('reports-program-completion', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      Current Completion Rate: {{Math.round(completionRate * 100)}}%
-    </div>
+    Current Completion Rate:
+    {{ completionRate == null ? 'n/a' : Math.round(completionRate * 100) + '%' }}
+    <span style="margin-left:12px;">
+      Projected (greens + what-if): {{ projectedGreenPctText }}
+    </span>
+  </div>
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading students…
     </div>
