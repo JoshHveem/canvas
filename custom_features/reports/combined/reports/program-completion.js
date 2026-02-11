@@ -49,9 +49,31 @@ Vue.component('reports-program-completion', {
   },
 
   computed: {
-    projectedGreenCount() {
+currentRateForPill() {
+  // prefer server value if present, otherwise fall back to computed
+  const srv = this.completionRate;
+  if (Number.isFinite(srv)) return srv;
+
+  const r = this.info?.currentRate;
+  return Number.isFinite(r) ? r : null;
+},
+
+projectedGreenCount() {
   const list = Array.isArray(this.info?.candidates) ? this.info.candidates : [];
   return list.filter(x => window.COMPLETION.bucketFromChance(x?.prob) === 'green').length;
+},
+
+projectedCompletionRateGreen() {
+  const baseE = Number(this.info?.baseE) || 0;
+  const baseC = Number(this.info?.baseC) || 0;
+
+  const greens = Number(this.projectedGreenCount) || 0;
+  const drops  = Math.max(0, Number(this.whatIfDrops) || 0);
+
+  const denom = baseE + greens + drops;
+  const num   = baseC + greens;
+
+  return denom ? (num / denom) : null;
 },
 
 projectedCompletionRateGreen() {
@@ -424,18 +446,38 @@ projectedGreenPctText() {
       if (!Array.isArray(rows) || rows.length === 0) return {};
       if (idx === n) return { borderTop: '4px solid rgba(0,0,0,0.75)' };
       return {};
-    }
+    },
+    ratePillStyle(rate) {
+  const r = Number(rate);
+  if (!Number.isFinite(r)) {
+    return { backgroundColor: this.colors.gray, color: this.colors.black, opacity: 0.85 };
+  }
+
+  // thresholds are in fraction form
+  if (r > 0.65)  return { backgroundColor: this.colors.green,  color: this.colors.white, opacity: 0.9 };
+  if (r >= 0.60) return { backgroundColor: this.colors.yellow, color: this.colors.black, opacity: 0.9 };
+  return          { backgroundColor: this.colors.red,    color: this.colors.white, opacity: 0.9 };
+},
+
+ratePctText(rate, digits = 1) {
+  const r = Number(rate);
+  return Number.isFinite(r) ? (r * 100).toFixed(digits) + '%' : 'n/a';
+},
   },
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-    Current Completion Rate:
-    {{ completionRate == null ? 'n/a' : Math.round(completionRate * 100) + '%' }}
-    <span style="margin-left:12px;">
-      Projected (greens + what-if): {{ projectedGreenPctText }}
-    </span>
-  </div>
+    <div class="btech-row" style="align-items:center; margin-bottom:12px;"><div class="btech-row" style="align-items:center; gap:8px; margin-bottom:10px;">
+  <span class="btech-pill"
+        :style="ratePillStyle(currentRateForPill)">
+    Current: {{ ratePctText(currentRateForPill, 0) }}
+  </span>
+
+  <span class="btech-pill"
+        :style="ratePillStyle(projectedCompletionRateGreen)">
+    Projected: {{ ratePctText(projectedCompletionRateGreen, 1) }}
+  </span>
+</div>
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading students…
     </div>
