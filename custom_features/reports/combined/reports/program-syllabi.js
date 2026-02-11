@@ -200,7 +200,9 @@ Vue.component('reports-program-syllabi', {
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
     </div>
 
-    <div class="btech-row" style="gap:1rem; margin-bottom:8px; align-items:center;">
+    <div class="btech-row"
+     style="gap:1rem; margin-bottom:8px; align-items:center; justify-content:flex-start;">
+      
       <div style="display:flex; align-items:center; gap:.5rem;">
         <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
         <select v-model="filters.submitted" style="font-size:.75rem;">
@@ -218,7 +220,8 @@ Vue.component('reports-program-syllabi', {
           <option :value="false">No</option>
         </select>
       </div>
-    </div>
+
+    </div> 
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading syllabi…
