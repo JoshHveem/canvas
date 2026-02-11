@@ -70,26 +70,43 @@ Vue.component('reports-programs-syllabi', {
       ),
 
       new window.ReportColumn(
-        'Published Approved', 'Count: is_published_course AND is_approved.', '7rem', false, 'number',
-        d => String(this.publishedApprovedCount(d)),
-        d => this.countPillStyle(this.publishedCount(d) - this.publishedApprovedCount(d)), // highlight remaining
-        d => this.publishedApprovedCount(d)
+        'Completed', 'Count: is_submitted AND is_approved.', '7rem', false, 'number',
+        d => String(this.completedCount(d)),
+        d => this.countPillStyle(this.syllabiTotal(d) - this.completedCount(d)), // highlight remaining
+        d => this.completedCount(d)
       ),
 
       new window.ReportColumn(
-        '% Published Approved',
-        'is_approved (if is_published_course) / total is_published_course.',
+        '% Completed',
+        'completed / total',
         '8rem',
         false,
         'number',
-        d => this.pctText(this.percPublishedApproved(d)),
-        d => this.pctPillStyle(this.percPublishedApproved(d)),
-        d => this.percPublishedApproved(d)
+        d => this.pctText(this.pctCompleted(d)),
+        d => this.pctPillStyle(this.pctCompleted(d)),
+        d => this.pctCompleted(d)
       ),
-    ]);
-  },
+      ]);
+    },
 
   computed: {
+    // ---------- helpers ----------
+    getProgramRollup(p) {
+      // p.syllabi is now the aggregate object:
+      // { total, needs_submission, needs_approval, completed, pct_completed, syllabi: [...] }
+      const r = p?.syllabi;
+      if (!r || typeof r !== 'object') {
+        return {
+          total: 0,
+          needs_submission: 0,
+          needs_approval: 0,
+          completed: 0,
+          pct_completed: NaN,
+          syllabi: []
+        };
+      }
+      return r;
+    },
     visibleRows() {
       const rows = Array.isArray(this.departments) ? this.departments : [];
       this.table.setRows(rows);
@@ -113,28 +130,27 @@ Vue.component('reports-programs-syllabi', {
     // treat only literal true as true; everything else false-ish
     isTrue(v) { return v === true; },
 
-    syllabiTotal(d) {
-      return this.getDeptSyllabi(d).length;
+    syllabiTotal(p) {
+      return Number(this.getProgramRollup(p)?.total) || 0;
     },
 
-    needsApproval(d) {
-      const syls = this.getDeptSyllabi(d);
-      let n = 0;
-      for (const s of syls) {
-        if (this.isTrue(s?.is_submitted) && !this.isTrue(s?.is_approved)) n++;
-      }
-      return n;
+    needsSubmission(p) {
+      return Number(this.getProgramRollup(p)?.needs_submission) || 0;
     },
 
-    needsSubmission(d) {
-      const syls = this.getDeptSyllabi(d);
-      let n = 0;
-      for (const s of syls) {
-        if (!this.isTrue(s?.is_submitted) && !this.isTrue(s?.is_approved)) n++;
-      }
-      return n;
+    needsApproval(p) {
+      return Number(this.getProgramRollup(p)?.needs_approval) || 0;
     },
 
+    completedCount(p) {
+      return Number(this.getProgramRollup(p)?.completed) || 0;
+    },
+
+    pctCompleted(p) {
+      const v = this.getProgramRollup(p)?.pct_completed;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : NaN;
+    }, 
     publishedCount(d) {
       const syls = this.getDeptSyllabi(d);
       let n = 0;
