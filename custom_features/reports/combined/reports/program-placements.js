@@ -3,6 +3,7 @@ Vue.component('reports-program-placements', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
+    placementRate: { type: Number, default: null },
     students: { type: Array, default: () => ([]) },
     loading: { type: Boolean, default: false }
   },
@@ -523,7 +524,7 @@ statusSortValue(s, { mode }) {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      {{program.placement}}
+      {{placementRate}}
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">

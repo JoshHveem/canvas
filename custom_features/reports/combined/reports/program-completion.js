@@ -5,6 +5,7 @@ Vue.component('reports-program-completion', {
     anonymous: { type: Boolean, default: false },
     projectedNonCompleters: { type: [Number], default: 0 },
     students: { type: Array, default: () => ([]) },
+    completionRate: { type: Number, default: null },
     loading: { type: Boolean, default: false }
   },
 
@@ -407,7 +408,7 @@ Vue.component('reports-program-completion', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:10px;">
-      {{program.completion}}
+      {{completionRate}}
     </div>
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading students…
