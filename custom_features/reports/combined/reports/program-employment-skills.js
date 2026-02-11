@@ -39,7 +39,7 @@ Vue.component('reports-program-employment-skills', {
         { digits: 1 }
       ),
       this.makeDateColumn('Last submitted', 'Last employment skills submission date.', '8rem',
-        s => s?.employment_skills_last_submitted_at
+        s => s?.employment_skills_last_submitted
       ),
 
       // Optional: show a compact preview of "last" skills (top 2 by score)
