@@ -1,9 +1,9 @@
 // departments-syllabi-overview.js
-Vue.component('reports-departments-syllabi', {
+Vue.component('reports-programs-syllabi', {
   props: {
     year: { type: [Number, String], required: true },
     anonymous: { type: Boolean, default: false },
-    departments: { type: Array, required: true }, // expects departments[i].syllabi = []
+    programs: { type: Array, required: true },
     loading: { type: Boolean, default: false },
     tags: { type: Array, required: false, default: [] }
   },
