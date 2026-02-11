@@ -33,40 +33,36 @@ Vue.component('reports-program-employment-skills', {
 
   created() {
     this.table.setColumns([
-      this.makeStudentColumn(),
-
-      this.makeNumberColumn('Subs', 'Total employment skills submissions.', '5.5rem',
+    this.makeStudentColumn(),
+    this.makeNumberColumn('Subs', 'Total employment skills submissions.', '5.5rem',
         s => Number(s?.employment_skills_total_submissions ?? 0)
-      ),
-
-      this.makeNumberColumn('Mo/Submit', 'Avg months between submissions (server-calculated).', '6.5rem',
+    ),
+    this.makeNumberColumn('Mo/Submit', 'Avg months between submissions (server-calculated).', '6.5rem',
         s => {
-          const v = s?.employment_skills_avg_months_between_submissions;
-          return (v == null) ? null : Number(v);
+        const v = s?.employment_skills_avg_months_between_submissions;
+        return (v == null) ? null : Number(v);
         },
         { digits: 1 }
-      ),
-
-      this.makeDateColumn('Last submitted', 'Last employment skills submission date.', '8rem',
+    ),
+    this.makeDateColumn('Last submitted', 'Last employment skills submission date.', '8rem',
         s => s?.employment_skills_last_submitted_at
-      ),
+    ),
 
-      // clickable preview cells
-      this.makeSkillsPreviewClickableColumn(
-        'Last',
-        'Click to view full breakdown of skills for the most recent submission.',
-        '10rem',
+    // NEW: clickable “mean score” cells
+    this.makeSkillsMeanClickableColumn(
+        'Last score',
+        'Mean of all skill scores in the most recent evaluation. Click for details.',
+        '7rem',
         s => s?.employment_skills_last,
-        { maxItems: 2, mode: 'last' }
-      ),
-
-      this.makeSkillsPreviewClickableColumn(
-        'Avg',
-        'Click to view full breakdown of average skill scores across submissions.',
-        '10rem',
+        { mode: 'last' }
+    ),
+    this.makeSkillsMeanClickableColumn(
+        'Avg score',
+        'Mean of all average skill scores. Click for details.',
+        '7rem',
         s => s?.employment_skills_average,
-        { maxItems: 2, mode: 'avg' }
-      )
+        { mode: 'avg' }
+    )
     ]);
   },
 
@@ -141,6 +137,13 @@ Vue.component('reports-program-employment-skills', {
         .map(([skill, score]) => ({ skill: String(skill), score: Number(score) }))
         .filter(r => r.skill && Number.isFinite(r.score))
         .sort((a, b) => b.score - a.score || a.skill.localeCompare(b.skill));
+    },
+
+    meanScoreFromObj(obj) {
+        const rows = this.objToSkillRows(obj); // already filters finite numbers
+        if (!rows.length) return null;
+        const sum = rows.reduce((acc, r) => acc + r.score, 0);
+        return sum / rows.length;
     },
 
     // ---------- modal ----------
@@ -283,7 +286,7 @@ Vue.component('reports-program-employment-skills', {
 
       if (!s) return;
 
-      const raw = (mode === 'avg') ? s?.employment_skills_average : s?.employment_skills_last;
+      const raw = (mode === 'avg') ? s?.employment_skills_averages : s?.employment_skills_last;
       this.openSkillsModal(s, mode, raw);
     }
   },
