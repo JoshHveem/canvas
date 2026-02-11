@@ -6,9 +6,18 @@ Vue.component('reports-program', {
         v-if="subMenu == 'completion'"
         :year="year"
         :campus="program?.campus ?? ''"
+        :completion-rate="program?.completion ?? 0"
         :projected-non-completers="program?.projected_non_completers ?? 0"
         :students="program?.students ?? []"
       ></reports-program-completion>
+      <reports-program-placements
+         v-if="subMenu == 'placements'"
+         :year="year"
+        :campus="program?.campus ?? ''"
+        :placement-rate="program?.placement ?? 0"
+        :projected-non-completers="program?.projected_non_completers ?? 0"
+        :students="program?.students ?? []"
+      ></reports-program-placements>
       <reports-program-employment-skills
         v-if="subMenu == 'employment-skills'"
         :year="year"
@@ -22,13 +31,6 @@ Vue.component('reports-program', {
         :syllabi-data="program?.syllabi ?? {}"
         :syllabi="program?.syllabi?.syllabi ?? []"
       ></reports-program-syllabi>
-      <reports-program-placements
-         v-if="subMenu == 'placements'"
-         :year="year"
-        :campus="program?.campus ?? ''"
-        :projected-non-completers="program?.projected_non_completers ?? 0"
-        :students="program?.students ?? []"
-      ></reports-program-placements>
     </div>
   `,
   props: {
