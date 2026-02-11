@@ -90,119 +90,93 @@ Vue.component('reports-programs-syllabi', {
     },
 
   computed: {
-    // ---------- helpers ----------
-    getProgramRollup(p) {
-      // p.syllabi is now the aggregate object:
-      // { total, needs_submission, needs_approval, completed, pct_completed, syllabi: [...] }
-      const r = p?.syllabi;
-      if (!r || typeof r !== 'object') {
-        return {
-          total: 0,
-          needs_submission: 0,
-          needs_approval: 0,
-          completed: 0,
-          pct_completed: NaN,
-          syllabi: []
-        };
-      }
-      return r;
-    },
     visibleRows() {
-      const rows = Array.isArray(this.departments) ? this.departments : [];
+      const rows = Array.isArray(this.programs) ? this.programs : [];
       this.table.setRows(rows);
       return this.table.getSortedRows();
     }
   },
 
   methods: {
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
+  getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
+  setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
 
-    // ---------- helpers ----------
-    getDeptSyllabi(d) {
-      const arr = d?.syllabi;
-      if (!Array.isArray(arr)) return [];
-      const y = Number(this.year);
-      if (!Number.isFinite(y)) return arr;
-      return arr.filter(s => Number(s?.academic_year) === y);
-    },
-
-    // treat only literal true as true; everything else false-ish
-    isTrue(v) { return v === true; },
-
-    syllabiTotal(p) {
-      return Number(this.getProgramRollup(p)?.total) || 0;
-    },
-
-    needsSubmission(p) {
-      return Number(this.getProgramRollup(p)?.needs_submission) || 0;
-    },
-
-    needsApproval(p) {
-      return Number(this.getProgramRollup(p)?.needs_approval) || 0;
-    },
-
-    completedCount(p) {
-      return Number(this.getProgramRollup(p)?.completed) || 0;
-    },
-
-    pctCompleted(p) {
-      const v = this.getProgramRollup(p)?.pct_completed;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : NaN;
-    }, 
-    publishedCount(d) {
-      const syls = this.getDeptSyllabi(d);
-      let n = 0;
-      for (const s of syls) {
-        if (this.isTrue(s?.is_published_course)) n++;
-      }
-      return n;
-    },
-
-    publishedApprovedCount(d) {
-      const syls = this.getDeptSyllabi(d);
-      let n = 0;
-      for (const s of syls) {
-        if (this.isTrue(s?.is_published_course) && this.isTrue(s?.is_approved)) n++;
-      }
-      return n;
-    },
-
-    percPublishedApproved(d) {
-      const denom = this.publishedCount(d);
-      if (denom <= 0) return NaN;
-      return this.publishedApprovedCount(d) / denom;
-    },
-
-    // ---------- formatting ----------
-    pctText(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 'n/a';
-      return (n * 100).toFixed(1) + '%';
-    },
-
-    pctPillStyle(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-      const pct = n * 100;
+  // ----- rollup reader -----
+  getProgramRollup(p) {
+    const r = p?.syllabi; // your rollup object
+    if (!r || typeof r !== 'object') {
       return {
-        backgroundColor: (pct < 80) ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
+        total: 0,
+        needs_submission: 0,
+        needs_approval: 0,
+        completed: 0,
+        pct_completed: NaN,
+        syllabi: []
       };
-    },
-
-    // For counts where “0 is good”: 0 => green, 1–5 yellow, >5 red
-    countPillStyle(count) {
-      const n = Number(count);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return {
-        backgroundColor: (n <= 0) ? this.colors.green : (n <= 5 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
+    }
+    // ensure syllabi is always an array
+    if (!Array.isArray(r.syllabi)) r.syllabi = [];
+    return r;
   },
+
+  syllabiTotal(p) {
+    return Number(this.getProgramRollup(p).total) || 0;
+  },
+
+  needsSubmission(p) {
+    return Number(this.getProgramRollup(p).needs_submission) || 0;
+  },
+
+  needsApproval(p) {
+    return Number(this.getProgramRollup(p).needs_approval) || 0;
+  },
+
+  completedCount(p) {
+    return Number(this.getProgramRollup(p).completed) || 0;
+  },
+
+  pctCompleted(p) {
+    const n = Number(this.getProgramRollup(p).pct_completed);
+    return Number.isFinite(n) ? n : NaN;
+  },
+
+  // ----- optional: keep Published Courses column using rollup.syllabi -----
+  publishedCount(p) {
+    const syls = this.getProgramRollup(p).syllabi;
+    let n = 0;
+    for (const s of syls) {
+      if (s?.is_published_course === true) n++;
+    }
+    return n;
+  },
+
+  // ---------- formatting ----------
+  pctText(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 'n/a';
+    return (n * 100).toFixed(1) + '%';
+  },
+
+  pctPillStyle(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+
+    const pct = n * 100;
+    return {
+      backgroundColor: (pct < 80) ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
+      color: this.colors.white
+    };
+  },
+
+  countPillStyle(count) {
+    const n = Number(count);
+    if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+    return {
+      backgroundColor: (n <= 0) ? this.colors.green : (n <= 5 ? this.colors.yellow : this.colors.red),
+      color: this.colors.white
+    };
+  },
+},
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
