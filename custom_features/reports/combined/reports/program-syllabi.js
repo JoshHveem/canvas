@@ -214,13 +214,6 @@ Vue.component('reports-program-syllabi', {
         <option :value="true">Yes</option>
         <option :value="false">No</option>
       </select>
-
-      <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Published</label>
-      <select v-model="filters.published_course" style="font-size:.75rem;">
-        <option value="">All</option>
-        <option :value="true">Yes</option>
-        <option :value="false">No</option>
-      </select>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
