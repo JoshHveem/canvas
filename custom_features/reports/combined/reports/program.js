@@ -68,6 +68,7 @@ Vue.component('reports-program', {
           String(p?.campus || '').trim() === campus
         ) || null
       );
+      console.log(program);
       return program;
     } 
   },
