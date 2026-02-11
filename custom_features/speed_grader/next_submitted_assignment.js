@@ -91,6 +91,8 @@ function ensureNextButton(submittedIds, student_id) {
 async function initNextAssignmentButton() {
   console.log("START");
   let pieces;
+  console.log('' + window.location.search);
+  console.log('' + window.location.href);
   const assignmentMatch = window.location.search.match(/[?&]assignment_id=([0-9]+)/);
   const studentMatch = window.location.search.match(/[?&]student_id=([0-9]+)/);
   const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
