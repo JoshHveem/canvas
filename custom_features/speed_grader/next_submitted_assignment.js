@@ -89,24 +89,27 @@ function ensureNextButton(submittedIds, student_id) {
 }
 
 async function initNextAssignmentButton() {
+  console.log("START");
   let rUrl = /\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/;
-let pieces = window.location.href.match(rUrl);
+  let pieces = window.location.href.match(rUrl);
 
-// Fallback: if strict regex didn't match, use flexible extraction
-if (!pieces) {
-  const assignmentMatch = window.location.href.match(/[?&]assignment_id=([0-9]+)/);
-  const studentMatch = window.location.href.match(/[?&]student_id=([0-9]+)/);
-  const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
-  
-  if (assignmentMatch && studentMatch && courseMatch) {
-    // Build a synthetic pieces array to match the format of the strict regex
-    pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
+  // Fallback: if strict regex didn't match, use flexible extraction
+  if (!pieces) {
+    const assignmentMatch = window.location.href.match(/[?&]assignment_id=([0-9]+)/);
+    const studentMatch = window.location.href.match(/[?&]student_id=([0-9]+)/);
+    const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
+    
+    if (assignmentMatch && studentMatch && courseMatch) {
+      // Build a synthetic pieces array to match the format of the strict regex
+      pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
+    }
   }
-}
+  console.log(pieces);
 
 
   const student_id = Number(pieces[3]);
 
+  console.log("CREATE BUTTON 1");
   // Mount immediately (empty -> toast behavior)
   let submittedIds = [];
   ensureNextButton(submittedIds, student_id);
@@ -130,10 +133,13 @@ if (!pieces) {
       .map(s => Number(s.assignment_id))
       .filter(Number.isFinite);
   }
+  console.log(submissions);
 
   // Update with real list
+  console.log("CREATE BUTTON 2");
   ensureNextButton(submittedIds, student_id);
 
+  console.log("SETUP OBSERVER");
   // Observer on a stable root 
   let rafScheduled = false;
   const observer = new MutationObserver(() => {
@@ -146,7 +152,7 @@ if (!pieces) {
     });
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe($("main"), { childList: true, subtree: true });
 
   // === TIMING EDITION: Aggressive retry polling for initial load ===
   // This ensures button mounts even if container isn't ready at init time
