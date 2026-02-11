@@ -200,20 +200,24 @@ Vue.component('reports-program-syllabi', {
       <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
     </div>
 
-    <div class="btech-row" style="gap:8px; margin-bottom:8px;">
-      <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
-      <select v-model="filters.submitted" style="font-size:.75rem;">
-        <option value="">All</option>
-        <option :value="true">Yes</option>
-        <option :value="false">No</option>
-      </select>
+    <div class="btech-row" style="gap:1rem; margin-bottom:8px; align-items:center;">
+      <div style="display:flex; align-items:center; gap:.5rem;">
+        <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
+        <select v-model="filters.submitted" style="font-size:.75rem;">
+          <option value="">All</option>
+          <option :value="true">Yes</option>
+          <option :value="false">No</option>
+        </select>
+      </div>
 
-      <label class="btech-muted" style="font-size:.75rem; margin-left:8px;">Approved</label>
-      <select v-model="filters.approved" style="font-size:.75rem;">
-        <option value="">All</option>
-        <option :value="true">Yes</option>
-        <option :value="false">No</option>
-      </select>
+      <div style="display:flex; align-items:center; gap:.5rem;">
+        <label class="btech-muted" style="font-size:.75rem;">Approved</label>
+        <select v-model="filters.approved" style="font-size:.75rem;">
+          <option value="">All</option>
+          <option :value="true">Yes</option>
+          <option :value="false">No</option>
+        </select>
+      </div>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
