@@ -399,8 +399,8 @@
             selectors: [],
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
-              { value: 'completion',    label: 'Completion' },
-              { value: 'placements',    label: 'Placements' },
+              { value: 'completion',    label: 'Completion', isd_only: true },
+              { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'employment-skills',    label: 'Employment Skills' },
             ]
           },
@@ -413,8 +413,8 @@
             selectors: ['programs', 'campus'],
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
-              { value: 'completion',    label: 'Completion' },
-              { value: 'placements',    label: 'Placements' },
+              { value: 'completion',    label: 'Completion', isd_only: true },
+              { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'employment-skills',    label: 'Employment Skills' },
             ]
           },
@@ -509,6 +509,9 @@
       },
 
       computed: {
+        isISD() {
+          return !!(window && window.IS_ISD);
+        },
         courseTagsLabel() {
           const sel = this.settings?.filters?.course_tags;
           const n = Array.isArray(sel) ? sel.length : 0;
@@ -549,9 +552,11 @@
 
         currentSubMenus() {
           const rt = this.currentReportMeta;
-          return rt && rt.subMenus ? rt.subMenus : [];
-        },
+          const menus = (rt && rt.subMenus) ? rt.subMenus : [];
 
+          // Hide ISD-only menus unless window.IS_ISD is true
+          return menus.filter(m => !m.isd_only || this.isISD);
+        },
         currentSubKey() {
           const menus = this.currentSubMenus;
           if (!menus.length) return null;
@@ -561,8 +566,18 @@
           const saved = map[type];
 
           if (saved && menus.some(m => m.value === saved)) return saved;
-          return menus[0].value;
-        },
+
+          // If a saved submenu became invalid (e.g. ISD-only), reset it
+          const fallback = menus[0].value;
+          if (saved && saved !== fallback) {
+            // avoid reactivity gotcha: update map safely
+            if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
+            this.$set(this.settings.subMenuByType, type, fallback);
+            this.saveSettings(this.settings);
+          }
+
+          return fallback;
+        }, 
         currentReportProps() {
           const base = {
             year: this.settings.filters.year,
