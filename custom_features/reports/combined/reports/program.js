@@ -16,7 +16,7 @@ Vue.component('reports-program', {
         :students="program?.students ?? []"
       ></reports-program-employment-skills>
       <reports-program-syllabi
-        v-if="subMenu == 'employment-skills'"
+        v-if="subMenu == 'syllabi'"
         :year="year"
         :campus="program?.campus ?? ''"
         :syllabi="program?.syllabi ?? []"

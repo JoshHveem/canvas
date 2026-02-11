@@ -16,6 +16,13 @@ Vue.component('reports-programs', {
         @drill-program="$emit('drill-program', $event)"
       ></reports-programs-placements>
 
+      <reports-programs-syllabi
+        v-if="subMenu == 'syllabi'"
+        :year="year"
+        :programs="programsClean"
+        @drill-program="$emit('drill-program', $event)"
+      ></reports-programs-syllabi>
+
       <reports-programs-employment-skills
         v-if="subMenu == 'employment-skills'"
         :year="year"
