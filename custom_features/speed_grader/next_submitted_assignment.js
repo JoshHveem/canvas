@@ -166,7 +166,7 @@ async function initNextAssignmentButton() {
 }
 
 // Kick it off
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('load', async () => {
   try {
     await initNextAssignmentButton();
   } catch (e) {
