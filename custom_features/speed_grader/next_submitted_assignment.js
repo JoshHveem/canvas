@@ -95,7 +95,7 @@ async function initNextAssignmentButton() {
   console.log('' + window.location.href);
   const assignmentMatch = window.location.search.match(/[?&]assignment_id=([0-9]+)/);
   const studentMatch = window.location.search.match(/[?&]student_id=([0-9]+)/);
-  const courseMatch = window.location.href.match(/\/courses\/([0-9]+)\/gradebook\/speed_grader/);
+  const courseMatch = window.location.href.match(/\/courses\/([0-9]+)/);
   
   // Build a synthetic pieces array to match the format of the strict regex
   pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
