@@ -46,6 +46,13 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
+        'Code', 'Course code (links to Simple Syllabus in Canvas).', '16rem', false, 'string',
+        s => this.courseCodeText(s),
+        null,
+        s => this.courseCodeSortKey(s)
+      ),
+
+      new window.ReportColumn(
         'Status', 'Needs submission / needs approval / completed.', '10rem', false, 'string',
         s => this.statusText(s),
         s => this.statusPillStyle(s),
@@ -166,12 +173,19 @@ Vue.component('reports-program-syllabi', {
     },
 
     // ---------- course formatting ----------
-    courseText(s) {
+    courseCodeText(s) {
       const code = (s?.course_code ?? '').trim();
       return this.escapeHtml(code || '(no course code)');
     },
-    courseSortKey(s) {
+    courseCodeSortKey(s) {
       return String(s?.course_code ?? '').trim().toLowerCase();
+    },
+    courseText(s) {
+      const name = (s?.course_name ?? '').trim();
+      return this.escapeHtml(name || '(no course code)');
+    },
+    courseSortKey(s) {
+      return String(s?.course_name ?? '').trim().toLowerCase();
     },
 
     courseLinkHtml(s) {
