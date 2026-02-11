@@ -85,6 +85,39 @@ Vue.component('reports-program-employment-skills', {
   methods: {
     // ---------- tiny helpers ----------
     safeName(s) { return (s?.name ?? '').toLowerCase(); },
+    makeSkillsMeanClickableColumn(name, description, width, getter, opts = {}) {
+    const mode = opts.mode || 'last';
+
+    return new window.ReportColumn(
+        name,
+        description,
+        width,
+        false,
+        'number',
+        s => {
+        const obj = this.asObject(getter(s));
+        const mean = this.meanScoreFromObj(obj);
+        if (!Number.isFinite(mean)) return '—';
+
+        const sid = this.escapeHtml(String(s?.sis_user_id ?? ''));
+        const cid = this.escapeHtml(String(s?.canvas_user_id ?? ''));
+        const key = `${sid}|${cid}|${mode}`;
+
+        // clickable number
+        return `
+            <a href="#" class="emp-skill-link" data-emp-skill-key="${key}" title="Click to view all skills">
+            <b>${mean.toFixed(2)}</b>
+            </a>
+        `;
+        },
+        null,
+        s => {
+        const obj = this.asObject(getter(s));
+        const mean = this.meanScoreFromObj(obj);
+        return Number.isFinite(mean) ? mean : -Infinity;
+        }
+    );
+    },
 
     displayName(s) {
       if (this.anonymous) return 'STUDENT';
