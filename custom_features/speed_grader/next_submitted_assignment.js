@@ -166,7 +166,8 @@ async function initNextAssignmentButton() {
 }
 
 // Kick it off
-document.addEventListener('load', async () => {
+console.log("INIT");
+$(document).ready(async () => {
   try {
     await initNextAssignmentButton();
   } catch (e) {
