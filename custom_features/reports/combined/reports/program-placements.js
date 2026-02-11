@@ -156,11 +156,6 @@ barNotPlaced() {
   return this.barStudents.filter(s => !s.is_placement);
 },
 
-placementRate() {
-  const denom = this.barStudents.length;
-  return denom ? (this.barPlaced.length / denom) : null;
-},
-
 placementPctText() {
   const r = this.placementRate;
   return Number.isFinite(r) ? (r * 100).toFixed(1) + '%' : 'n/a';
