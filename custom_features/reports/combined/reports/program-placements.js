@@ -1,4 +1,5 @@
 // program-placements.js (slim, no what-if, 3 groups)
+console.log('load palcements');
 Vue.component('reports-program-placements', {
   props: {
     year: { type: [Number, String], required: true },
