@@ -35,6 +35,7 @@ Vue.component('reports-program-syllabi', {
   },
 
   created() {
+    console.log(this.syllabi);
     this.table.setColumns([
       new window.ReportColumn(
         'Course', 'Course code (links to Simple Syllabus in Canvas).', '16rem', false, 'string',
