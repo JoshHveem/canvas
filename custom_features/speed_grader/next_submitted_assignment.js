@@ -106,7 +106,7 @@ function getUrlPieces() {
   };
 }
 
-async function waitForUrlPieces({ intervalMs = 1000, maxRetries = 10 } = {}) {
+async function waitForUrlPieces({ intervalMs = 200, maxRetries = 10 } = {}) {
   const startHref = window.location.href; // helps avoid waiting on a URL you're no longer on
 
   for (let i = 0; i <= maxRetries; i++) {
@@ -131,16 +131,8 @@ async function waitForUrlPieces({ intervalMs = 1000, maxRetries = 10 } = {}) {
 }
 
 async function initNextAssignmentButton() {
-  console.log("START");
-  console.log("" + window.location.search);
-  console.log("" + window.location.href);
+  const { student_id } = await waitForUrlPieces({ intervalMs: 200, maxRetries: 10 });
 
-  // ✅ Only this part retries
-  const { student_id } = await waitForUrlPieces({ intervalMs: 1000, maxRetries: 10 });
-
-  console.log("URL pieces ready:", { student_id });
-
-  console.log("CREATE BUTTON 1");
   let submittedIds = [];
   ensureNextButton(submittedIds, student_id);
 
@@ -164,12 +156,9 @@ async function initNextAssignmentButton() {
       .filter(Number.isFinite);
   }
 
-  console.log(submissions);
 
-  console.log("CREATE BUTTON 2");
   ensureNextButton(submittedIds, student_id);
 
-  console.log("SETUP OBSERVER");
 
   let rafScheduled = false;
   const observer = new MutationObserver(() => {
@@ -194,7 +183,6 @@ async function initNextAssignmentButton() {
 }
 
 // Kick it off
-console.log("INIT");
 $(document).ready(() => {
   initNextAssignmentButton().catch(e => {
     console.error("Next Assignment init failed:", e);
