@@ -88,32 +88,66 @@ function ensureNextButton(submittedIds, student_id) {
   btn.data('submittedIds', Array.isArray(submittedIds) ? submittedIds : []);
 }
 
-async function initNextAssignmentButton() {
-  console.log("START");
-  let pieces;
-  console.log('' + window.location.search);
-  console.log('' + window.location.href);
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getUrlPieces() {
   const assignmentMatch = window.location.search.match(/[?&]assignment_id=([0-9]+)/);
   const studentMatch = window.location.search.match(/[?&]student_id=([0-9]+)/);
   const courseMatch = window.location.href.match(/\/courses\/([0-9]+)/);
-  
-  // Build a synthetic pieces array to match the format of the strict regex
-  pieces = [null, courseMatch[1], assignmentMatch[1], studentMatch[1]];
 
-  console.log(pieces);
-  console.log(JSON.stringify(window.location));
+  if (!assignmentMatch || !studentMatch || !courseMatch) return null;
 
-  const student_id = Number(pieces[3]);
+  return {
+    course_id: Number(courseMatch[1]),
+    assignment_id: Number(assignmentMatch[1]),
+    student_id: Number(studentMatch[1]),
+  };
+}
+
+async function waitForUrlPieces({ intervalMs = 1000, maxRetries = 10 } = {}) {
+  const startHref = window.location.href; // helps avoid waiting on a URL you're no longer on
+
+  for (let i = 0; i <= maxRetries; i++) {
+    const pieces = getUrlPieces();
+    if (pieces) return pieces;
+
+    // If navigation happened, stop (prevents "catching up" on a stale page)
+    if (window.location.href !== startHref) {
+      console.warn("URL changed while waiting for pieces; restarting wait.");
+      return waitForUrlPieces({ intervalMs, maxRetries });
+    }
+
+    console.warn(`Missing URL pieces (attempt ${i + 1}/${maxRetries + 1}); retrying in 1s...`, {
+      href: window.location.href,
+      search: window.location.search,
+    });
+
+    await sleep(intervalMs);
+  }
+
+  throw new Error("URL pieces never became available (course_id/assignment_id/student_id).");
+}
+
+async function initNextAssignmentButton() {
+  console.log("START");
+  console.log("" + window.location.search);
+  console.log("" + window.location.href);
+
+  // ✅ Only this part retries
+  const { student_id } = await waitForUrlPieces({ intervalMs: 1000, maxRetries: 10 });
+
+  console.log("URL pieces ready:", { student_id });
 
   console.log("CREATE BUTTON 1");
-  // Mount immediately (empty -> toast behavior)
   let submittedIds = [];
   ensureNextButton(submittedIds, student_id);
 
   // Fetch submitted items
   let submissions = await canvasGet(`/api/v1/courses/${ENV.course_id}/students/submissions`, {
     student_ids: [student_id],
-    workflow_state: 'submitted',
+    workflow_state: "submitted",
     per_page: 100
   });
 
@@ -129,44 +163,40 @@ async function initNextAssignmentButton() {
       .map(s => Number(s.assignment_id))
       .filter(Number.isFinite);
   }
+
   console.log(submissions);
 
-  // Update with real list
   console.log("CREATE BUTTON 2");
   ensureNextButton(submittedIds, student_id);
 
   console.log("SETUP OBSERVER");
-  // Observer on a stable root 
+
   let rafScheduled = false;
   const observer = new MutationObserver(() => {
-    // debounce hard to avoid running hundreds of times per render
     if (rafScheduled) return;
     rafScheduled = true;
+
     requestAnimationFrame(() => {
       rafScheduled = false;
       ensureNextButton(submittedIds, student_id);
     });
   });
 
-  observer.observe($("main"), { childList: true, subtree: true });
+  observer.observe($("main")[0], { childList: true, subtree: true });
 
-  // === TIMING EDITION: Aggressive retry polling for initial load ===
-  // This ensures button mounts even if container isn't ready at init time
-  // Polls every 250ms for ~5 seconds until button appears
+  // Aggressive retry polling for initial load of the *DOM container/button*
   let attempts = 0;
   const boot = setInterval(() => {
     attempts++;
     ensureNextButton(submittedIds, student_id);
-    if ($('#next-assignment-button').length > 0 || attempts >= 20) clearInterval(boot);
+    if ($("#next-assignment-button").length > 0 || attempts >= 20) clearInterval(boot);
   }, 250);
 }
 
 // Kick it off
 console.log("INIT");
-$(document).ready(async () => {
-  try {
-    await initNextAssignmentButton();
-  } catch (e) {
-    console.error('Next Assignment init failed:', e);
-  }
+$(document).ready(() => {
+  initNextAssignmentButton().catch(e => {
+    console.error("Next Assignment init failed:", e);
+  });
 });
