@@ -91,7 +91,7 @@ Vue.component('reports-programs-graduates', {
     minNeeded(E, C, candidates, target) {
   const e = Number(E) || 0;
   const c = Number(C) || 0;
-  const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+  const t = Number.isFinite(Number(target)) ? Number(target) : 0.50;
   if (!e) return 0;
   if ((c / e) >= t) return 0;
 
@@ -109,7 +109,7 @@ Vue.component('reports-programs-graduates', {
 chooseForBar(E, C, candidates, target) {
   const e = Number(E) || 0;
   const c = Number(C) || 0;
-  const t = Number.isFinite(Number(target)) ? Number(target) : 0.60;
+  const t = Number.isFinite(Number(target)) ? Number(target) : 0.50;
 
   const list = Array.isArray(candidates) ? candidates : [];
   if (!e || !list.length) return [];
@@ -138,7 +138,7 @@ chooseForBar(E, C, candidates, target) {
 
     // ---- Graduates ----
     computeForProgram(p) {
-  const target = 0.60;
+  const target = 0.50;
 
   // ✅ graduation compute
   const info = window.COMPLETION.computeProgram(p, { target, mode: 'graduation' });
@@ -199,8 +199,8 @@ chooseForBar(E, C, candidates, target) {
       if (!Number.isFinite(r)) return { backgroundColor: 'transparent', color: this.colors.black };
 
       // thresholds: <60 red, <70 yellow, >=70 green
-      if (r < 0.60) return { backgroundColor: this.colors.red, color: this.colors.white };
-      if (r < 0.70) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      if (r < 0.50) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (r < 0.60) return { backgroundColor: this.colors.yellow, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
     },
 
