@@ -338,16 +338,16 @@ projectedGreenPctText() {
     makeCreditsRemainingColumn() {
       return new window.ReportColumn(
         'Credits Remaining', 'credits left in the program', '8rem', false, 'string',
-        s => `${s.credits_remaining ?? 'n/a'}`,
-        s => `${s.credits_remaining ?? 'n/a'}`,
+        s => `${Math.round(s.credits_remaining * 10) / 10 ?? 'n/a'}`,
+        s => `${Math.round(s.credits_remaining * 10) / 10 ?? 'n/a'}`,
         s => s.credits_remaining ?? -1,
       );
     },
     makeCreditsPerMonthColumn() {
       return new window.ReportColumn(
         'Credits / Month', 'Avg credits / month based on student performance so far', '8rem', false, 'string',
-        s => `${s.credits_per_day * 30}`,
-        s => `${s.credits_per_day * 30}`,
+        s => `${Math.round(s.credits_per_day * 30 * 10) / 10 ?? 'n/a'}`,
+        s => `${Math.round(s.credits_per_day * 30 * 10) / 10 ?? 'n/a'}`,
         s => s.credits_per_day ?? -1,
       );
     },
