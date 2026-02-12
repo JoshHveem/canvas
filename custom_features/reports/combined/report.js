@@ -398,6 +398,7 @@
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion', isd_only: true },
+              { value: 'graduates',    label: 'Graduates', isd_only: true },
               { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'syllabi',  label: 'Syllabi' },
               { value: 'employment-skills',    label: 'Employment Skills' },
@@ -413,6 +414,7 @@
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
               { value: 'completion',    label: 'Completion', isd_only: true },
+              { value: 'graduates',    label: 'Graduates', isd_only: true },
               { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'syllabi',  label: 'Syllabi' },
               { value: 'employment-skills',    label: 'Employment Skills' },
@@ -1047,6 +1049,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-placements.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-graduates.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-employment-skills.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
