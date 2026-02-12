@@ -100,7 +100,8 @@ projectedGreenPctText() {
     // one compute, with your tie-breakers
     info() {
       return window.COMPLETION.computeStudents(this.studentsClean, {
-        target: 0.60,
+        mode: 'graduation',
+        target: 0.50,
         projectedEndDateFn: this.projectedEndDate,
         safeNameFn: this.safeName
       });
