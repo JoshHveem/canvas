@@ -394,7 +394,7 @@ projectedGreenPctText() {
         };
       }
 
-      const b = window.COMPLETION.bucketFromChance(s?.chance_to_graduate);
+      const b = window.COMPLETION.bucketFromChance(s?.chance_to_graduate ?? s?.chance_to_complete);
       if (!b) return { backgroundColor: this.colors.gray, color: this.colors.black };
       return { backgroundColor: window.COMPLETION.bucketColor(b, this.colors), color: this.colors.white };
     },
@@ -408,7 +408,7 @@ projectedGreenPctText() {
         return s?.is_graduate ? this.colors.green : this.colors.gray;
       }
 
-      const b = window.COMPLETION.bucketFromChance(s?.chance_to_graduate);
+      const b = window.COMPLETION.bucketFromChance(s?.chance_to_graduate ?? s?.chance_to_complete);
       return b ? window.COMPLETION.bucketColor(b, this.colors) : null;
     },
 
