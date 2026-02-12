@@ -38,7 +38,9 @@ Vue.component('reports-program-completion', {
     this.tableActive.setColumns([
       this.makeStatusColumn('active'),
       this.makeStudentColumn(),
-      this.makeEndColumn('active', 'End (Projected)', 'Projected exit date (server-calculated).')
+      this.makeEndColumn('active', 'End (Projected)', 'Projected exit date (server-calculated).'),
+      this.makeCreditsRemainingColumn(this.info?.credits_remaining || 0),
+      this.makeCreditsPerMonthColumn(this.info?.credits_per_day || 0),
     ]);
 
     this.tableFinished.setColumns([
@@ -330,6 +332,23 @@ projectedGreenPctText() {
         s => this.statusDotHtml(s, { mode }),
         null,
         s => this.statusSortValue(s, { mode })
+      );
+    },
+
+    makeCreditsRemainingColumn() {
+      return new window.ReportColumn(
+        'Credits Remaining', 'credits left in the program', '8rem', false, 'string',
+        s => `${s.credits_remaining ?? 'n/a'}`,
+        s => `${s.credits_remaining ?? 'n/a'}`,
+        s => s.credits_remaining ?? -1,
+      );
+    },
+    makeCreditsPerMonthColumn() {
+      return new window.ReportColumn(
+        'Credits / Month', 'Avg credits / month based on student performance so far', '8rem', false, 'string',
+        s => `${s.credits_per_day * 30}`,
+        s => `${s.credits_per_day * 30}`,
+        s => s.credits_per_day ?? -1,
       );
     },
 
