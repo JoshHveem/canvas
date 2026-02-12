@@ -10,6 +10,14 @@ Vue.component('reports-program', {
         :projected-non-completers="program?.projected_non_completers ?? 0"
         :students="program?.students ?? []"
       ></reports-program-completion>
+      <reports-program-graduates
+         v-if="subMenu == 'graduates'"
+         :year="year"
+        :campus="program?.campus ?? ''"
+        :graduation-rate="program?.graduation_rate ?? 0"
+        :projected-non-graduates="program?.projected_non_graduates ?? 0"
+        :students="program?.students ?? []"
+      ></reports-program-graduates>
       <reports-program-placements
          v-if="subMenu == 'placements'"
          :year="year"
