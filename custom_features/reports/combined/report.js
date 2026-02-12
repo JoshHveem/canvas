@@ -1054,6 +1054,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-employment-skills.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-completion.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-graduates.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-employment-skills.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-placements.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");

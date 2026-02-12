@@ -9,6 +9,13 @@ Vue.component('reports-programs', {
         @drill-report="$emit('drill-report', $event)"
       ></reports-programs-completion>
 
+      <reports-programs-graduates
+        v-if="subMenu == 'graduates'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-graduates>
+
       <reports-programs-placements
         v-if="subMenu == 'placements'"
         :year="year"
