@@ -27,7 +27,7 @@ Vue.component('reports-programs-graduates', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Status', 'Worst-case color of the last student needed to get above 60%.', '3.5rem', false, 'string',
+        'Status', 'Worst-case color of the last student needed to get above 50%.', '3.5rem', false, 'string',
         p => this.statusDotHtmlForProgram(p),
         null,
         p => this.statusSortValueForProgram(p)
@@ -58,7 +58,7 @@ Vue.component('reports-programs-graduates', {
       ),
 
       new window.ReportColumn(
-        'Needed', 'How many additional projected graduates are required to reach 60%.', '5.5rem', false, 'number',
+        'Needed', 'How many additional projected graduates are required to reach 50%.', '5.5rem', false, 'number',
         p => String(this.neededCountForProgram(p)),
         s => {
           const n = this.neededCountForProgram(s);
@@ -71,7 +71,7 @@ Vue.component('reports-programs-graduates', {
       ),
 
       new window.ReportColumn(
-        'Graduates Bar', 'Exiters + projected graduates chosen to clear 60%.', '24rem', false, 'string',
+        'Graduates Bar', 'Exiters + projected graduates chosen to clear 50%.', '24rem', false, 'string',
         p => this.graduatesBarHtmlForProgram(p),
         null,
         p => this.statusSortValueForProgram(p)
@@ -156,7 +156,7 @@ chooseForBar(E, C, candidates, target) {
   const neededMin = this.minNeeded(E, C, candidates, target);
   const barChosen = this.chooseForBar(E, C, candidates, target);
 
-  // status = bucket of the last student needed to clear 60%
+  // status = bucket of the last student needed to clear 50%
   let statusBucket = 'red';
   if ((E > 0) && (C / E) >= target) {
     statusBucket = 'green';
@@ -198,7 +198,7 @@ chooseForBar(E, C, candidates, target) {
       const r = this.currentRateForProgram(p);
       if (!Number.isFinite(r)) return { backgroundColor: 'transparent', color: this.colors.black };
 
-      // thresholds: <60 red, <70 yellow, >=70 green
+      // thresholds: <50 red, <60 yellow, >=60 green
       if (r < 0.50) return { backgroundColor: this.colors.red, color: this.colors.white };
       if (r < 0.60) return { backgroundColor: this.colors.yellow, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
@@ -303,14 +303,14 @@ chooseForBar(E, C, candidates, target) {
         <div
           style="
             position:absolute;
-            left:60%;
+            left:50%;
             top:-3px;
             bottom:-3px;
             width:2px;
             background:${this.colors.black};
             opacity:0.6;
           "
-          title="60% requirement"
+          title="50% requirement"
         ></div>
       `;
 
