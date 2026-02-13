@@ -382,6 +382,7 @@
             selectors: ['departments'],
             subMenus: [
               { value: 'overview',    label: 'Overview' },
+              { value: 'course-readiness',    label: 'Course Readiness' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
               { value: 'occupations', label: 'Occupations' },
@@ -1044,6 +1045,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
