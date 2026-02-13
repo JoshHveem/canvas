@@ -12,6 +12,13 @@ Vue.component('reports-department', {
         :course-surveys="courseSurveys"
       ></reports-department-overview>
 
+      <reports-department-course-readiness
+        v-if="subMenu == 'course-readiness'"
+        :year="year"
+        :statistics="statistics"
+        :course-readiness="course_readiness"
+      ></reports-department-course-readiness>
+
       <reports-department-instructors
         v-if="subMenu == 'instructors'"
         :year="year"
@@ -110,6 +117,13 @@ Vue.component('reports-department', {
 
     occupations() {
       let list = this.department_metrics?.occupations ?? [];
+      if (!list.length) return [];
+      const yr = Number(this.year) || new Date().getFullYear();
+      return list.filter(d => Number(d.academic_year) === yr) || [];
+    },
+
+    course_readiness() {
+      let list = this.department_metrics?.course_readiness ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
       return list.filter(d => Number(d.academic_year) === yr) || [];
