@@ -45,43 +45,43 @@ Vue.component('reports-department-course-readiness', {
 
       new window.ReportColumn(
         'Course Status', 'Status of the Canvas course (published, etc.).', '8rem', false, 'string',
-        c => statusText(c?.course_status),
-        c => statusStyle(c?.course_status),
+        c => this.statusText(c?.course_status),
+        c => this.statusStyle(c?.course_status),
         c => String(c?.course_status ?? '')
       ),
 
       new window.ReportColumn(
         'Syllabus', 'Syllabus status.', '7rem', false, 'string',
-        c => statusText(c?.syllabus_status),
-        c => statusStyle(c?.syllabus_status),
+        c => this.statusText(c?.syllabus_status),
+        c => this.statusStyle(c?.syllabus_status),
         c => String(c?.syllabus_status ?? '')
       ),
 
       new window.ReportColumn(
         'Course Eval', 'Course evaluation status.', '8rem', false, 'string',
-        c => statusText(c?.course_evaluation_status),
-        c => statusStyle(c?.course_evaluation_status),
+        c => this.statusText(c?.course_evaluation_status),
+        c => this.statusStyle(c?.course_evaluation_status),
         c => String(c?.course_evaluation_status ?? '')
       ),
 
       new window.ReportColumn(
         'Instructor Eval', 'Instructor evaluation status.', '9rem', false, 'string',
-        c => statusText(c?.instructor_evaluation_status),
-        c => statusStyle(c?.instructor_evaluation_status),
+        c => this.statusText(c?.instructor_evaluation_status),
+        c => this.statusStyle(c?.instructor_evaluation_status),
         c => String(c?.instructor_evaluation_status ?? '')
       ),
 
       new window.ReportColumn(
         'Employment Skills', 'Employment skills evaluation status.', '10rem', false, 'string',
-        c => statusText(c?.employment_skills_evaluation_status),
-        c => statusStyle(c?.employment_skills_evaluation_status),
+        c => this.statusText(c?.employment_skills_evaluation_status),
+        c => this.statusStyle(c?.employment_skills_evaluation_status),
         c => String(c?.employment_skills_evaluation_status ?? '')
       ),
 
       new window.ReportColumn(
         'Canvas Content', 'Canvas content status.', '8rem', false, 'string',
-        c => statusText(c?.canvas_content_status),
-        c => statusStyle(c?.canvas_content_status),
+        c => this.statusText(c?.canvas_content_status),
+        c => this.statusStyle(c?.canvas_content_status),
         c => String(c?.canvas_content_status ?? '')
       ),
 
