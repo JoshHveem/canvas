@@ -44,6 +44,13 @@ Vue.component('reports-department-course-readiness', {
       ),
 
       new window.ReportColumn(
+        'Type', 'Course type.', '7rem', false, 'string',
+        c => (c?.course_type ?? ''),
+        null,
+        c => (c?.course_type ?? '')
+      ),
+
+      new window.ReportColumn(
         'Course Status', 'Status of the Canvas course (published, etc.).', '8rem', false, 'string',
         c => this.statusText(c?.course_status),
         c => this.statusStyle(c?.course_status),
@@ -85,12 +92,6 @@ Vue.component('reports-department-course-readiness', {
         c => String(c?.canvas_content_status ?? '')
       ),
 
-      new window.ReportColumn(
-        'Type', 'Course type.', '7rem', false, 'string',
-        c => (c?.course_type ?? ''),
-        null,
-        c => (c?.course_type ?? '')
-      ),
 
       new window.ReportColumn(
         'Source', 'Creation source.', '7rem', false, 'string',
