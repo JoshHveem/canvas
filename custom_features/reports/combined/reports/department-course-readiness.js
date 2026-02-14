@@ -241,13 +241,6 @@ Vue.component('reports-department-course-readiness', {
         c => this.statusStyle(c?.canvas_content_status),
         c => String(c?.canvas_content_status ?? '')
       ),
-
-      new window.ReportColumn(
-        'Overall', 'Overall readiness rollup.', '8rem', false, 'string',
-        c => this.overallStatus(c),
-        c => this.overallStyle(this.overallStatus(c)),
-        c => this.overallStatus(c)
-      ),
     ]);
   },
 
@@ -364,7 +357,7 @@ Vue.component('reports-department-course-readiness', {
       if (v === 'Unpublished' || v === 'Pending Approval') {
         return { backgroundColor: this.colors.yellow, color: this.colors.black };
       }
-      if (v === 'None' || v === 'Unsubmitted') {
+      if (v === 'None' || v === 'Unsubmitted' || v === 'Unpublished') {
         return { backgroundColor: this.colors.red, color: this.colors.white };
       }
       return { backgroundColor: this.colors.gray, color: this.colors.black };
