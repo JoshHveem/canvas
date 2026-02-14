@@ -122,11 +122,9 @@ Vue.component('reports-department', {
     },
 
     course_readiness() {
-      console.log(this.department_metrics);
       let list = this.department_metrics?.course_readiness ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
-      console.log(list);
       return list.filter(d => Number(d.academic_year) === yr) || [];
     },
 

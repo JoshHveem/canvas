@@ -27,6 +27,7 @@ Vue.component('reports-department-course-readiness', {
   },
 
   created() {
+    console.log(this.courseReadiness);
     this.table.setColumns([
       new window.ReportColumn(
         'Course', 'Course code.', '14rem', false, 'string',
