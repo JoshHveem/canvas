@@ -416,7 +416,7 @@ Vue.component('reports-department-course-readiness', {
 
     <div v-else>
       <!-- Filters -->
-        <div class="btech-row" style="gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+        <divstyle="gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
         <multi-filter-pill
           label="Source"
           :options="sourceOptions"
