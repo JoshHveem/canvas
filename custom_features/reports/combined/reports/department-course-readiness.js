@@ -44,6 +44,13 @@ Vue.component('reports-department-course-readiness', {
       ),
 
       new window.ReportColumn(
+        'Source', 'Creation source.', '7rem', false, 'string',
+        c => (c?.creation_source ?? ''),
+        null,
+        c => (c?.creation_source ?? '')
+      ),
+
+      new window.ReportColumn(
         'Type', 'Course type.', '7rem', false, 'string',
         c => (c?.course_type ?? ''),
         null,
@@ -93,12 +100,6 @@ Vue.component('reports-department-course-readiness', {
       ),
 
 
-      new window.ReportColumn(
-        'Source', 'Creation source.', '7rem', false, 'string',
-        c => (c?.creation_source ?? ''),
-        null,
-        c => (c?.creation_source ?? '')
-      ),
       new window.ReportColumn(
         'Overall', 'Overall readiness rollup.', '8rem', false, 'string',
         c => this.overallStatus(c),
