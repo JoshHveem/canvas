@@ -182,7 +182,7 @@ Vue.component('reports-department-course-readiness', {
       new window.ReportColumn(
         'Canvas ID', 'Canvas course id.', '7rem', false, 'number',
         c => (c?.canvas_course_id ?? 'n/a'),
-        null,
+        c => `<a href="/courses/${c?.canvas_course_id}" target="_blank" rel="noopener noreferrer">${c?.canvas_course_id ?? 'n/a'}</a>`,
         c => Number(c?.canvas_course_id ?? -1)
       ),
 
