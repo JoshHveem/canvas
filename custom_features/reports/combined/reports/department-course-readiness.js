@@ -1,3 +1,138 @@
+Vue.component('multi-filter-pill', {
+  props: {
+    label: { type: String, required: true },
+    options: { type: Array, required: true },
+    value: { type: Array, required: true }, // selected
+    placeholder: { type: String, default: 'All' },
+    maxSummaryItems: { type: Number, default: 2 },
+  },
+
+  data() {
+    return { open: false };
+  },
+
+  computed: {
+    summary() {
+      const selected = Array.isArray(this.value) ? this.value : [];
+      if (!selected.length) return this.placeholder;
+
+      // if everything selected
+      if (selected.length === this.options.length) return 'All';
+
+      // show up to maxSummaryItems then "+N"
+      const first = selected.slice(0, this.maxSummaryItems);
+      const rest = selected.length - first.length;
+      return rest > 0 ? `${first.join(', ')} +${rest}` : first.join(', ');
+    }
+  },
+
+  mounted() {
+    document.addEventListener('click', this.onDocClick, true);
+  },
+
+  beforeDestroy() {
+    document.removeEventListener('click', this.onDocClick, true);
+  },
+
+  methods: {
+    toggleOpen() { this.open = !this.open; },
+
+    onDocClick(e) {
+      if (!this.open) return;
+      const root = this.$refs.root;
+      if (root && !root.contains(e.target)) this.open = false;
+    },
+
+    isChecked(opt) {
+      return (this.value || []).includes(opt);
+    },
+
+    setChecked(opt, checked) {
+      const current = Array.isArray(this.value) ? [...this.value] : [];
+      const has = current.includes(opt);
+
+      let next = current;
+      if (checked && !has) next.push(opt);
+      if (!checked && has) next = current.filter(x => x !== opt);
+
+      this.$emit('input', next);
+    },
+
+    selectAll() {
+      this.$emit('input', [...this.options]);
+    },
+
+    clearAll() {
+      this.$emit('input', []);
+    },
+
+    close() { this.open = false; }
+  },
+
+  template: `
+    <div ref="root" style="position:relative; display:inline-block; min-width:220px;">
+      <div
+        class="btech-pill"
+        style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 10px; cursor:pointer; user-select:none;"
+        @click="toggleOpen"
+        :title="label + ': ' + summary"
+      >
+        <div style="display:flex; flex-direction:column; line-height:1.1;">
+          <span style="font-size:.7rem; opacity:.8;"><b>{{ label }}</b></span>
+          <span style="font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">
+            {{ summary }}
+          </span>
+        </div>
+
+        <svg style="width:14px; height:14px; opacity:.8;" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 7l5 6 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <div
+        v-if="open"
+        class="btech-card btech-theme"
+        style="position:absolute; z-index:50; top:calc(100% + 6px); left:0; width:320px; padding:10px; box-shadow:0 10px 25px rgba(0,0,0,.12);"
+        @click.stop
+      >
+        <div class="btech-row" style="align-items:center; margin-bottom:8px;">
+          <div style="font-size:.8rem;"><b>{{ label }}</b></div>
+          <div style="flex:1;"></div>
+          <button class="btech-btn" type="button" @click="close">Done</button>
+        </div>
+
+        <div class="btech-row" style="gap:8px; margin-bottom:8px;">
+          <button class="btech-btn" type="button" @click="selectAll">All</button>
+          <button class="btech-btn" type="button" @click="clearAll">None</button>
+          <div style="flex:1;"></div>
+          <span class="btech-muted" style="font-size:.75rem;">
+            {{ (value || []).length }} / {{ options.length }}
+          </span>
+        </div>
+
+        <div style="max-height:220px; overflow:auto; border:1px solid #e5e7eb; border-radius:8px; padding:8px;">
+          <label
+            v-for="opt in options"
+            :key="opt"
+            style="display:flex; align-items:center; gap:8px; padding:4px 2px; cursor:pointer;"
+          >
+            <input
+              type="checkbox"
+              :checked="isChecked(opt)"
+              @change="setChecked(opt, $event.target.checked)"
+            />
+            <span style="font-size:.8rem;">{{ opt }}</span>
+          </label>
+
+          <div v-if="!options || !options.length" class="btech-muted" style="font-size:.8rem;">
+            No options.
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+});
+
 Vue.component('reports-department-course-readiness', {
   props: {
     year: { type: [Number, String], required: true },
@@ -281,52 +416,29 @@ Vue.component('reports-department-course-readiness', {
 
     <div v-else>
       <!-- Filters -->
-      <div class="btech-row" style="gap:12px; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap;">
-        <!-- Source -->
-        <div style="min-width:220px;">
-          <div class="btech-muted" style="font-size:.75rem; margin-bottom:4px;"><b>Source</b></div>
-          <select multiple size="4" style="width:100%; padding:6px;"
-            :value="filters.source"
-            @change="onMultiSelectChange('source', $event)"
-          >
-            <option v-for="opt in sourceOptions" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
-          <div style="margin-top:4px; display:flex; gap:6px;">
-            <button class="btech-btn" type="button" @click="selectAll('source', sourceOptions)">All</button>
-            <button class="btech-btn" type="button" @click="selectNone('source')">None</button>
-          </div>
-        </div>
+        <div class="btech-row" style="gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+        <multi-filter-pill
+          label="Source"
+          :options="sourceOptions"
+          v-model="filters.source"
+          placeholder="All"
+        ></multi-filter-pill>
 
-        <!-- Type -->
-        <div style="min-width:220px;">
-          <div class="btech-muted" style="font-size:.75rem; margin-bottom:4px;"><b>Type</b></div>
-          <select multiple size="4" style="width:100%; padding:6px;"
-            :value="filters.type"
-            @change="onMultiSelectChange('type', $event)"
-          >
-            <option v-for="opt in typeOptions" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
-          <div style="margin-top:4px; display:flex; gap:6px;">
-            <button class="btech-btn" type="button" @click="selectAll('type', typeOptions)">All</button>
-            <button class="btech-btn" type="button" @click="selectNone('type')">None</button>
-          </div>
-        </div>
+        <multi-filter-pill
+          label="Type"
+          :options="typeOptions"
+          v-model="filters.type"
+          placeholder="All"
+        ></multi-filter-pill>
 
-        <!-- Course Status -->
-        <div style="min-width:220px;">
-          <div class="btech-muted" style="font-size:.75rem; margin-bottom:4px;"><b>Course Status</b></div>
-          <select multiple size="4" style="width:100%; padding:6px;"
-            :value="filters.course_status"
-            @change="onMultiSelectChange('course_status', $event)"
-          >
-            <option v-for="opt in courseStatusOptions" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
-          <div style="margin-top:4px; display:flex; gap:6px;">
-            <button class="btech-btn" type="button" @click="selectAll('course_status', courseStatusOptions)">All</button>
-            <button class="btech-btn" type="button" @click="selectNone('course_status')">None</button>
-          </div>
-        </div>
-      </div>
+        <multi-filter-pill
+          label="Course Status"
+          :options="courseStatusOptions"
+          v-model="filters.course_status"
+          placeholder="All"
+          :max-summary-items="2"
+        ></multi-filter-pill>
+      </div> 
 
       <!-- Column headers -->
       <div
