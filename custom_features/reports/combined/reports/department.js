@@ -15,7 +15,6 @@ Vue.component('reports-department', {
       <reports-department-course-readiness
         v-if="subMenu == 'course-readiness'"
         :year="year"
-        :statistics="statistics"
         :course-readiness="course_readiness"
       ></reports-department-course-readiness>
 
@@ -123,6 +122,7 @@ Vue.component('reports-department', {
     },
 
     course_readiness() {
+      console.log(this.department_metrics);
       let list = this.department_metrics?.course_readiness ?? [];
       if (!list.length) return [];
       const yr = Number(this.year) || new Date().getFullYear();
