@@ -138,6 +138,7 @@ Vue.component('reports-courses', {
       // Process + normalize to what your overview/surveys expect.
       // (Your old code processed after fetch; now we do it here.)
       this.courses = this.processCourses(cloned);
+      console.log(this.courses);
     },
 
     processCourses(courses) {
