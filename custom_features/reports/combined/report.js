@@ -298,7 +298,8 @@
   }
 
   async function postLoad() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = new Date().toISOString();
+    console.log(todayStr)
     let vueString = '';
     await $.get(SOURCE_URL + `/custom_features/reports/combined/template.vue?v=${todayStr}`, null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
