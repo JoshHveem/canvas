@@ -434,7 +434,7 @@
 
         try {
           await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/${termId}/dates?requester_id=${ENV.current_user_id}`,
+            `https://reports.bridgetools.dev/api/v2/hs_terms/${termId}/dates`,
             {
               entry_date: this.submissionDatesStart,
               exit_date: this.submissionDatesEnd,
@@ -481,7 +481,7 @@
           const year = this.selectedTerm.academic_year;
 
           const terms = await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/by_section/${section}/${year}?requester_id=${ENV.current_user_id}`,
+            `https://reports.bridgetools.dev/api/v2/hs_terms/by_section/${section}/${year}`,
             {},
             "GET"
           );
@@ -508,7 +508,7 @@
           this.bulkSaving = true;
 
           await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates?requester_id=${ENV.current_user_id}`,
+            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
             {
               termIds: this.bulkSelectedTermIds,
               entry_date: this.submissionDatesStart,
@@ -541,7 +541,7 @@
           this.bulkSaving = true;
 
           await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates?requester_id=${ENV.current_user_id}`,
+            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
             {
               termIds: this.bulkSelectedTermIds,
               entry_date: this.submissionDatesStart,
