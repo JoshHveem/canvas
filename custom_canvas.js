@@ -331,6 +331,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (rCheckInCourse.test(window.location.pathname)) {
       $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
       feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      feature("quizzes/quiz_analytics_print_margin", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics$/);
       featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
       let courseData = await $.get('/api/v1/courses/' + CURRENT_COURSE_ID);
