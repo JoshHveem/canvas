@@ -331,7 +331,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (rCheckInCourse.test(window.location.pathname)) {
       $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
       feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-      feature("quizzes/quiz_analytics_print_margin", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics$/);
       featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
       let courseData = await $.get('/api/v1/courses/' + CURRENT_COURSE_ID);
@@ -339,6 +338,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       //AVAILABLE TO EVERYONE
       feature("quizzes/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
       feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
+      feature("quizzes/quiz_analytics_print_margin", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics$/);
       feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Primarily used by Drafting / Digital Design. Possibly others
       feature('speed_grader/answer_key', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Not sure if this is used.
       feature("highlight_comments_same_date", [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/]);
