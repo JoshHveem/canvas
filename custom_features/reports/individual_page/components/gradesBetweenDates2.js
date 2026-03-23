@@ -14,7 +14,9 @@
           <div class='btech-report-submission-dates'>
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
-              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} (x{{term.concurrent_count}})</option>
+              <option v-for='term in sortedTerms' :value='term._id'>
+                {{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} (x{{term.concurrent_count}})
+              </option>
             </select>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change="getIncludedAssignmentsBetweenDates()">
@@ -261,6 +263,11 @@
       }
     },
     computed: {
+      sortedTerms() {
+        return [...this.terms].sort((a, b) => {
+          return new Date(a.entry_date) - new Date(b.entry_date);
+        });
+      },
       estimatedCreditsEnrolled() {
         const start = this.parseDate(this.submissionDatesStart);
         const end   = this.parseDate(this.submissionDatesEnd);
