@@ -265,7 +265,7 @@
     computed: {
       sortedTerms() {
         return [...this.terms].sort((a, b) => {
-          return new Date(a.entry_date) - new Date(b.entry_date);
+          return new Date(b.entry_date) - new Date(a.entry_date);
         });
       },
       estimatedCreditsEnrolled() {
