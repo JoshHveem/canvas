@@ -54,7 +54,7 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
-        'Doc', 'Simple Syllabus doc code (links to Simple Syllabus).', '6rem', false, 'string',
+        'Approval', 'Simple Syllabus doc code (links to Simple Syllabus).', '6rem', false, 'string',
         s => this.docLinkHtml(s),
         null,
         s => s.doc_code 
