@@ -33,7 +33,16 @@ Vue.component('reports-program-syllabi', {
       }
     };
   },
-
+  watch: {
+    syllabi: {
+      immediate: true,
+      handler(val) {
+        if (Array.isArray(val) && val.length) {
+          this.preloadSimpleSyllabusAuth();
+        }
+      }
+    }
+  },
   created() {
     console.log(this.syllabi);
     this.table.setColumns([
@@ -45,7 +54,7 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
-        'Doc', 'Simple Syllabus doc code (links to Simple Syllabus).', '16rem', false, 'string',
+        'Doc', 'Simple Syllabus doc code (links to Simple Syllabus).', '6rem', false, 'string',
         s => this.docLinkHtml(s),
         null,
         s => s.doc_code 
@@ -205,6 +214,35 @@ Vue.component('reports-program-syllabi', {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+    },
+    preloadSimpleSyllabusAuth() {
+      if (this.anonymous) return; // don’t bother if not logged in
+      if (window.__ssPreloaded) return;
+      window.__ssPreloaded = true;
+
+      const rows = Array.isArray(this.syllabi) ? this.syllabi : [];
+      if (!rows.length) return;
+
+      // Find first row with a valid Canvas course id
+      const first = rows.find(r => r?.canvas_course_id);
+      if (!first) return;
+
+      const url = `https://btech.instructure.com/courses/${encodeURIComponent(first.canvas_course_id)}/external_tools/106228`;
+
+      const iframe = document.createElement("iframe");
+      iframe.src = url;
+
+      // fully hidden
+      iframe.style.position = "absolute";
+      iframe.style.width = "1px";
+      iframe.style.height = "1px";
+      iframe.style.border = "0";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+
+      document.body.appendChild(iframe);
+
+      console.log("Simple Syllabus auth preload started:", url);
     }
   },
 
