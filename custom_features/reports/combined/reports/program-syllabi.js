@@ -45,6 +45,13 @@ Vue.component('reports-program-syllabi', {
       ),
 
       new window.ReportColumn(
+        'Doc', 'Simple Syllabus doc code (links to Simple Syllabus).', '16rem', false, 'string',
+        s => this.docLinkHtml(s),
+        null,
+        s => s.doc_code 
+      ),
+
+      new window.ReportColumn(
         'Code', 'Course code (links to Simple Syllabus in Canvas).', '6rem', false, 'string',
         s => this.courseCodeText(s),
         null,
@@ -177,6 +184,16 @@ Vue.component('reports-program-syllabi', {
       if (id === undefined || id === null || id === '') return code;
 
       const url = `https://btech.instructure.com/courses/${encodeURIComponent(id)}/external_tools/106228`;
+      return `<a href="${url}" target="_blank" rel="noopener">${code}</a>`;
+    },
+
+    docLinkHtml(s) {
+      const id = s?.doc_code;
+      const code = s?.doc_code || '';
+
+      // If missing ID, just show text
+      if (id === undefined || id === null || id === '') return code;
+      const url = `https://btech.simplesyllabus.com/en-US/doc/${encodeURIComponent(id)}`;
       return `<a href="${url}" target="_blank" rel="noopener">${code}</a>`;
     },
 
