@@ -40,6 +40,12 @@
             return {};
           }
         },
+        selectedFilters: {
+          type: Object,
+          default: function () {
+            return {};
+          }
+        },
         programs: {
           type: Array,
           default: function () {
@@ -72,6 +78,7 @@
             {
               reportType: this.reportMeta.value || "",
               subMenu: this.subMenu || "",
+              selectedFilters: this.selectedFilters || {},
               programsCount: Array.isArray(this.programs) ? this.programs.length : 0,
               savedSettings: this.settings || {}
             },
@@ -95,6 +102,12 @@
           default: ""
         },
         settings: {
+          type: Object,
+          default: function () {
+            return {};
+          }
+        },
+        selectedFilters: {
           type: Object,
           default: function () {
             return {};
@@ -129,6 +142,7 @@
               reportType: this.reportMeta.value || "",
               subMenu: this.subMenu || "",
               sections: this.sections.map((section) => section.value),
+              selectedFilters: this.selectedFilters || {},
               programsCount: this.programsCount,
               savedSettings: this.settings || {}
             },
@@ -234,6 +248,10 @@
           return Array.isArray(this.currentReportMeta?.filters) ? this.currentReportMeta.filters : [];
         },
 
+        currentFilterControls() {
+          return this.currentFilters.map((filterKey) => this.buildFilterControl(filterKey)).filter(Boolean);
+        },
+
         currentSubMenus() {
           return this.currentReportMeta?.subMenus || [];
         },
@@ -252,6 +270,7 @@
             reportMeta: this.currentReportMeta,
             subMenu: this.currentSubKey,
             settings: this.settings,
+            selectedFilters: this.settings.filters || {},
             sharedLoading: this.sharedLoading
           };
 
@@ -291,6 +310,59 @@
         async ensureSharedFilterData() {
           if (this.currentNeedsPrograms) {
             await this.loadPrograms();
+            this.pruneFilterSelection("programs");
+          }
+        },
+
+        buildFilterControl(filterKey) {
+          if (filterKey === "programs") {
+            return {
+              key: "programs",
+              label: "Program",
+              placeholder: "All Programs",
+              options: this.getProgramFilterOptions(),
+              value: String(this.settings?.filters?.programs || ""),
+              disabled: this.sharedLoading.programs
+            };
+          }
+
+          return null;
+        },
+
+        getProgramFilterOptions() {
+          const list = Array.isArray(this.programs) ? this.programs : [];
+          const byCode = new Map();
+
+          for (const program of list) {
+            const code = String(program?.program_code || "").trim();
+            if (!code) continue;
+
+            const existing = byCode.get(code);
+            const next = {
+              value: code,
+              label: `${String(program?.program_name || code).trim()} (${code})`,
+              academicYear: Number(program?.academic_year || 0)
+            };
+
+            if (!existing || next.academicYear > existing.academicYear) {
+              byCode.set(code, next);
+            }
+          }
+
+          return Array.from(byCode.values())
+            .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }))
+            .map(({ value, label }) => ({ value, label }));
+        },
+
+        pruneFilterSelection(filterKey) {
+          if (filterKey !== "programs") return;
+
+          const selected = String(this.settings?.filters?.programs || "");
+          if (!selected) return;
+
+          const valid = this.getProgramFilterOptions().some((option) => option.value === selected);
+          if (!valid) {
+            this.$set(this.settings.filters, "programs", "");
           }
         },
 
@@ -309,6 +381,11 @@
           if (!type) return;
 
           this.$set(this.settings.subMenuByType, type, value);
+          await this.persistSettings();
+        },
+
+        async updateFilterValue(filterKey, value) {
+          this.$set(this.settings.filters, filterKey, value);
           await this.persistSettings();
         },
 

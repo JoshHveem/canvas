@@ -55,6 +55,41 @@
         </div>
 
         <div
+          v-if="currentFilterControls.length"
+          style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px;"
+        >
+          <div
+            v-for="filter in currentFilterControls"
+            :key="filter.key"
+            style="display:inline-block; min-width:240px;"
+          >
+            <label
+              class="btech-muted"
+              :for="`report-filter-${filter.key}`"
+              style="display:block; font-size:12px; margin-bottom:4px;"
+            >
+              {{ filter.label }}
+            </label>
+            <select
+              :id="`report-filter-${filter.key}`"
+              :value="filter.value"
+              :disabled="filter.disabled"
+              @change="updateFilterValue(filter.key, $event.target.value)"
+              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option value="">{{ filter.placeholder }}</option>
+              <option
+                v-for="option in filter.options"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div
           style="margin-bottom:16px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff;"
         >
           <div style="font-weight:600; margin-bottom:4px;">Shell Notes</div>
