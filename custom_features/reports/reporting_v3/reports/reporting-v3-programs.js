@@ -40,7 +40,10 @@
       return {
         cplPrograms: [],
         cplLoading: false,
-        cplError: ""
+        cplError: "",
+        employmentSkillsPrograms: [],
+        employmentSkillsLoading: false,
+        employmentSkillsError: ""
       };
     },
     computed: {
@@ -53,6 +56,9 @@
       showCplView() {
         return this.subMenu === "completion";
       },
+      showEmploymentSkillsView() {
+        return this.subMenu === "employment-skills";
+      },
       summary() {
         return JSON.stringify(
           {
@@ -61,6 +67,7 @@
             sections: this.sections.map((section) => section.value),
             selectedFilters: this.selectedFilters || {},
             cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
+            employmentSkillsProgramsCount: Array.isArray(this.employmentSkillsPrograms) ? this.employmentSkillsPrograms.length : 0,
             savedSettings: this.settings || {}
           },
           null,
@@ -75,6 +82,9 @@
           if (this.showCplView) {
             this.ensureCplPrograms();
           }
+          if (this.showEmploymentSkillsView) {
+            this.ensureEmploymentSkillsPrograms();
+          }
         }
       },
       selectedFilters: {
@@ -83,11 +93,14 @@
           if (this.showCplView) {
             this.ensureCplPrograms(true);
           }
+          if (this.showEmploymentSkillsView) {
+            this.ensureEmploymentSkillsPrograms(true);
+          }
         }
       }
     },
     methods: {
-      buildCplFilters() {
+      buildProgramFilters() {
         const filters = {};
         const selectedYear = Number(this.selectedFilters?.academic_year || 0);
         const selectedProgram = String(this.selectedFilters?.programs || "").trim();
@@ -111,7 +124,7 @@
         this.cplError = "";
 
         try {
-          const data = await bridgetools.req3("programs", this.buildCplFilters(), { include: ["cpl"] });
+          const data = await bridgetools.req3("programs", this.buildProgramFilters(), { include: ["cpl"] });
           this.cplPrograms = Array.isArray(data?.data) ? data.data : [];
         } catch (error) {
           console.error("Failed to load program CPL data", error);
@@ -120,20 +133,48 @@
         } finally {
           this.cplLoading = false;
         }
-      }
-    },
-    template: `
-      <div class="btech-card btech-theme" style="padding:20px;">
-        <reports-v3-programs-cpl
+      },
+
+      async ensureEmploymentSkillsPrograms(forceReload = false) {
+        if (this.employmentSkillsLoading) return;
+        if (!forceReload && Array.isArray(this.employmentSkillsPrograms) && this.employmentSkillsPrograms.length) return;
+
+        this.employmentSkillsLoading = true;
+        this.employmentSkillsError = "";
+
+        try {
+          const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
+            include: ["employment_skills_summary"]
+          });
+          this.employmentSkillsPrograms = Array.isArray(data?.data) ? data.data : [];
+        } catch (error) {
+          console.error("Failed to load program employment skills data", error);
+          this.employmentSkillsPrograms = [];
+          this.employmentSkillsError = String(error?.message || error || "Failed to load employment skills data.");
+        } finally {
+          this.employmentSkillsLoading = false;
+        }
+      },
+      template: `
+        <div class="btech-card btech-theme" style="padding:20px;">
+          <reports-v3-programs-cpl
           v-if="showCplView"
           :programs="cplPrograms"
           :selected-filters="selectedFilters"
-          :loading="cplLoading"
-          :error="cplError"
-        />
+            :loading="cplLoading"
+            :error="cplError"
+          />
 
-        <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
-          <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
+          <reports-v3-programs-employment-skills
+            v-else-if="showEmploymentSkillsView"
+            :programs="employmentSkillsPrograms"
+            :selected-filters="selectedFilters"
+            :loading="employmentSkillsLoading"
+            :error="employmentSkillsError"
+          />
+
+          <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
+            <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
           <div class="btech-muted" style="margin-bottom:12px;">
             Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
           </div>
