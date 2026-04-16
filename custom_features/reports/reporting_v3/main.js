@@ -10,6 +10,7 @@
     `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-shell.js?v=${VERSION}`,
     `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-cpl.js?v=${VERSION}`,
     `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-employment-skills.js?v=${VERSION}`,
+    `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-syllabi.js?v=${VERSION}`,
     `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-programs.js?v=${VERSION}`
   ];
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";

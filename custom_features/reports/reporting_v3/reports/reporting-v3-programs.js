@@ -41,6 +41,9 @@
         cplPrograms: [],
         cplLoading: false,
         cplError: "",
+        syllabiPrograms: [],
+        syllabiLoading: false,
+        syllabiError: "",
         employmentSkillsPrograms: [],
         employmentSkillsLoading: false,
         employmentSkillsError: ""
@@ -56,6 +59,9 @@
       showCplView() {
         return this.subMenu === "completion";
       },
+      showSyllabiView() {
+        return this.subMenu === "syllabi";
+      },
       showEmploymentSkillsView() {
         return this.subMenu === "employment-skills";
       },
@@ -67,6 +73,7 @@
             sections: this.sections.map((section) => section.value),
             selectedFilters: this.selectedFilters || {},
             cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
+            syllabiProgramsCount: Array.isArray(this.syllabiPrograms) ? this.syllabiPrograms.length : 0,
             employmentSkillsProgramsCount: Array.isArray(this.employmentSkillsPrograms) ? this.employmentSkillsPrograms.length : 0,
             savedSettings: this.settings || {}
           },
@@ -82,6 +89,9 @@
           if (this.showCplView) {
             this.ensureCplPrograms();
           }
+          if (this.showSyllabiView) {
+            this.ensureSyllabiPrograms();
+          }
           if (this.showEmploymentSkillsView) {
             this.ensureEmploymentSkillsPrograms();
           }
@@ -92,6 +102,9 @@
         handler() {
           if (this.showCplView) {
             this.ensureCplPrograms(true);
+          }
+          if (this.showSyllabiView) {
+            this.ensureSyllabiPrograms(true);
           }
           if (this.showEmploymentSkillsView) {
             this.ensureEmploymentSkillsPrograms(true);
@@ -135,6 +148,27 @@
         }
       },
 
+      async ensureSyllabiPrograms(forceReload = false) {
+        if (this.syllabiLoading) return;
+        if (!forceReload && Array.isArray(this.syllabiPrograms) && this.syllabiPrograms.length) return;
+
+        this.syllabiLoading = true;
+        this.syllabiError = "";
+
+        try {
+          const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
+            include: ["syllabi"]
+          });
+          this.syllabiPrograms = Array.isArray(data?.data) ? data.data : [];
+        } catch (error) {
+          console.error("Failed to load program syllabi data", error);
+          this.syllabiPrograms = [];
+          this.syllabiError = String(error?.message || error || "Failed to load syllabi data.");
+        } finally {
+          this.syllabiLoading = false;
+        }
+      },
+
       async ensureEmploymentSkillsPrograms(forceReload = false) {
         if (this.employmentSkillsLoading) return;
         if (!forceReload && Array.isArray(this.employmentSkillsPrograms) && this.employmentSkillsPrograms.length) return;
@@ -164,6 +198,14 @@
           :selected-filters="selectedFilters"
           :loading="cplLoading"
           :error="cplError"
+        />
+
+        <reports-v3-programs-syllabi
+          v-else-if="showSyllabiView"
+          :programs="syllabiPrograms"
+          :selected-filters="selectedFilters"
+          :loading="syllabiLoading"
+          :error="syllabiError"
         />
 
         <reports-v3-programs-employment-skills
