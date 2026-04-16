@@ -34,15 +34,15 @@
       tableColumns() {
         return [
           { key: "programName", label: "Program", width: "18rem" },
-          { key: "programCode", label: "Code", width: "7rem" },
-          { key: "academicYear", label: "Year", width: "6rem", format: "integer", align: "right" },
-          { key: "campusCode", label: "Campus", width: "6rem" },
-          { key: "numStudents", label: "Students", width: "7rem", format: "integer", align: "right" },
-          { key: "totalEvalsSubmitted", label: "Submitted", width: "7rem", format: "integer", align: "right" },
+          { key: "programCode", label: "Code", width: "4rem" },
+          { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
+          { key: "campusCode", label: "Campus", width: "4rem" },
+          { key: "numStudents", label: "Students", width: "6rem", format: "integer", align: "right" },
+          { key: "totalEvalsSubmitted", label: "Submitted", width: "6rem", format: "integer", align: "right" },
           { key: "totalValidEvals", label: "Valid", width: "6rem", format: "integer", align: "right" },
-          { key: "evalsPerStudent", label: "Evals/Student", width: "8rem", format: "number", decimals: 2, align: "right" },
-          { key: "evalsPerQuarter", label: "Evals/Qtr", width: "7rem", format: "number", decimals: 2, align: "right" },
-          { key: "percSubmittedGraded", label: "% Graded", width: "7rem", format: "percent", decimals: 1, align: "right" }
+          { key: "evalsPerStudent", label: "Evals/Student", width: "6rem", format: "number", decimals: 2, align: "right" },
+          { key: "evalsPerQuarter", label: "Evals/Qtr", width: "6rem", format: "number", decimals: 2, align: "right" },
+          { key: "percSubmittedGraded", label: "% Graded", width: "6rem", format: "percent", decimals: 1, align: "right" }
         ];
       }
     },
