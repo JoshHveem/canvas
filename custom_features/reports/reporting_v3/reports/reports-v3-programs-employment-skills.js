@@ -41,8 +41,22 @@
           { key: "totalEvalsSubmitted", label: "Submitted", width: "6rem", format: "integer", align: "right" },
           { key: "totalValidEvals", label: "Valid", width: "6rem", format: "integer", align: "right" },
           { key: "evalsPerStudent", label: "Evals/Student", width: "6rem", format: "number", decimals: 2, align: "right" },
-          { key: "evalsPerQuarter", label: "Evals/Qtr", width: "6rem", format: "number", decimals: 2, align: "right" },
-          { key: "percSubmittedGraded", label: "% Graded", width: "6rem", format: "percent", decimals: 1, align: "right" }
+          { key: "evalsPerQuarter", label: "Evals/Qtr", width: "6rem", format: "number", decimals: 2, align: "right",
+            pillBands: {
+              good: 1.2,
+              warning: 1,
+              bad: 0.8
+            }
+          },
+          { key: "percSubmittedGraded", label: "% Graded", width: "6rem", format: "percent", decimals: 1, align: "right",
+
+            pillBands: {
+              good: 0.9,
+              warning: 0.8,
+              bad: 0.5
+            }
+            
+          }
         ];
       }
     },
