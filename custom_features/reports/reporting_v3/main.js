@@ -19,6 +19,20 @@
         subMenus: [
           { value: "overview", label: "Overview" }
         ]
+      },
+      {
+        value: "programs",
+        label: "Programs",
+        title: "Programs",
+        component: "reporting-v3-programs",
+        description: "Programs report group shell.",
+        subMenus: [
+          { value: "completion", label: "Completion" },
+          { value: "graduates", label: "Graduates" },
+          { value: "placements", label: "Placements" },
+          { value: "syllabi", label: "Syllabi" },
+          { value: "employment-skills", label: "Employment Skills" }
+        ]
       }
     ];
   }
@@ -123,6 +137,81 @@
           );
         }
       }
+    });
+
+    Vue.component("reporting-v3-programs", {
+      props: {
+        reportMeta: {
+          type: Object,
+          default: function () {
+            return {};
+          }
+        },
+        subMenu: {
+          type: String,
+          default: ""
+        },
+        settings: {
+          type: Object,
+          default: function () {
+            return {};
+          }
+        }
+      },
+      computed: {
+        sections() {
+          return Array.isArray(this.reportMeta?.subMenus) ? this.reportMeta.subMenus : [];
+        },
+        activeSection() {
+          return this.sections.find((section) => section.value === this.subMenu) || this.sections[0] || null;
+        },
+        summary() {
+          return JSON.stringify(
+            {
+              reportType: this.reportMeta.value || "",
+              subMenu: this.subMenu || "",
+              sections: this.sections.map((section) => section.value),
+              savedSettings: this.settings || {}
+            },
+            null,
+            2
+          );
+        }
+      },
+      template: `
+        <div class="btech-card btech-theme" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+            <div>
+              <div class="btech-card-title" style="margin-bottom:6px;">{{ reportMeta.title || 'Programs' }}</div>
+              <div class="btech-muted">{{ reportMeta.description || 'Programs report group shell.' }}</div>
+            </div>
+            <div class="btech-pill" style="font-size:11px;">{{ activeSection ? activeSection.label : 'Programs' }}</div>
+          </div>
+
+          <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+            <div
+              v-for="section in sections"
+              :key="section.value"
+              :style="section.value === subMenu
+                ? 'border:1px solid #111827; border-radius:12px; padding:14px; background:#111827; color:#fff;'
+                : 'border:1px solid #cbd5e1; border-radius:12px; padding:14px; background:#fff; color:#0f172a;'"
+            >
+              <div style="font-weight:600; margin-bottom:4px;">{{ section.label }}</div>
+              <div style="font-size:12px; opacity:.8;">
+                Placeholder view ready for the {{ section.label.toLowerCase() }} report.
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
+            <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
+            <div class="btech-muted" style="margin-bottom:12px;">
+              Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
+            </div>
+            <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
+          </div>
+        </div>
+      `
     });
   }
 
