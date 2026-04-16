@@ -20,7 +20,7 @@
       "title": "Programs",
       "component": "reporting-v3-programs",
       "description": "Programs report group shell.",
-      "filters": [],
+      "filters": ["programs"],
       "subMenus": [
         {
           "value": "completion",

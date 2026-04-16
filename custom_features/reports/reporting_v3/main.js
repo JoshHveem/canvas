@@ -39,6 +39,12 @@
           default: function () {
             return {};
           }
+        },
+        programs: {
+          type: Array,
+          default: function () {
+            return [];
+          }
         }
       },
       template: `
@@ -66,6 +72,7 @@
             {
               reportType: this.reportMeta.value || "",
               subMenu: this.subMenu || "",
+              programsCount: Array.isArray(this.programs) ? this.programs.length : 0,
               savedSettings: this.settings || {}
             },
             null,
@@ -92,6 +99,18 @@
           default: function () {
             return {};
           }
+        },
+        programs: {
+          type: Array,
+          default: function () {
+            return [];
+          }
+        },
+        sharedLoading: {
+          type: Object,
+          default: function () {
+            return {};
+          }
         }
       },
       computed: {
@@ -101,12 +120,16 @@
         activeSection() {
           return this.sections.find((section) => section.value === this.subMenu) || this.sections[0] || null;
         },
+        programsCount() {
+          return Array.isArray(this.programs) ? this.programs.length : 0;
+        },
         summary() {
           return JSON.stringify(
             {
               reportType: this.reportMeta.value || "",
               subMenu: this.subMenu || "",
               sections: this.sections.map((section) => section.value),
+              programsCount: this.programsCount,
               savedSettings: this.settings || {}
             },
             null,
@@ -137,6 +160,12 @@
                 Placeholder view ready for the {{ section.label.toLowerCase() }} report.
               </div>
             </div>
+          </div>
+
+          <div style="margin-top:18px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff;">
+            <div style="font-weight:600; margin-bottom:4px;">Shared Programs Data</div>
+            <div class="btech-muted" v-if="sharedLoading.programs">Loading programs...</div>
+            <div class="btech-muted" v-else>{{ programsCount }} programs available to this report.</div>
           </div>
 
           <div style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
@@ -187,7 +216,11 @@
         return {
           loading: true,
           reportTypes,
-          settings: utils.getDefaultSettings(reportTypes)
+          settings: utils.getDefaultSettings(reportTypes),
+          programs: [],
+          sharedLoading: {
+            programs: false
+          }
         };
       },
 
@@ -195,6 +228,10 @@
         currentReportMeta() {
           const fallback = this.reportTypes[0] || {};
           return this.reportTypes.find((report) => report.value === this.settings.reportType) || fallback;
+        },
+
+        currentFilters() {
+          return Array.isArray(this.currentReportMeta?.filters) ? this.currentReportMeta.filters : [];
         },
 
         currentSubMenus() {
@@ -211,32 +248,59 @@
         },
 
         currentViewProps() {
-          return {
+          const props = {
             reportMeta: this.currentReportMeta,
             subMenu: this.currentSubKey,
-            settings: this.settings
+            settings: this.settings,
+            sharedLoading: this.sharedLoading
           };
+
+          if (this.currentFilters.includes("programs")) {
+            props.programs = this.programs;
+          }
+
+          return props;
+        },
+
+        currentNeedsPrograms() {
+          return this.currentFilters.includes("programs");
         }
       },
 
-      async mounted() {
-        const loadedSettings = await utils.loadUserSettings(
-          SETTINGS_NAMESPACE,
-          SETTINGS_KEY,
-          utils.getDefaultSettings(this.reportTypes)
-        );
-
-        this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
-        this.loading = false;
-      },
-
       methods: {
+        async loadPrograms() {
+          if (this.sharedLoading.programs) return;
+          if (Array.isArray(this.programs) && this.programs.length) return;
+
+          this.sharedLoading.programs = true;
+
+          try {
+            const response = await bridgetools.req3("programs", {
+              academic_year: { op: ">=", value: 2021 }
+            });
+
+            this.programs = Array.isArray(response?.data) ? response.data : [];
+          } catch (error) {
+            console.error("Failed to load programs", error);
+            this.programs = [];
+          } finally {
+            this.sharedLoading.programs = false;
+          }
+        },
+
+        async ensureSharedFilterData() {
+          if (this.currentNeedsPrograms) {
+            await this.loadPrograms();
+          }
+        },
+
         async persistSettings() {
           await utils.saveUserSettings(SETTINGS_NAMESPACE, SETTINGS_KEY, this.settings);
         },
 
         async onReportChange() {
           this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
+          await this.ensureSharedFilterData();
           await this.persistSettings();
         },
 
@@ -265,6 +329,18 @@
         close() {
           $(`#${ROOT_ID}`).hide();
         }
+      },
+
+      async mounted() {
+        const loadedSettings = await utils.loadUserSettings(
+          SETTINGS_NAMESPACE,
+          SETTINGS_KEY,
+          utils.getDefaultSettings(this.reportTypes)
+        );
+
+        this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
+        await this.ensureSharedFilterData();
+        this.loading = false;
       }
     });
   }
