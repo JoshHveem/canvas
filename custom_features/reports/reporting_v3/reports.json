@@ -1,0 +1,48 @@
+{
+  "reportTypes": [
+    {
+      "value": "shell",
+      "label": "Shell",
+      "title": "Reporting V3",
+      "component": "reporting-v3-shell",
+      "description": "Base shell for building new reports.",
+      "filters": [],
+      "subMenus": [
+        {
+          "value": "overview",
+          "label": "Overview"
+        }
+      ]
+    },
+    {
+      "value": "programs",
+      "label": "Programs",
+      "title": "Programs",
+      "component": "reporting-v3-programs",
+      "description": "Programs report group shell.",
+      "filters": [],
+      "subMenus": [
+        {
+          "value": "completion",
+          "label": "Completion"
+        },
+        {
+          "value": "graduates",
+          "label": "Graduates"
+        },
+        {
+          "value": "placements",
+          "label": "Placements"
+        },
+        {
+          "value": "syllabi",
+          "label": "Syllabi"
+        },
+        {
+          "value": "employment-skills",
+          "label": "Employment Skills"
+        }
+      ]
+    }
+  ]
+}

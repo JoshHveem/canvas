@@ -1,88 +1,24 @@
 // reports/reporting_v3/main.js
 (async function () {
-  const TEMPLATE_PATH = "/custom_features/reports/reporting_v3/template.vue";
-  const TEMPLATE_URL = `${SOURCE_URL}${TEMPLATE_PATH}?v=${Date.now()}`;
+  const VERSION = Date.now();
+  const BASE_PATH = "/custom_features/reports/reporting_v3";
+  const TEMPLATE_URL = `${SOURCE_URL}${BASE_PATH}/template.vue?v=${VERSION}`;
+  const UTILS_URL = `${SOURCE_URL}${BASE_PATH}/utils.js?v=${VERSION}`;
+  const REPORTS_URL = `${SOURCE_URL}${BASE_PATH}/reports.json?v=${VERSION}`;
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
+  const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
   const BUTTON_ID = "canvas-reporting-v3-gen";
   const BUTTON_LABEL = "Reports V3";
-  const loadedScripts = new Set();
 
-  function getDefaultReports() {
-    return [
-      {
-        value: "shell",
-        label: "Shell",
-        title: "Reporting V3",
-        component: "reporting-v3-shell",
-        description: "Base shell for building new reports.",
-        subMenus: [
-          { value: "overview", label: "Overview" }
-        ]
-      },
-      {
-        value: "programs",
-        label: "Programs",
-        title: "Programs",
-        component: "reporting-v3-programs",
-        description: "Programs report group shell.",
-        subMenus: [
-          { value: "completion", label: "Completion" },
-          { value: "graduates", label: "Graduates" },
-          { value: "placements", label: "Placements" },
-          { value: "syllabi", label: "Syllabi" },
-          { value: "employment-skills", label: "Employment Skills" }
-        ]
-      }
-    ];
-  }
+  await $.getScript(UTILS_URL);
 
-  function getDefaultSettings(reports) {
-    const firstReport = reports[0] || {};
-    const firstSubMenu = (firstReport.subMenus || [])[0];
+  const utils = window.ReportingV3Utils;
 
-    return {
-      reportType: firstReport.value || "",
-      subMenuByType: firstSubMenu && firstReport.value
-        ? { [firstReport.value]: firstSubMenu.value }
-        : {},
-      filters: {}
-    };
-  }
-
-  async function loadScriptOnce(url) {
-    if (loadedScripts.has(url)) return;
-    await $.getScript(url);
-    loadedScripts.add(url);
-  }
-
-  function loadCSS(url) {
-    const style = document.createElement("link");
-    const head = document.head || document.getElementsByTagName("head")[0];
-    style.href = url;
-    style.type = "text/css";
-    style.rel = "stylesheet";
-    style.media = "screen,print";
-    head.insertBefore(style, head.firstChild);
-  }
-
-  function createButton() {
-    const btn = $(`<a class="Button" id="${BUTTON_ID}">${BUTTON_LABEL}</a>`);
-    const wrapper = $('<div style="position: relative; display: block;"></div>');
-
-    btn.on("click", function () {
+  function createOpenButton() {
+    return utils.createButton(BUTTON_ID, BUTTON_LABEL, function () {
       $(`#${ROOT_ID}`).show();
     });
-
-    wrapper.append(btn);
-    return wrapper;
-  }
-
-  function ensureButton(container) {
-    if (!container || !container.length) return;
-    if ($(`#${BUTTON_ID}`).length === 0) {
-      container.append(createButton());
-    }
   }
 
   function registerBaseComponents() {
@@ -215,39 +151,15 @@
     });
   }
 
-  async function loadSettings(defaults) {
-    const fallback = JSON.parse(JSON.stringify(defaults));
-
-    try {
-      const resp = await $.get(`/api/v1/users/self/custom_data/reporting_v3?ns=${SETTINGS_NAMESPACE}`);
-      const saved = resp?.data?.settings || {};
-      return {
-        reportType: saved.reportType || fallback.reportType,
-        subMenuByType: Object.assign({}, fallback.subMenuByType, saved.subMenuByType || {}),
-        filters: Object.assign({}, fallback.filters, saved.filters || {})
-      };
-    } catch (err) {
-      return fallback;
-    }
-  }
-
-  async function saveSettings(settings) {
-    await $.put(`/api/v1/users/self/custom_data/reporting_v3?ns=${SETTINGS_NAMESPACE}`, {
-      data: { settings }
-    });
+  async function loadReportTypes() {
+    const payload = await utils.fetchJson(REPORTS_URL);
+    return Array.isArray(payload?.reportTypes) ? payload.reportTypes : [];
   }
 
   async function postLoad() {
-    let vueString = "";
-
-    await $.get(
-      TEMPLATE_URL,
-      null,
-      function (html) {
-        vueString = html.replace("<template>", "").replace("</template>", "");
-      },
-      "text"
-    );
+    const vueString = (await utils.fetchText(TEMPLATE_URL))
+      .replace("<template>", "")
+      .replace("</template>", "");
 
     if ($(`#${ROOT_ID}`).length === 0) {
       $("#application").after(`<div id="${ROOT_ID}"></div>`);
@@ -256,16 +168,16 @@
     $(`#${ROOT_ID}`).html(vueString).hide();
 
     const container = $("#right-side");
-    ensureButton(container);
+    utils.ensureButton(container, BUTTON_ID, createOpenButton);
 
     if (container.length) {
       const observer = new MutationObserver(function () {
-        ensureButton(container);
+        utils.ensureButton(container, BUTTON_ID, createOpenButton);
       });
       observer.observe(container[0], { childList: true, subtree: false });
     }
 
-    const reportTypes = getDefaultReports();
+    const reportTypes = await loadReportTypes();
     registerBaseComponents();
 
     new Vue({
@@ -275,7 +187,7 @@
         return {
           loading: true,
           reportTypes,
-          settings: getDefaultSettings(reportTypes)
+          settings: utils.getDefaultSettings(reportTypes)
         };
       },
 
@@ -308,51 +220,23 @@
       },
 
       async mounted() {
-        const loadedSettings = await loadSettings(getDefaultSettings(this.reportTypes));
-        this.settings = this.normalizeSettings(loadedSettings);
+        const loadedSettings = await utils.loadUserSettings(
+          SETTINGS_NAMESPACE,
+          SETTINGS_KEY,
+          utils.getDefaultSettings(this.reportTypes)
+        );
+
+        this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
         this.loading = false;
       },
 
       methods: {
-        normalizeSettings(settings) {
-          const normalized = Object.assign({}, getDefaultSettings(this.reportTypes), settings || {});
-
-          if (!normalized.reportType) {
-            normalized.reportType = this.reportTypes[0]?.value || "";
-          }
-
-          if (!normalized.subMenuByType || typeof normalized.subMenuByType !== "object") {
-            normalized.subMenuByType = {};
-          }
-
-          if (!normalized.filters || typeof normalized.filters !== "object") {
-            normalized.filters = {};
-          }
-
-          const type = normalized.reportType;
-          const report = this.reportTypes.find((item) => item.value === type) || this.reportTypes[0] || {};
-          const firstSubMenu = (report.subMenus || [])[0];
-
-          if (type && firstSubMenu && !normalized.subMenuByType[type]) {
-            this.$set(normalized.subMenuByType, type, firstSubMenu.value);
-          }
-
-          return normalized;
-        },
-
         async persistSettings() {
-          await saveSettings(this.settings);
+          await utils.saveUserSettings(SETTINGS_NAMESPACE, SETTINGS_KEY, this.settings);
         },
 
         async onReportChange() {
-          const type = this.settings.reportType;
-          const report = this.reportTypes.find((item) => item.value === type) || {};
-          const firstSubMenu = (report.subMenus || [])[0];
-
-          if (type && firstSubMenu && !this.settings.subMenuByType[type]) {
-            this.$set(this.settings.subMenuByType, type, firstSubMenu.value);
-          }
-
+          this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
           await this.persistSettings();
         },
 
@@ -386,13 +270,11 @@
   }
 
   async function init() {
-    loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-    loadCSS("https://reports.bridgetools.dev/style/main.css");
+    utils.loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
+    utils.loadCSS("https://reports.bridgetools.dev/style/main.css");
 
     if (!window.Vue) {
-      await loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
-      await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
-
+      await utils.loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
 
     await postLoad();
