@@ -144,9 +144,6 @@
         showCplView() {
           return this.subMenu === "completion";
         },
-        programsCount() {
-          return Array.isArray(this.programs) ? this.programs.length : 0;
-        },
         summary() {
           return JSON.stringify(
             {
@@ -154,7 +151,6 @@
               subMenu: this.subMenu || "",
               sections: this.sections.map((section) => section.value),
               selectedFilters: this.selectedFilters || {},
-              programsCount: this.programsCount,
               cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
               savedSettings: this.settings || {}
             },
@@ -227,27 +223,6 @@
             <div class="btech-pill" style="font-size:11px;">{{ activeSection ? activeSection.label : 'Programs' }}</div>
           </div>
 
-          <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-            <div
-              v-for="section in sections"
-              :key="section.value"
-              :style="section.value === subMenu
-                ? 'border:1px solid #111827; border-radius:12px; padding:14px; background:#111827; color:#fff;'
-                : 'border:1px solid #cbd5e1; border-radius:12px; padding:14px; background:#fff; color:#0f172a;'"
-            >
-              <div style="font-weight:600; margin-bottom:4px;">{{ section.label }}</div>
-              <div style="font-size:12px; opacity:.8;">
-                Placeholder view ready for the {{ section.label.toLowerCase() }} report.
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-top:18px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff;">
-            <div style="font-weight:600; margin-bottom:4px;">Shared Programs Data</div>
-            <div class="btech-muted" v-if="sharedLoading.programs">Loading programs...</div>
-            <div class="btech-muted" v-else>{{ programsCount }} programs available to this report.</div>
-          </div>
-
           <reports-v3-programs-cpl
             v-if="showCplView"
             :programs="cplPrograms"
@@ -256,7 +231,7 @@
             :error="cplError"
           />
 
-          <div style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
+          <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
             <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
             <div class="btech-muted" style="margin-bottom:12px;">
               Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.

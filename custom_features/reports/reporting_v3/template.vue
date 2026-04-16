@@ -89,15 +89,6 @@
           </div>
         </div>
 
-        <div
-          style="margin-bottom:16px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff;"
-        >
-          <div style="font-weight:600; margin-bottom:4px;">Shell Notes</div>
-          <div class="btech-muted">
-            Add report-specific selectors, datasets, and components incrementally from here instead of carrying over v2 assumptions.
-          </div>
-        </div>
-
         <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">
           <div class="btech-muted">Loading report shell...</div>
         </div>
