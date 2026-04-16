@@ -52,6 +52,18 @@
     },
 
     computed: {
+      colors() {
+        const palette = window.bridgetools?.colors || {};
+        return {
+          green: palette.green || "#16a34a",
+          yellow: palette.yellow || "#eab308",
+          red: palette.red || "#dc2626",
+          gray: palette.gray || "#e5e7eb",
+          white: palette.white || "#ffffff",
+          black: palette.black || "#111827"
+        };
+      },
+
       resolvedColumns() {
         return (Array.isArray(this.columns) ? this.columns : []).map((column, index) => ({
           align: "left",
@@ -171,6 +183,60 @@
         }
       },
 
+      hasBandPill(column) {
+        return !!(column && column.pillBands && typeof column.pillBands === "object");
+      },
+
+      getBandPillStyle(row, column) {
+        const band = this.getBandPillBand(row, column);
+
+        if (!band) {
+          return {
+            display: "inline-block",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            backgroundColor: this.colors.gray,
+            color: this.colors.black,
+            fontWeight: 600
+          };
+        }
+
+        const backgroundColor = this.getBandColor(band);
+        const color = band === "warning" ? this.colors.black : this.colors.white;
+
+        return {
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: "999px",
+          backgroundColor,
+          color,
+          fontWeight: 600
+        };
+      },
+
+      getBandPillBand(row, column) {
+        const raw = this.getRawValue(row, column);
+        const num = toNumber(raw);
+        const bands = Object.entries(column?.pillBands || {})
+          .filter(([, threshold]) => Number.isFinite(Number(threshold)))
+          .map(([name, threshold]) => ({ name, threshold: Number(threshold) }))
+          .sort((a, b) => b.threshold - a.threshold);
+
+        if (num == null || !bands.length) return null;
+
+        const matched = bands.find((band) => num >= band.threshold);
+        if (matched) return matched.name;
+
+        return bands[bands.length - 1]?.name || null;
+      },
+
+      getBandColor(band) {
+        if (band === "good") return this.colors.green;
+        if (band === "warning") return this.colors.yellow;
+        if (band === "bad") return this.colors.red;
+        return this.colors.gray;
+      },
+
       setSort(column) {
         if (column.sortable === false) return;
 
@@ -248,7 +314,11 @@
                   :style="cellStyle(column, row)"
                   style="padding:10px 12px; font-size:12px; border-top:1px solid #eef2f7; overflow:hidden; text-overflow:ellipsis;"
                 >
-                  <span v-if="column.allowHtml" v-html="formatValue(row, column)"></span>
+                  <span
+                    v-if="hasBandPill(column)"
+                    :style="getBandPillStyle(row, column)"
+                  >{{ formatValue(row, column) }}</span>
+                  <span v-else-if="column.allowHtml" v-html="formatValue(row, column)"></span>
                   <span v-else>{{ formatValue(row, column) }}</span>
                 </td>
               </tr>

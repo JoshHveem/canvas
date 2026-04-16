@@ -264,7 +264,19 @@
             { key: "programCode", label: "Code", width: "7rem" },
             { key: "academicYear", label: "Year", width: "6rem", format: "integer", align: "right" },
             { key: "campusCode", label: "Campus", width: "6rem" },
-            { key: "completion", label: "Completion", width: "8rem", format: "percent", decimals: 0, align: "right" },
+            {
+              key: "completion",
+              label: "Completion",
+              width: "8rem",
+              format: "percent",
+              decimals: 0,
+              align: "right",
+              pillBands: {
+                good: 0.7,
+                warning: 0.6,
+                bad: 0.5
+              }
+            },
             { key: "placement", label: "Placement", width: "8rem", format: "percent", decimals: 0, align: "right" },
             { key: "licensure", label: "Licensure", width: "8rem", format: "percent", decimals: 0, align: "right" }
           ];
