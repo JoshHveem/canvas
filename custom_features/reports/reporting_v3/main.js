@@ -56,15 +56,7 @@
       },
       template: `
         <div class="btech-card btech-theme" style="padding:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
-            <div>
-              <div class="btech-card-title" style="margin-bottom:6px;">{{ reportMeta.title || 'Reporting V3' }}</div>
-              <div class="btech-muted">{{ reportMeta.description || 'Base report shell ready for new components.' }}</div>
-            </div>
-            <div class="btech-pill" style="font-size:11px;">{{ subMenu || 'overview' }}</div>
-          </div>
-
-          <div style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
+          <div style="border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
             <div style="font-weight:600; margin-bottom:6px;">Starting point</div>
             <div class="btech-muted" style="margin-bottom:12px;">
               Replace this component or add more registered report components as you build out reporting v3.
@@ -215,14 +207,6 @@
       },
       template: `
         <div class="btech-card btech-theme" style="padding:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
-            <div>
-              <div class="btech-card-title" style="margin-bottom:6px;">{{ reportMeta.title || 'Programs' }}</div>
-              <div class="btech-muted">{{ reportMeta.description || 'Programs report group shell.' }}</div>
-            </div>
-            <div class="btech-pill" style="font-size:11px;">{{ activeSection ? activeSection.label : 'Programs' }}</div>
-          </div>
-
           <reports-v3-programs-cpl
             v-if="showCplView"
             :programs="cplPrograms"
