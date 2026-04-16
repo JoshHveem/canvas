@@ -6,6 +6,11 @@
   const UTILS_URL = `${SOURCE_URL}${BASE_PATH}/utils.js?v=${VERSION}`;
   const REPORTS_URL = `${SOURCE_URL}${BASE_PATH}/reports.json?v=${VERSION}`;
   const TABLE_COMPONENT_URL = `${SOURCE_URL}${BASE_PATH}/components/reports-v3-table.js?v=${VERSION}`;
+  const REPORT_COMPONENT_URLS = [
+    `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-shell.js?v=${VERSION}`,
+    `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-cpl.js?v=${VERSION}`,
+    `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-programs.js?v=${VERSION}`
+  ];
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
   const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
@@ -19,315 +24,6 @@
   function createOpenButton() {
     return utils.createButton(BUTTON_ID, BUTTON_LABEL, function () {
       $(`#${ROOT_ID}`).show();
-    });
-  }
-
-  function registerBaseComponents() {
-    Vue.component("reporting-v3-shell", {
-      props: {
-        reportMeta: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        subMenu: {
-          type: String,
-          default: ""
-        },
-        settings: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        selectedFilters: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        programs: {
-          type: Array,
-          default: function () {
-            return [];
-          }
-        }
-      },
-      template: `
-        <div class="btech-card btech-theme" style="padding:20px;">
-          <div style="border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
-            <div style="font-weight:600; margin-bottom:6px;">Starting point</div>
-            <div class="btech-muted" style="margin-bottom:12px;">
-              Replace this component or add more registered report components as you build out reporting v3.
-            </div>
-            <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
-          </div>
-        </div>
-      `,
-      computed: {
-        summary() {
-          return JSON.stringify(
-            {
-              reportType: this.reportMeta.value || "",
-              subMenu: this.subMenu || "",
-              selectedFilters: this.selectedFilters || {},
-              programsCount: Array.isArray(this.programs) ? this.programs.length : 0,
-              savedSettings: this.settings || {}
-            },
-            null,
-            2
-          );
-        }
-      }
-    });
-
-    Vue.component("reporting-v3-programs", {
-      props: {
-        reportMeta: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        subMenu: {
-          type: String,
-          default: ""
-        },
-        settings: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        selectedFilters: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        programs: {
-          type: Array,
-          default: function () {
-            return [];
-          }
-        },
-        sharedLoading: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        }
-      },
-      data() {
-        return {
-          cplPrograms: [],
-          cplLoading: false,
-          cplError: ""
-        };
-      },
-      computed: {
-        sections() {
-          return Array.isArray(this.reportMeta?.subMenus) ? this.reportMeta.subMenus : [];
-        },
-        activeSection() {
-          return this.sections.find((section) => section.value === this.subMenu) || this.sections[0] || null;
-        },
-        showCplView() {
-          return this.subMenu === "completion";
-        },
-        summary() {
-          return JSON.stringify(
-            {
-              reportType: this.reportMeta.value || "",
-              subMenu: this.subMenu || "",
-              sections: this.sections.map((section) => section.value),
-              selectedFilters: this.selectedFilters || {},
-              cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
-              savedSettings: this.settings || {}
-            },
-            null,
-            2
-          );
-        }
-      },
-      watch: {
-        subMenu: {
-          immediate: true,
-          handler() {
-            if (this.showCplView) {
-              this.ensureCplPrograms();
-            }
-          }
-        },
-        selectedFilters: {
-          deep: true,
-          handler() {
-            if (this.showCplView) {
-              this.ensureCplPrograms(true);
-            }
-          }
-        }
-      },
-      methods: {
-        buildCplFilters() {
-          const filters = {};
-          const selectedYear = Number(this.selectedFilters?.academic_year || 0);
-          const selectedProgram = String(this.selectedFilters?.programs || "").trim();
-
-          if (selectedYear) {
-            filters.academic_year = { op: "=", value: selectedYear };
-          }
-
-          if (selectedProgram) {
-            filters.program_code = { op: "=", value: selectedProgram };
-          }
-
-          return filters;
-        },
-
-        async ensureCplPrograms(forceReload = false) {
-          if (this.cplLoading) return;
-          if (!forceReload && Array.isArray(this.cplPrograms) && this.cplPrograms.length) return;
-
-          this.cplLoading = true;
-          this.cplError = "";
-
-          try {
-            const data = await bridgetools.req3("programs", this.buildCplFilters(), { include: ["cpl"] });
-            this.cplPrograms = Array.isArray(data?.data) ? data.data : [];
-          } catch (error) {
-            console.error("Failed to load program CPL data", error);
-            this.cplPrograms = [];
-            this.cplError = String(error?.message || error || "Failed to load CPL data.");
-          } finally {
-            this.cplLoading = false;
-          }
-        }
-      },
-      template: `
-        <div class="btech-card btech-theme" style="padding:20px;">
-          <reports-v3-programs-cpl
-            v-if="showCplView"
-            :programs="cplPrograms"
-            :selected-filters="selectedFilters"
-            :loading="cplLoading"
-            :error="cplError"
-          />
-
-          <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
-            <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
-            <div class="btech-muted" style="margin-bottom:12px;">
-              Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
-            </div>
-            <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
-          </div>
-        </div>
-      `
-    });
-
-    Vue.component("reports-v3-programs-cpl", {
-      props: {
-        programs: {
-          type: Array,
-          default: function () {
-            return [];
-          }
-        },
-        selectedFilters: {
-          type: Object,
-          default: function () {
-            return {};
-          }
-        },
-        loading: {
-          type: Boolean,
-          default: false
-        },
-        error: {
-          type: String,
-          default: ""
-        }
-      },
-      computed: {
-        filteredPrograms() {
-          const list = Array.isArray(this.programs) ? this.programs : [];
-
-          return list
-            .map((program) => this.normalizeProgramRow(program))
-            .filter(Boolean);
-        },
-
-        tableColumns() {
-          return [
-            { key: "programName", label: "Program", width: "18rem" },
-            { key: "programCode", label: "Code", width: "7rem" },
-            { key: "academicYear", label: "Year", width: "6rem", format: "integer", align: "right" },
-            { key: "campusCode", label: "Campus", width: "6rem" },
-            {
-              key: "completion",
-              label: "Completion",
-              width: "8rem",
-              format: "percent",
-              decimals: 0,
-              align: "right",
-              pillBands: {
-                good: 0.7,
-                warning: 0.6,
-                bad: 0.5
-              }
-            },
-            { key: "placement", label: "Placement", width: "8rem", format: "percent", decimals: 0, align: "right" },
-            { key: "licensure", label: "Licensure", width: "8rem", format: "percent", decimals: 0, align: "right" }
-          ];
-        }
-      },
-      methods: {
-        normalizeProgramRow(program) {
-          if (!program || typeof program !== "object") return null;
-
-          return {
-            programCode: String(program?.program_code || "").trim(),
-            programName: String(program?.program_name || program?.program_code || "Program").trim(),
-            academicYear: Number(program?.academic_year || 0),
-            campusCode: String(program?.campus_code || "").trim(),
-            completion: program?.cpl__completion,
-            placement: program?.cpl__placement,
-            licensure: program?.cpl__licensure
-          };
-        },
-
-        rowKey(row) {
-          return `${row.programCode}-${row.academicYear}-${row.campusCode || "na"}`;
-        }
-      },
-      template: `
-        <div style="margin-top:18px;">
-          <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-            <div class="btech-muted">Loading CPL data...</div>
-          </div>
-
-          <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-            <div style="font-weight:600; margin-bottom:4px;">CPL Data Error</div>
-            <div class="btech-muted">{{ error }}</div>
-          </div>
-
-          <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-            <div style="font-weight:600; margin-bottom:4px;">Programs CPL</div>
-            <div class="btech-muted">No CPL rows match the current filters.</div>
-          </div>
-
-          <reports-v3-table
-            v-else
-            :rows="filteredPrograms"
-            :columns="tableColumns"
-            :row-key="rowKey"
-            default-sort-key="programName"
-            :default-sort-dir="1"
-            empty-message="No CPL rows match the current filters."
-          />
-        </div>
-      `
     });
   }
 
@@ -358,7 +54,6 @@
     }
 
     const reportTypes = await loadReportTypes();
-    registerBaseComponents();
 
     new Vue({
       el: `#${ROOT_ID}`,
@@ -627,6 +322,9 @@
       await utils.loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
     await utils.loadScriptOnce(TABLE_COMPONENT_URL);
+    for (const url of REPORT_COMPONENT_URLS) {
+      await utils.loadScriptOnce(url);
+    }
 
     await postLoad();
   }
