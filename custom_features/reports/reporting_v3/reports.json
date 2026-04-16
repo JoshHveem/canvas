@@ -24,23 +24,28 @@
       "subMenus": [
         {
           "value": "completion",
-          "label": "Completion"
+          "label": "Completion",
+          "filter_by_year": true
         },
         {
           "value": "graduates",
-          "label": "Graduates"
+          "label": "Graduates",
+          "filter_by_year": true
         },
         {
           "value": "placements",
-          "label": "Placements"
+          "label": "Placements",
+          "filter_by_year": true
         },
         {
           "value": "syllabi",
-          "label": "Syllabi"
+          "label": "Syllabi",
+          "filter_by_year": true
         },
         {
           "value": "employment-skills",
-          "label": "Employment Skills"
+          "label": "Employment Skills",
+          "filter_by_year": true
         }
       ]
     }

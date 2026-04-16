@@ -239,6 +239,10 @@
       },
 
       computed: {
+        currentYear() {
+          return new Date().getFullYear();
+        },
+
         currentReportMeta() {
           const fallback = this.reportTypes[0] || {};
           return this.reportTypes.find((report) => report.value === this.settings.reportType) || fallback;
@@ -249,7 +253,11 @@
         },
 
         currentFilterControls() {
-          return this.currentFilters.map((filterKey) => this.buildFilterControl(filterKey)).filter(Boolean);
+          const filterKeys = this.currentNeedsAcademicYear
+            ? ["academic_year", ...this.currentFilters]
+            : this.currentFilters.slice();
+
+          return filterKeys.map((filterKey) => this.buildFilterControl(filterKey)).filter(Boolean);
         },
 
         currentSubMenus() {
@@ -263,6 +271,14 @@
 
           if (hasSaved) return saved;
           return this.currentSubMenus[0]?.value || "";
+        },
+
+        currentSubMenuMeta() {
+          return this.currentSubMenus.find((menu) => menu.value === this.currentSubKey) || this.currentSubMenus[0] || {};
+        },
+
+        currentNeedsAcademicYear() {
+          return !!this.currentSubMenuMeta?.filter_by_year;
         },
 
         currentViewProps() {
@@ -283,6 +299,16 @@
 
         currentNeedsPrograms() {
           return this.currentFilters.includes("programs");
+        },
+
+        academicYearOptions() {
+          return Array.from({ length: 5 }, (_, index) => {
+            const year = this.currentYear - index;
+            return {
+              value: String(year),
+              label: String(year)
+            };
+          });
         }
       },
 
@@ -315,6 +341,17 @@
         },
 
         buildFilterControl(filterKey) {
+          if (filterKey === "academic_year") {
+            return {
+              key: "academic_year",
+              label: "Academic Year",
+              placeholder: "Select Year",
+              options: this.academicYearOptions,
+              value: String(this.settings?.filters?.academic_year || this.currentYear),
+              disabled: false
+            };
+          }
+
           if (filterKey === "programs") {
             return {
               key: "programs",
@@ -331,11 +368,16 @@
 
         getProgramFilterOptions() {
           const list = Array.isArray(this.programs) ? this.programs : [];
+          const selectedYear = Number(this.settings?.filters?.academic_year || 0);
           const byCode = new Map();
 
           for (const program of list) {
             const code = String(program?.program_code || "").trim();
             if (!code) continue;
+
+            if (this.currentNeedsAcademicYear && selectedYear && Number(program?.academic_year) !== selectedYear) {
+              continue;
+            }
 
             const existing = byCode.get(code);
             const next = {
@@ -372,6 +414,7 @@
 
         async onReportChange() {
           this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
+          this.ensureAcademicYearFilter();
           await this.ensureSharedFilterData();
           await this.persistSettings();
         },
@@ -381,12 +424,28 @@
           if (!type) return;
 
           this.$set(this.settings.subMenuByType, type, value);
+          this.ensureAcademicYearFilter();
+          this.pruneFilterSelection("programs");
           await this.persistSettings();
         },
 
         async updateFilterValue(filterKey, value) {
           this.$set(this.settings.filters, filterKey, value);
+          if (filterKey === "academic_year") {
+            this.pruneFilterSelection("programs");
+          }
           await this.persistSettings();
+        },
+
+        ensureAcademicYearFilter() {
+          if (!this.currentNeedsAcademicYear) return;
+
+          const validYears = new Set(this.academicYearOptions.map((option) => option.value));
+          const currentValue = String(this.settings?.filters?.academic_year || "");
+
+          if (!validYears.has(currentValue)) {
+            this.$set(this.settings.filters, "academic_year", String(this.currentYear));
+          }
         },
 
         async drillToReport(payload) {
@@ -416,6 +475,7 @@
         );
 
         this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
+        this.ensureAcademicYearFilter();
         await this.ensureSharedFilterData();
         this.loading = false;
       }
