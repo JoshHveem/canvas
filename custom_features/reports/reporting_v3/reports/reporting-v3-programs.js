@@ -155,26 +155,27 @@
           this.employmentSkillsLoading = false;
         }
       },
-      template: `
-        <div class="btech-card btech-theme" style="padding:20px;">
-          <reports-v3-programs-cpl
+    },
+    template: `
+      <div class="btech-card btech-theme" style="padding:20px;">
+        <reports-v3-programs-cpl
           v-if="showCplView"
           :programs="cplPrograms"
           :selected-filters="selectedFilters"
-            :loading="cplLoading"
-            :error="cplError"
-          />
+          :loading="cplLoading"
+          :error="cplError"
+        />
 
-          <reports-v3-programs-employment-skills
-            v-else-if="showEmploymentSkillsView"
-            :programs="employmentSkillsPrograms"
-            :selected-filters="selectedFilters"
-            :loading="employmentSkillsLoading"
-            :error="employmentSkillsError"
-          />
+        <reports-v3-programs-employment-skills
+          v-else-if="showEmploymentSkillsView"
+          :programs="employmentSkillsPrograms"
+          :selected-filters="selectedFilters"
+          :loading="employmentSkillsLoading"
+          :error="employmentSkillsError"
+        />
 
-          <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
-            <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
+        <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
+          <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
           <div class="btech-muted" style="margin-bottom:12px;">
             Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
           </div>
