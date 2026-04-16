@@ -3,6 +3,16 @@
     <div class="btech-modal-content" style="overflow:visible;">
       <div class="btech-modal-content-inner" style="overflow:visible; max-width:1100px;">
         <span class="btech-close" @click="close()">&times;</span>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+          <div>
+            <h3 class="btech-card-title" style="margin:0 0 6px 0;">
+              {{ currentReportMeta.title || 'Reporting V3' }}
+            </h3>
+          </div>
+
+        </div>
+
         <div
           role="tablist"
           aria-label="Report type"
