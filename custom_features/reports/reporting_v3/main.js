@@ -126,12 +126,22 @@
           }
         }
       },
+      data() {
+        return {
+          cplPrograms: [],
+          cplLoading: false,
+          cplError: ""
+        };
+      },
       computed: {
         sections() {
           return Array.isArray(this.reportMeta?.subMenus) ? this.reportMeta.subMenus : [];
         },
         activeSection() {
           return this.sections.find((section) => section.value === this.subMenu) || this.sections[0] || null;
+        },
+        showCplView() {
+          return this.subMenu === "completion";
         },
         programsCount() {
           return Array.isArray(this.programs) ? this.programs.length : 0;
@@ -144,11 +154,42 @@
               sections: this.sections.map((section) => section.value),
               selectedFilters: this.selectedFilters || {},
               programsCount: this.programsCount,
+              cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
               savedSettings: this.settings || {}
             },
             null,
             2
           );
+        }
+      },
+      watch: {
+        subMenu: {
+          immediate: true,
+          handler() {
+            if (this.showCplView) {
+              this.ensureCplPrograms();
+            }
+          }
+        }
+      },
+      methods: {
+        async ensureCplPrograms() {
+          if (this.cplLoading) return;
+          if (Array.isArray(this.cplPrograms) && this.cplPrograms.length) return;
+
+          this.cplLoading = true;
+          this.cplError = "";
+
+          try {
+            const data = await bridgetools.req3("programs", {}, { include: ["cpl"] });
+            this.cplPrograms = Array.isArray(data?.data) ? data.data : [];
+          } catch (error) {
+            console.error("Failed to load program CPL data", error);
+            this.cplPrograms = [];
+            this.cplError = String(error?.message || error || "Failed to load CPL data.");
+          } finally {
+            this.cplLoading = false;
+          }
         }
       },
       template: `
@@ -182,12 +223,179 @@
             <div class="btech-muted" v-else>{{ programsCount }} programs available to this report.</div>
           </div>
 
+          <reports-v3-programs-cpl
+            v-if="showCplView"
+            :programs="cplPrograms"
+            :selected-filters="selectedFilters"
+            :loading="cplLoading"
+            :error="cplError"
+          />
+
           <div style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
             <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
             <div class="btech-muted" style="margin-bottom:12px;">
               Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
             </div>
             <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
+          </div>
+        </div>
+      `
+    });
+
+    Vue.component("reports-v3-programs-cpl", {
+      props: {
+        programs: {
+          type: Array,
+          default: function () {
+            return [];
+          }
+        },
+        selectedFilters: {
+          type: Object,
+          default: function () {
+            return {};
+          }
+        },
+        loading: {
+          type: Boolean,
+          default: false
+        },
+        error: {
+          type: String,
+          default: ""
+        }
+      },
+      computed: {
+        filteredPrograms() {
+          const selectedProgram = String(this.selectedFilters?.programs || "").trim();
+          const selectedYear = Number(this.selectedFilters?.academic_year || 0);
+          const list = Array.isArray(this.programs) ? this.programs : [];
+
+          return list
+            .filter((program) => {
+              if (selectedProgram && String(program?.program_code || "").trim() !== selectedProgram) {
+                return false;
+              }
+
+              if (selectedYear && Number(program?.academic_year || 0) !== selectedYear) {
+                return false;
+              }
+
+              return true;
+            })
+            .map((program) => ({
+              programCode: String(program?.program_code || "").trim(),
+              programName: String(program?.program_name || program?.program_code || "Program").trim(),
+              academicYear: Number(program?.academic_year || 0),
+              cplEntries: this.normalizeCplEntries(program?.cpl)
+            }));
+        }
+      },
+      methods: {
+        normalizeCplEntries(cpl) {
+          const list = Array.isArray(cpl)
+            ? cpl
+            : cpl && typeof cpl === "object"
+            ? [cpl]
+            : [];
+
+          return list.filter(Boolean);
+        },
+
+        entryTitle(entry, index) {
+          const campus = String(entry?.campus || "").trim();
+          if (campus) return campus;
+          return `CPL ${index + 1}`;
+        },
+
+        entryMetrics(entry) {
+          const fields = [
+            { key: "completion", label: "Completion" },
+            { key: "placement", label: "Placement" },
+            { key: "licensure", label: "Licensure" },
+            { key: "placed", label: "Placed" },
+            { key: "starting_wage", label: "Starting Wage" }
+          ];
+
+          return fields
+            .filter((field) => entry?.[field.key] != null && entry?.[field.key] !== "")
+            .map((field) => ({
+              label: field.label,
+              value: this.formatMetricValue(field.key, entry[field.key])
+            }));
+        },
+
+        formatMetricValue(key, value) {
+          const num = Number(value);
+
+          if (!Number.isFinite(num)) {
+            return String(value);
+          }
+
+          if (key === "completion" || key === "placement" || key === "licensure") {
+            return `${Math.round(num * 100)}%`;
+          }
+
+          if (key === "starting_wage") {
+            return `$${num.toFixed(0)}`;
+          }
+
+          return `${num}`;
+        }
+      },
+      template: `
+        <div style="margin-top:18px;">
+          <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
+            <div class="btech-muted">Loading CPL data...</div>
+          </div>
+
+          <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
+            <div style="font-weight:600; margin-bottom:4px;">CPL Data Error</div>
+            <div class="btech-muted">{{ error }}</div>
+          </div>
+
+          <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
+            <div style="font-weight:600; margin-bottom:4px;">Programs CPL</div>
+            <div class="btech-muted">No CPL rows match the current filters.</div>
+          </div>
+
+          <div v-else style="display:grid; gap:16px;">
+            <div
+              v-for="program in filteredPrograms"
+              :key="program.programCode + '-' + program.academicYear"
+              class="btech-card btech-theme"
+              style="padding:18px;"
+            >
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+                <div>
+                  <div class="btech-card-title" style="margin-bottom:4px;">{{ program.programName }}</div>
+                  <div class="btech-muted">{{ program.programCode }} | {{ program.academicYear || 'n/a' }}</div>
+                </div>
+                <div class="btech-pill" style="font-size:11px;">{{ program.cplEntries.length }} CPL row<span v-if="program.cplEntries.length !== 1">s</span></div>
+              </div>
+
+              <div v-if="program.cplEntries.length" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+                <div
+                  v-for="(entry, index) in program.cplEntries"
+                  :key="program.programCode + '-cpl-' + index"
+                  style="border:1px solid #e2e8f0; border-radius:12px; padding:14px; background:#fff;"
+                >
+                  <div style="font-weight:600; margin-bottom:10px;">{{ entryTitle(entry, index) }}</div>
+                  <div style="display:grid; gap:8px;">
+                    <div
+                      v-for="metric in entryMetrics(entry)"
+                      :key="metric.label"
+                      style="display:flex; justify-content:space-between; gap:12px; font-size:12px;"
+                    >
+                      <span class="btech-muted">{{ metric.label }}</span>
+                      <span style="font-weight:600;">{{ metric.value }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="btech-muted">This program returned no CPL entries.</div>
+            </div>
           </div>
         </div>
       `
