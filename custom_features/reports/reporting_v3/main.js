@@ -5,6 +5,7 @@
   const TEMPLATE_URL = `${SOURCE_URL}${BASE_PATH}/template.vue?v=${VERSION}`;
   const UTILS_URL = `${SOURCE_URL}${BASE_PATH}/utils.js?v=${VERSION}`;
   const REPORTS_URL = `${SOURCE_URL}${BASE_PATH}/reports.json?v=${VERSION}`;
+  const TABLE_COMPONENT_URL = `${SOURCE_URL}${BASE_PATH}/components/reports-v3-table.js?v=${VERSION}`;
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
   const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
@@ -296,6 +297,18 @@
           return list
             .map((program) => this.normalizeProgramRow(program))
             .filter(Boolean);
+        },
+
+        tableColumns() {
+          return [
+            { key: "programName", label: "Program", width: "18rem" },
+            { key: "programCode", label: "Code", width: "7rem" },
+            { key: "academicYear", label: "Year", width: "6rem", format: "integer", align: "right" },
+            { key: "campusCode", label: "Campus", width: "6rem" },
+            { key: "completion", label: "Completion", width: "8rem", format: "percent", decimals: 0, align: "right" },
+            { key: "placement", label: "Placement", width: "8rem", format: "percent", decimals: 0, align: "right" },
+            { key: "licensure", label: "Licensure", width: "8rem", format: "percent", decimals: 0, align: "right" }
+          ];
         }
       },
       methods: {
@@ -313,43 +326,8 @@
           };
         },
 
-        entryTitle(program) {
-          const campus = String(program?.campusCode || "").trim();
-          if (campus) return `Campus ${campus}`;
-          return "Campus";
-        },
-
-        entryMetrics(program) {
-          const fields = [
-            { key: "completion", label: "Completion" },
-            { key: "placement", label: "Placement" },
-            { key: "licensure", label: "Licensure" }
-          ];
-
-          return fields
-            .filter((field) => program?.[field.key] != null && program?.[field.key] !== "")
-            .map((field) => ({
-              label: field.label,
-              value: this.formatMetricValue(field.key, program[field.key])
-            }));
-        },
-
-        formatMetricValue(key, value) {
-          const num = Number(value);
-
-          if (!Number.isFinite(num)) {
-            return String(value);
-          }
-
-          if (key === "completion" || key === "placement" || key === "licensure") {
-            return `${Math.round(num * 100)}%`;
-          }
-
-          if (key === "starting_wage") {
-            return `$${num.toFixed(0)}`;
-          }
-
-          return `${num}`;
+        rowKey(row) {
+          return `${row.programCode}-${row.academicYear}-${row.campusCode || "na"}`;
         }
       },
       template: `
@@ -368,38 +346,15 @@
             <div class="btech-muted">No CPL rows match the current filters.</div>
           </div>
 
-          <div v-else style="display:grid; gap:16px;">
-            <div
-              v-for="program in filteredPrograms"
-              :key="program.programCode + '-' + program.academicYear + '-' + program.campusCode"
-              class="btech-card btech-theme"
-              style="padding:18px;"
-            >
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
-                <div>
-                  <div class="btech-card-title" style="margin-bottom:4px;">{{ program.programName }}</div>
-                  <div class="btech-muted">{{ program.programCode }} | {{ program.academicYear || 'n/a' }} | {{ entryTitle(program) }}</div>
-                </div>
-                <div class="btech-pill" style="font-size:11px;">CPL</div>
-              </div>
-
-              <div v-if="entryMetrics(program).length" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-                <div
-                  v-for="metric in entryMetrics(program)"
-                  :key="program.programCode + '-' + program.campusCode + '-' + metric.label"
-                  style="border:1px solid #e2e8f0; border-radius:12px; padding:14px; background:#fff;"
-                >
-                  <div style="font-weight:600; margin-bottom:10px;">{{ metric.label }}</div>
-                  <div style="display:flex; justify-content:space-between; gap:12px; font-size:12px;">
-                    <span class="btech-muted">{{ entryTitle(program) }}</span>
-                    <span style="font-weight:600;">{{ metric.value }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="btech-muted">This program returned no CPL metrics.</div>
-            </div>
-          </div>
+          <reports-v3-table
+            v-else
+            :rows="filteredPrograms"
+            :columns="tableColumns"
+            :row-key="rowKey"
+            default-sort-key="programName"
+            :default-sort-dir="1"
+            empty-message="No CPL rows match the current filters."
+          />
         </div>
       `
     });
@@ -700,6 +655,7 @@
     if (!window.Vue) {
       await utils.loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
+    await utils.loadScriptOnce(TABLE_COMPONENT_URL);
 
     await postLoad();
   }
