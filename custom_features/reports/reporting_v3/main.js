@@ -170,18 +170,42 @@
               this.ensureCplPrograms();
             }
           }
+        },
+        selectedFilters: {
+          deep: true,
+          handler() {
+            if (this.showCplView) {
+              this.ensureCplPrograms(true);
+            }
+          }
         }
       },
       methods: {
-        async ensureCplPrograms() {
+        buildCplFilters() {
+          const filters = {};
+          const selectedYear = Number(this.selectedFilters?.academic_year || 0);
+          const selectedProgram = String(this.selectedFilters?.programs || "").trim();
+
+          if (selectedYear) {
+            filters.academic_year = { op: "=", value: selectedYear };
+          }
+
+          if (selectedProgram) {
+            filters.program_code = { op: "=", value: selectedProgram };
+          }
+
+          return filters;
+        },
+
+        async ensureCplPrograms(forceReload = false) {
           if (this.cplLoading) return;
-          if (Array.isArray(this.cplPrograms) && this.cplPrograms.length) return;
+          if (!forceReload && Array.isArray(this.cplPrograms) && this.cplPrograms.length) return;
 
           this.cplLoading = true;
           this.cplError = "";
 
           try {
-            const data = await bridgetools.req3("programs", {}, { include: ["cpl"] });
+            const data = await bridgetools.req3("programs", this.buildCplFilters(), { include: ["cpl"] });
             this.cplPrograms = Array.isArray(data?.data) ? data.data : [];
           } catch (error) {
             console.error("Failed to load program CPL data", error);
@@ -267,61 +291,46 @@
       },
       computed: {
         filteredPrograms() {
-          const selectedProgram = String(this.selectedFilters?.programs || "").trim();
-          const selectedYear = Number(this.selectedFilters?.academic_year || 0);
           const list = Array.isArray(this.programs) ? this.programs : [];
 
           return list
-            .filter((program) => {
-              if (selectedProgram && String(program?.program_code || "").trim() !== selectedProgram) {
-                return false;
-              }
-
-              if (selectedYear && Number(program?.academic_year || 0) !== selectedYear) {
-                return false;
-              }
-
-              return true;
-            })
-            .map((program) => ({
-              programCode: String(program?.program_code || "").trim(),
-              programName: String(program?.program_name || program?.program_code || "Program").trim(),
-              academicYear: Number(program?.academic_year || 0),
-              cplEntries: this.normalizeCplEntries(program?.cpl)
-            }));
+            .map((program) => this.normalizeProgramRow(program))
+            .filter(Boolean);
         }
       },
       methods: {
-        normalizeCplEntries(cpl) {
-          const list = Array.isArray(cpl)
-            ? cpl
-            : cpl && typeof cpl === "object"
-            ? [cpl]
-            : [];
+        normalizeProgramRow(program) {
+          if (!program || typeof program !== "object") return null;
 
-          return list.filter(Boolean);
+          return {
+            programCode: String(program?.program_code || "").trim(),
+            programName: String(program?.program_name || program?.program_code || "Program").trim(),
+            academicYear: Number(program?.academic_year || 0),
+            campusCode: String(program?.campus_code || "").trim(),
+            completion: program?.cpl__completion,
+            placement: program?.cpl__placement,
+            licensure: program?.cpl__licensure
+          };
         },
 
-        entryTitle(entry, index) {
-          const campus = String(entry?.campus || "").trim();
-          if (campus) return campus;
-          return `CPL ${index + 1}`;
+        entryTitle(program) {
+          const campus = String(program?.campusCode || "").trim();
+          if (campus) return `Campus ${campus}`;
+          return "Campus";
         },
 
-        entryMetrics(entry) {
+        entryMetrics(program) {
           const fields = [
             { key: "completion", label: "Completion" },
             { key: "placement", label: "Placement" },
-            { key: "licensure", label: "Licensure" },
-            { key: "placed", label: "Placed" },
-            { key: "starting_wage", label: "Starting Wage" }
+            { key: "licensure", label: "Licensure" }
           ];
 
           return fields
-            .filter((field) => entry?.[field.key] != null && entry?.[field.key] !== "")
+            .filter((field) => program?.[field.key] != null && program?.[field.key] !== "")
             .map((field) => ({
               label: field.label,
-              value: this.formatMetricValue(field.key, entry[field.key])
+              value: this.formatMetricValue(field.key, program[field.key])
             }));
         },
 
@@ -362,39 +371,33 @@
           <div v-else style="display:grid; gap:16px;">
             <div
               v-for="program in filteredPrograms"
-              :key="program.programCode + '-' + program.academicYear"
+              :key="program.programCode + '-' + program.academicYear + '-' + program.campusCode"
               class="btech-card btech-theme"
               style="padding:18px;"
             >
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
                 <div>
                   <div class="btech-card-title" style="margin-bottom:4px;">{{ program.programName }}</div>
-                  <div class="btech-muted">{{ program.programCode }} | {{ program.academicYear || 'n/a' }}</div>
+                  <div class="btech-muted">{{ program.programCode }} | {{ program.academicYear || 'n/a' }} | {{ entryTitle(program) }}</div>
                 </div>
-                <div class="btech-pill" style="font-size:11px;">{{ program.cplEntries.length }} CPL row<span v-if="program.cplEntries.length !== 1">s</span></div>
+                <div class="btech-pill" style="font-size:11px;">CPL</div>
               </div>
 
-              <div v-if="program.cplEntries.length" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+              <div v-if="entryMetrics(program).length" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
                 <div
-                  v-for="(entry, index) in program.cplEntries"
-                  :key="program.programCode + '-cpl-' + index"
+                  v-for="metric in entryMetrics(program)"
+                  :key="program.programCode + '-' + program.campusCode + '-' + metric.label"
                   style="border:1px solid #e2e8f0; border-radius:12px; padding:14px; background:#fff;"
                 >
-                  <div style="font-weight:600; margin-bottom:10px;">{{ entryTitle(entry, index) }}</div>
-                  <div style="display:grid; gap:8px;">
-                    <div
-                      v-for="metric in entryMetrics(entry)"
-                      :key="metric.label"
-                      style="display:flex; justify-content:space-between; gap:12px; font-size:12px;"
-                    >
-                      <span class="btech-muted">{{ metric.label }}</span>
-                      <span style="font-weight:600;">{{ metric.value }}</span>
-                    </div>
+                  <div style="font-weight:600; margin-bottom:10px;">{{ metric.label }}</div>
+                  <div style="display:flex; justify-content:space-between; gap:12px; font-size:12px;">
+                    <span class="btech-muted">{{ entryTitle(program) }}</span>
+                    <span style="font-weight:600;">{{ metric.value }}</span>
                   </div>
                 </div>
               </div>
 
-              <div v-else class="btech-muted">This program returned no CPL entries.</div>
+              <div v-else class="btech-muted">This program returned no CPL metrics.</div>
             </div>
           </div>
         </div>
