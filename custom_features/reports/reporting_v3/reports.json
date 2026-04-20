@@ -34,7 +34,7 @@
           "label": "Course Readiness",
           "filter_by_year": true,
           "component": "reports-v3-programs-course-readiness",
-          "include": "course_readiness"
+          "include": "canvas_course_readiness"
         },
         {
           "value": "completions",
