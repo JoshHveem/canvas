@@ -159,6 +159,7 @@
           const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
             include: ["syllabi"]
           });
+          console.log(data);
           this.syllabiPrograms = Array.isArray(data?.data) ? data.data : [];
         } catch (error) {
           console.error("Failed to load program syllabi data", error);
