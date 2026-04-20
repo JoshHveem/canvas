@@ -34,9 +34,9 @@
       tableColumns() {
         return [
           { key: "programName", label: "Program", width: "18rem" },
-          { key: "programCode", label: "Code", width: "7rem" },
-          { key: "academicYear", label: "Year", width: "6rem", format: "integer", align: "right" },
-          { key: "campusCode", label: "Campus", width: "6rem" },
+          { key: "programCode", label: "Code", width: "4rem" },
+          { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
+          { key: "campusCode", label: "Campus", width: "4rem" },
           {
             key: "completion",
             label: "Completion",
