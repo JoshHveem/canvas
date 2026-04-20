@@ -39,17 +39,20 @@
         {
           "value": "completions",
           "label": "Completions",
-          "filter_by_year": true
+          "filter_by_year": true,
+          "include": "completions"
         },
         {
           "value": "graduates",
           "label": "Graduates",
-          "filter_by_year": true
+          "filter_by_year": true,
+          "include": "graduates"
         },
         {
           "value": "placements",
           "label": "Placements",
-          "filter_by_year": true
+          "filter_by_year": true,
+          "include": "placements"
         },
         {
           "value": "syllabi",
