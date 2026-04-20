@@ -38,15 +38,10 @@
     },
     data() {
       return {
-        cplPrograms: [],
-        cplLoading: false,
-        cplError: "",
-        syllabiPrograms: [],
-        syllabiLoading: false,
-        syllabiError: "",
-        employmentSkillsPrograms: [],
-        employmentSkillsLoading: false,
-        employmentSkillsError: ""
+        sectionRows: {},
+        sectionLoading: {},
+        sectionErrors: {},
+        sectionLoaded: {}
       };
     },
     computed: {
@@ -56,25 +51,34 @@
       activeSection() {
         return this.sections.find((section) => section.value === this.subMenu) || this.sections[0] || null;
       },
-      showCplView() {
-        return this.subMenu === "completion";
+      activeSectionKey() {
+        return String(this.activeSection?.value || "");
       },
-      showSyllabiView() {
-        return this.subMenu === "syllabi";
+      activeSectionComponent() {
+        return String(this.activeSection?.component || "").trim();
       },
-      showEmploymentSkillsView() {
-        return this.subMenu === "employment-skills";
+      activeSectionRows() {
+        return Array.isArray(this.sectionRows[this.activeSectionKey]) ? this.sectionRows[this.activeSectionKey] : [];
+      },
+      activeSectionLoading() {
+        return !!this.sectionLoading[this.activeSectionKey];
+      },
+      activeSectionError() {
+        return String(this.sectionErrors[this.activeSectionKey] || "");
       },
       summary() {
         return JSON.stringify(
           {
             reportType: this.reportMeta.value || "",
             subMenu: this.subMenu || "",
-            sections: this.sections.map((section) => section.value),
+            sections: this.sections.map((section) => ({
+              value: section.value,
+              component: section.component || "",
+              include: section.include || "",
+              rows: Array.isArray(this.sectionRows[section.value]) ? this.sectionRows[section.value].length : 0,
+              loaded: !!this.sectionLoaded[section.value]
+            })),
             selectedFilters: this.selectedFilters || {},
-            cplProgramsCount: Array.isArray(this.cplPrograms) ? this.cplPrograms.length : 0,
-            syllabiProgramsCount: Array.isArray(this.syllabiPrograms) ? this.syllabiPrograms.length : 0,
-            employmentSkillsProgramsCount: Array.isArray(this.employmentSkillsPrograms) ? this.employmentSkillsPrograms.length : 0,
             savedSettings: this.settings || {}
           },
           null,
@@ -86,29 +90,13 @@
       subMenu: {
         immediate: true,
         handler() {
-          if (this.showCplView) {
-            this.ensureCplPrograms();
-          }
-          if (this.showSyllabiView) {
-            this.ensureSyllabiPrograms();
-          }
-          if (this.showEmploymentSkillsView) {
-            this.ensureEmploymentSkillsPrograms();
-          }
+          this.ensureActiveSectionData();
         }
       },
       selectedFilters: {
         deep: true,
         handler() {
-          if (this.showCplView) {
-            this.ensureCplPrograms(true);
-          }
-          if (this.showSyllabiView) {
-            this.ensureSyllabiPrograms(true);
-          }
-          if (this.showEmploymentSkillsView) {
-            this.ensureEmploymentSkillsPrograms(true);
-          }
+          this.ensureActiveSectionData(true);
         }
       }
     },
@@ -129,98 +117,57 @@
         return filters;
       },
 
-      async ensureCplPrograms(forceReload = false) {
-        if (this.cplLoading) return;
-        if (!forceReload && Array.isArray(this.cplPrograms) && this.cplPrograms.length) return;
-
-        this.cplLoading = true;
-        this.cplError = "";
-
-        try {
-          const data = await bridgetools.req3("programs", this.buildProgramFilters(), { include: ["cpl"] });
-          this.cplPrograms = Array.isArray(data?.data) ? data.data : [];
-        } catch (error) {
-          console.error("Failed to load program CPL data", error);
-          this.cplPrograms = [];
-          this.cplError = String(error?.message || error || "Failed to load CPL data.");
-        } finally {
-          this.cplLoading = false;
-        }
+      getSectionKey(section) {
+        return String(section?.value || "");
       },
 
-      async ensureSyllabiPrograms(forceReload = false) {
-        if (this.syllabiLoading) return;
-        if (!forceReload && Array.isArray(this.syllabiPrograms) && this.syllabiPrograms.length) return;
+      async ensureActiveSectionData(forceReload = false) {
+        await this.ensureSectionData(this.activeSection, forceReload);
+      },
 
-        this.syllabiLoading = true;
-        this.syllabiError = "";
+      async ensureSectionData(section, forceReload = false) {
+        const key = this.getSectionKey(section);
+        const include = String(section?.include || "").trim();
+        if (!key || !include) return;
+
+        if (this.sectionLoading[key]) return;
+        if (!forceReload && this.sectionLoaded[key]) return;
+
+        this.$set(this.sectionLoading, key, true);
+        this.$set(this.sectionErrors, key, "");
 
         try {
           const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
-            include: ["syllabi"]
+            include: [include]
           });
-          console.log(data);
-          this.syllabiPrograms = Array.isArray(data?.data) ? data.data : [];
+
+          this.$set(this.sectionRows, key, Array.isArray(data?.data) ? data.data : []);
+          this.$set(this.sectionLoaded, key, true);
         } catch (error) {
-          console.error("Failed to load program syllabi data", error);
-          this.syllabiPrograms = [];
-          this.syllabiError = String(error?.message || error || "Failed to load syllabi data.");
+          console.error(`Failed to load program ${key} data`, error);
+          this.$set(this.sectionRows, key, []);
+          this.$set(this.sectionErrors, key, String(error?.message || error || `Failed to load ${key} data.`));
+          this.$set(this.sectionLoaded, key, false);
         } finally {
-          this.syllabiLoading = false;
+          this.$set(this.sectionLoading, key, false);
         }
-      },
-
-      async ensureEmploymentSkillsPrograms(forceReload = false) {
-        if (this.employmentSkillsLoading) return;
-        if (!forceReload && Array.isArray(this.employmentSkillsPrograms) && this.employmentSkillsPrograms.length) return;
-
-        this.employmentSkillsLoading = true;
-        this.employmentSkillsError = "";
-
-        try {
-          const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
-            include: ["employment_skills_summary"]
-          });
-          this.employmentSkillsPrograms = Array.isArray(data?.data) ? data.data : [];
-        } catch (error) {
-          console.error("Failed to load program employment skills data", error);
-          this.employmentSkillsPrograms = [];
-          this.employmentSkillsError = String(error?.message || error || "Failed to load employment skills data.");
-        } finally {
-          this.employmentSkillsLoading = false;
-        }
-      },
+      }
     },
     template: `
       <div class="btech-card btech-theme" style="padding:20px;">
-        <reports-v3-programs-cpl
-          v-if="showCplView"
-          :programs="cplPrograms"
+        <component
+          v-if="activeSectionComponent"
+          :is="activeSectionComponent"
+          :programs="activeSectionRows"
           :selected-filters="selectedFilters"
-          :loading="cplLoading"
-          :error="cplError"
-        />
-
-        <reports-v3-programs-syllabi
-          v-else-if="showSyllabiView"
-          :programs="syllabiPrograms"
-          :selected-filters="selectedFilters"
-          :loading="syllabiLoading"
-          :error="syllabiError"
-        />
-
-        <reports-v3-programs-employment-skills
-          v-else-if="showEmploymentSkillsView"
-          :programs="employmentSkillsPrograms"
-          :selected-filters="selectedFilters"
-          :loading="employmentSkillsLoading"
-          :error="employmentSkillsError"
+          :loading="activeSectionLoading"
+          :error="activeSectionError"
         />
 
         <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
           <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
           <div class="btech-muted" style="margin-bottom:12px;">
-            Add program-specific filters, loaders, and visualizations to this component as each section gets implemented.
+            Add a section component and include name in reports.json to render this submenu.
           </div>
           <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
         </div>

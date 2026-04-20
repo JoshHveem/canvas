@@ -23,8 +23,22 @@
       "filters": ["programs"],
       "subMenus": [
         {
-          "value": "completion",
-          "label": "Completion",
+          "value": "cpl",
+          "label": "CPL",
+          "filter_by_year": true,
+          "component": "reports-v3-programs-cpl",
+          "include": "cpl"
+        },
+        {
+          "value": "course-readiness",
+          "label": "Course Readiness",
+          "filter_by_year": true,
+          "component": "reports-v3-programs-course-readiness",
+          "include": "course_readiness"
+        },
+        {
+          "value": "completions",
+          "label": "Completions",
           "filter_by_year": true
         },
         {
@@ -40,12 +54,16 @@
         {
           "value": "syllabi",
           "label": "Syllabi",
-          "filter_by_year": true
+          "filter_by_year": true,
+          "component": "reports-v3-programs-syllabi",
+          "include": "syllabi"
         },
         {
           "value": "employment-skills",
           "label": "Employment Skills",
-          "filter_by_year": true
+          "filter_by_year": true,
+          "component": "reports-v3-programs-employment-skills",
+          "include": "employment_skills_summary"
         }
       ]
     }

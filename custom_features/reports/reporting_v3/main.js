@@ -6,13 +6,6 @@
   const UTILS_URL = `${SOURCE_URL}${BASE_PATH}/utils.js?v=${VERSION}`;
   const REPORTS_URL = `${SOURCE_URL}${BASE_PATH}/reports.json?v=${VERSION}`;
   const TABLE_COMPONENT_URL = `${SOURCE_URL}${BASE_PATH}/components/reports-v3-table.js?v=${VERSION}`;
-  const REPORT_COMPONENT_URLS = [
-    `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-shell.js?v=${VERSION}`,
-    `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-cpl.js?v=${VERSION}`,
-    `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-employment-skills.js?v=${VERSION}`,
-    `${SOURCE_URL}${BASE_PATH}/reports/reports-v3-programs-syllabi.js?v=${VERSION}`,
-    `${SOURCE_URL}${BASE_PATH}/reports/reporting-v3-programs.js?v=${VERSION}`
-  ];
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
   const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
@@ -34,7 +27,38 @@
     return Array.isArray(payload?.reportTypes) ? payload.reportTypes : [];
   }
 
-  async function postLoad() {
+  function getComponentScriptUrl(componentName) {
+    const name = String(componentName || "").trim();
+    if (!name) return "";
+    return `${SOURCE_URL}${BASE_PATH}/reports/${name}.js?v=${VERSION}`;
+  }
+
+  function getReportComponentUrls(reportTypes) {
+    const urls = [];
+    const seen = new Set();
+
+    (Array.isArray(reportTypes) ? reportTypes : []).forEach((report) => {
+      const names = [report?.component];
+
+      if (Array.isArray(report?.subMenus)) {
+        report.subMenus.forEach((subMenu) => {
+          names.push(subMenu?.component);
+        });
+      }
+
+      names.forEach((name) => {
+        const url = getComponentScriptUrl(name);
+        if (!url || seen.has(url)) return;
+
+        seen.add(url);
+        urls.push(url);
+      });
+    });
+
+    return urls;
+  }
+
+  async function postLoad(reportTypes) {
     const vueString = (await utils.fetchText(TEMPLATE_URL))
       .replace("<template>", "")
       .replace("</template>", "");
@@ -54,8 +78,6 @@
       });
       observer.observe(container[0], { childList: true, subtree: false });
     }
-
-    const reportTypes = await loadReportTypes();
 
     new Vue({
       el: `#${ROOT_ID}`,
@@ -323,12 +345,16 @@
     if (!window.Vue) {
       await utils.loadScriptOnce("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     }
+
+    const reportTypes = await loadReportTypes();
+    const reportComponentUrls = getReportComponentUrls(reportTypes);
+
     await utils.loadScriptOnce(TABLE_COMPONENT_URL);
-    for (const url of REPORT_COMPONENT_URLS) {
+    for (const url of reportComponentUrls) {
       await utils.loadScriptOnce(url);
     }
 
-    await postLoad();
+    await postLoad(reportTypes);
   }
 
   await init();
