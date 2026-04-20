@@ -40,7 +40,7 @@
           {
             key: "completion",
             label: "Completion",
-            width: "8rem",
+            width: "6rem",
             format: "percent",
             decimals: 0,
             align: "right",
@@ -53,7 +53,7 @@
           {
             key: "placement",
             label: "Placement",
-            width: "8rem",
+            width: "6rem",
             format: "percent",
             decimals: 0,
             align: "right",
@@ -66,7 +66,7 @@
           {
             key: "licensure",
             label: "Licensure",
-            width: "8rem",
+            width: "6rem",
             format: "percent",
             decimals: 0,
             align: "right",
