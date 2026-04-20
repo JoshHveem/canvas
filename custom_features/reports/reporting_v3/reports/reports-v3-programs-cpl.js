@@ -33,7 +33,7 @@
 
       tableColumns() {
         return [
-          { key: "programName", label: "Program", width: "18rem" },
+          { key: "programName", label: "Program", width: "12rem" },
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
