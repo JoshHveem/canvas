@@ -46,7 +46,6 @@
     methods: {
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
-        console.log(program);
 
         return {
           programCode: String(program?.program_code || "").trim(),
