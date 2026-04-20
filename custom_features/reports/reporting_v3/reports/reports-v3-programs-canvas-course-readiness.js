@@ -34,15 +34,15 @@
 
       tableColumns() {
         return [
-          { key: "programName", label: "Program", width: "18rem" },
+          { key: "programName", label: "Program", width: "12rem" },
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
-          { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
+          { key: "numCourses", label: "Courses", width: "4rem", format: "integer", align: "right" },
           {
             key: "percSyllabiApproved",
             label: "% Syllabi",
-            width: "7rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
@@ -55,7 +55,7 @@
           {
             key: "percCourseEvaluationPublished",
             label: "% Course Evals",
-            width: "7rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
@@ -68,7 +68,7 @@
           {
             key: "percInstructorEvaluationPublished",
             label: "% Instr Evals",
-            width: "7rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
@@ -81,7 +81,7 @@
           {
             key: "percEmploymentSkillsEvaluationPublished",
             label: "% Empl Skill Evals",
-            width: "7rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
@@ -94,7 +94,7 @@
           {
             key: "percContentPublished",
             label: "% Content",
-            width: "7rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
