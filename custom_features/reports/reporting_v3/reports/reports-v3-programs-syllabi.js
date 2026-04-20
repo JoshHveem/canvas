@@ -52,12 +52,7 @@
           programName: String(program?.program_name || program?.program_code || "Program").trim(),
           academicYear: Number(program?.academic_year || 0),
           campusCode: String(program?.campus_code || "").trim(),
-          numActive: program?.syllabi__num_is_active,
-          numPublished: program?.syllabi__num_is_published,
-          numSubmitted: program?.syllabi__num_is_submitted,
-          numApproved: program?.syllabi__num_is_approved,
-          percActive: program?.syllabi__perc_is_active,
-          percPublished: program?.syllabi__perc_is_published,
+          numCourses: program?.syllabi__num_courses,
           percSubmitted: program?.syllabi__perc_is_submitted,
           percApproved: program?.syllabi__perc_is_approved
         };
