@@ -33,7 +33,7 @@
           "value": "canvas-course-readiness",
           "label": "Course Readiness",
           "filter_by_year": true,
-          "component": "reports-v3-programs-cavnas-course-readiness",
+          "component": "reports-v3-programs-canvas-course-readiness",
           "include": "canvas_course_readiness"
         },
         {

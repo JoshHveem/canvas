@@ -1,4 +1,3 @@
-
 (function () {
   Vue.component("reports-v3-programs-canvas-course-readiness", {
     props: {
@@ -27,7 +26,6 @@
       filteredPrograms() {
         const list = Array.isArray(this.programs) ? this.programs : [];
 
-        console.log(list);
         return list
           .map((program) => this.normalizeProgramRow(program))
           .filter(Boolean);
@@ -40,20 +38,71 @@
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
-          { key: "percSubmitted", label: "% Submitted", width: "7rem", format: "percent", decimals: 1, align: "right",
+          {
+            key: "percSyllabiApproved",
+            label: "% Syllabi",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
             pillBands: {
               good: 1.0,
               warning: 0.9,
               bad: 0.75
             }
           },
-          { key: "percApproved", label: "% Approved", width: "7rem", format: "percent", decimals: 1, align: "right",
+          {
+            key: "percCourseEvaluationPublished",
+            label: "% Course Evals",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
             pillBands: {
               good: 1.0,
               warning: 0.9,
               bad: 0.75
             }
           },
+          {
+            key: "percInstructorEvaluationPublished",
+            label: "% Instr Evals",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          },
+          {
+            key: "percEmploymentSkillsEvaluationPublished",
+            label: "% Empl Skill Evals",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          },
+          {
+            key: "percContentPublished",
+            label: "% Content",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          }
         ];
       }
     },
@@ -66,9 +115,12 @@
           programName: String(program?.program_name || program?.program_code || "Program").trim(),
           academicYear: Number(program?.academic_year || 0),
           campusCode: String(program?.campus_code || "").trim(),
-          numCourses: program?.syllabi__num_courses,
-          percSubmitted: program?.syllabi__perc_is_submitted,
-          percApproved: program?.syllabi__perc_is_approved
+          numCourses: program?.canvas_course_readiness__num_courses,
+          percSyllabiApproved: program?.canvas_course_readiness__perc_syllabi_approved,
+          percCourseEvaluationPublished: program?.canvas_course_readiness__perc_course_evaluation_published,
+          percInstructorEvaluationPublished: program?.canvas_course_readiness__perc_instructor_evaluation_published,
+          percEmploymentSkillsEvaluationPublished: program?.canvas_course_readiness__perc_employment_skills_evaluation_published,
+          percContentPublished: program?.canvas_course_readiness__perc_content_published
         };
       },
 
@@ -79,17 +131,17 @@
     template: `
       <div style="margin-top:18px;">
         <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-          <div class="btech-muted">Loading syllabi data...</div>
+          <div class="btech-muted">Loading course readiness data...</div>
         </div>
 
         <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-          <div style="font-weight:600; margin-bottom:4px;">Syllabi Error</div>
+          <div style="font-weight:600; margin-bottom:4px;">Course Readiness Error</div>
           <div class="btech-muted">{{ error }}</div>
         </div>
 
         <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-          <div style="font-weight:600; margin-bottom:4px;">Syllabi</div>
-          <div class="btech-muted">No syllabi rows match the current filters.</div>
+          <div style="font-weight:600; margin-bottom:4px;">Course Readiness</div>
+          <div class="btech-muted">No course readiness rows match the current filters.</div>
         </div>
 
         <reports-v3-table
@@ -99,7 +151,7 @@
           :row-key="rowKey"
           default-sort-key="programName"
           :default-sort-dir="1"
-          empty-message="No syllabi rows match the current filters."
+          empty-message="No course readiness rows match the current filters."
         />
       </div>
     `
