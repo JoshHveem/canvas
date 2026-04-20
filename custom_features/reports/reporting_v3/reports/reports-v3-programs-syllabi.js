@@ -37,12 +37,7 @@
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
-          { key: "numActive", label: "Active", width: "5rem", format: "integer", align: "right" },
-          { key: "numPublished", label: "Published", width: "6rem", format: "integer", align: "right" },
-          { key: "numSubmitted", label: "Submitted", width: "6rem", format: "integer", align: "right" },
-          { key: "numApproved", label: "Approved", width: "6rem", format: "integer", align: "right" },
-          { key: "percActive", label: "% Active", width: "6rem", format: "percent", decimals: 1, align: "right" },
-          { key: "percPublished", label: "% Published", width: "7rem", format: "percent", decimals: 1, align: "right" },
+          { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
           { key: "percSubmitted", label: "% Submitted", width: "7rem", format: "percent", decimals: 1, align: "right" },
           { key: "percApproved", label: "% Approved", width: "7rem", format: "percent", decimals: 1, align: "right" }
         ];
