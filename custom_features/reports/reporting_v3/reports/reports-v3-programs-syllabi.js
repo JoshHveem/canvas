@@ -38,8 +38,20 @@
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
-          { key: "percSubmitted", label: "% Submitted", width: "7rem", format: "percent", decimals: 1, align: "right" },
-          { key: "percApproved", label: "% Approved", width: "7rem", format: "percent", decimals: 1, align: "right" }
+          { key: "percSubmitted", label: "% Submitted", width: "7rem", format: "percent", decimals: 1, align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          },
+          { key: "percApproved", label: "% Approved", width: "7rem", format: "percent", decimals: 1, align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          },
         ];
       }
     },
