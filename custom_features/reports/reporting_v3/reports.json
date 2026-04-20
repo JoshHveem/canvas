@@ -30,10 +30,10 @@
           "include": "cpl"
         },
         {
-          "value": "course-readiness",
+          "value": "canvas-course-readiness",
           "label": "Course Readiness",
           "filter_by_year": true,
-          "component": "reports-v3-programs-course-readiness",
+          "component": "reports-v3-programs-cavnas-course-readiness",
           "include": "canvas_course_readiness"
         },
         {

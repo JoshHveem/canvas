@@ -33,29 +33,40 @@
     return `${SOURCE_URL}${BASE_PATH}/reports/${name}.js?v=${VERSION}`;
   }
 
-  function getReportComponentUrls(reportTypes) {
-    const urls = [];
+  function getReportComponentScripts(reportTypes) {
+    const scripts = [];
     const seen = new Set();
 
     (Array.isArray(reportTypes) ? reportTypes : []).forEach((report) => {
-      const names = [report?.component];
+      const reportComponent = String(report?.component || "").trim();
+      const reportUrl = getComponentScriptUrl(reportComponent);
 
-      if (Array.isArray(report?.subMenus)) {
-        report.subMenus.forEach((subMenu) => {
-          names.push(subMenu?.component);
+      if (reportUrl && !seen.has(reportUrl)) {
+        seen.add(reportUrl);
+        scripts.push({
+          url: reportUrl,
+          name: reportComponent,
+          required: true
         });
       }
 
-      names.forEach((name) => {
-        const url = getComponentScriptUrl(name);
-        if (!url || seen.has(url)) return;
+      if (Array.isArray(report?.subMenus)) {
+        report.subMenus.forEach((subMenu) => {
+          const componentName = String(subMenu?.component || "").trim();
+          const url = getComponentScriptUrl(componentName);
+          if (!url || seen.has(url)) return;
 
-        seen.add(url);
-        urls.push(url);
-      });
+          seen.add(url);
+          scripts.push({
+            url,
+            name: componentName,
+            required: false
+          });
+        });
+      }
     });
 
-    return urls;
+    return scripts;
   }
 
   async function postLoad(reportTypes) {
@@ -347,15 +358,27 @@
     }
 
     const reportTypes = await loadReportTypes();
-    const reportComponentUrls = getReportComponentUrls(reportTypes);
+    const reportComponentScripts = getReportComponentScripts(reportTypes);
 
     await utils.loadScriptOnce(TABLE_COMPONENT_URL);
-    for (const url of reportComponentUrls) {
-      await utils.loadScriptOnce(url);
+    for (const script of reportComponentScripts) {
+      try {
+        await utils.loadScriptOnce(script.url);
+      } catch (error) {
+        if (script.required) {
+          throw error;
+        }
+
+        console.warn(`Skipping optional report component script "${script.name}"`, error);
+      }
     }
 
     await postLoad(reportTypes);
   }
 
-  await init();
+  try {
+    await init();
+  } catch (error) {
+    console.error("Reporting V3 failed to initialize", error);
+  }
 })();
