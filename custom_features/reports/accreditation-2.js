@@ -177,38 +177,87 @@
           let sections = await canvasGet("/api/v1/courses/" + this.courseId + "/sections?include[]=students")
           this.sections = sections;
 
-          // Load campus information
+          const normalizeCampus = (enrollment) => {
+            if (enrollment?.sis_data__is_distance_approved) return 'Online';
+
+            const campusCode = String(enrollment?.sis_data__campus_code || '').trim().toUpperCase();
+            if (campusCode === 'L') return 'Logan Campus';
+            if (campusCode === 'B') return 'Brigham City Campus';
+            return campusCode;
+          };
+
+          const normalizeEnrollmentType = (enrollment, campus) => {
+            const courseType = String(enrollment?.sis_data__course_type || '').trim().toUpperCase();
+            if (courseType) return courseType;
+            if (campus.toLowerCase().includes('hs')) return 'HS';
+            if (campus !== '') return 'CS';
+            return '';
+          };
+
+          const getEnrollmentRank = (enrollment) => {
+            let rank = 0;
+            if (!enrollment?.is_deleted) rank += 100;
+            if (enrollment?.is_active) rank += 50;
+            if (!enrollment?.is_concluded) rank += 25;
+            if (!enrollment?.exit_date) rank += 10;
+            return rank;
+          };
+
+          const enrollmentsByUser = {};
+          try {
+            let req = await bridgetools.req3('canvas_enrollments', {
+              canvas_course_id: { op: '=', value: this.courseId }
+            }, {
+              include: ['sis_data']
+            });
+            let enrollments = Array.isArray(req?.data) ? req.data : [];
+
+            for (let i = 0; i < enrollments.length; i++) {
+              let enrollment = enrollments[i];
+              let userId = enrollment?.canvas_user_id;
+              if (userId == null) continue;
+
+              let current = enrollmentsByUser[userId];
+              if (!current) {
+                enrollmentsByUser[userId] = enrollment;
+                continue;
+              }
+
+              let currentRank = getEnrollmentRank(current);
+              let nextRank = getEnrollmentRank(enrollment);
+              if (nextRank > currentRank) {
+                enrollmentsByUser[userId] = enrollment;
+                continue;
+              }
+
+              if (nextRank === currentRank) {
+                let currentEntry = Date.parse(current?.entry_date || current?.last_active_at || 0) || 0;
+                let nextEntry = Date.parse(enrollment?.entry_date || enrollment?.last_active_at || 0) || 0;
+                if (nextEntry > currentEntry) {
+                  enrollmentsByUser[userId] = enrollment;
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Failed to load accreditation enrollment data', err);
+          }
+
           for (let s in sections) {
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
               if ((student.id in this.campuses)) continue;
+
               this.campuses[student.id] = '';
-              try {
-                let userData = await bridgetools.req(`https://reports.bridgetools.dev/api/v2/students/${student.id}`);
-                if (!(student.id in this.enrollmentTypes)) {
-                  this.enrollmentTypes[student.id] = userData.enrollment_type;
-                }
-                let degrees = userData.degrees;
-                for (let d = 0; d < degrees.length; d++) {
-                  let degree = degrees[d];
-                  let entry = new Date(degree.entry_date);
-                  let exit = new Date(degree.exit_date);
-                  let campus = degree.campus;
-                  let distance = degree.distance_approved;
-                  if (distance) campus = 'Online';
-                  else if (campus == 'L') campus = 'Logan Campus';
-                  else if (campus == 'B') campus = 'Brigham City Campus';
-                  this.campuses[student.id] = campus;
-                  if (campus.toLowerCase().includes('hs')) {
-                    this.enrollmentTypes[student.id] = 'HS';
-                  } else {
-                    this.enrollmentTypes[student.id] = 'CS';
-                  }
-                  break
-                }
-              } catch (err) {
-                console.error(err);
+              let enrollment = enrollmentsByUser[student.id];
+              if (!enrollment) continue;
+
+              let campus = normalizeCampus(enrollment);
+              this.campuses[student.id] = campus;
+
+              let enrollmentType = normalizeEnrollmentType(enrollment, campus);
+              if (enrollmentType !== '') {
+                this.enrollmentTypes[student.id] = enrollmentType;
               }
             }
           }
