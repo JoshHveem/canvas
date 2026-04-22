@@ -37,6 +37,36 @@
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
+          { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
+          { key: "projectedCompleters", label: "Projected Completers", width: "9rem", format: "integer", align: "right" },
+          { key: "exiters", label: "Exiters", width: "6rem", format: "integer", align: "right" },
+          { key: "projectedExiters", label: "Projected Exiters", width: "6rem", format: "integer", align: "right" },
+          {
+            key: "completionRate",
+            label: "Completion Rate",
+            width: "8rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 0.7,
+              warning: 0.6,
+              bad: 0.5
+            }
+          },
+          {
+            key: "projectedCompletionRate",
+            label: "Projected Rate",
+            width: "8rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 0.7,
+              warning: 0.6,
+              bad: 0.5
+            }
+          },
           {
             key: "completionBreakdown",
             label: "Completion Breakdown",
@@ -61,37 +91,6 @@
               whiteSpace: "normal"
             }
           },
-          { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
-          { key: "exiters", label: "Exiters", width: "6rem", format: "integer", align: "right" },
-          { key: "activeStudents", label: "Active", width: "6rem", format: "integer", align: "right" },
-          { key: "totalStudents", label: "Total", width: "6rem", format: "integer", align: "right" },
-          {
-            key: "completionRate",
-            label: "Completion Rate",
-            width: "8rem",
-            format: "percent",
-            decimals: 1,
-            align: "right",
-            pillBands: {
-              good: 0.7,
-              warning: 0.6,
-              bad: 0.5
-            }
-          },
-          { key: "projectedCompleters", label: "Projected Completers", width: "9rem", format: "integer", align: "right" },
-          {
-            key: "projectedCompletionRate",
-            label: "Projected Rate",
-            width: "8rem",
-            format: "percent",
-            decimals: 1,
-            align: "right",
-            pillBands: {
-              good: 0.7,
-              warning: 0.6,
-              bad: 0.5
-            }
-          }
         ];
       }
     },
