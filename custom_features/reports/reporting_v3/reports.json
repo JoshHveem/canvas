@@ -47,7 +47,8 @@
           "value": "graduates",
           "label": "Graduates",
           "filter_by_year": true,
-          "include": "graduates"
+          "component": "reports-v3-programs-graduates",
+          "include": "graduates_projected"
         },
         {
           "value": "placements",
