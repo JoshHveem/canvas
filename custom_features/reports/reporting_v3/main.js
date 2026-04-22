@@ -100,8 +100,10 @@
           reportTypes,
           settings: utils.getDefaultSettings(reportTypes),
           programs: [],
+          avps: [],
           sharedLoading: {
-            programs: false
+            programs: false,
+            avps: false
           }
         };
       },
@@ -162,11 +164,19 @@
             props.programs = this.programs;
           }
 
+          if (this.currentFilters.includes("avps")) {
+            props.avps = this.avps;
+          }
+
           return props;
         },
 
         currentNeedsPrograms() {
           return this.currentFilters.includes("programs");
+        },
+
+        currentNeedsAvps() {
+          return this.currentFilters.includes("avps");
         },
 
         academicYearOptions() {
@@ -201,10 +211,32 @@
           }
         },
 
+        async loadAvps() {
+          if (this.sharedLoading.avps) return;
+          if (Array.isArray(this.avps) && this.avps.length) return;
+
+          this.sharedLoading.avps = true;
+
+          try {
+            const response = await bridgetools.req3("avps");
+            this.avps = Array.isArray(response?.data) ? response.data : [];
+          } catch (error) {
+            console.error("Failed to load avps", error);
+            this.avps = [];
+          } finally {
+            this.sharedLoading.avps = false;
+          }
+        },
+
         async ensureSharedFilterData() {
           if (this.currentNeedsPrograms) {
             await this.loadPrograms();
             this.pruneFilterSelection("programs");
+          }
+
+          if (this.currentNeedsAvps) {
+            await this.loadAvps();
+            this.pruneFilterSelection("avps");
           }
         },
 
@@ -228,6 +260,17 @@
               options: this.getProgramFilterOptions(),
               value: String(this.settings?.filters?.programs || ""),
               disabled: this.sharedLoading.programs
+            };
+          }
+
+          if (filterKey === "avps") {
+            return {
+              key: "avps",
+              label: "AVP",
+              placeholder: "All AVPs",
+              options: this.getAvpFilterOptions(),
+              value: String(this.settings?.filters?.avps || ""),
+              disabled: this.sharedLoading.avps
             };
           }
 
@@ -264,15 +307,35 @@
             .map(({ value, label }) => ({ value, label }));
         },
 
-        pruneFilterSelection(filterKey) {
-          if (filterKey !== "programs") return;
+        getAvpFilterOptions() {
+          const list = Array.isArray(this.avps) ? this.avps : [];
+          const bySisId = new Map();
 
-          const selected = String(this.settings?.filters?.programs || "");
+          for (const avp of list) {
+            const sisUserId = String(avp?.avp_sis_user_id || "").trim();
+            if (!sisUserId) continue;
+
+            bySisId.set(sisUserId, {
+              value: sisUserId,
+              label: String(avp?.name || sisUserId).trim()
+            });
+          }
+
+          return Array.from(bySisId.values()).sort((a, b) =>
+            a.label.localeCompare(b.label, undefined, { numeric: true })
+          );
+        },
+
+        pruneFilterSelection(filterKey) {
+          if (filterKey !== "programs" && filterKey !== "avps") return;
+
+          const selected = String(this.settings?.filters?.[filterKey] || "");
           if (!selected) return;
 
-          const valid = this.getProgramFilterOptions().some((option) => option.value === selected);
+          const options = filterKey === "programs" ? this.getProgramFilterOptions() : this.getAvpFilterOptions();
+          const valid = options.some((option) => option.value === selected);
           if (!valid) {
-            this.$set(this.settings.filters, "programs", "");
+            this.$set(this.settings.filters, filterKey, "");
           }
         },
 
@@ -301,6 +364,7 @@
           this.$set(this.settings.filters, filterKey, value);
           if (filterKey === "academic_year") {
             this.pruneFilterSelection("programs");
+            this.pruneFilterSelection("avps");
           }
           await this.persistSettings();
         },

@@ -72,6 +72,23 @@
           "include": "employment_skills_summary"
         }
       ]
+    },
+    {
+      "value": "avps",
+      "label": "AVP",
+      "title": "AVP",
+      "component": "reporting-v3-avps",
+      "description": "AVP report group shell.",
+      "filters": ["avps"],
+      "subMenus": [
+        {
+          "value": "canvas-course-readiness",
+          "label": "Course Readiness",
+          "filter_by_year": true,
+          "component": "reports-v3-avps-canvas-course-readiness",
+          "include": "canvas_course_readiness"
+        }
+      ]
     }
   ]
 }
