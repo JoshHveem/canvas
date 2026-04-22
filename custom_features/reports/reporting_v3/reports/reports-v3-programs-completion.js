@@ -47,12 +47,14 @@
             },
             component: "reports-v3-segmented-bar",
             componentProps: function (row) {
+              const palette = window.bridgetools?.colors || {};
+
               return {
                 segments: row?.completionBreakdown || [],
                 height: 16,
                 borderRadius: 999,
-                separatorColor: "rgba(255,255,255,0.85)",
-                emptyColor: "#f3f4f6"
+                separatorColor: palette.white || "white",
+                emptyColor: palette.gray || "transparent"
               };
             },
             cellStyle: {
@@ -101,6 +103,7 @@
       },
 
       buildCompletionBreakdown(program) {
+        const palette = window.bridgetools?.colors || {};
         const completers = this.toWholeNumber(program?.completions_projected__completers);
         const projectedCompleters = this.toWholeNumber(program?.completions_projected__projected_completers);
         const exiters = this.toWholeNumber(program?.completions_projected__exiters);
@@ -117,22 +120,22 @@
           {
             name: `Completers: ${completers}`,
             count: completers,
-            color: "#86efac"
+            color: palette.yellowGreen || palette.green
           },
           {
             name: `Projected Completers: ${projectedCompleterGain}`,
             count: projectedCompleterGain,
-            color: "#16a34a"
+            color: palette.green
           },
           {
             name: `Non Completers: ${nonCompleters}`,
             count: nonCompleters,
-            color: "#d1d5db"
+            color: palette.gray
           },
           {
             name: `Projected Non Completers: ${projectedNonCompleters}`,
             count: projectedNonCompleters,
-            color: "#4b5563"
+            color: palette.darkGray
           }
         ].filter((segment) => segment.count > 0);
       },
