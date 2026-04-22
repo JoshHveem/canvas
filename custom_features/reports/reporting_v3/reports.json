@@ -54,6 +54,7 @@
           "value": "placements",
           "label": "Placements",
           "filter_by_year": true,
+          "component": "reports-v3-programs-placements",
           "include": "placements"
         },
         {
