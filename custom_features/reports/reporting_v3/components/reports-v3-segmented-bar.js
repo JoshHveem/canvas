@@ -67,13 +67,32 @@
         return Math.max(0, Math.min(100, value));
       },
 
+      normalizedSegments() {
+        return (Array.isArray(this.segments) ? this.segments : [])
+          .map((segment, segmentIndex) => ({
+            key: `segment-${segmentIndex}`,
+            name: String(segment?.name || `Segment ${segmentIndex + 1}`).trim(),
+            color: String(segment?.color || this.emptyColor).trim() || this.emptyColor,
+            count: Math.max(0, Math.floor(Number(segment?.count) || 0))
+          }))
+          .filter((segment) => segment.count > 0);
+      },
+
+      totalBars() {
+        return this.normalizedSegments.reduce((sum, segment) => sum + segment.count, 0);
+      },
+
+      useSolidSegments() {
+        return this.totalBars > 100;
+      },
+
       flattenedBars() {
         const items = [];
 
-        (Array.isArray(this.segments) ? this.segments : []).forEach((segment, segmentIndex) => {
-          const count = Math.max(0, Math.floor(Number(segment?.count) || 0));
-          const name = String(segment?.name || `Segment ${segmentIndex + 1}`).trim();
-          const color = String(segment?.color || this.emptyColor).trim() || this.emptyColor;
+        this.normalizedSegments.forEach((segment, segmentIndex) => {
+          const count = segment.count;
+          const name = segment.name;
+          const color = segment.color;
 
           for (let barIndex = 0; barIndex < count; barIndex += 1) {
             items.push({
@@ -88,7 +107,7 @@
       },
 
       hasBars() {
-        return this.flattenedBars.length > 0;
+        return this.totalBars > 0;
       },
 
       rootStyle() {
@@ -130,7 +149,7 @@
 
     template: `
       <div :style="rootStyle">
-        <div v-if="hasBars" :style="barsStyle">
+        <div v-if="hasBars && !useSolidSegments" :style="barsStyle">
           <div
             v-for="(bar, index) in flattenedBars"
             :key="bar.key"
@@ -139,6 +158,19 @@
               flex: '1 1 0',
               background: bar.color,
               borderRight: index === flattenedBars.length - 1 ? 'none' : ('1px solid ' + separatorColor)
+            }"
+          ></div>
+        </div>
+
+        <div v-else-if="hasBars" :style="barsStyle">
+          <div
+            v-for="(segment, index) in normalizedSegments"
+            :key="segment.key"
+            :title="segment.name"
+            :style="{
+              flex: String(segment.count) + ' 1 0',
+              background: segment.color,
+              borderRight: index === normalizedSegments.length - 1 ? 'none' : ('1px solid ' + separatorColor)
             }"
           ></div>
         </div>
