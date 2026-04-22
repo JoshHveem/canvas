@@ -154,7 +154,7 @@
       }
     },
     template: `
-      <div class="btech-card btech-theme" style="padding:20px;">
+      <div class="btech-card btech-theme" style="padding:20px; display:inline-block; width:fit-content; max-width:100%;">
         <component
           v-if="activeSectionComponent"
           :is="activeSectionComponent"

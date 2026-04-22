@@ -1,6 +1,6 @@
 <template>
-  <div class="btech-modal btech-canvas-report" style="display:block; width:100%;">
-    <div class="btech-modal-content" style="overflow:visible; display:flex; justify-content:center; width:100%;">
+  <div class="btech-modal btech-canvas-report" style="display:inline-block;">
+    <div class="btech-modal-content" style="overflow:visible; display:flex; justify-content:center;">
       <div class="btech-modal-content-inner" style="overflow:visible; width:fit-content; max-width:min(1400px, calc(100vw - 48px)); margin:0 auto;">
         <span class="btech-close" @click="close()">&times;</span>
 
