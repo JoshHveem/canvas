@@ -38,11 +38,11 @@
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
-          { key: "projectedCompleters", label: "Projected Completers", width: "9rem", format: "integer", align: "right" },
+          { key: "projectedCompleters", label: "Projected Completers", width: "6rem", format: "integer", align: "right" },
           {
             key: "completionRate",
             label: "Completion Rate",
-            width: "8rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
@@ -55,7 +55,7 @@
           {
             key: "projectedCompletionRate",
             label: "Projected Rate",
-            width: "8rem",
+            width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
