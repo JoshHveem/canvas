@@ -37,7 +37,32 @@
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
+          {
+            key: "completionBreakdown",
+            label: "Completion Breakdown",
+            width: "16rem",
+            sortable: true,
+            sortValue: function (row) {
+              return Number(row?.projectedExiters || 0);
+            },
+            component: "reports-v3-segmented-bar",
+            componentProps: function (row) {
+              return {
+                segments: row?.completionBreakdown || [],
+                height: 16,
+                borderRadius: 999,
+                separatorColor: "rgba(255,255,255,0.85)",
+                emptyColor: "#f3f4f6"
+              };
+            },
+            cellStyle: {
+              whiteSpace: "normal"
+            }
+          },
           { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
+          { key: "exiters", label: "Exiters", width: "6rem", format: "integer", align: "right" },
+          { key: "activeStudents", label: "Active", width: "6rem", format: "integer", align: "right" },
+          { key: "totalStudents", label: "Total", width: "6rem", format: "integer", align: "right" },
           {
             key: "completionRate",
             label: "Completion Rate",
@@ -69,6 +94,49 @@
       }
     },
     methods: {
+      toWholeNumber(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return 0;
+        return Math.max(0, Math.round(num));
+      },
+
+      buildCompletionBreakdown(program) {
+        const completers = this.toWholeNumber(program?.completions_projected__completers);
+        const projectedCompleters = this.toWholeNumber(program?.completions_projected__projected_completers);
+        const exiters = this.toWholeNumber(program?.completions_projected__exiters);
+        const projectedExiters = this.toWholeNumber(program?.completions_projected__projected_exiters);
+
+        const projectedCompleterGain = Math.max(0, projectedCompleters - completers);
+        const nonCompleters = Math.max(0, exiters - completers);
+        const projectedNonCompleters = Math.max(
+          0,
+          (projectedExiters - projectedCompleters) - nonCompleters
+        );
+
+        return [
+          {
+            name: `Completers: ${completers}`,
+            count: completers,
+            color: "#86efac"
+          },
+          {
+            name: `Projected Completers: ${projectedCompleterGain}`,
+            count: projectedCompleterGain,
+            color: "#16a34a"
+          },
+          {
+            name: `Non Completers: ${nonCompleters}`,
+            count: nonCompleters,
+            color: "#d1d5db"
+          },
+          {
+            name: `Projected Non Completers: ${projectedNonCompleters}`,
+            count: projectedNonCompleters,
+            color: "#4b5563"
+          }
+        ].filter((segment) => segment.count > 0);
+      },
+
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
@@ -102,7 +170,8 @@
           completionRate: program?.completions_projected__completion_rate,
           projectedCompleters: program?.completions_projected__projected_completers,
           projectedExiters: program?.completions_projected__projected_exiters,
-          projectedCompletionRate: program?.completions_projected__projected_completion_rate
+          projectedCompletionRate: program?.completions_projected__projected_completion_rate,
+          completionBreakdown: this.buildCompletionBreakdown(program)
         };
       },
 
