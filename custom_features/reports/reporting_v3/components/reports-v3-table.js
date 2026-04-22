@@ -293,8 +293,8 @@
     },
 
     template: `
-      <div class="btech-card btech-theme" style="padding:0; overflow:hidden;">
-        <div style="overflow:auto;">
+      <div class="btech-card btech-theme" style="padding:0; overflow:hidden; display:inline-block; width:fit-content; max-width:100%; vertical-align:top;">
+        <div style="overflow:auto; max-width:100%;">
           <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
             <colgroup>
               <col
