@@ -117,7 +117,7 @@
           {
             name: `Completers: ${completers}`,
             count: completers,
-            color: palette.yellowGreen || palette.green
+            color: palette.fadedGreen
           },
           {
             name: `Projected Completers: ${projectedCompleterGain}`,
