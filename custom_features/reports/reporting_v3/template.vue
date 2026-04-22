@@ -1,7 +1,7 @@
 <template>
   <div class="btech-modal btech-canvas-report" style="display:inline-block;">
-    <div class="btech-modal-content" style="overflow:visible;">
-      <div class="btech-modal-content-inner" style="overflow:visible; width:min(1400px, calc(100vw - 48px)); max-width:1400px;">
+    <div class="btech-modal-content" style="overflow:visible; display:flex; justify-content:center;">
+      <div class="btech-modal-content-inner" style="overflow:visible; width:fit-content; max-width:min(1400px, calc(100vw - 48px)); margin:0 auto;">
         <span class="btech-close" @click="close()">&times;</span>
 
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
