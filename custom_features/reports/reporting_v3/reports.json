@@ -40,7 +40,8 @@
           "value": "completions",
           "label": "Completions",
           "filter_by_year": true,
-          "include": "completions"
+          "component": "reports-v3-programs-completion",
+          "include": "completions_projected"
         },
         {
           "value": "graduates",

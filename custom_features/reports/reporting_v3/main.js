@@ -6,6 +6,7 @@
   const UTILS_URL = `${SOURCE_URL}${BASE_PATH}/utils.js?v=${VERSION}`;
   const REPORTS_URL = `${SOURCE_URL}${BASE_PATH}/reports.json?v=${VERSION}`;
   const TABLE_COMPONENT_URL = `${SOURCE_URL}${BASE_PATH}/components/reports-v3-table.js?v=${VERSION}`;
+  const SEGMENTED_BAR_COMPONENT_URL = `${SOURCE_URL}${BASE_PATH}/components/reports-v3-segmented-bar.js?v=${VERSION}`;
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
   const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
@@ -361,6 +362,7 @@
     const reportComponentScripts = getReportComponentScripts(reportTypes);
 
     await utils.loadScriptOnce(TABLE_COMPONENT_URL);
+    await utils.loadScriptOnce(SEGMENTED_BAR_COMPONENT_URL);
     for (const script of reportComponentScripts) {
       try {
         await utils.loadScriptOnce(script.url);

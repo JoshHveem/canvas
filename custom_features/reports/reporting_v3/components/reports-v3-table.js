@@ -187,6 +187,24 @@
         return !!(column && column.pillBands && typeof column.pillBands === "object");
       },
 
+      hasComponent(column) {
+        return !!(column && column.component);
+      },
+
+      getComponentProps(row, column) {
+        const raw = this.getRawValue(row, column);
+        const extras = typeof column.componentProps === "function"
+          ? column.componentProps(row, column, raw)
+          : column.componentProps;
+
+        return {
+          value: raw,
+          row,
+          column,
+          ...(extras && typeof extras === "object" ? extras : {})
+        };
+      },
+
       getBandPillStyle(row, column) {
         const band = this.getBandPillBand(row, column);
 
@@ -318,6 +336,11 @@
                     v-if="hasBandPill(column)"
                     :style="getBandPillStyle(row, column)"
                   >{{ formatValue(row, column) }}</span>
+                  <component
+                    v-else-if="hasComponent(column)"
+                    :is="column.component"
+                    v-bind="getComponentProps(row, column)"
+                  ></component>
                   <span v-else-if="column.allowHtml" v-html="formatValue(row, column)"></span>
                   <span v-else>{{ formatValue(row, column) }}</span>
                 </td>
