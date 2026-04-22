@@ -39,8 +39,6 @@
           { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
           { key: "projectedCompleters", label: "Projected Completers", width: "9rem", format: "integer", align: "right" },
-          { key: "exiters", label: "Exiters", width: "6rem", format: "integer", align: "right" },
-          { key: "projectedExiters", label: "Projected Exiters", width: "6rem", format: "integer", align: "right" },
           {
             key: "completionRate",
             label: "Completion Rate",
