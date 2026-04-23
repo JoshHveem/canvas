@@ -1,5 +1,6 @@
 // reports/reporting_v3/main.js
 (async function () {
+  console.log("LOAD REPORTING V3 MAIN JS");
   const VERSION = Date.now();
   const BASE_PATH = "/custom_features/reports/reporting_v3";
   const TEMPLATE_URL = `${SOURCE_URL}${BASE_PATH}/template.vue?v=${VERSION}`;
