@@ -1,16 +1,13 @@
 <template>
-  <div class="btech-modal btech-canvas-report" style="display:inline-block;">
-    <div class="btech-modal-content" style="overflow:visible; display:flex; justify-content:center;">
-      <div class="btech-modal-content-inner" style="overflow:visible; width:fit-content; max-width:min(1400px, calc(100vw - 48px)); margin:0 auto;">
-        <span class="btech-close" @click="close()">&times;</span>
-
+  <div class="btech-canvas-report" style="padding:24px 16px 32px;">
+    <div style="display:flex; justify-content:center;">
+      <div style="width:fit-content; max-width:min(1400px, 100%);">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
           <div>
             <h3 class="btech-card-title" style="margin:0 0 6px 0;">
               {{ currentReportMeta.title || 'Reporting V3' }}
             </h3>
           </div>
-
         </div>
 
         <div

@@ -10,18 +10,10 @@
   const SETTINGS_NAMESPACE = "edu.btech.canvas.reporting_v3";
   const SETTINGS_KEY = "reporting_v3";
   const ROOT_ID = "canvas-reporting-v3-vue";
-  const BUTTON_ID = "canvas-reporting-v3-gen";
-  const BUTTON_LABEL = "Reports V3";
 
   await $.getScript(UTILS_URL);
 
   const utils = window.ReportingV3Utils;
-
-  function createOpenButton() {
-    return utils.createButton(BUTTON_ID, BUTTON_LABEL, function () {
-      $(`#${ROOT_ID}`).show();
-    });
-  }
 
   async function loadReportTypes() {
     const payload = await utils.fetchJson(REPORTS_URL);
@@ -75,21 +67,13 @@
       .replace("<template>", "")
       .replace("</template>", "");
 
-    if ($(`#${ROOT_ID}`).length === 0) {
-      $("#application").after(`<div id="${ROOT_ID}"></div>`);
+    const contentRoot = $("#content");
+    if (!contentRoot.length) {
+      throw new Error('Reporting V3 could not find div#content to mount into.');
     }
 
-    $(`#${ROOT_ID}`).html(vueString).hide();
-
-    const container = $("#right-side");
-    utils.ensureButton(container, BUTTON_ID, createOpenButton);
-
-    if (container.length) {
-      const observer = new MutationObserver(function () {
-        utils.ensureButton(container, BUTTON_ID, createOpenButton);
-      });
-      observer.observe(container[0], { childList: true, subtree: false });
-    }
+    contentRoot.empty().append(`<div id="${ROOT_ID}"></div>`);
+    $(`#${ROOT_ID}`).html(vueString);
 
     new Vue({
       el: `#${ROOT_ID}`,
@@ -392,10 +376,6 @@
           }
 
           await this.onReportChange();
-        },
-
-        close() {
-          $(`#${ROOT_ID}`).hide();
         }
       },
 
