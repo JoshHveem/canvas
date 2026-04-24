@@ -389,7 +389,7 @@
             ${isReady ? "Ready" : "Not Ready"}
           </span>
         </div>
-        <p class="btech-course-readiness__meta">Updates every 60 seconds. Last checked ${escapeHtml(updatedAt)}</p>
+        <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
       </div>
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
