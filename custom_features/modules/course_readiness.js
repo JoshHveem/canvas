@@ -8,6 +8,7 @@
   const instructorEvalId = "243044643269963";
   const courseEvalId = "241976981675072";
   const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
+  const maxListedAttentionItems = 3;
 
   if (!courseId) return;
 
@@ -550,6 +551,10 @@ function findEntityIdByCourseId(courseId, options = {}) {
     };
   }
 
+  function getAdditionalItemsText(count, nounPlural = "items") {
+    return `${count} additional ${nounPlural}...`;
+  }
+
   function getEvaluationCheck(assignments, title) {
     if (!assignments.length) {
       return {
@@ -685,7 +690,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
         label: "Fail",
         detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`,
         items: data.assignmentsWorthPointsNotInModule,
-        itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`
+        itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`,
+        additionalItemsText: count => getAdditionalItemsText(count, "assignments")
       };
     }
 
@@ -714,7 +720,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
         label: "Unpublished",
         detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`,
         items: data.unpublishedAssignmentsInModule,
-        itemFormatter: item => escapeHtml(item.name)
+        itemFormatter: item => escapeHtml(item.name),
+        additionalItemsText: count => getAdditionalItemsText(count, "assignments")
       };
     }
 
@@ -802,10 +809,25 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function renderCheck(check) {
-    const itemList = Array.isArray(check.items) && check.items.length
+    const visibleItems = Array.isArray(check.items)
+      ? check.items.slice(0, maxListedAttentionItems)
+      : [];
+    const remainingItemCount = Array.isArray(check.items)
+      ? Math.max(check.items.length - visibleItems.length, 0)
+      : 0;
+
+    const itemList = visibleItems.length
       ? `
         <ul class="btech-course-readiness__check-list">
-          ${check.items.map(item => `<li>${check.itemFormatter(item)}</li>`).join("")}
+          ${visibleItems.map(item => `<li>${check.itemFormatter(item)}</li>`).join("")}
+          ${remainingItemCount > 0
+            ? `<li>${escapeHtml(
+              typeof check.additionalItemsText === "function"
+                ? check.additionalItemsText(remainingItemCount)
+                : getAdditionalItemsText(remainingItemCount)
+            )}</li>`
+            : ""
+          }
         </ul>
       `
       : "";
