@@ -384,7 +384,7 @@
     card.html(`
       <div class="btech-course-readiness__header">
         <div class="btech-course-readiness__title-row">
-          <h2 class="btech-course-readiness__title">Is Course Ready to Publish?</h2>
+          <h2 class="btech-course-readiness__title">Course Ready?</h2>
           <span class="btech-course-readiness__status ${isReady ? "is-pass" : "is-fail"}">
             ${isReady ? "Ready" : "Not Ready"}
           </span>
@@ -417,21 +417,21 @@
           )}
           ${renderCheck(
             "Assignments in Modules",
-            data.assignmentsWorthPointsNotInModule.length === 0,
+            data.assignmentsWorthPointsNotInModule.length === 0 && data.hasAnyContent,
             data.assignmentsWorthPointsNotInModule.length === 0
               ? "All point-bearing assignments are in a module."
               : `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`
           )}
           ${renderCheck(
             "Assignments Published",
-            data.unpublishedAssignmentsInModule.length === 0,
+            data.unpublishedAssignmentsInModule.length === 0 && data.hasAnyContent,
             data.unpublishedAssignmentsInModule.length === 0
               ? "All assignments found in modules are published."
               : `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`
           )}
           ${renderCheck(
             "Content Published",
-            data.unpublishedModuleItems.length === 0,
+            data.unpublishedModuleItems.length === 0 && data.hasAnyContent,
             data.unpublishedModuleItems.length === 0
               ? "No unpublished module items were found."
               : `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
