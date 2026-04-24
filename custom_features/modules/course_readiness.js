@@ -61,18 +61,22 @@
 
         #${cardId} .btech-course-readiness__status-segment {
           height: 100%;
+          box-sizing: border-box;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-pass {
           background: #dff3e4;
+          border: 1px solid #0b6b2f;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-warn {
           background: #fff3cd;
+          border: 1px solid #8a5b00;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-fail {
           background: #fde8e8;
+          border: 1px solid #a61b1b;
         }
 
         #${cardId} .btech-course-readiness__status-label {
