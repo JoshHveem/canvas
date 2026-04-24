@@ -11,10 +11,16 @@
 
   if (!courseId) return;
 
+  function extractYear(termName) {
+    const match = String(termName ?? "").match(/\b(20\d{2})\b/);
+    return match ? match[1] : "";
+  }
+
   function findSyllabusByCourseId(courseId, options = {}) {
     const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
     const pageSize = options.pageSize || 50;
     const delayMs = options.delayMs || 200;
+    const termYear = String(options.termYear ?? "").trim();
 
     const target = String(courseId);
     let page = 0;
@@ -25,11 +31,14 @@
     }
 
     function fetchPage() {
-        return $.get(baseUrl, {
+        const requestData = {
         "entity_types[]": "section",
         page: page,
         page_size: pageSize
-        }).then(function (data) {
+        };
+        if (termYear) requestData.term = termYear;
+
+        return $.get(baseUrl, requestData).then(function (data) {
         const sys = data.sys || {};
         if (sys.success === false) {
             throw new Error("Simple Syllabus API returned success=false");
@@ -72,6 +81,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
     const pageSize = options.pageSize || 50;
     const delayMs = options.delayMs || 200;
+    const termYear = String(options.termYear ?? "").trim();
 
     const target = String(courseId);
     let page = 0;
@@ -81,11 +91,14 @@ function findEntityIdByCourseId(courseId, options = {}) {
     }
 
     function fetchPage() {
-        return $.get(baseUrl, {
+        const requestData = {
         "entity_types[]": "section",
         page: page,
         page_size: pageSize
-        }).then(function (data) {
+        };
+        if (termYear) requestData.term = termYear;
+
+        return $.get(baseUrl, requestData).then(function (data) {
         const items = data.items || [];
 
         const found = items.find(item => titleHasCourseId(item.title));
@@ -132,9 +145,9 @@ function findEntityIdByCourseId(courseId, options = {}) {
   let syllabusEntityId = null;
   let syllabusEntityIdLookupComplete = false;
 
-  async function getSyllabusDocByCourseId(courseId) {
+  async function getSyllabusDocByCourseId(courseId, termYear = "") {
     if (!syllabusEntityIdLookupComplete) {
-      syllabusEntityId = await findEntityIdByCourseId(courseId);
+      syllabusEntityId = await findEntityIdByCourseId(courseId, { termYear });
       syllabusEntityIdLookupComplete = true;
     }
 
@@ -412,13 +425,16 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   async function getCourseData() {
-    const [course, assignmentGroups, modules, assignmentList, syllabusDoc] = await Promise.all([
-      $.get(`/api/v1/courses/${courseId}`),
+    const [course, assignmentGroups, modules, assignmentList] = await Promise.all([
+      $.get(`/api/v1/courses/${courseId}?include[]=term`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
       canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
-      canvasGet(`/api/v1/courses/${courseId}/assignments`),
-      getSyllabusDocByCourseId(courseId)
+      canvasGet(`/api/v1/courses/${courseId}/assignments`)
     ]);
+
+    const termName = String(course?.term?.name ?? "");
+    const termYear = extractYear(termName);
+    const syllabusDoc = await getSyllabusDocByCourseId(courseId, termYear);
 
     const moduleItems = modules.flatMap(module =>
       (module.items ?? []).map(item => ({
@@ -501,6 +517,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
     );
 
     return {
+      termName,
+      termYear,
       syllabusDoc,
       syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
       instructorEvalAssignments,
