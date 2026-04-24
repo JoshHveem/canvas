@@ -96,7 +96,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         page: page,
         page_size: pageSize
         };
-        if (termYear) requestData.term = termYear;
+        if (termYear) requestData.term_name = termYear;
 
         return $.get(baseUrl, requestData).then(function (data) {
         const items = data.items || [];
