@@ -583,16 +583,22 @@
     }
 
     const overallStatus = getOverallStatus(data);
+    const progress = getProgressData(overallStatus.checks);
 
     card.html(`
       <div class="btech-course-readiness__header">
         <div class="btech-course-readiness__title-row">
-          <h2 class="btech-course-readiness__title">Course Ready?</h2>
-          <span class="btech-course-readiness__status is-${overallStatus.state}">
-            ${overallStatus.label}
-          </span>
+          <h2 class="btech-course-readiness__title">Course Readiness</h2>
         </div>
-        <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
+        <div class="btech-course-readiness__status" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed`)}">
+          <div class="btech-course-readiness__status-bar">
+            <span class="btech-course-readiness__status-segment is-pass" style="width: ${(progress.passCount / progress.total) * 100}%;"></span>
+            <span class="btech-course-readiness__status-segment is-warn" style="width: ${(progress.warnCount / progress.total) * 100}%;"></span>
+            <span class="btech-course-readiness__status-segment is-fail" style="width: ${(progress.failCount / progress.total) * 100}%;"></span>
+          </div>
+          <span class="btech-course-readiness__status-label">${progress.percentComplete}% Done</span>
+        </div>
+        <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
       </div>
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
@@ -615,8 +621,7 @@
         card.html(`
           <div class="btech-course-readiness__header">
             <div class="btech-course-readiness__title-row">
-              <h2 class="btech-course-readiness__title">Is Course Ready to Publish?</h2>
-              <span class="btech-course-readiness__status is-fail">Loading</span>
+              <h2 class="btech-course-readiness__title">Course Readiness</h2>
             </div>
             <p class="btech-course-readiness__meta">Preparing checklist...</p>
           </div>
