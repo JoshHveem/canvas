@@ -626,6 +626,7 @@
 
     const overallStatus = getOverallStatus(data);
     const progress = getProgressData(overallStatus.checks);
+    const isReady = overallStatus.state === "pass";
 
     card.html(`
       <div class="btech-course-readiness__header">
@@ -642,11 +643,13 @@
         </div>
         <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
       </div>
-      <div class="btech-course-readiness__body">
-        <ul class="btech-course-readiness__checks">
-          ${overallStatus.checks.map(check => renderCheck(check)).join("")}
-        </ul>
-      </div>
+      ${isReady ? "" : `
+        <div class="btech-course-readiness__body">
+          <ul class="btech-course-readiness__checks">
+            ${overallStatus.checks.map(check => renderCheck(check)).join("")}
+          </ul>
+        </div>
+      `}
     `);
   }
 
@@ -672,6 +675,10 @@
 
       const data = await getCourseData();
       renderCard(card, data);
+      if (getIsReady(data) && window.__btechCourseReadinessIntervalId) {
+        clearInterval(window.__btechCourseReadinessIntervalId);
+        window.__btechCourseReadinessIntervalId = null;
+      }
     } catch (error) {
       console.error("Course readiness check failed.", error);
       renderCard(card, null, "Unable to refresh the course readiness checklist right now.");
