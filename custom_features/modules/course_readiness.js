@@ -11,6 +11,138 @@
 
   if (!courseId) return;
 
+  function findSyllabusByCourseId(courseId, options = {}) {
+    const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
+    const pageSize = options.pageSize || 50;
+    const delayMs = options.delayMs || 200;
+
+    const target = String(courseId);
+    let page = 0;
+
+    function titleHasCourseId(title) {
+        const match = String(title || "").match(/\((\d+)\)\s*$/);
+        return match && match[1] === target;
+    }
+
+    function fetchPage() {
+        return $.get(baseUrl, {
+        "entity_types[]": "section",
+        page: page,
+        page_size: pageSize
+        }).then(function (data) {
+        const sys = data.sys || {};
+        if (sys.success === false) {
+            throw new Error("Simple Syllabus API returned success=false");
+        }
+
+        const items = data.items || [];
+
+        const found = items.find(function (item) {
+            return titleHasCourseId(item.title);
+        });
+
+        if (found) {
+            return found;
+        }
+
+        const pagination = data.pagination || {};
+        const total = pagination.total;
+        const returned = pagination.returned || 0;
+
+        if (returned === 0) {
+            return null;
+        }
+
+        if (Number.isInteger(total) && (page + 1) * pageSize >= total) {
+            return null;
+        }
+
+        page += 1;
+
+        return new Promise(function (resolve) {
+            setTimeout(resolve, delayMs);
+        }).then(fetchPage);
+        });
+    }
+
+    return fetchPage();
+}
+
+function findEntityIdByCourseId(courseId, options = {}) {
+    const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
+    const pageSize = options.pageSize || 50;
+    const delayMs = options.delayMs || 200;
+
+    const target = String(courseId);
+    let page = 0;
+
+    function titleHasCourseId(title) {
+        return new RegExp("\\(" + target + "\\)").test(String(title || ""));
+    }
+
+    function fetchPage() {
+        return $.get(baseUrl, {
+        "entity_types[]": "section",
+        page: page,
+        page_size: pageSize
+        }).then(function (data) {
+        const items = data.items || [];
+
+        const found = items.find(item => titleHasCourseId(item.title));
+
+        if (found) {
+            return found.entity_id; // 👈 return entity_id only
+        }
+
+        const pagination = data.pagination || {};
+        const total = pagination.total;
+        const returned = pagination.returned || 0;
+
+        if (returned === 0) return null;
+        if (Number.isInteger(total) && (page + 1) * pageSize >= total) return null;
+
+        page++;
+
+        return new Promise(resolve => setTimeout(resolve, delayMs))
+            .then(fetchPage);
+        });
+    }
+
+    return fetchPage();
+    }
+
+  function findSyllabusByEntityId(entityId, options = {}) {
+    const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
+
+    return $.get(baseUrl, {
+      "entity_ids[]": entityId,
+      page: 0,
+      page_size: 50
+    }).then(function (data) {
+      const sys = data.sys || {};
+      if (sys.success === false) {
+        throw new Error("Simple Syllabus API returned success=false");
+      }
+
+      const items = data.items || [];
+      return items[0] || null;
+    });
+  }
+
+  let syllabusEntityId = null;
+  let syllabusEntityIdLookupComplete = false;
+
+  async function getSyllabusDocByCourseId(courseId) {
+    if (!syllabusEntityIdLookupComplete) {
+      syllabusEntityId = await findEntityIdByCourseId(courseId);
+      syllabusEntityIdLookupComplete = true;
+    }
+
+    if (!syllabusEntityId) return null;
+
+    return await findSyllabusByEntityId(syllabusEntityId);
+  }
+
   function escapeHtml(value) {
     return $("<div>").text(value ?? "").html();
   }
@@ -280,11 +412,12 @@
   }
 
   async function getCourseData() {
-    const [course, assignmentGroups, modules, assignmentList] = await Promise.all([
+    const [course, assignmentGroups, modules, assignmentList, syllabusDoc] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
       canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
-      canvasGet(`/api/v1/courses/${courseId}/assignments`)
+      canvasGet(`/api/v1/courses/${courseId}/assignments`),
+      getSyllabusDocByCourseId(courseId)
     ]);
 
     const moduleItems = modules.flatMap(module =>
@@ -368,6 +501,8 @@
     );
 
     return {
+      syllabusDoc,
+      syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
       instructorEvalAssignments,
       courseEvalAssignments,
       hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
@@ -414,6 +549,44 @@
       state: "warn",
       label: "Unpublished",
       detail: `${title} assignment exists but is not published.`
+    };
+  }
+
+  function getSyllabusCheck(data) {
+    if (!data.syllabusDoc) {
+      return {
+        title: "Syllabus",
+        state: "fail",
+        label: "Fail",
+        detail: "No Simple Syllabus record was found for this course."
+      };
+    }
+
+    if (data.syllabusStatus === "completed") {
+      return {
+        title: "Syllabus",
+        state: "pass",
+        label: "Pass",
+        detail: "Syllabus is completed."
+      };
+    }
+
+    if (data.syllabusStatus === "awaiting_approval") {
+      return {
+        title: "Syllabus",
+        state: "warn",
+        label: "Awaiting Approval",
+        detail: "Syllabus is awaiting approval."
+      };
+    }
+
+    return {
+      title: "Syllabus",
+      state: "fail",
+      label: "Fail",
+      detail: data.syllabusStatus
+        ? `Syllabus status is ${data.syllabusStatus.replace(/_/g, " ")}.`
+        : "Syllabus status is unavailable."
     };
   }
 
@@ -513,6 +686,7 @@
 
   function getChecks(data) {
     return [
+      getSyllabusCheck(data),
       getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
       getEvaluationCheck(data.courseEvalAssignments, "Course Evaluation"),
       getContentCheck(data),
