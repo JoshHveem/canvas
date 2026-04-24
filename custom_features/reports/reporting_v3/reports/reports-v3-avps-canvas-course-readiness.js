@@ -111,20 +111,87 @@
       }
     },
     methods: {
+      firstFiniteNumber() {
+        for (const value of arguments) {
+          const num = Number(value);
+          if (Number.isFinite(num)) {
+            return num;
+          }
+        }
+
+        return null;
+      },
+
+      ratio(numerator, denominator) {
+        const num = Number(numerator);
+        const den = Number(denominator);
+
+        if (!Number.isFinite(num) || !Number.isFinite(den) || den <= 0) {
+          return null;
+        }
+
+        return num / den;
+      },
+
       normalizeAvpRow(avp) {
         if (!avp || typeof avp !== "object") return null;
+
+        const numCourses = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_courses,
+          avp?.num_courses
+        );
+        const numSyllabiApproved = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_syllabi_approved,
+          avp?.num_syllabi_approved
+        );
+        const numHasCourseEvaluation = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_has_course_evaluation,
+          avp?.num_has_course_evaluation
+        );
+        const numCourseEvaluationPublished = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_course_evaluation_published,
+          avp?.num_course_evaluation_published
+        );
+        const numHasInstructorEvaluation = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_has_instructor_evaluation,
+          avp?.num_has_instructor_evaluation
+        );
+        const numInstructorEvaluationPublished = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_instructor_evaluation_published,
+          avp?.num_instructor_evaluation_published
+        );
+        const numHasEmploymentSkillsEvaluation = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_has_employment_skills_evaluation,
+          avp?.num_has_employment_skills_evaluation
+        );
+        const numEmploymentSkillsEvaluationPublished = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_employment_skills_evaluation_published,
+          avp?.canvas_course_readiness__num_employment_skills_evaluation_publi,
+          avp?.num_employment_skills_evaluation_published
+        );
+        const numHasContent = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_has_content,
+          avp?.num_has_content
+        );
+        const numContentPublished = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_content_published,
+          avp?.num_content_published
+        );
 
         return {
           name: String(avp?.name || avp?.avp_sis_user_id || "AVP").trim(),
           avpSisUserId: String(avp?.avp_sis_user_id || "").trim(),
           numDepartments: avp?.num_departments,
           academicYear: Number(avp?.canvas_course_readiness__academic_year || avp?.academic_year || 0),
-          numCourses: avp?.canvas_course_readiness__num_courses,
-          percSyllabiApproved: avp?.canvas_course_readiness__perc_syllabi_approved,
-          percCourseEvaluationPublished: avp?.canvas_course_readiness__perc_course_evaluation_published,
-          percInstructorEvaluationPublished: avp?.canvas_course_readiness__perc_instructor_evaluation_published,
-          percEmploymentSkillsEvaluationPublished: avp?.canvas_course_readiness__perc_employment_skills_evaluation_published,
-          percContentPublished: avp?.canvas_course_readiness__perc_content_published
+          numCourses,
+          percSyllabiApproved: this.ratio(numSyllabiApproved, numCourses),
+          percCourseEvaluationPublished: this.ratio(numCourseEvaluationPublished, numHasCourseEvaluation),
+          percInstructorEvaluationPublished: this.ratio(numInstructorEvaluationPublished, numHasInstructorEvaluation),
+          percEmploymentSkillsEvaluationPublished: this.ratio(
+            numEmploymentSkillsEvaluationPublished,
+            numHasEmploymentSkillsEvaluation
+          ),
+          percContentPublished: this.ratio(numContentPublished, numHasContent)
         };
       },
 
