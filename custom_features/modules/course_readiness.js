@@ -144,6 +144,17 @@
           color: #5b6d79;
         }
 
+        #${cardId} .btech-course-readiness__check-list {
+          margin: 0.45rem 0 0 1.35rem;
+          padding: 0;
+          font-size: 0.8rem;
+          color: #2d3b45;
+        }
+
+        #${cardId} .btech-course-readiness__check-list li + li {
+          margin-top: 0.2rem;
+        }
+
         #${cardId} .btech-course-readiness__issues {
           margin-top: 1rem;
           display: grid;
@@ -359,20 +370,11 @@
       };
     }
 
-    if (data.unpublishedModuleItems.length > 0) {
-      return {
-        title: "Course Content",
-        state: "warn",
-        label: "Unpublished",
-        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
-      };
-    }
-
     return {
       title: "Course Content",
       state: "pass",
       label: "Pass",
-      detail: "Course content exists and module items are published."
+      detail: "Course content exists."
     };
   }
 
@@ -402,7 +404,9 @@
         title: "Assignments in Modules",
         state: "fail",
         label: "Fail",
-        detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`
+        detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`,
+        items: data.assignmentsWorthPointsNotInModule,
+        itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`
       };
     }
 
@@ -429,7 +433,9 @@
         title: "Assignments Published",
         state: "warn",
         label: "Unpublished",
-        detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`
+        detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`,
+        items: data.unpublishedAssignmentsInModule,
+        itemFormatter: item => escapeHtml(item.name)
       };
     }
 
@@ -456,7 +462,9 @@
         title: "Content Published",
         state: "warn",
         label: "Unpublished",
-        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
+        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`,
+        items: data.unpublishedModuleItems,
+        itemFormatter: item => `${escapeHtml(item.title || item.type || "Module item")} (${escapeHtml(item.moduleName || "Unknown module")})`
       };
     }
 
@@ -507,6 +515,14 @@
   }
 
   function renderCheck(check) {
+    const itemList = Array.isArray(check.items) && check.items.length
+      ? `
+        <ul class="btech-course-readiness__check-list">
+          ${check.items.map(item => `<li>${check.itemFormatter(item)}</li>`).join("")}
+        </ul>
+      `
+      : "";
+
     return `
       <li class="btech-course-readiness__check is-${check.state}">
         <div class="btech-course-readiness__check-header">
@@ -514,19 +530,7 @@
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
         </div>
         ${check.state === "pass" ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
-      </li>
-    `;
-  }
-
-  function renderIssue(title, items, formatter) {
-    if (!items.length) return "";
-
-    return `
-      <li class="btech-course-readiness__issue">
-        <p class="btech-course-readiness__issue-title">${escapeHtml(title)} (${items.length})</p>
-        <ul class="btech-course-readiness__issue-list">
-          ${items.map(item => `<li>${formatter(item)}</li>`).join("")}
-        </ul>
+        ${itemList}
       </li>
     `;
   }
@@ -554,23 +558,6 @@
     }
 
     const overallStatus = getOverallStatus(data);
-    const issuesMarkup = [
-      renderIssue(
-        "Assignments worth points but not in a module",
-        data.assignmentsWorthPointsNotInModule,
-        item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`
-      ),
-      renderIssue(
-        "Unpublished assignments in modules",
-        data.unpublishedAssignmentsInModule,
-        item => escapeHtml(item.name)
-      ),
-      renderIssue(
-        "Unpublished module items",
-        data.unpublishedModuleItems,
-        item => `${escapeHtml(item.title || item.type || "Module item")} (${escapeHtml(item.moduleName || "Unknown module")})`
-      )
-    ].join("");
 
     card.html(`
       <div class="btech-course-readiness__header">
@@ -586,7 +573,6 @@
         <ul class="btech-course-readiness__checks">
           ${overallStatus.checks.map(check => renderCheck(check)).join("")}
         </ul>
-        ${issuesMarkup ? `<ul class="btech-course-readiness__issues">${issuesMarkup}</ul>` : ""}
       </div>
     `);
   }
