@@ -204,7 +204,10 @@
 
           try {
             const response = await bridgetools.req3("avps");
+            console.log("[Reporting V3] loadAvps response", response);
+            console.log("[Reporting V3] loadAvps response.data", response?.data);
             this.avps = Array.isArray(response?.data) ? response.data : [];
+            console.log("[Reporting V3] normalized avps list", this.avps);
           } catch (error) {
             console.error("Failed to load avps", error);
             this.avps = [];

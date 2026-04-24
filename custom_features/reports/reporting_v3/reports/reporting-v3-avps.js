@@ -66,6 +66,15 @@
       activeSectionError() {
         return String(this.sectionErrors[this.activeSectionKey] || "");
       },
+      debugActiveSectionRows() {
+        const rows = this.activeSectionRows;
+        console.log("[Reporting V3] AVP active section rows", {
+          subMenu: this.activeSectionKey,
+          rowCount: Array.isArray(rows) ? rows.length : 0,
+          rows
+        });
+        return rows;
+      },
       summary() {
         return JSON.stringify(
           {
@@ -137,11 +146,30 @@
         this.$set(this.sectionErrors, key, "");
 
         try {
-          const data = await bridgetools.req3("avps", this.buildAvpFilters(), {
+          const filters = this.buildAvpFilters();
+          console.log("[Reporting V3] AVP section request", {
+            key,
+            include,
+            filters,
+            forceReload
+          });
+
+          const data = await bridgetools.req3("avps", filters, {
             include: [include]
+          });
+          console.log("[Reporting V3] AVP section response", {
+            key,
+            include,
+            data
           });
 
           this.$set(this.sectionRows, key, Array.isArray(data?.data) ? data.data : []);
+          console.log("[Reporting V3] AVP normalized section rows", {
+            key,
+            include,
+            rowCount: Array.isArray(this.sectionRows[key]) ? this.sectionRows[key].length : 0,
+            rows: this.sectionRows[key]
+          });
           this.$set(this.sectionLoaded, key, true);
         } catch (error) {
           console.error(`Failed to load avp ${key} data`, error);
@@ -158,7 +186,7 @@
         <component
           v-if="activeSectionComponent"
           :is="activeSectionComponent"
-          :avps="activeSectionRows"
+          :avps="debugActiveSectionRows"
           :selected-filters="selectedFilters"
           :loading="activeSectionLoading"
           :error="activeSectionError"

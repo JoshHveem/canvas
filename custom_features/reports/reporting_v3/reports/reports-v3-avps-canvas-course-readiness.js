@@ -25,10 +25,14 @@
     computed: {
       filteredAvps() {
         const list = Array.isArray(this.avps) ? this.avps : [];
+        console.log("[Reporting V3] AVP course readiness component input", list);
 
-        return list
+        const rows = list
           .map((avp) => this.normalizeAvpRow(avp))
           .filter(Boolean);
+
+        console.log("[Reporting V3] AVP course readiness normalized rows", rows);
+        return rows;
       },
 
       tableColumns() {
