@@ -395,43 +395,43 @@
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
           ${renderCheck(
-            "Instructor evaluation is in a module",
+            "Instructor Evaluation",
             data.hasInstructorEval,
             data.hasInstructorEval ? "Instructor evaluation link found." : "Add the instructor evaluation link to a module."
           )}
           ${renderCheck(
-            "Course evaluation is in a module",
+            "Course Evaluation",
             data.hasCourseEval,
             data.hasCourseEval ? "Course evaluation link found." : "Add the course evaluation link to a module."
           )}
           ${renderCheck(
-            "Course has content",
+            "Course Content",
             data.hasAnyContent,
             data.hasAnyContent ? "At least one module item was found." : "No module items were found in this course."
           )}
           ${renderCheck(
-            "Assignment group weights total 100%",
+            "Group Weights = 100%",
             data.assignmentGroupWeightsAddTo100,
             data.usesAssignmentGroupWeights
               ? `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
               : "Assignment group weighting is not enabled for this course."
           )}
           ${renderCheck(
-            "Assignments with points are placed in modules",
+            "Assignments in Modules",
             data.assignmentsWorthPointsNotInModule.length === 0,
             data.assignmentsWorthPointsNotInModule.length === 0
               ? "All point-bearing assignments are in a module."
               : `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`
           )}
           ${renderCheck(
-            "Assignments in modules are published",
+            "Assignments Published",
             data.unpublishedAssignmentsInModule.length === 0,
             data.unpublishedAssignmentsInModule.length === 0
               ? "All assignments found in modules are published."
               : `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`
           )}
           ${renderCheck(
-            "All published-state module items are published",
+            "Content Published",
             data.unpublishedModuleItems.length === 0,
             data.unpublishedModuleItems.length === 0
               ? "No unpublished module items were found."
