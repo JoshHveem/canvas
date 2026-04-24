@@ -436,13 +436,20 @@
   }
 
   function getWeightsCheck(data) {
+    if (!data.usesAssignmentGroupWeights) {
+      return {
+        title: "Group Weights = 100%",
+        state: "pass",
+        label: "Pass",
+        detail: "Assignment group weighting is not enabled for this course."
+      };
+    }
+
     return {
       title: "Group Weights = 100%",
       state: data.assignmentGroupWeightsAddTo100 ? "pass" : "fail",
       label: data.assignmentGroupWeightsAddTo100 ? "Pass" : "Fail",
-      detail: data.usesAssignmentGroupWeights
-        ? `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
-        : "Assignment group weighting is not enabled for this course."
+      detail: `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
     };
   }
 
@@ -504,35 +511,6 @@
     };
   }
 
-  function getContentPublishedCheck(data) {
-    if (!data.hasAnyContent) {
-      return {
-        title: "Content Published",
-        state: "fail",
-        label: "Fail",
-        detail: "No module content exists yet."
-      };
-    }
-
-    if (data.unpublishedModuleItems.length > 0) {
-      return {
-        title: "Content Published",
-        state: "warn",
-        label: "Unpublished",
-        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`,
-        items: data.unpublishedModuleItems,
-        itemFormatter: item => `${escapeHtml(item.title || item.type || "Module item")} (${escapeHtml(item.moduleName || "Unknown module")})`
-      };
-    }
-
-    return {
-      title: "Content Published",
-      state: "pass",
-      label: "Pass",
-      detail: "No unpublished module items were found."
-    };
-  }
-
   function getChecks(data) {
     return [
       getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
@@ -540,8 +518,7 @@
       getContentCheck(data),
       getWeightsCheck(data),
       getAssignmentsInModulesCheck(data),
-      getAssignmentsPublishedCheck(data),
-      getContentPublishedCheck(data)
+      getAssignmentsPublishedCheck(data)
     ];
   }
 
