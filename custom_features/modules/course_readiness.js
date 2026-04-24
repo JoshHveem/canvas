@@ -64,15 +64,15 @@
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-pass {
-          background: #0b6b2f;
+          background: #dff3e4;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-warn {
-          background: #f3bf2b;
+          background: #fff3cd;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-fail {
-          background: #c62828;
+          background: #fde8e8;
         }
 
         #${cardId} .btech-course-readiness__status-label {
@@ -83,8 +83,7 @@
           justify-content: center;
           font-size: 0.72rem;
           font-weight: 700;
-          color: #ffffff;
-          text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+          color: #000000;
           letter-spacing: 0.02em;
         }
 
