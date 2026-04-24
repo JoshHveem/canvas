@@ -35,11 +35,7 @@
         }
 
         #${cardId} .btech-course-readiness__title-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 0.75rem;
-          margin-bottom: 0.35rem;
+          margin-bottom: 0.6rem;
         }
 
         #${cardId} .btech-course-readiness__title {
@@ -50,31 +46,46 @@
         }
 
         #${cardId} .btech-course-readiness__status {
-          display: inline-flex;
+          position: relative;
+          height: 1.15rem;
+          border-radius: 999px;
+          overflow: hidden;
+          background: #e5e8ea;
+        }
+
+        #${cardId} .btech-course-readiness__status-bar {
+          display: flex;
+          width: 100%;
+          height: 100%;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment {
+          height: 100%;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-pass {
+          background: #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-warn {
+          background: #f3bf2b;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-fail {
+          background: #c62828;
+        }
+
+        #${cardId} .btech-course-readiness__status-label {
+          position: absolute;
+          inset: 0;
+          display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 999px;
-          padding: 0.15rem 0.6rem;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.03em;
-          white-space: nowrap;
-        }
-
-        #${cardId} .btech-course-readiness__status.is-pass {
-          background: #dff3e4;
-          color: #0b6b2f;
-        }
-
-        #${cardId} .btech-course-readiness__status.is-warn {
-          background: #fff3cd;
-          color: #8a5b00;
-        }
-
-        #${cardId} .btech-course-readiness__status.is-fail {
-          background: #fde8e8;
-          color: #a61b1b;
+          color: #ffffff;
+          text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+          letter-spacing: 0.02em;
         }
 
         #${cardId} .btech-course-readiness__meta {
@@ -514,6 +525,21 @@
     };
   }
 
+  function getProgressData(checks) {
+    const total = checks.length || 1;
+    const passCount = checks.filter(check => check.state === "pass").length;
+    const warnCount = checks.filter(check => check.state === "warn").length;
+    const failCount = checks.filter(check => check.state === "fail").length;
+
+    return {
+      total,
+      passCount,
+      warnCount,
+      failCount,
+      percentComplete: Math.round((passCount / total) * 100)
+    };
+  }
+
   function renderCheck(check) {
     const itemList = Array.isArray(check.items) && check.items.length
       ? `
@@ -545,8 +571,7 @@
       card.html(`
         <div class="btech-course-readiness__header">
           <div class="btech-course-readiness__title-row">
-            <h2 class="btech-course-readiness__title">Is Course Ready to Publish?</h2>
-            <span class="btech-course-readiness__status is-fail">Error</span>
+            <h2 class="btech-course-readiness__title">Course Readiness</h2>
           </div>
           <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
         </div>
