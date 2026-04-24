@@ -100,40 +100,38 @@
         }
 
         #${cardId} .btech-course-readiness__check {
-          display: grid;
-          grid-template-columns: auto 1fr;
+          display: block;
+        }
+
+        #${cardId} .btech-course-readiness__check-header {
+          display: flex;
+          align-items: center;
           gap: 0.55rem;
-          align-items: start;
         }
 
         #${cardId} .btech-course-readiness__pill {
-          min-width: 2.5rem;
+          width: 0.8rem;
+          height: 0.8rem;
+          min-width: 0.8rem;
           border-radius: 999px;
-          padding: 0.15rem 0.45rem;
-          font-size: 0.7rem;
-          font-weight: 700;
-          text-align: center;
-          text-transform: uppercase;
-          letter-spacing: 0.03em;
         }
 
         #${cardId} .btech-course-readiness__check.is-pass .btech-course-readiness__pill {
           background: #dff3e4;
-          color: #0b6b2f;
+          border: 1px solid #0b6b2f;
         }
 
         #${cardId} .btech-course-readiness__check.is-warn .btech-course-readiness__pill {
           background: #fff3cd;
-          color: #8a5b00;
+          border: 1px solid #8a5b00;
         }
 
         #${cardId} .btech-course-readiness__check.is-fail .btech-course-readiness__pill {
           background: #fde8e8;
-          color: #a61b1b;
+          border: 1px solid #a61b1b;
         }
 
         #${cardId} .btech-course-readiness__check-title {
-          display: block;
           font-size: 0.875rem;
           font-weight: 600;
           color: #2d3b45;
@@ -141,7 +139,7 @@
 
         #${cardId} .btech-course-readiness__check-detail {
           display: block;
-          margin-top: 0.15rem;
+          margin-top: 0.35rem;
           font-size: 0.8rem;
           color: #5b6d79;
         }
@@ -511,11 +509,11 @@
   function renderCheck(check) {
     return `
       <li class="btech-course-readiness__check is-${check.state}">
-        <span class="btech-course-readiness__pill">${escapeHtml(check.label)}</span>
-        <div>
+        <div class="btech-course-readiness__check-header">
+          <span class="btech-course-readiness__pill" aria-hidden="true"></span>
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
-          <span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>
         </div>
+        <span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>
       </li>
     `;
   }
