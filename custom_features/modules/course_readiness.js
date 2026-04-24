@@ -67,6 +67,11 @@
           color: #0b6b2f;
         }
 
+        #${cardId} .btech-course-readiness__status.is-warn {
+          background: #fff3cd;
+          color: #8a5b00;
+        }
+
         #${cardId} .btech-course-readiness__status.is-fail {
           background: #fde8e8;
           color: #a61b1b;
@@ -115,6 +120,11 @@
         #${cardId} .btech-course-readiness__check.is-pass .btech-course-readiness__pill {
           background: #dff3e4;
           color: #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__check.is-warn .btech-course-readiness__pill {
+          background: #fff3cd;
+          color: #8a5b00;
         }
 
         #${cardId} .btech-course-readiness__check.is-fail .btech-course-readiness__pill {
@@ -206,21 +216,12 @@
     return ids.filter(id => Number.isFinite(id) && id > 0);
   }
 
-  function getExternalUrl(item) {
-    return String(
-      item.external_url
-      ?? item.url
-      ?? item.html_url
-      ?? item.content_details?.url
-      ?? ""
-    ).toLowerCase();
-  }
-
   async function getCourseData() {
-    const [course, assignmentGroups, modules] = await Promise.all([
+    const [course, assignmentGroups, modules, assignmentList] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
-      canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`)
+      canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
+      canvasGet(`/api/v1/courses/${courseId}/assignments`)
     ]);
 
     const moduleItems = modules.flatMap(module =>
@@ -287,13 +288,24 @@
     );
     const usesAssignmentGroupWeights = Boolean(course?.apply_assignment_group_weights);
 
-    const urls = moduleItems
-      .map(getExternalUrl)
+    const evaluationUrls = assignmentList
+      .map(assignment => String(assignment?.external_tool_tag_attributes?.url ?? ""))
+      .map(url => url.toLowerCase())
       .filter(Boolean);
 
+    const instructorEvalAssignments = assignmentList.filter(assignment =>
+      String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase().includes(`jotform_id=${instructorEvalId}`)
+    );
+
+    const courseEvalAssignments = assignmentList.filter(assignment =>
+      String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase().includes(`jotform_id=${courseEvalId}`)
+    );
+
     return {
-      hasInstructorEval: urls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
-      hasCourseEval: urls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
+      instructorEvalAssignments,
+      courseEvalAssignments,
+      hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
+      hasCourseEval: evaluationUrls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
       hasAnyContent: moduleItems.length > 0,
       usesAssignmentGroupWeights,
       assignmentGroupWeightsAddTo100: usesAssignmentGroupWeights && Math.abs(assignmentGroupWeightTotal - 100) < 0.001,
@@ -305,23 +317,204 @@
   }
 
   function getIsReady(data) {
-    return Boolean(
-      data.hasInstructorEval
-      && data.hasCourseEval
-      && data.hasAnyContent
-      && data.assignmentGroupWeightsAddTo100
-      && data.assignmentsWorthPointsNotInModule.length === 0
-      && data.unpublishedAssignmentsInModule.length === 0
-      && data.unpublishedModuleItems.length === 0
-    );
+    return getOverallStatus(data).state === "pass";
   }
 
-  function renderCheck(title, passed, detail) {
+  function getEvaluationCheck(assignments, title) {
+    if (!assignments.length) {
+      return {
+        title,
+        state: "fail",
+        label: "Fail",
+        detail: `Add the ${title.toLowerCase()} assignment.`
+      };
+    }
+
+    const hasPublishedAssignment = assignments.some(assignment =>
+      assignment.published === true || assignment.workflow_state === "published"
+    );
+
+    if (hasPublishedAssignment) {
+      return {
+        title,
+        state: "pass",
+        label: "Pass",
+        detail: `${title} assignment is published.`
+      };
+    }
+
+    return {
+      title,
+      state: "warn",
+      label: "Unpublished",
+      detail: `${title} assignment exists but is not published.`
+    };
+  }
+
+  function getContentCheck(data) {
+    if (!data.hasAnyContent) {
+      return {
+        title: "Course Content",
+        state: "fail",
+        label: "Fail",
+        detail: "No module items were found in this course."
+      };
+    }
+
+    if (data.unpublishedModuleItems.length > 0) {
+      return {
+        title: "Course Content",
+        state: "warn",
+        label: "Unpublished",
+        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
+      };
+    }
+
+    return {
+      title: "Course Content",
+      state: "pass",
+      label: "Pass",
+      detail: "Course content exists and module items are published."
+    };
+  }
+
+  function getWeightsCheck(data) {
+    return {
+      title: "Group Weights = 100%",
+      state: data.assignmentGroupWeightsAddTo100 ? "pass" : "fail",
+      label: data.assignmentGroupWeightsAddTo100 ? "Pass" : "Fail",
+      detail: data.usesAssignmentGroupWeights
+        ? `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
+        : "Assignment group weighting is not enabled for this course."
+    };
+  }
+
+  function getAssignmentsInModulesCheck(data) {
+    if (!data.hasAnyContent) {
+      return {
+        title: "Assignments in Modules",
+        state: "fail",
+        label: "Fail",
+        detail: "No module content exists yet."
+      };
+    }
+
+    if (data.assignmentsWorthPointsNotInModule.length > 0) {
+      return {
+        title: "Assignments in Modules",
+        state: "fail",
+        label: "Fail",
+        detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`
+      };
+    }
+
+    return {
+      title: "Assignments in Modules",
+      state: "pass",
+      label: "Pass",
+      detail: "All point-bearing assignments are in a module."
+    };
+  }
+
+  function getAssignmentsPublishedCheck(data) {
+    if (!data.hasAnyContent) {
+      return {
+        title: "Assignments Published",
+        state: "fail",
+        label: "Fail",
+        detail: "No module content exists yet."
+      };
+    }
+
+    if (data.unpublishedAssignmentsInModule.length > 0) {
+      return {
+        title: "Assignments Published",
+        state: "warn",
+        label: "Unpublished",
+        detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`
+      };
+    }
+
+    return {
+      title: "Assignments Published",
+      state: "pass",
+      label: "Pass",
+      detail: "All assignments found in modules are published."
+    };
+  }
+
+  function getContentPublishedCheck(data) {
+    if (!data.hasAnyContent) {
+      return {
+        title: "Content Published",
+        state: "fail",
+        label: "Fail",
+        detail: "No module content exists yet."
+      };
+    }
+
+    if (data.unpublishedModuleItems.length > 0) {
+      return {
+        title: "Content Published",
+        state: "warn",
+        label: "Unpublished",
+        detail: `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
+      };
+    }
+
+    return {
+      title: "Content Published",
+      state: "pass",
+      label: "Pass",
+      detail: "No unpublished module items were found."
+    };
+  }
+
+  function getChecks(data) {
+    return [
+      getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
+      getEvaluationCheck(data.courseEvalAssignments, "Course Evaluation"),
+      getContentCheck(data),
+      getWeightsCheck(data),
+      getAssignmentsInModulesCheck(data),
+      getAssignmentsPublishedCheck(data),
+      getContentPublishedCheck(data)
+    ];
+  }
+
+  function getOverallStatus(data) {
+    const checks = getChecks(data);
+
+    if (checks.some(check => check.state === "fail")) {
+      return {
+        state: "fail",
+        label: "Not Ready",
+        checks
+      };
+    }
+
+    if (checks.some(check => check.state === "warn")) {
+      return {
+        state: "warn",
+        label: "Needs Publishing",
+        checks
+      };
+    }
+
+    return {
+      state: "pass",
+      label: "Ready",
+      checks
+    };
+  }
+
+  function renderCheck(check) {
     return `
-      <li class="btech-course-readiness__check ${passed ? "is-pass" : "is-fail"}">
-        <span class="btech-course-readiness__pill">${passed ? "Pass" : "Fix"}</span>
+      <li class="btech-course-readiness__check is-${check.state}">
+        <span class="btech-course-readiness__pill">${escapeHtml(check.label)}</span>
         <div>
-          <span class="btech-course-readiness__check-title">${escapeHtml(title)}</span>
+          <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
+          <span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>
         </div>
       </li>
     `;
@@ -362,7 +555,7 @@
       return;
     }
 
-    const isReady = getIsReady(data);
+    const overallStatus = getOverallStatus(data);
     const issuesMarkup = [
       renderIssue(
         "Assignments worth points but not in a module",
@@ -385,58 +578,17 @@
       <div class="btech-course-readiness__header">
         <div class="btech-course-readiness__title-row">
           <h2 class="btech-course-readiness__title">Course Ready?</h2>
-          <span class="btech-course-readiness__status ${isReady ? "is-pass" : "is-fail"}">
-            ${isReady ? "Ready" : "Not Ready"}
+          <span class="btech-course-readiness__status is-${overallStatus.state}">
+            ${overallStatus.label}
           </span>
         </div>
         <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
       </div>
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
-          ${renderCheck(
-            "Instructor Evaluation",
-            data.hasInstructorEval,
-            data.hasInstructorEval ? "Instructor evaluation link found." : "Add the instructor evaluation link to a module."
-          )}
-          ${renderCheck(
-            "Course Evaluation",
-            data.hasCourseEval,
-            data.hasCourseEval ? "Course evaluation link found." : "Add the course evaluation link to a module."
-          )}
-          ${renderCheck(
-            "Course Content",
-            data.hasAnyContent,
-            data.hasAnyContent ? "At least one module item was found." : "No module items were found in this course."
-          )}
-          ${renderCheck(
-            "Group Weights = 100%",
-            data.assignmentGroupWeightsAddTo100,
-            data.usesAssignmentGroupWeights
-              ? `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
-              : "Assignment group weighting is not enabled for this course."
-          )}
-          ${renderCheck(
-            "Assignments in Modules",
-            data.assignmentsWorthPointsNotInModule.length === 0 && data.hasAnyContent,
-            data.assignmentsWorthPointsNotInModule.length === 0
-              ? "All point-bearing assignments are in a module."
-              : `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`
-          )}
-          ${renderCheck(
-            "Assignments Published",
-            data.unpublishedAssignmentsInModule.length === 0 && data.hasAnyContent,
-            data.unpublishedAssignmentsInModule.length === 0
-              ? "All assignments found in modules are published."
-              : `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`
-          )}
-          ${renderCheck(
-            "Content Published",
-            data.unpublishedModuleItems.length === 0 && data.hasAnyContent,
-            data.unpublishedModuleItems.length === 0
-              ? "No unpublished module items were found."
-              : `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
-          )}
+          ${overallStatus.checks.map(check => renderCheck(check)).join("")}
         </ul>
+        ${issuesMarkup ? `<ul class="btech-course-readiness__issues">${issuesMarkup}</ul>` : ""}
       </div>
     `);
   }
