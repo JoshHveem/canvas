@@ -437,10 +437,6 @@
               : `${data.unpublishedModuleItems.length} module item(s) are still unpublished.`
           )}
         </ul>
-        ${issuesMarkup
-          ? `<ul class="btech-course-readiness__issues">${issuesMarkup}</ul>`
-          : `<p class="btech-course-readiness__empty">No publish blockers found.</p>`
-        }
       </div>
     `);
   }
