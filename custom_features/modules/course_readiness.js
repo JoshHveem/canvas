@@ -322,7 +322,6 @@
         <span class="btech-course-readiness__pill">${passed ? "Pass" : "Fix"}</span>
         <div>
           <span class="btech-course-readiness__check-title">${escapeHtml(title)}</span>
-          <span class="btech-course-readiness__check-detail">${escapeHtml(detail)}</span>
         </div>
       </li>
     `;
