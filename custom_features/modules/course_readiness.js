@@ -320,6 +320,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
           border: 1px solid #0b6b2f;
         }
 
+        #${cardId} .btech-course-readiness__check.is-loading .btech-course-readiness__pill {
+          background: #e5e8ea;
+          border: 1px solid #5b6d79;
+        }
+
         #${cardId} .btech-course-readiness__check.is-warn .btech-course-readiness__pill {
           background: #fff3cd;
           border: 1px solid #8a5b00;
@@ -434,7 +439,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     const termName = String(course?.term?.name ?? "");
     const termYear = extractYear(termName);
-    const syllabusDoc = await getSyllabusDocByCourseId(courseId, termYear);
 
     const moduleItems = modules.flatMap(module =>
       (module.items ?? []).map(item => ({
@@ -519,8 +523,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
     return {
       termName,
       termYear,
-      syllabusDoc,
-      syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
       instructorEvalAssignments,
       courseEvalAssignments,
       hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
@@ -536,7 +538,16 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function getIsReady(data) {
-    return getOverallStatus(data).state === "pass";
+    return getChecks(data).every(check => check.state === "pass");
+  }
+
+  function getLoadingCheck(title, detail = "Loading...") {
+    return {
+      title,
+      state: "loading",
+      label: "Loading",
+      detail
+    };
   }
 
   function getEvaluationCheck(assignments, title) {
@@ -571,6 +582,19 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function getSyllabusCheck(data) {
+    if (data.syllabusLoading) {
+      return getLoadingCheck("Syllabus", "Loading syllabus status...");
+    }
+
+    if (data.syllabusLoadError) {
+      return {
+        title: "Syllabus",
+        state: "fail",
+        label: "Fail",
+        detail: "Unable to load syllabus status."
+      };
+    }
+
     if (!data.syllabusDoc) {
       return {
         title: "Syllabus",
@@ -703,6 +727,18 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function getChecks(data) {
+    if (!data.coreLoaded) {
+      return [
+        getLoadingCheck("Syllabus", "Loading syllabus status..."),
+        getLoadingCheck("Instructor Evaluation"),
+        getLoadingCheck("Course Evaluation"),
+        getLoadingCheck("Course Content"),
+        getLoadingCheck("Group Weights = 100%"),
+        getLoadingCheck("Assignments in Modules"),
+        getLoadingCheck("Assignments Published")
+      ];
+    }
+
     return [
       getSyllabusCheck(data),
       getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
@@ -716,6 +752,14 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
   function getOverallStatus(data) {
     const checks = getChecks(data);
+
+    if (checks.some(check => check.state === "loading")) {
+      return {
+        state: "loading",
+        label: "Loading",
+        checks
+      };
+    }
 
     if (checks.some(check => check.state === "fail")) {
       return {
@@ -743,12 +787,14 @@ function findEntityIdByCourseId(courseId, options = {}) {
   function getProgressData(checks) {
     const total = checks.length || 1;
     const passCount = checks.filter(check => check.state === "pass").length;
+    const loadingCount = checks.filter(check => check.state === "loading").length;
     const warnCount = checks.filter(check => check.state === "warn").length;
     const failCount = checks.filter(check => check.state === "fail").length;
 
     return {
       total,
       passCount,
+      loadingCount,
       warnCount,
       failCount,
       percentComplete: Math.round((passCount / total) * 100)
@@ -806,7 +852,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         <div class="btech-course-readiness__title-row">
           <h2 class="btech-course-readiness__title">Course Readiness</h2>
         </div>
-        <div class="btech-course-readiness__status" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed`)}">
+        <div class="btech-course-readiness__status" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed, ${progress.loadingCount} loading`)}">
           <div class="btech-course-readiness__status-bar">
             <span class="btech-course-readiness__status-segment is-pass" style="width: ${(progress.passCount / progress.total) * 100}%;"></span>
             <span class="btech-course-readiness__status-segment is-warn" style="width: ${(progress.warnCount / progress.total) * 100}%;"></span>
@@ -836,27 +882,46 @@ function findEntityIdByCourseId(courseId, options = {}) {
     isRefreshing = true;
 
     try {
-      if (!card.html().trim()) {
-        card.html(`
-          <div class="btech-course-readiness__header">
-            <div class="btech-course-readiness__title-row">
-              <h2 class="btech-course-readiness__title">Course Readiness</h2>
-            </div>
-            <p class="btech-course-readiness__meta">Preparing checklist...</p>
-          </div>
-        `);
-      }
+      const loadingState = {
+        coreLoaded: false,
+        syllabusLoading: true
+      };
+      renderCard(card, loadingState);
 
-      const data = await getCourseData();
-      renderCard(card, data);
-      courseReadinessComplete = getIsReady(data);
+      const coreData = await getCourseData();
+      const partialData = {
+        ...coreData,
+        coreLoaded: true,
+        syllabusLoading: true,
+        syllabusDoc: null,
+        syllabusStatus: "",
+        syllabusLoadError: false
+      };
+      renderCard(card, partialData);
+
+      const syllabusDoc = await getSyllabusDocByCourseId(courseId, coreData.termYear);
+      const finalData = {
+        ...partialData,
+        syllabusLoading: false,
+        syllabusDoc,
+        syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
+        syllabusLoadError: false
+      };
+      renderCard(card, finalData);
+      courseReadinessComplete = getIsReady(finalData);
       if (courseReadinessComplete && window.__btechCourseReadinessIntervalId) {
         clearInterval(window.__btechCourseReadinessIntervalId);
         window.__btechCourseReadinessIntervalId = null;
       }
     } catch (error) {
       console.error("Course readiness check failed.", error);
-      renderCard(card, null, "Unable to refresh the course readiness checklist right now.");
+      if (card.html().trim()) {
+        renderCard(card, {
+          ...(await Promise.resolve({ coreLoaded: false, syllabusLoading: false, syllabusLoadError: true }))
+        }, "Unable to refresh the course readiness checklist right now.");
+      } else {
+        renderCard(card, null, "Unable to refresh the course readiness checklist right now.");
+      }
     } finally {
       isRefreshing = false;
     }
