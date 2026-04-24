@@ -42,6 +42,20 @@
           { key: "numDepartments", label: "Departments", width: "6rem", format: "integer", align: "right" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
+          { key: "numCoursesComplete", label: "Courses Complete", width: "7rem", format: "integer", align: "right" },
+          {
+            key: "percCoursesComplete",
+            label: "% Courses Complete",
+            width: "8rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 1.0,
+              warning: 0.9,
+              bad: 0.75
+            }
+          },
           {
             key: "percSyllabiApproved",
             label: "% Syllabi",
@@ -144,6 +158,10 @@
           avp?.canvas_course_readiness__num_syllabi_approved,
           avp?.num_syllabi_approved
         );
+        const numCoursesComplete = this.firstFiniteNumber(
+          avp?.canvas_course_readiness__num_courses_ready_published,
+          avp?.num_courses_ready_published
+        );
         const numCourseEvaluationPublished = this.firstFiniteNumber(
           avp?.canvas_course_readiness__num_course_evaluation_published,
           avp?.num_course_evaluation_published
@@ -168,6 +186,8 @@
           numDepartments: avp?.num_departments,
           academicYear: Number(avp?.canvas_course_readiness__academic_year || avp?.academic_year || 0),
           numCourses,
+          numCoursesComplete,
+          percCoursesComplete: this.ratio(numCoursesComplete, numCourses),
           percSyllabiApproved: this.ratio(numSyllabiApproved, numCourses),
           percCourseEvaluationPublished: this.ratio(numCourseEvaluationPublished, numCourses),
           percInstructorEvaluationPublished: this.ratio(numInstructorEvaluationPublished, numCourses),
