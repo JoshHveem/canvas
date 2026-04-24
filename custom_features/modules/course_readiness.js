@@ -513,7 +513,7 @@
           <span class="btech-course-readiness__pill" aria-hidden="true"></span>
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
         </div>
-        <span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>
+        ${check.state === "pass" ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
       </li>
     `;
   }
