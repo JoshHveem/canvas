@@ -66,17 +66,45 @@
 
         #${cardId} .btech-course-readiness__status-segment.is-pass {
           background: #dff3e4;
-          border: 1px solid #0b6b2f;
+          box-shadow: inset 0 1px 0 #0b6b2f, inset 0 -1px 0 #0b6b2f;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-warn {
           background: #fff3cd;
-          border: 1px solid #8a5b00;
+          box-shadow: inset 0 1px 0 #8a5b00, inset 0 -1px 0 #8a5b00;
         }
 
         #${cardId} .btech-course-readiness__status-segment.is-fail {
           background: #fde8e8;
-          border: 1px solid #a61b1b;
+          box-shadow: inset 0 1px 0 #a61b1b, inset 0 -1px 0 #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment:first-child {
+          box-shadow: inset 1px 0 0 currentColor;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-pass:first-child {
+          box-shadow: inset 1px 0 0 #0b6b2f, inset 0 1px 0 #0b6b2f, inset 0 -1px 0 #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-warn:first-child {
+          box-shadow: inset 1px 0 0 #8a5b00, inset 0 1px 0 #8a5b00, inset 0 -1px 0 #8a5b00;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-fail:first-child {
+          box-shadow: inset 1px 0 0 #a61b1b, inset 0 1px 0 #a61b1b, inset 0 -1px 0 #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-pass:last-child {
+          box-shadow: inset -1px 0 0 #0b6b2f, inset 0 1px 0 #0b6b2f, inset 0 -1px 0 #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-warn:last-child {
+          box-shadow: inset -1px 0 0 #8a5b00, inset 0 1px 0 #8a5b00, inset 0 -1px 0 #8a5b00;
+        }
+
+        #${cardId} .btech-course-readiness__status-segment.is-fail:last-child {
+          box-shadow: inset -1px 0 0 #a61b1b, inset 0 1px 0 #a61b1b, inset 0 -1px 0 #a61b1b;
         }
 
         #${cardId} .btech-course-readiness__status-label {
