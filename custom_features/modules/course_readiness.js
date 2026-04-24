@@ -19,7 +19,7 @@
   function findSyllabusByCourseId(courseId, options = {}) {
     const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
     const pageSize = options.pageSize || 50;
-    const delayMs = options.delayMs || 200;
+    const delayMs = options.delayMs || 50;
     const termYear = String(options.termYear ?? "").trim();
 
     const target = String(courseId);
@@ -882,11 +882,12 @@ function findEntityIdByCourseId(courseId, options = {}) {
     isRefreshing = true;
 
     try {
-      const loadingState = {
-        coreLoaded: false,
-        syllabusLoading: true
-      };
-      renderCard(card, loadingState);
+      if (!card.html().trim()) {
+        renderCard(card, {
+          coreLoaded: false,
+          syllabusLoading: true
+        });
+      }
 
       const coreData = await getCourseData();
       const partialData = {
@@ -899,14 +900,27 @@ function findEntityIdByCourseId(courseId, options = {}) {
       };
       renderCard(card, partialData);
 
-      const syllabusDoc = await getSyllabusDocByCourseId(courseId, coreData.termYear);
-      const finalData = {
-        ...partialData,
-        syllabusLoading: false,
-        syllabusDoc,
-        syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
-        syllabusLoadError: false
-      };
+      let finalData;
+      try {
+        const syllabusDoc = await getSyllabusDocByCourseId(courseId, coreData.termYear);
+        finalData = {
+          ...partialData,
+          syllabusLoading: false,
+          syllabusDoc,
+          syllabusStatus: String(syllabusDoc?.status ?? "").trim().toLowerCase(),
+          syllabusLoadError: false
+        };
+      } catch (syllabusError) {
+        console.error("Course readiness syllabus check failed.", syllabusError);
+        finalData = {
+          ...partialData,
+          syllabusLoading: false,
+          syllabusDoc: null,
+          syllabusStatus: "",
+          syllabusLoadError: true
+        };
+      }
+
       renderCard(card, finalData);
       courseReadinessComplete = getIsReady(finalData);
       if (courseReadinessComplete && window.__btechCourseReadinessIntervalId) {
@@ -915,13 +929,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       }
     } catch (error) {
       console.error("Course readiness check failed.", error);
-      if (card.html().trim()) {
-        renderCard(card, {
-          ...(await Promise.resolve({ coreLoaded: false, syllabusLoading: false, syllabusLoadError: true }))
-        }, "Unable to refresh the course readiness checklist right now.");
-      } else {
-        renderCard(card, null, "Unable to refresh the course readiness checklist right now.");
-      }
+      renderCard(card, null, "Unable to refresh the course readiness checklist right now.");
     } finally {
       isRefreshing = false;
     }
