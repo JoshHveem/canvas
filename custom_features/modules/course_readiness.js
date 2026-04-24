@@ -7,6 +7,7 @@
   const refreshMs = 60000;
   const instructorEvalId = "243044643269963";
   const courseEvalId = "241976981675072";
+  const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
 
   if (!courseId) return;
 
@@ -360,7 +361,10 @@
     );
 
     const courseEvalAssignments = assignmentList.filter(assignment =>
-      String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase().includes(`jotform_id=${courseEvalId}`)
+      (() => {
+        const url = String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase();
+        return url.includes(`jotform_id=${courseEvalId}`) || url === courseEvalBaseUrl;
+      })()
     );
 
     return {
@@ -654,6 +658,7 @@
   }
 
   let isRefreshing = false;
+  let courseReadinessComplete = false;
 
   async function refreshCourseReadiness() {
     const card = ensureCard();
@@ -675,7 +680,8 @@
 
       const data = await getCourseData();
       renderCard(card, data);
-      if (getIsReady(data) && window.__btechCourseReadinessIntervalId) {
+      courseReadinessComplete = getIsReady(data);
+      if (courseReadinessComplete && window.__btechCourseReadinessIntervalId) {
         clearInterval(window.__btechCourseReadinessIntervalId);
         window.__btechCourseReadinessIntervalId = null;
       }
@@ -694,5 +700,7 @@
     clearInterval(window.__btechCourseReadinessIntervalId);
   }
 
-  window.__btechCourseReadinessIntervalId = window.setInterval(refreshCourseReadiness, refreshMs);
+  if (!courseReadinessComplete) {
+    window.__btechCourseReadinessIntervalId = window.setInterval(refreshCourseReadiness, refreshMs);
+  }
 })();
