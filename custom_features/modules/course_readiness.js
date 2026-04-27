@@ -893,7 +893,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       : "";
 
     return `
-      <li class="btech-course-readiness__check is-${check.state}">
+      <li class="btech-course-readiness__check is-${check.state}${check.dividerBefore ? " has-divider" : ""}">
         <div class="btech-course-readiness__check-header">
           <span class="btech-course-readiness__pill" aria-hidden="true"></span>
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
