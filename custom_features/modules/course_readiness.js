@@ -303,6 +303,12 @@ function findEntityIdByCourseId(courseId, options = {}) {
           display: block;
         }
 
+        #${cardId} .btech-course-readiness__check.has-divider {
+          border-top: 1px solid #e5e8ea;
+          margin-top: 0.55rem;
+          padding-top: 0.8rem;
+        }
+
         #${cardId} .btech-course-readiness__check-header {
           display: flex;
           align-items: center;
@@ -326,6 +332,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
           border: 1px solid #5b6d79;
         }
 
+        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__pill {
+          background: #e5e8ea;
+          border: 1px solid #9aa5ad;
+        }
+
         #${cardId} .btech-course-readiness__check.is-warn .btech-course-readiness__pill {
           background: #fff3cd;
           border: 1px solid #8a5b00;
@@ -340,6 +351,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
           font-size: 0.875rem;
           font-weight: 600;
           color: #2d3b45;
+        }
+
+        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__check-title,
+        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__check-detail {
+          color: #7a8994;
         }
 
         #${cardId} .btech-course-readiness__check-detail {
@@ -524,6 +540,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     return {
       termName,
       termYear,
+      isCoursePublished: Boolean(course?.published) || ["available", "completed"].includes(String(course?.workflow_state ?? "").toLowerCase()),
       instructorEvalAssignments,
       courseEvalAssignments,
       hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
@@ -733,7 +750,40 @@ function findEntityIdByCourseId(courseId, options = {}) {
     };
   }
 
-  function getChecks(data) {
+  function getPublishedCheck(data, prerequisitesReady) {
+    if (!data.coreLoaded) {
+      return getLoadingCheck("Published", "Loading publish status...");
+    }
+
+    if (!prerequisitesReady) {
+      return {
+        title: "Published",
+        state: "blocked",
+        label: "Blocked",
+        detail: "Not Ready to Publish",
+        dividerBefore: true
+      };
+    }
+
+    if (data.isCoursePublished) {
+      return {
+        title: "Published",
+        state: "pass",
+        label: "Pass",
+        dividerBefore: true
+      };
+    }
+
+    return {
+      title: "Published",
+      state: "fail",
+      label: "Fail",
+      detail: "Course is not published.",
+      dividerBefore: true
+    };
+  }
+
+  function getPrerequisiteChecks(data) {
     if (!data.coreLoaded) {
       return [
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
@@ -754,6 +804,16 @@ function findEntityIdByCourseId(courseId, options = {}) {
       getWeightsCheck(data),
       getAssignmentsInModulesCheck(data),
       getAssignmentsPublishedCheck(data)
+    ];
+  }
+
+  function getChecks(data) {
+    const prerequisiteChecks = getPrerequisiteChecks(data);
+    const prerequisitesReady = prerequisiteChecks.every(check => check.state === "pass");
+
+    return [
+      ...prerequisiteChecks,
+      getPublishedCheck(data, prerequisitesReady)
     ];
   }
 
