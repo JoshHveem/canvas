@@ -488,7 +488,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       const pointsPossible = Number(assignment.points_possible ?? 0);
       const isInModule = getAssignmentContentIds(assignment).some(id => assignmentModuleIds.has(id));
 
-      if (pointsPossible > 0 && !isInModule) {
+      if (assignment.published === true && pointsPossible > 0 && !isInModule) {
         assignmentsWorthPointsNotInModule.push({
           id: assignment.id,
           name: assignment.name,
@@ -752,7 +752,10 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
   function getPublishedCheck(data, prerequisitesReady) {
     if (!data.coreLoaded) {
-      return getLoadingCheck("Published", "Loading publish status...");
+      return {
+        ...getLoadingCheck("Published", "Loading publish status..."),
+        dividerBefore: true
+      };
     }
 
     if (!prerequisitesReady) {
