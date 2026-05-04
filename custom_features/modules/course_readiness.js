@@ -485,12 +485,13 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   async function getCourseData() {
-    const [course, assignmentGroups, modules, assignmentList, instructorEnrollments] = await Promise.all([
+    const [course, assignmentGroups, modules, assignmentList, instructorEnrollments, tabs] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}?include[]=term`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
       canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
       canvasGet(`/api/v1/courses/${courseId}/assignments`),
-      canvasGet(`/api/v1/courses/${courseId}/enrollments?type[]=TeacherEnrollment&state[]=active&state[]=invited&state[]=creation_pending`)
+      canvasGet(`/api/v1/courses/${courseId}/enrollments?type[]=TeacherEnrollment&state[]=active&state[]=invited&state[]=creation_pending`),
+      canvasGet(`/api/v1/courses/${courseId}/tabs`)
     ]);
 
     const termName = String(course?.term?.name ?? "");
@@ -585,6 +586,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
       hasCourseEval: evaluationUrls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
       instructorEnrollments,
+      tabs,
       manualConfirmations: getManualConfirmations(),
       hasAnyContent: moduleItems.length > 0,
       usesAssignmentGroupWeights,
@@ -692,6 +694,41 @@ function findEntityIdByCourseId(courseId, options = {}) {
       detail: data.syllabusStatus
         ? `Syllabus status is ${data.syllabusStatus.replace(/_/g, " ")}.`
         : "Syllabus status is unavailable."
+    };
+  }
+
+  function getSyllabusLinkCheck(data) {
+    const simpleSyllabusTab = (data.tabs || []).find(tab =>
+      String(tab?.label ?? "").trim().toLowerCase() === "simple syllabus"
+    );
+
+    if (!simpleSyllabusTab) {
+      return {
+        title: "Syllabus Link Enabled",
+        state: "fail",
+        label: "Fail",
+        detail: "Simple Syllabus was not found in course navigation."
+      };
+    }
+
+    const visibility = String(simpleSyllabusTab.visibility ?? "").toLowerCase();
+
+    if (visibility === "public") {
+      return {
+        title: "Syllabus Link Enabled",
+        state: "pass",
+        label: "Pass",
+        detail: "Simple Syllabus is enabled in course navigation."
+      };
+    }
+
+    return {
+      title: "Syllabus Link Enabled",
+      state: "fail",
+      label: "Fail",
+      detail: simpleSyllabusTab.visibility
+        ? `Simple Syllabus navigation visibility is ${simpleSyllabusTab.visibility}.`
+        : "Simple Syllabus navigation visibility is unavailable."
     };
   }
 
@@ -880,6 +917,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         getLoadingCheck("Group Weights = 100%"),
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
+        getLoadingCheck("Syllabus Link Enabled"),
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
         ...getManualConfirmationChecks({ manualConfirmations: getManualConfirmations() })
       ];
@@ -893,6 +931,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       getWeightsCheck(data),
       getAssignmentsInModulesCheck(data),
       getAssignmentsPublishedCheck(data),
+      getSyllabusLinkCheck(data),
       getSyllabusCheck(data),
       ...getManualConfirmationChecks(data)
     ];
