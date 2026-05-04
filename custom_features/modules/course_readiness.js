@@ -184,6 +184,13 @@ function findEntityIdByCourseId(courseId, options = {}) {
     window.localStorage.setItem(manualConfirmationStorageKey, JSON.stringify(confirmations));
   }
 
+  async function enableSyllabusLink(tabId) {
+    return await $.put(`/api/v1/courses/${courseId}/tabs/${encodeURIComponent(tabId)}`, {
+      hidden: false,
+      position: 2
+    });
+  }
+
   function ensureStyles() {
     if (document.getElementById(styleId)) return;
 
@@ -351,6 +358,10 @@ function findEntityIdByCourseId(courseId, options = {}) {
           height: 0.95rem;
           min-width: 0.95rem;
           margin: 0;
+        }
+
+        #${cardId} .btech-course-readiness__action {
+          margin-top: 0.45rem;
         }
 
         #${cardId} .btech-course-readiness__pill {
@@ -713,7 +724,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     const visibility = String(simpleSyllabusTab.visibility ?? "").toLowerCase();
 
-    if (visibility === "public") {
+    if (visibility === "public" && simpleSyllabusTab.hidden !== true) {
       return {
         title: "Syllabus Link Enabled",
         state: "pass",
@@ -728,7 +739,12 @@ function findEntityIdByCourseId(courseId, options = {}) {
       label: "Fail",
       detail: simpleSyllabusTab.visibility
         ? `Simple Syllabus navigation visibility is ${simpleSyllabusTab.visibility}.`
-        : "Simple Syllabus navigation visibility is unavailable."
+        : "Simple Syllabus navigation visibility is unavailable.",
+      action: {
+        type: "enableSyllabusLink",
+        label: "Enable Link",
+        tabId: simpleSyllabusTab.id
+      }
     };
   }
 
@@ -1031,6 +1047,18 @@ function findEntityIdByCourseId(courseId, options = {}) {
           ${check.state === "pass" ? "checked" : ""}
         >`
       : `<span class="btech-course-readiness__pill" aria-hidden="true"></span>`;
+    const actionButton = check.action
+      ? `
+        <div class="btech-course-readiness__action">
+          <button
+            type="button"
+            class="btn btn-small btech-course-readiness__action-button"
+            data-action-type="${escapeHtml(check.action.type)}"
+            data-tab-id="${escapeHtml(check.action.tabId)}"
+          >${escapeHtml(check.action.label)}</button>
+        </div>
+      `
+      : "";
 
     return `
       <li class="btech-course-readiness__check is-${check.state}${check.dividerBefore ? " has-divider" : ""}">
@@ -1039,7 +1067,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
           ${checkControl}
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
         </div>
-        ${check.state === "pass" ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
+        ${check.state === "pass" || check.action ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
+        ${actionButton}
         ${itemList}
       </li>
     `;
@@ -1095,12 +1124,33 @@ function findEntityIdByCourseId(courseId, options = {}) {
     `);
 
     bindManualConfirmationEvents(card);
+    bindActionEvents(card);
   }
 
   function bindManualConfirmationEvents(card) {
     card.find(".btech-course-readiness__manual-checkbox").on("change", function () {
       setManualConfirmation($(this).data("manual-confirmation-key"), this.checked);
       refreshCourseReadiness();
+    });
+  }
+
+  function bindActionEvents(card) {
+    card.find(".btech-course-readiness__action-button").on("click", async function () {
+      const button = $(this);
+      const actionType = button.data("action-type");
+
+      if (actionType !== "enableSyllabusLink") return;
+
+      button.prop("disabled", true).text("Enabling...");
+
+      try {
+        await enableSyllabusLink(button.data("tab-id"));
+        await refreshCourseReadiness();
+      } catch (error) {
+        console.error("Unable to enable Simple Syllabus link.", error);
+        button.prop("disabled", false).text("Enable Link");
+        alert("Unable to enable the Simple Syllabus link right now.");
+      }
     });
   }
 
