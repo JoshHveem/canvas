@@ -9,7 +9,6 @@
   const courseEvalId = "241976981675072";
   const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
   const maxListedAttentionItems = 3;
-  const manualConfirmationStorageKey = `btech-course-readiness-manual-confirmations-${courseId}`;
   const manualConfirmationItems = [
     {
       key: "cleanUnusedContent",
@@ -180,21 +179,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
   function escapeHtml(value) {
     return $("<div>").text(value ?? "").html();
-  }
-
-  function getManualConfirmations() {
-    try {
-      return JSON.parse(window.localStorage.getItem(manualConfirmationStorageKey) || "{}") || {};
-    } catch (error) {
-      console.error("Unable to load course readiness manual confirmations.", error);
-      return {};
-    }
-  }
-
-  function setManualConfirmation(key, value) {
-    const confirmations = getManualConfirmations();
-    confirmations[key] = Boolean(value);
-    window.localStorage.setItem(manualConfirmationStorageKey, JSON.stringify(confirmations));
   }
 
   async function enableSyllabusLink(tabId) {
@@ -393,13 +377,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
           text-transform: uppercase;
         }
 
-        #${cardId} .btech-course-readiness__manual-checkbox {
-          width: 0.95rem;
-          height: 0.95rem;
-          min-width: 0.95rem;
-          margin: 0;
-        }
-
         #${cardId} .btech-course-readiness__action {
           margin-top: 0.45rem;
         }
@@ -434,6 +411,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
         #${cardId} .btech-course-readiness__check.is-fail .btech-course-readiness__pill {
           background: #fde8e8;
           border: 1px solid #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__check.is-info .btech-course-readiness__pill {
+          background: #eef2f4;
+          border: 1px solid #5b6d79;
         }
 
         #${cardId} .btech-course-readiness__check-title {
@@ -638,7 +620,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
       hasCourseEval: evaluationUrls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
       instructorEnrollments,
       tabs,
-      manualConfirmations: getManualConfirmations(),
       hasAnyContent: moduleItems.length > 0,
       usesAssignmentGroupWeights,
       assignmentGroupWeightsAddTo100: usesAssignmentGroupWeights && Math.abs(assignmentGroupWeightTotal - 100) < 0.001,
@@ -948,21 +929,17 @@ function findEntityIdByCourseId(courseId, options = {}) {
     };
   }
 
-  function getManualConfirmationChecks(data) {
-    const confirmations = data.manualConfirmations || {};
-
+  function getManualConfirmationChecks() {
     return manualConfirmationItems.map((item, index) => {
-      const isConfirmed = confirmations[item.key] === true;
-
       return {
         title: item.title,
         guideKey: item.key,
-        state: isConfirmed ? "pass" : "fail",
-        label: isConfirmed ? "Pass" : "Fail",
+        state: "info",
+        label: "Info",
         detail: item.detail,
-        manualConfirmationKey: item.key,
         sectionLabel: index === 0 ? "Manual Confirmation" : "",
-        dividerBefore: index === 0
+        dividerBefore: index === 0,
+        isScored: false
       };
     });
   }
@@ -1019,7 +996,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         getLoadingCheck("Assignments Published"),
         getLoadingCheck("Syllabus Link Enabled"),
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
-        ...getManualConfirmationChecks({ manualConfirmations: getManualConfirmations() })
+        ...getManualConfirmationChecks()
       ];
     }
 
@@ -1033,13 +1010,15 @@ function findEntityIdByCourseId(courseId, options = {}) {
       getAssignmentsPublishedCheck(data),
       getSyllabusLinkCheck(data),
       getSyllabusCheck(data),
-      ...getManualConfirmationChecks(data)
+      ...getManualConfirmationChecks()
     ];
   }
 
   function getChecks(data) {
     const prerequisiteChecks = getPrerequisiteChecks(data);
-    const prerequisitesReady = prerequisiteChecks.every(check => check.state === "pass");
+    const prerequisitesReady = prerequisiteChecks
+      .filter(check => check.isScored !== false)
+      .every(check => check.state === "pass");
 
     return [
       ...prerequisiteChecks,
@@ -1049,8 +1028,9 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
   function getOverallStatus(data) {
     const checks = getChecks(data);
+    const scoredChecks = checks.filter(check => check.isScored !== false);
 
-    if (checks.some(check => check.state === "loading")) {
+    if (scoredChecks.some(check => check.state === "loading")) {
       return {
         state: "loading",
         label: "Loading",
@@ -1058,7 +1038,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       };
     }
 
-    if (checks.some(check => check.state === "fail")) {
+    if (scoredChecks.some(check => check.state === "fail")) {
       return {
         state: "fail",
         label: "Not Ready",
@@ -1066,7 +1046,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       };
     }
 
-    if (checks.some(check => check.state === "warn")) {
+    if (scoredChecks.some(check => check.state === "warn")) {
       return {
         state: "warn",
         label: "Needs Publishing",
@@ -1082,11 +1062,12 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function getProgressData(checks) {
-    const total = checks.length || 1;
-    const passCount = checks.filter(check => check.state === "pass").length;
-    const loadingCount = checks.filter(check => check.state === "loading").length;
-    const warnCount = checks.filter(check => check.state === "warn").length;
-    const failCount = checks.filter(check => check.state === "fail").length;
+    const scoredChecks = checks.filter(check => check.isScored !== false);
+    const total = scoredChecks.length || 1;
+    const passCount = scoredChecks.filter(check => check.state === "pass").length;
+    const loadingCount = scoredChecks.filter(check => check.state === "loading").length;
+    const warnCount = scoredChecks.filter(check => check.state === "warn").length;
+    const failCount = scoredChecks.filter(check => check.state === "fail").length;
 
     return {
       total,
@@ -1122,15 +1103,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         </ul>
       `
       : "";
-    const checkControl = check.manualConfirmationKey
-      ? `<input
-          type="checkbox"
-          class="btech-course-readiness__manual-checkbox"
-          data-manual-confirmation-key="${escapeHtml(check.manualConfirmationKey)}"
-          aria-label="${escapeHtml(`Confirm ${check.title}`)}"
-          ${check.state === "pass" ? "checked" : ""}
-        >`
-      : `<span class="btech-course-readiness__pill" aria-hidden="true"></span>`;
+    const checkControl = `<span class="btech-course-readiness__pill" aria-hidden="true"></span>`;
     const actionButton = check.action
       ? `
         <div class="btech-course-readiness__action">
@@ -1219,15 +1192,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       `}
     `);
 
-    bindManualConfirmationEvents(card);
     bindActionEvents(card);
-  }
-
-  function bindManualConfirmationEvents(card) {
-    card.find(".btech-course-readiness__manual-checkbox").on("change", function () {
-      setManualConfirmation($(this).data("manual-confirmation-key"), this.checked);
-      refreshCourseReadiness();
-    });
   }
 
   function bindActionEvents(card) {
