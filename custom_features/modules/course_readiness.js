@@ -447,11 +447,12 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   async function getCourseData() {
-    const [course, assignmentGroups, modules, assignmentList] = await Promise.all([
+    const [course, assignmentGroups, modules, assignmentList, instructorEnrollments] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}?include[]=term`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
       canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
-      canvasGet(`/api/v1/courses/${courseId}/assignments`)
+      canvasGet(`/api/v1/courses/${courseId}/assignments`),
+      canvasGet(`/api/v1/courses/${courseId}/enrollments?type[]=TeacherEnrollment&state[]=active&state[]=invited&state[]=creation_pending`)
     ]);
 
     const termName = String(course?.term?.name ?? "");
@@ -545,6 +546,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       courseEvalAssignments,
       hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
       hasCourseEval: evaluationUrls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
+      instructorEnrollments,
       hasAnyContent: moduleItems.length > 0,
       usesAssignmentGroupWeights,
       assignmentGroupWeightsAddTo100: usesAssignmentGroupWeights && Math.abs(assignmentGroupWeightTotal - 100) < 0.001,
@@ -672,6 +674,28 @@ function findEntityIdByCourseId(courseId, options = {}) {
     };
   }
 
+  function getInstructorsCheck(data) {
+    const instructorCount = Array.isArray(data.instructorEnrollments)
+      ? data.instructorEnrollments.length
+      : 0;
+
+    if (instructorCount > 0) {
+      return {
+        title: "Instructors Added",
+        state: "pass",
+        label: "Pass",
+        detail: `${instructorCount} instructor(s) found.`
+      };
+    }
+
+    return {
+      title: "Instructors Added",
+      state: "fail",
+      label: "Fail",
+      detail: "No instructors have been added to this course."
+    };
+  }
+
   function getWeightsCheck(data) {
     if (!data.usesAssignmentGroupWeights) {
       return {
@@ -790,6 +814,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.coreLoaded) {
       return [
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
+        getLoadingCheck("Instructors Added"),
         getLoadingCheck("Instructor Evaluation"),
         getLoadingCheck("Course Evaluation"),
         getLoadingCheck("Course Content"),
@@ -801,6 +826,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return [
       getSyllabusCheck(data),
+      getInstructorsCheck(data),
       getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
       getEvaluationCheck(data.courseEvalAssignments, "Course Evaluation"),
       getContentCheck(data),
