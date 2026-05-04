@@ -17,6 +17,19 @@
       detail: "Confirm unused content has been cleaned up."
     }
   ];
+  const guideLinks = {
+    instructorsAdded: "",
+    instructorEvaluation: "",
+    courseEvaluation: "",
+    courseContent: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.2trq1w64kmtd",
+    groupWeights: "",
+    assignmentsInModules: "",
+    assignmentsPublished: "",
+    syllabusLinkEnabled: "",
+    syllabus: "",
+    cleanUnusedContent: "",
+    published: ""
+  };
 
   if (!courseId) return;
 
@@ -345,6 +358,33 @@ function findEntityIdByCourseId(courseId, options = {}) {
           gap: 0.55rem;
         }
 
+        #${cardId} .btech-course-readiness__check-title {
+          flex: 1 1 auto;
+        }
+
+        #${cardId} .btech-course-readiness__guide-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1rem;
+          height: 1rem;
+          min-width: 1rem;
+          border: 1px solid #8b969e;
+          border-radius: 999px;
+          color: #394b58;
+          font-size: 0.72rem;
+          font-weight: 700;
+          line-height: 1;
+          text-decoration: none;
+        }
+
+        #${cardId} .btech-course-readiness__guide-link:hover,
+        #${cardId} .btech-course-readiness__guide-link:focus {
+          color: #1f5f8b;
+          border-color: #1f5f8b;
+          text-decoration: none;
+        }
+
         #${cardId} .btech-course-readiness__section-label {
           margin-bottom: 0.45rem;
           font-size: 0.72rem;
@@ -618,8 +658,24 @@ function findEntityIdByCourseId(courseId, options = {}) {
       title,
       state: "loading",
       label: "Loading",
-      detail
+      detail,
+      guideKey: getGuideKeyFromTitle(title)
     };
+  }
+
+  function getGuideKeyFromTitle(title) {
+    return {
+      "Assignments Published": "assignmentsPublished",
+      "Assignments in Modules": "assignmentsInModules",
+      "Course Content": "courseContent",
+      "Course Evaluation": "courseEvaluation",
+      "Group Weights = 100%": "groupWeights",
+      "Instructor Evaluation": "instructorEvaluation",
+      "Instructors Added": "instructorsAdded",
+      "Published": "published",
+      "Syllabus": "syllabus",
+      "Syllabus Link Enabled": "syllabusLinkEnabled"
+    }[title] || "";
   }
 
   function getAdditionalItemsText(count, nounPlural = "items") {
@@ -630,6 +686,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!assignments.length) {
       return {
         title,
+        guideKey: getGuideKeyFromTitle(title),
         state: "fail",
         label: "Fail",
         detail: `Add the ${title.toLowerCase()} assignment.`
@@ -643,6 +700,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (hasPublishedAssignment) {
       return {
         title,
+        guideKey: getGuideKeyFromTitle(title),
         state: "pass",
         label: "Pass",
         detail: `${title} assignment is published.`
@@ -651,6 +709,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title,
+      guideKey: getGuideKeyFromTitle(title),
       state: "warn",
       label: "Unpublished",
       detail: `${title} assignment exists but is not published.`
@@ -665,6 +724,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.syllabusLoadError) {
       return {
         title: "Syllabus",
+        guideKey: "syllabus",
         state: "fail",
         label: "Fail",
         detail: "Unable to load syllabus status."
@@ -674,6 +734,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.syllabusDoc) {
       return {
         title: "Syllabus",
+        guideKey: "syllabus",
         state: "fail",
         label: "Fail",
         detail: "No Simple Syllabus record was found for this course."
@@ -683,6 +744,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.syllabusStatus === "completed") {
       return {
         title: "Syllabus",
+        guideKey: "syllabus",
         state: "pass",
         label: "Pass",
         detail: "Syllabus is completed."
@@ -692,6 +754,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.syllabusStatus === "awaiting_approval") {
       return {
         title: "Syllabus",
+        guideKey: "syllabus",
         state: "warn",
         label: "Awaiting Approval",
         detail: "Syllabus is awaiting approval."
@@ -700,6 +763,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Syllabus",
+      guideKey: "syllabus",
       state: "fail",
       label: "Fail",
       detail: data.syllabusStatus
@@ -716,6 +780,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!simpleSyllabusTab) {
       return {
         title: "Syllabus Link Enabled",
+        guideKey: "syllabusLinkEnabled",
         state: "fail",
         label: "Fail",
         detail: "Simple Syllabus was not found in course navigation."
@@ -727,6 +792,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (visibility === "public" && simpleSyllabusTab.hidden !== true) {
       return {
         title: "Syllabus Link Enabled",
+        guideKey: "syllabusLinkEnabled",
         state: "pass",
         label: "Pass",
         detail: "Simple Syllabus is enabled in course navigation."
@@ -735,6 +801,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Syllabus Link Enabled",
+      guideKey: "syllabusLinkEnabled",
       state: "fail",
       label: "Fail",
       detail: simpleSyllabusTab.visibility
@@ -752,6 +819,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.hasAnyContent) {
       return {
         title: "Course Content",
+        guideKey: "courseContent",
         state: "fail",
         label: "Fail",
         detail: "No module items were found in this course."
@@ -760,6 +828,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Course Content",
+      guideKey: "courseContent",
       state: "pass",
       label: "Pass",
       detail: "Course content exists."
@@ -774,6 +843,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (instructorCount > 0) {
       return {
         title: "Instructors Added",
+        guideKey: "instructorsAdded",
         state: "pass",
         label: "Pass",
         detail: `${instructorCount} instructor(s) found.`,
@@ -785,6 +855,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Instructors Added",
+      guideKey: "instructorsAdded",
       state: "fail",
       label: "Fail",
       detail: "No instructors have been added to this course."
@@ -795,6 +866,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.usesAssignmentGroupWeights) {
       return {
         title: "Group Weights = 100%",
+        guideKey: "groupWeights",
         state: "pass",
         label: "Pass",
         detail: "Assignment group weighting is not enabled for this course."
@@ -803,6 +875,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Group Weights = 100%",
+      guideKey: "groupWeights",
       state: data.assignmentGroupWeightsAddTo100 ? "pass" : "fail",
       label: data.assignmentGroupWeightsAddTo100 ? "Pass" : "Fail",
       detail: `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
@@ -813,6 +886,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.hasAnyContent) {
       return {
         title: "Assignments in Modules",
+        guideKey: "assignmentsInModules",
         state: "fail",
         label: "Fail",
         detail: "No module content exists yet."
@@ -822,6 +896,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.assignmentsWorthPointsNotInModule.length > 0) {
       return {
         title: "Assignments in Modules",
+        guideKey: "assignmentsInModules",
         state: "fail",
         label: "Fail",
         detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`,
@@ -833,6 +908,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Assignments in Modules",
+      guideKey: "assignmentsInModules",
       state: "pass",
       label: "Pass",
       detail: "All point-bearing assignments are in a module."
@@ -843,6 +919,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.hasAnyContent) {
       return {
         title: "Assignments Published",
+        guideKey: "assignmentsPublished",
         state: "fail",
         label: "Fail",
         detail: "No module content exists yet."
@@ -852,6 +929,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.unpublishedAssignmentsInModule.length > 0) {
       return {
         title: "Assignments Published",
+        guideKey: "assignmentsPublished",
         state: "warn",
         label: "Unpublished",
         detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`,
@@ -863,6 +941,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Assignments Published",
+      guideKey: "assignmentsPublished",
       state: "pass",
       label: "Pass",
       detail: "All assignments found in modules are published."
@@ -877,6 +956,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
       return {
         title: item.title,
+        guideKey: item.key,
         state: isConfirmed ? "pass" : "fail",
         label: isConfirmed ? "Pass" : "Fail",
         detail: item.detail,
@@ -891,6 +971,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!data.coreLoaded) {
       return {
         ...getLoadingCheck("Published", "Loading publish status..."),
+        guideKey: "published",
         dividerBefore: true
       };
     }
@@ -898,6 +979,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (!prerequisitesReady) {
       return {
         title: "Published",
+        guideKey: "published",
         state: "blocked",
         label: "Blocked",
         detail: "Not Ready to Publish",
@@ -908,6 +990,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     if (data.isCoursePublished) {
       return {
         title: "Published",
+        guideKey: "published",
         state: "pass",
         label: "Pass",
         dividerBefore: true
@@ -916,6 +999,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
     return {
       title: "Published",
+      guideKey: "published",
       state: "fail",
       label: "Fail",
       detail: "Course is not published.",
@@ -1059,6 +1143,17 @@ function findEntityIdByCourseId(courseId, options = {}) {
         </div>
       `
       : "";
+    const guideUrl = guideLinks[check.guideKey] || "";
+    const guideLink = guideUrl
+      ? `<a
+          class="btech-course-readiness__guide-link"
+          href="${escapeHtml(guideUrl)}"
+          target="_blank"
+          rel="noopener"
+          title="${escapeHtml(`Guide for ${check.title}`)}"
+          aria-label="${escapeHtml(`Guide for ${check.title}`)}"
+        >i</a>`
+      : "";
 
     return `
       <li class="btech-course-readiness__check is-${check.state}${check.dividerBefore ? " has-divider" : ""}">
@@ -1066,6 +1161,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         <div class="btech-course-readiness__check-header">
           ${checkControl}
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
+          ${guideLink}
         </div>
         ${check.state === "pass" || check.action ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
         ${actionButton}
