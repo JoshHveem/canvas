@@ -8,6 +8,7 @@
   const instructorEvalId = "243044643269963";
   const courseEvalId = "241976981675072";
   const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
+  const simpleSyllabusToolId = "106228";
   const maxListedAttentionItems = 3;
   const manualConfirmationItems = [
     {
@@ -25,6 +26,7 @@
     assignmentsInModules: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.5npc62ocz9sq",
     assignmentsPublished: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.5npc62ocz9sq",
     syllabusLinkEnabled: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
+    syllabusModuleLinks: "",
     syllabus: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
     cleanUnusedContent: "",
     published: ""
@@ -517,6 +519,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
     return ids.filter(id => Number.isFinite(id) && id > 0);
   }
 
+  function getSyllabusCourseIdFromUrl(value) {
+    const match = String(value ?? "").match(new RegExp(`/courses/(\\d+)/external_tools/${simpleSyllabusToolId}(?:\\b|[/?#])`));
+    return match ? match[1] : "";
+  }
+
   async function getCourseData() {
     const [course, assignmentGroups, modules, assignmentList, instructorEnrollments, tabs] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}?include[]=term`),
@@ -588,6 +595,21 @@ function findEntityIdByCourseId(courseId, options = {}) {
         moduleName: item.moduleName
       }));
 
+    const syllabusModuleLinkMismatches = moduleItems
+      .map(item => {
+        const url = String(item.external_url || item.url || item.html_url || item.content_details?.url || "");
+        const linkedCourseId = getSyllabusCourseIdFromUrl(url);
+
+        return {
+          id: item.id,
+          title: item.title,
+          moduleName: item.moduleName,
+          url,
+          linkedCourseId
+        };
+      })
+      .filter(item => item.linkedCourseId && item.linkedCourseId !== String(courseId));
+
     const assignmentGroupWeightTotal = assignmentGroups.reduce(
       (sum, group) => sum + Number(group.group_weight ?? 0),
       0
@@ -626,7 +648,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
       assignmentGroupWeightTotal,
       assignmentsWorthPointsNotInModule,
       unpublishedAssignmentsInModule,
-      unpublishedModuleItems
+      unpublishedModuleItems,
+      syllabusModuleLinkMismatches
     };
   }
 
@@ -655,7 +678,8 @@ function findEntityIdByCourseId(courseId, options = {}) {
       "Instructors Added": "instructorsAdded",
       "Published": "published",
       "Syllabus": "syllabus",
-      "Syllabus Link Enabled": "syllabusLinkEnabled"
+      "Syllabus Link Enabled": "syllabusLinkEnabled",
+      "Syllabus Module Links": "syllabusModuleLinks"
     }[title] || "";
   }
 
@@ -793,6 +817,39 @@ function findEntityIdByCourseId(courseId, options = {}) {
         label: "Enable Link",
         tabId: simpleSyllabusTab.id
       }
+    };
+  }
+
+  function getSyllabusModuleLinksCheck(data) {
+    if (!data.hasAnyContent) {
+      return {
+        title: "Syllabus Module Links",
+        guideKey: "syllabusModuleLinks",
+        state: "fail",
+        label: "Fail",
+        detail: "No module content exists yet."
+      };
+    }
+
+    if (data.syllabusModuleLinkMismatches.length > 0) {
+      return {
+        title: "Syllabus Module Links",
+        guideKey: "syllabusModuleLinks",
+        state: "fail",
+        label: "Fail",
+        detail: `${data.syllabusModuleLinkMismatches.length} Simple Syllabus module link(s) point to another course.`,
+        items: data.syllabusModuleLinkMismatches,
+        itemFormatter: item => `${escapeHtml(item.title)} (${escapeHtml(item.moduleName)}; course ${escapeHtml(item.linkedCourseId)})`,
+        additionalItemsText: count => getAdditionalItemsText(count, "links")
+      };
+    }
+
+    return {
+      title: "Syllabus Module Links",
+      guideKey: "syllabusModuleLinks",
+      state: "pass",
+      label: "Pass",
+      detail: "Simple Syllabus module links point to this course."
     };
   }
 
@@ -994,6 +1051,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         getLoadingCheck("Group Weights = 100%"),
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
+        getLoadingCheck("Syllabus Module Links"),
         getLoadingCheck("Syllabus Link Enabled"),
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
         ...getManualConfirmationChecks()
@@ -1008,6 +1066,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       getWeightsCheck(data),
       getAssignmentsInModulesCheck(data),
       getAssignmentsPublishedCheck(data),
+      getSyllabusModuleLinksCheck(data),
       getSyllabusLinkCheck(data),
       getSyllabusCheck(data),
       ...getManualConfirmationChecks()
