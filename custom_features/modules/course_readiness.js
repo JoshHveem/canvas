@@ -1145,7 +1145,9 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
       try {
         await enableSyllabusLink(button.data("tab-id"));
-        window.location.reload();
+        const check = button.closest(".btech-course-readiness__check");
+        check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
+        button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
       } catch (error) {
         console.error("Unable to enable Simple Syllabus link.", error);
         button.prop("disabled", false).text("Enable Link");
