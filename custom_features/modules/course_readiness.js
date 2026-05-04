@@ -34,6 +34,8 @@
 
   if (!courseId) return;
 
+  let latestSyllabusModuleLinkMismatches = [];
+
   function extractYear(termName) {
     const match = String(termName ?? "").match(/\b(20\d{2})\b/);
     return match ? match[1] : "";
@@ -188,6 +190,17 @@ function findEntityIdByCourseId(courseId, options = {}) {
       hidden: false,
       position: 2
     });
+  }
+
+  async function fixSyllabusModuleLinks(mismatches) {
+    for (let i = 0; i < mismatches.length; i++) {
+      const item = mismatches[i];
+      await $.put(`/api/v1/courses/${courseId}/modules/${item.moduleId}/items/${item.id}`, {
+        module_item: {
+          external_url: item.fixedUrl
+        }
+      });
+    }
   }
 
   function ensureStyles() {
@@ -524,6 +537,13 @@ function findEntityIdByCourseId(courseId, options = {}) {
     return match ? match[1] : "";
   }
 
+  function getFixedSyllabusUrl(value) {
+    return String(value ?? "").replace(
+      new RegExp(`/courses/\\d+/external_tools/${simpleSyllabusToolId}`),
+      `/courses/${courseId}/external_tools/${simpleSyllabusToolId}`
+    );
+  }
+
   async function getCourseData() {
     const [course, assignmentGroups, modules, assignmentList, instructorEnrollments, tabs] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}?include[]=term`),
@@ -540,6 +560,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
     const moduleItems = modules.flatMap(module =>
       (module.items ?? []).map(item => ({
         ...item,
+        moduleId: module.id,
         moduleName: module.name
       }))
     );
@@ -603,12 +624,15 @@ function findEntityIdByCourseId(courseId, options = {}) {
         return {
           id: item.id,
           title: item.title,
+          moduleId: item.moduleId,
           moduleName: item.moduleName,
           url,
-          linkedCourseId
+          linkedCourseId,
+          fixedUrl: getFixedSyllabusUrl(url)
         };
       })
       .filter(item => item.linkedCourseId && item.linkedCourseId !== String(courseId));
+    latestSyllabusModuleLinkMismatches = syllabusModuleLinkMismatches;
 
     const assignmentGroupWeightTotal = assignmentGroups.reduce(
       (sum, group) => sum + Number(group.group_weight ?? 0),
@@ -837,10 +861,11 @@ function findEntityIdByCourseId(courseId, options = {}) {
         guideKey: "syllabusModuleLinks",
         state: "fail",
         label: "Fail",
-        detail: `${data.syllabusModuleLinkMismatches.length} Simple Syllabus module link(s) point to another course.`,
-        items: data.syllabusModuleLinkMismatches,
-        itemFormatter: item => `${escapeHtml(item.title)} (${escapeHtml(item.moduleName)}; course ${escapeHtml(item.linkedCourseId)})`,
-        additionalItemsText: count => getAdditionalItemsText(count, "links")
+        detail: "",
+        action: {
+          type: "fixSyllabusModuleLinks",
+          label: "Fix Syllabus Links"
+        }
       };
     }
 
@@ -1259,19 +1284,37 @@ function findEntityIdByCourseId(courseId, options = {}) {
       const button = $(this);
       const actionType = button.data("action-type");
 
-      if (actionType !== "enableSyllabusLink") return;
+      if (actionType === "enableSyllabusLink") {
+        button.prop("disabled", true).text("Enabling...");
 
-      button.prop("disabled", true).text("Enabling...");
+        try {
+          await enableSyllabusLink(button.data("tab-id"));
+          const check = button.closest(".btech-course-readiness__check");
+          check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
+          button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
+        } catch (error) {
+          console.error("Unable to enable Simple Syllabus link.", error);
+          button.prop("disabled", false).text("Enable Link");
+          alert("Unable to enable the Simple Syllabus link right now.");
+        }
 
-      try {
-        await enableSyllabusLink(button.data("tab-id"));
-        const check = button.closest(".btech-course-readiness__check");
-        check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
-        button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
-      } catch (error) {
-        console.error("Unable to enable Simple Syllabus link.", error);
-        button.prop("disabled", false).text("Enable Link");
-        alert("Unable to enable the Simple Syllabus link right now.");
+        return;
+      }
+
+      if (actionType === "fixSyllabusModuleLinks") {
+        button.prop("disabled", true).text("Fixing...");
+
+        try {
+          await fixSyllabusModuleLinks(latestSyllabusModuleLinkMismatches);
+          latestSyllabusModuleLinkMismatches = [];
+          const check = button.closest(".btech-course-readiness__check");
+          check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
+          button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
+        } catch (error) {
+          console.error("Unable to fix Simple Syllabus module links.", error);
+          button.prop("disabled", false).text("Fix Syllabus Links");
+          alert("Unable to fix the Simple Syllabus module links right now.");
+        }
       }
     });
   }
