@@ -24,9 +24,9 @@
     courseContent: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.2trq1w64kmtd",
     groupWeights: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.ixz8s2t0x82k",
     assignmentsInModules: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.5npc62ocz9sq",
-    assignmentsPublished: "",
-    syllabusLinkEnabled: "",
-    syllabus: "",
+    assignmentsPublished: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.5npc62ocz9sq",
+    syllabusLinkEnabled: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
+    syllabus: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
     cleanUnusedContent: "",
     published: ""
   };
