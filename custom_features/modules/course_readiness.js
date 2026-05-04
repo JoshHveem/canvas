@@ -1145,7 +1145,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
 
       try {
         await enableSyllabusLink(button.data("tab-id"));
-        await refreshCourseReadiness();
+        window.location.reload();
       } catch (error) {
         console.error("Unable to enable Simple Syllabus link.", error);
         button.prop("disabled", false).text("Enable Link");
