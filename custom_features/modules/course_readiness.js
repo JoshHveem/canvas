@@ -50,18 +50,18 @@
     let page = 0;
 
     function titleHasCourseId(title) {
-        return new RegExp("\\(" + target + "\\)").test(String(title || ""));
+      return new RegExp("\\(" + target + "\\)").test(String(title || ""));
     }
 
     function fetchPage() {
-        const requestData = {
+      const requestData = {
         "entity_types[]": "section",
         page: page,
         page_size: pageSize
-        };
-        if (termYear) requestData.term_name = termYear;
+      };
+      if (termYear) requestData.term_name = termYear;
 
-        return $.get(baseUrl, requestData).then(function (data) {
+      return $.get(baseUrl, requestData).then(function (data) {
         const items = data.items || [];
 
         const found = items.find(item => titleHasCourseId(item.title));
@@ -574,15 +574,6 @@
       }
     });
 
-    const unpublishedModuleItems = moduleItems
-      .filter(item => item.published === false || item.content_details?.published === false)
-      .map(item => ({
-        id: item.id,
-        title: item.title,
-        type: item.type,
-        moduleName: item.moduleName
-      }));
-
     const syllabusModuleLinkMismatches = moduleItems
       .map(item => {
         const url = String(item.external_url || item.url || item.html_url || item.content_details?.url || "");
@@ -607,11 +598,6 @@
     );
     const usesAssignmentGroupWeights = Boolean(course?.apply_assignment_group_weights);
 
-    const evaluationUrls = assignmentList
-      .map(assignment => String(assignment?.external_tool_tag_attributes?.url ?? ""))
-      .map(url => url.toLowerCase())
-      .filter(Boolean);
-
     const instructorEvalAssignments = assignmentList.filter(assignment =>
       String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase().includes(`jotform_id=${instructorEvalId}`)
     );
@@ -629,8 +615,6 @@
       isCoursePublished: Boolean(course?.published) || ["available", "completed"].includes(String(course?.workflow_state ?? "").toLowerCase()),
       instructorEvalAssignments,
       courseEvalAssignments,
-      hasInstructorEval: evaluationUrls.some(url => url.includes(`jotform_id=${instructorEvalId}`)),
-      hasCourseEval: evaluationUrls.some(url => url.includes(`jotform_id=${courseEvalId}`)),
       instructorEnrollments,
       tabs,
       hasAnyContent: moduleItems.length > 0,
@@ -639,7 +623,6 @@
       assignmentGroupWeightTotal,
       assignmentsWorthPointsNotInModule,
       unpublishedAssignmentsInModule,
-      unpublishedModuleItems,
       syllabusModuleLinkMismatches
     };
   }
@@ -649,13 +632,7 @@
   }
 
   function getLoadingCheck(title, detail = "Loading...") {
-    return {
-      title,
-      state: "loading",
-      label: "Loading",
-      detail,
-      guideKey: getGuideKeyFromTitle(title)
-    };
+    return createCheck(title, "loading", detail);
   }
 
   function getGuideKeyFromTitle(title) {
@@ -674,15 +651,30 @@
     }[title] || "";
   }
 
+  function getStateLabel(state) {
+    return {
+      fail: "Fail",
+      info: "Info",
+      loading: "Loading",
+      pass: "Pass",
+      warn: "Unpublished"
+    }[state] || state;
+  }
+
+  function createCheck(title, state, detail = "", options = {}) {
+    return {
+      title,
+      guideKey: getGuideKeyFromTitle(title),
+      state,
+      label: getStateLabel(state),
+      detail,
+      ...options
+    };
+  }
+
   function getEvaluationCheck(assignments, title) {
     if (!assignments.length) {
-      return {
-        title,
-        guideKey: getGuideKeyFromTitle(title),
-        state: "fail",
-        label: "Fail",
-        detail: `Add the ${title.toLowerCase()} assignment.`
-      };
+      return createCheck(title, "fail", `Add the ${title.toLowerCase()} assignment.`);
     }
 
     const hasPublishedAssignment = assignments.some(assignment =>
@@ -690,22 +682,10 @@
     );
 
     if (hasPublishedAssignment) {
-      return {
-        title,
-        guideKey: getGuideKeyFromTitle(title),
-        state: "pass",
-        label: "Pass",
-        detail: `${title} assignment is published.`
-      };
+      return createCheck(title, "pass", `${title} assignment is published.`);
     }
 
-    return {
-      title,
-      guideKey: getGuideKeyFromTitle(title),
-      state: "warn",
-      label: "Unpublished",
-      detail: `${title} assignment exists but is not published.`
-    };
+    return createCheck(title, "warn", `${title} assignment exists but is not published.`);
   }
 
   function getSyllabusCheck(data) {
@@ -714,54 +694,30 @@
     }
 
     if (data.syllabusLoadError) {
-      return {
-        title: "Syllabus",
-        guideKey: "syllabus",
-        state: "fail",
-        label: "Fail",
-        detail: "Unable to load syllabus status."
-      };
+      return createCheck("Syllabus", "fail", "Unable to load syllabus status.");
     }
 
     if (!data.syllabusDoc) {
-      return {
-        title: "Syllabus",
-        guideKey: "syllabus",
-        state: "fail",
-        label: "Fail",
-        detail: "No Simple Syllabus record was found for this course."
-      };
+      return createCheck("Syllabus", "fail", "No Simple Syllabus record was found for this course.");
     }
 
     if (data.syllabusStatus === "completed") {
-      return {
-        title: "Syllabus",
-        guideKey: "syllabus",
-        state: "pass",
-        label: "Pass",
-        detail: "Syllabus is completed."
-      };
+      return createCheck("Syllabus", "pass", "Syllabus is completed.");
     }
 
     if (data.syllabusStatus === "awaiting_approval") {
-      return {
-        title: "Syllabus",
-        guideKey: "syllabus",
-        state: "warn",
-        label: "Awaiting Approval",
-        detail: "Syllabus is awaiting approval."
-      };
+      return createCheck("Syllabus", "warn", "Syllabus is awaiting approval.", {
+        label: "Awaiting Approval"
+      });
     }
 
-    return {
-      title: "Syllabus",
-      guideKey: "syllabus",
-      state: "fail",
-      label: "Fail",
-      detail: data.syllabusStatus
+    return createCheck(
+      "Syllabus",
+      "fail",
+      data.syllabusStatus
         ? `Syllabus status is ${data.syllabusStatus.replace(/_/g, " ")}.`
         : "Syllabus status is unavailable."
-    };
+    );
   }
 
   function getSyllabusLinkCheck(data) {
@@ -770,41 +726,29 @@
     );
 
     if (!simpleSyllabusTab) {
-      return {
-        title: "Syllabus Link Enabled",
-        guideKey: "syllabusLinkEnabled",
-        state: "fail",
-        label: "Fail",
-        detail: "Simple Syllabus was not found in course navigation."
-      };
+      return createCheck("Syllabus Link Enabled", "fail", "Simple Syllabus was not found in course navigation.");
     }
 
     const visibility = String(simpleSyllabusTab.visibility ?? "").toLowerCase();
 
     if (visibility === "public" && simpleSyllabusTab.hidden !== true) {
-      return {
-        title: "Syllabus Link Enabled",
-        guideKey: "syllabusLinkEnabled",
-        state: "pass",
-        label: "Pass",
-        detail: "Simple Syllabus is enabled in course navigation."
-      };
+      return createCheck("Syllabus Link Enabled", "pass", "Simple Syllabus is enabled in course navigation.");
     }
 
-    return {
-      title: "Syllabus Link Enabled",
-      guideKey: "syllabusLinkEnabled",
-      state: "fail",
-      label: "Fail",
-      detail: simpleSyllabusTab.visibility
+    return createCheck(
+      "Syllabus Link Enabled",
+      "fail",
+      simpleSyllabusTab.visibility
         ? `Simple Syllabus navigation visibility is ${simpleSyllabusTab.visibility}.`
         : "Simple Syllabus navigation visibility is unavailable.",
-      action: {
-        type: "enableSyllabusLink",
-        label: "Enable Link",
-        tabId: simpleSyllabusTab.id
+      {
+        action: {
+          type: "enableSyllabusLink",
+          label: "Enable Link",
+          tabId: simpleSyllabusTab.id
+        }
       }
-    };
+    );
   }
 
   function getSyllabusModuleLinksCheck(data) {
