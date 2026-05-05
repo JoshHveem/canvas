@@ -1039,9 +1039,9 @@ function findEntityIdByCourseId(courseId, options = {}) {
       return {
         title: "Published",
         guideKey: "published",
-        state: "blocked",
-        label: "Blocked",
-        detail: "Not Ready to Publish",
+        state: "fail",
+        label: "Fail",
+        detail: "Not ready to publish.",
         dividerBefore: true
       };
     }
@@ -1061,7 +1061,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
       guideKey: "published",
       state: "fail",
       label: "Fail",
-      detail: "Course is not published.",
+      detail: "Needs to be published.",
       dividerBefore: true
     };
   }
