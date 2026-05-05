@@ -9,7 +9,6 @@
   const courseEvalId = "241976981675072";
   const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
   const simpleSyllabusToolId = "106228";
-  const maxListedAttentionItems = 3;
   const manualConfirmationItems = [
     {
       key: "cleanUnusedContent",
@@ -41,68 +40,7 @@
     return match ? match[1] : "";
   }
 
-  function findSyllabusByCourseId(courseId, options = {}) {
-    const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
-    const pageSize = options.pageSize || 50;
-    const delayMs = options.delayMs || 50;
-    const termYear = String(options.termYear ?? "").trim();
-
-    const target = String(courseId);
-    let page = 0;
-
-    function titleHasCourseId(title) {
-        const match = String(title || "").match(/\((\d+)\)\s*$/);
-        return match && match[1] === target;
-    }
-
-    function fetchPage() {
-        const requestData = {
-        "entity_types[]": "section",
-        page: page,
-        page_size: pageSize
-        };
-        if (termYear) requestData.term = termYear;
-
-        return $.get(baseUrl, requestData).then(function (data) {
-        const sys = data.sys || {};
-        if (sys.success === false) {
-            throw new Error("Simple Syllabus API returned success=false");
-        }
-
-        const items = data.items || [];
-
-        const found = items.find(function (item) {
-            return titleHasCourseId(item.title);
-        });
-
-        if (found) {
-            return found;
-        }
-
-        const pagination = data.pagination || {};
-        const total = pagination.total;
-        const returned = pagination.returned || 0;
-
-        if (returned === 0) {
-            return null;
-        }
-
-        if (Number.isInteger(total) && (page + 1) * pageSize >= total) {
-            return null;
-        }
-
-        page += 1;
-
-        return new Promise(function (resolve) {
-            setTimeout(resolve, delayMs);
-        }).then(fetchPage);
-        });
-    }
-
-    return fetchPage();
-}
-
-function findEntityIdByCourseId(courseId, options = {}) {
+  function findEntityIdByCourseId(courseId, options = {}) {
     const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
     const pageSize = options.pageSize || 50;
     const delayMs = options.delayMs || 200;
@@ -462,6 +400,35 @@ function findEntityIdByCourseId(courseId, options = {}) {
           margin-top: 0.2rem;
         }
 
+        #${cardId} .btech-course-readiness__disclosure {
+          margin-top: 0.45rem;
+        }
+
+        #${cardId} .btech-course-readiness__disclosure-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: #5b6d79;
+          font-size: 0.8rem;
+          line-height: 1.3;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        #${cardId} .btech-course-readiness__disclosure-arrow {
+          display: inline-block;
+          width: 0.65rem;
+          min-width: 0.65rem;
+          color: #394b58;
+        }
+
+        #${cardId} .btech-course-readiness__disclosure.is-open .btech-course-readiness__disclosure-arrow {
+          transform: rotate(90deg);
+        }
+
         #${cardId} .btech-course-readiness__issues {
           margin-top: 1rem;
           display: grid;
@@ -707,10 +674,6 @@ function findEntityIdByCourseId(courseId, options = {}) {
     }[title] || "";
   }
 
-  function getAdditionalItemsText(count, nounPlural = "items") {
-    return `${count} additional ${nounPlural}...`;
-  }
-
   function getEvaluationCheck(assignments, title) {
     if (!assignments.length) {
       return {
@@ -912,7 +875,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         detail: `${instructorCount} instructor(s) found.`,
         items: data.instructorEnrollments,
         itemFormatter: enrollment => escapeHtml(enrollment?.user?.name || enrollment?.user?.sortable_name || `User ${enrollment.user_id}`),
-        maxListedItems: Number.POSITIVE_INFINITY
+        itemSummary: `${instructorCount} instructor(s) added`
       };
     }
 
@@ -965,7 +928,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`,
         items: data.assignmentsWorthPointsNotInModule,
         itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`,
-        additionalItemsText: count => getAdditionalItemsText(count, "assignments")
+        itemSummary: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) need module placement`
       };
     }
 
@@ -998,7 +961,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
         detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`,
         items: data.unpublishedAssignmentsInModule,
         itemFormatter: item => escapeHtml(item.name),
-        additionalItemsText: count => getAdditionalItemsText(count, "assignments")
+        itemSummary: `${data.unpublishedAssignmentsInModule.length} assignment(s) unpublished`
       };
     }
 
@@ -1164,27 +1127,18 @@ function findEntityIdByCourseId(courseId, options = {}) {
   }
 
   function renderCheck(check) {
-    const maxListedItems = check.maxListedItems ?? maxListedAttentionItems;
-    const visibleItems = Array.isArray(check.items)
-      ? check.items.slice(0, maxListedItems)
-      : [];
-    const remainingItemCount = Array.isArray(check.items)
-      ? Math.max(check.items.length - visibleItems.length, 0)
-      : 0;
-
-    const itemList = visibleItems.length
+    const checkItems = Array.isArray(check.items) ? check.items : [];
+    const itemList = checkItems.length
       ? `
-        <ul class="btech-course-readiness__check-list">
-          ${visibleItems.map(item => `<li>${check.itemFormatter(item)}</li>`).join("")}
-          ${remainingItemCount > 0
-            ? `<li>${escapeHtml(
-              typeof check.additionalItemsText === "function"
-                ? check.additionalItemsText(remainingItemCount)
-                : getAdditionalItemsText(remainingItemCount)
-            )}</li>`
-            : ""
-          }
-        </ul>
+        <div class="btech-course-readiness__disclosure">
+          <button type="button" class="btech-course-readiness__disclosure-toggle" aria-expanded="false">
+            <span class="btech-course-readiness__disclosure-arrow" aria-hidden="true">&gt;</span>
+            <span>${escapeHtml(check.itemSummary || `${checkItems.length} item(s)`)}</span>
+          </button>
+          <ul class="btech-course-readiness__check-list" hidden>
+            ${checkItems.map(item => `<li>${check.itemFormatter(item)}</li>`).join("")}
+          </ul>
+        </div>
       `
       : "";
     const checkControl = `<span class="btech-course-readiness__pill" aria-hidden="true"></span>`;
@@ -1220,7 +1174,7 @@ function findEntityIdByCourseId(courseId, options = {}) {
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
           ${guideLink}
         </div>
-        ${check.state === "pass" || check.action ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
+        ${check.state === "pass" || check.action || checkItems.length ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
         ${actionButton}
         ${itemList}
       </li>
@@ -1277,6 +1231,20 @@ function findEntityIdByCourseId(courseId, options = {}) {
     `);
 
     bindActionEvents(card);
+    bindDisclosureEvents(card);
+  }
+
+  function bindDisclosureEvents(card) {
+    card.find(".btech-course-readiness__disclosure-toggle").on("click", function () {
+      const button = $(this);
+      const disclosure = button.closest(".btech-course-readiness__disclosure");
+      const list = disclosure.find(".btech-course-readiness__check-list").first();
+      const isOpen = button.attr("aria-expanded") === "true";
+
+      button.attr("aria-expanded", String(!isOpen));
+      disclosure.toggleClass("is-open", !isOpen);
+      list.prop("hidden", isOpen);
+    });
   }
 
   function bindActionEvents(card) {
