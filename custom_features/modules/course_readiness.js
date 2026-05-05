@@ -267,14 +267,10 @@
           padding: 1rem;
         }
 
-        #${cardId} .btech-course-readiness__checks,
-        #${cardId} .btech-course-readiness__issues {
+        #${cardId} .btech-course-readiness__checks {
           list-style: none;
           margin: 0;
           padding: 0;
-        }
-
-        #${cardId} .btech-course-readiness__checks {
           display: grid;
           gap: 0.6rem;
         }
@@ -293,10 +289,6 @@
           display: flex;
           align-items: center;
           gap: 0.55rem;
-        }
-
-        #${cardId} .btech-course-readiness__check-title {
-          flex: 1 1 auto;
         }
 
         #${cardId} .btech-course-readiness__guide-link {
@@ -351,11 +343,6 @@
           border: 1px solid #5b6d79;
         }
 
-        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__pill {
-          background: #e5e8ea;
-          border: 1px solid #9aa5ad;
-        }
-
         #${cardId} .btech-course-readiness__check.is-warn .btech-course-readiness__pill {
           background: #fff3cd;
           border: 1px solid #8a5b00;
@@ -372,14 +359,10 @@
         }
 
         #${cardId} .btech-course-readiness__check-title {
+          flex: 1 1 auto;
           font-size: 0.875rem;
           font-weight: 600;
           color: #2d3b45;
-        }
-
-        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__check-title,
-        #${cardId} .btech-course-readiness__check.is-blocked .btech-course-readiness__check-detail {
-          color: #7a8994;
         }
 
         #${cardId} .btech-course-readiness__check-detail {
@@ -429,48 +412,9 @@
           transform: rotate(90deg);
         }
 
-        #${cardId} .btech-course-readiness__issues {
-          margin-top: 1rem;
-          display: grid;
-          gap: 0.8rem;
-        }
-
-        #${cardId} .btech-course-readiness__issue {
-          border-top: 1px solid #e5e8ea;
-          padding-top: 0.8rem;
-        }
-
-        #${cardId} .btech-course-readiness__issue:first-child {
-          border-top: 0;
-          padding-top: 0;
-        }
-
-        #${cardId} .btech-course-readiness__issue-title {
-          margin: 0 0 0.35rem;
-          font-size: 0.82rem;
-          font-weight: 700;
-          color: #2d3b45;
-        }
-
-        #${cardId} .btech-course-readiness__issue-list {
-          margin: 0;
-          padding-left: 1rem;
-          font-size: 0.8rem;
-          color: #2d3b45;
-        }
-
-        #${cardId} .btech-course-readiness__issue-list li + li {
-          margin-top: 0.2rem;
-        }
-
-        #${cardId} .btech-course-readiness__empty,
         #${cardId} .btech-course-readiness__error {
           margin: 0;
           font-size: 0.8rem;
-          color: #5b6d79;
-        }
-
-        #${cardId} .btech-course-readiness__error {
           color: #a61b1b;
         }
       </style>
@@ -753,56 +697,27 @@
 
   function getSyllabusModuleLinksCheck(data) {
     if (!data.hasAnyContent) {
-      return {
-        title: "Syllabus Module Links",
-        guideKey: "syllabusModuleLinks",
-        state: "fail",
-        label: "Fail",
-        detail: "No module content exists yet."
-      };
+      return createCheck("Syllabus Module Links", "fail", "No module content exists yet.");
     }
 
     if (data.syllabusModuleLinkMismatches.length > 0) {
-      return {
-        title: "Syllabus Module Links",
-        guideKey: "syllabusModuleLinks",
-        state: "fail",
-        label: "Fail",
-        detail: "",
+      return createCheck("Syllabus Module Links", "fail", "", {
         action: {
           type: "fixSyllabusModuleLinks",
           label: "Fix Syllabus Links"
         }
-      };
+      });
     }
 
-    return {
-      title: "Syllabus Module Links",
-      guideKey: "syllabusModuleLinks",
-      state: "pass",
-      label: "Pass",
-      detail: "Simple Syllabus module links point to this course."
-    };
+    return createCheck("Syllabus Module Links", "pass", "Simple Syllabus module links point to this course.");
   }
 
   function getContentCheck(data) {
     if (!data.hasAnyContent) {
-      return {
-        title: "Course Content",
-        guideKey: "courseContent",
-        state: "fail",
-        label: "Fail",
-        detail: "No module items were found in this course."
-      };
+      return createCheck("Course Content", "fail", "No module items were found in this course.");
     }
 
-    return {
-      title: "Course Content",
-      guideKey: "courseContent",
-      state: "pass",
-      label: "Pass",
-      detail: "Course content exists."
-    };
+    return createCheck("Course Content", "pass", "Course content exists.");
   }
 
   function getInstructorsCheck(data) {
@@ -811,125 +726,68 @@
       : 0;
 
     if (instructorCount > 0) {
-      return {
-        title: "Instructors Added",
-        guideKey: "instructorsAdded",
-        state: "pass",
-        label: "Pass",
-        detail: `${instructorCount} instructor(s) found.`,
+      return createCheck("Instructors Added", "pass", `${instructorCount} instructor(s) found.`, {
         items: data.instructorEnrollments,
         itemFormatter: enrollment => escapeHtml(enrollment?.user?.name || enrollment?.user?.sortable_name || `User ${enrollment.user_id}`),
         itemSummary: `${instructorCount} instructor(s) added`
-      };
+      });
     }
 
-    return {
-      title: "Instructors Added",
-      guideKey: "instructorsAdded",
-      state: "fail",
-      label: "Fail",
-      detail: "No instructors have been added to this course."
-    };
+    return createCheck("Instructors Added", "fail", "No instructors have been added to this course.");
   }
 
   function getWeightsCheck(data) {
     if (!data.usesAssignmentGroupWeights) {
-      return {
-        title: "Group Weights = 100%",
-        guideKey: "groupWeights",
-        state: "pass",
-        label: "Pass",
-        detail: "Assignment group weighting is not enabled for this course."
-      };
+      return createCheck("Group Weights = 100%", "pass", "Assignment group weighting is not enabled for this course.");
     }
 
-    return {
-      title: "Group Weights = 100%",
-      guideKey: "groupWeights",
-      state: data.assignmentGroupWeightsAddTo100 ? "pass" : "fail",
-      label: data.assignmentGroupWeightsAddTo100 ? "Pass" : "Fail",
-      detail: `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
-    };
+    return createCheck(
+      "Group Weights = 100%",
+      data.assignmentGroupWeightsAddTo100 ? "pass" : "fail",
+      `Current total: ${Math.round(data.assignmentGroupWeightTotal * 100) / 100}%`
+    );
   }
 
   function getAssignmentsInModulesCheck(data) {
     if (!data.hasAnyContent) {
-      return {
-        title: "Assignments in Modules",
-        guideKey: "assignmentsInModules",
-        state: "fail",
-        label: "Fail",
-        detail: "No module content exists yet."
-      };
+      return createCheck("Assignments in Modules", "fail", "No module content exists yet.");
     }
 
     if (data.assignmentsWorthPointsNotInModule.length > 0) {
-      return {
-        title: "Assignments in Modules",
-        guideKey: "assignmentsInModules",
-        state: "fail",
-        label: "Fail",
-        detail: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`,
+      return createCheck("Assignments in Modules", "fail", `${data.assignmentsWorthPointsNotInModule.length} assignment(s) still need a module placement.`, {
         items: data.assignmentsWorthPointsNotInModule,
         itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.pointsPossible))} pts)`,
         itemSummary: `${data.assignmentsWorthPointsNotInModule.length} assignment(s) need module placement`
-      };
+      });
     }
 
-    return {
-      title: "Assignments in Modules",
-      guideKey: "assignmentsInModules",
-      state: "pass",
-      label: "Pass",
-      detail: "All point-bearing assignments are in a module."
-    };
+    return createCheck("Assignments in Modules", "pass", "All point-bearing assignments are in a module.");
   }
 
   function getAssignmentsPublishedCheck(data) {
     if (!data.hasAnyContent) {
-      return {
-        title: "Assignments Published",
-        guideKey: "assignmentsPublished",
-        state: "fail",
-        label: "Fail",
-        detail: "No module content exists yet."
-      };
+      return createCheck("Assignments Published", "fail", "No module content exists yet.");
     }
 
     if (data.unpublishedAssignmentsInModule.length > 0) {
-      return {
-        title: "Assignments Published",
-        guideKey: "assignmentsPublished",
-        state: "warn",
-        label: "Unpublished",
-        detail: `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`,
+      return createCheck("Assignments Published", "warn", `${data.unpublishedAssignmentsInModule.length} assignment(s) in modules are still unpublished.`, {
         items: data.unpublishedAssignmentsInModule,
         itemFormatter: item => escapeHtml(item.name),
         itemSummary: `${data.unpublishedAssignmentsInModule.length} assignment(s) unpublished`
-      };
+      });
     }
 
-    return {
-      title: "Assignments Published",
-      guideKey: "assignmentsPublished",
-      state: "pass",
-      label: "Pass",
-      detail: "All assignments found in modules are published."
-    };
+    return createCheck("Assignments Published", "pass", "All assignments found in modules are published.");
   }
 
   function getManualConfirmationChecks() {
     return manualConfirmationItems.map((item, index) => {
-      return {
-        title: item.title,
+      return createCheck(item.title, "info", item.detail, {
         guideKey: item.key,
-        state: "info",
-        label: "Info",
-        detail: item.detail,
         sectionLabel: index === 0 ? "Manual Confirmation" : "",
         dividerBefore: index === 0,
         isScored: false
-      };
+      });
     });
   }
 
@@ -937,40 +795,25 @@
     if (!data.coreLoaded) {
       return {
         ...getLoadingCheck("Published", "Loading publish status..."),
-        guideKey: "published",
         dividerBefore: true
       };
     }
 
     if (!prerequisitesReady) {
-      return {
-        title: "Published",
-        guideKey: "published",
-        state: "fail",
-        label: "Fail",
-        detail: "Not ready to publish.",
+      return createCheck("Published", "fail", "Not ready to publish.", {
         dividerBefore: true
-      };
+      });
     }
 
     if (data.isCoursePublished) {
-      return {
-        title: "Published",
-        guideKey: "published",
-        state: "pass",
-        label: "Pass",
+      return createCheck("Published", "pass", "", {
         dividerBefore: true
-      };
+      });
     }
 
-    return {
-      title: "Published",
-      guideKey: "published",
-      state: "fail",
-      label: "Fail",
-      detail: "Needs to be published.",
+    return createCheck("Published", "fail", "Needs to be published.", {
       dividerBefore: true
-    };
+    });
   }
 
   function getPrerequisiteChecks(data) {
@@ -1202,7 +1045,7 @@
         try {
           await enableSyllabusLink(button.data("tab-id"));
           const check = button.closest(".btech-course-readiness__check");
-          check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
+          check.removeClass("is-fail is-warn is-loading").addClass("is-pass");
           button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
         } catch (error) {
           console.error("Unable to enable Simple Syllabus link.", error);
@@ -1220,7 +1063,7 @@
           await fixSyllabusModuleLinks(latestSyllabusModuleLinkMismatches);
           latestSyllabusModuleLinkMismatches = [];
           const check = button.closest(".btech-course-readiness__check");
-          check.removeClass("is-fail is-warn is-loading is-blocked").addClass("is-pass");
+          check.removeClass("is-fail is-warn is-loading").addClass("is-pass");
           button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
         } catch (error) {
           console.error("Unable to fix Simple Syllabus module links.", error);
