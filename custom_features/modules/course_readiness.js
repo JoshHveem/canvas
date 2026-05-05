@@ -595,22 +595,11 @@
     }[title] || "";
   }
 
-  function getStateLabel(state) {
-    return {
-      fail: "Fail",
-      info: "Info",
-      loading: "Loading",
-      pass: "Pass",
-      warn: "Unpublished"
-    }[state] || state;
-  }
-
   function createCheck(title, state, detail = "", options = {}) {
     return {
       title,
       guideKey: getGuideKeyFromTitle(title),
       state,
-      label: getStateLabel(state),
       detail,
       ...options
     };
@@ -650,9 +639,7 @@
     }
 
     if (data.syllabusStatus === "awaiting_approval") {
-      return createCheck("Syllabus", "warn", "Syllabus is awaiting approval.", {
-        label: "Awaiting Approval"
-      });
+      return createCheck("Syllabus", "warn", "Syllabus is awaiting approval.");
     }
 
     return createCheck(
@@ -665,7 +652,7 @@
   }
 
   function getSyllabusLinkCheck(data) {
-    const simpleSyllabusTab = (data.tabs || []).find(tab =>
+    const simpleSyllabusTab = data.tabs.find(tab =>
       String(tab?.label ?? "").trim().toLowerCase() === "simple syllabus"
     );
 
@@ -721,9 +708,7 @@
   }
 
   function getInstructorsCheck(data) {
-    const instructorCount = Array.isArray(data.instructorEnrollments)
-      ? data.instructorEnrollments.length
-      : 0;
+    const instructorCount = data.instructorEnrollments.length;
 
     if (instructorCount > 0) {
       return createCheck("Instructors Added", "pass", `${instructorCount} instructor(s) found.`, {
@@ -867,7 +852,6 @@
     if (scoredChecks.some(check => check.state === "loading")) {
       return {
         state: "loading",
-        label: "Loading",
         checks
       };
     }
@@ -875,7 +859,6 @@
     if (scoredChecks.some(check => check.state === "fail")) {
       return {
         state: "fail",
-        label: "Not Ready",
         checks
       };
     }
@@ -883,14 +866,12 @@
     if (scoredChecks.some(check => check.state === "warn")) {
       return {
         state: "warn",
-        label: "Needs Publishing",
         checks
       };
     }
 
     return {
       state: "pass",
-      label: "Ready",
       checks
     };
   }
@@ -1034,6 +1015,12 @@
     });
   }
 
+  function markActionResolved(button) {
+    const check = button.closest(".btech-course-readiness__check");
+    check.removeClass("is-fail is-warn is-loading").addClass("is-pass");
+    button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
+  }
+
   function bindActionEvents(card) {
     card.find(".btech-course-readiness__action-button").on("click", async function () {
       const button = $(this);
@@ -1044,9 +1031,7 @@
 
         try {
           await enableSyllabusLink(button.data("tab-id"));
-          const check = button.closest(".btech-course-readiness__check");
-          check.removeClass("is-fail is-warn is-loading").addClass("is-pass");
-          button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
+          markActionResolved(button);
         } catch (error) {
           console.error("Unable to enable Simple Syllabus link.", error);
           button.prop("disabled", false).text("Enable Link");
@@ -1062,9 +1047,7 @@
         try {
           await fixSyllabusModuleLinks(latestSyllabusModuleLinkMismatches);
           latestSyllabusModuleLinkMismatches = [];
-          const check = button.closest(".btech-course-readiness__check");
-          check.removeClass("is-fail is-warn is-loading").addClass("is-pass");
-          button.closest(".btech-course-readiness__action").html('<span class="btech-course-readiness__check-detail">Refresh to view changes.</span>');
+          markActionResolved(button);
         } catch (error) {
           console.error("Unable to fix Simple Syllabus module links.", error);
           button.prop("disabled", false).text("Fix Syllabus Links");
