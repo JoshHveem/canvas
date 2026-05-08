@@ -591,7 +591,7 @@
       "Published": "published",
       "Syllabus Submitted": "syllabus",
       "Syllabus Link Enabled": "syllabusLinkEnabled",
-      "Syllabus Module Links": "syllabusModuleLinks"
+      "Syllabus in Navigation": "syllabusModuleLinks"
     }[title] || "";
   }
 
@@ -684,11 +684,11 @@
 
   function getSyllabusModuleLinksCheck(data) {
     if (!data.hasAnyContent) {
-      return createCheck("Syllabus Module Links", "fail", "No module content exists yet.");
+      return createCheck("Syllabus in Navigation", "fail", "No module content exists yet.");
     }
 
     if (data.syllabusModuleLinkMismatches.length > 0 && IS_ISD) {
-      return createCheck("Syllabus Module Links", "fail", "", {
+      return createCheck("Syllabus in Navigation", "fail", "", {
         action: {
           type: "fixSyllabusModuleLinks",
           label: "Fix Syllabus Links"
@@ -696,7 +696,7 @@
       });
     }
 
-    return createCheck("Syllabus Module Links", "pass", "Simple Syllabus module links point to this course.");
+    return createCheck("Syllabus in Navigation", "pass", "Simple Syllabus module links point to this course.");
   }
 
   function getContentCheck(data) {
@@ -811,7 +811,7 @@
         getLoadingCheck("Group Weights = 100%"),
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
-        getLoadingCheck("Syllabus Module Links"),
+        getLoadingCheck("Syllabus in Navigation"),
         getLoadingCheck("Syllabus Link Enabled"),
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
         ...getManualConfirmationChecks()
