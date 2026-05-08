@@ -590,8 +590,8 @@
       "Instructors Added": "instructorsAdded",
       "Published": "published",
       "Syllabus Submitted": "syllabus",
-      "Syllabus Link Enabled": "syllabusLinkEnabled",
-      "Syllabus in Navigation": "syllabusModuleLinks"
+      "Syllabus in Navigation": "syllabusLinkEnabled",
+      "Syllabus Module Links": "syllabusModuleLinks"
     }[title] || "";
   }
 
@@ -657,17 +657,17 @@
     );
 
     if (!simpleSyllabusTab) {
-      return createCheck("Syllabus Link Enabled", "fail", "Simple Syllabus was not found in course navigation.");
+      return createCheck("Syllabus in Navigation", "fail", "Simple Syllabus was not found in course navigation.");
     }
 
     const visibility = String(simpleSyllabusTab.visibility ?? "").toLowerCase();
 
     if (visibility === "public" && simpleSyllabusTab.hidden !== true) {
-      return createCheck("Syllabus Link Enabled", "pass", "Simple Syllabus is enabled in course navigation.");
+      return createCheck("Syllabus in Navigation", "pass", "Simple Syllabus is enabled in course navigation.");
     }
 
     return createCheck(
-      "Syllabus Link Enabled",
+      "Syllabus in Navigation",
       "fail",
       simpleSyllabusTab.visibility
         ? `Simple Syllabus navigation visibility is ${simpleSyllabusTab.visibility}.`
@@ -684,11 +684,11 @@
 
   function getSyllabusModuleLinksCheck(data) {
     if (!data.hasAnyContent) {
-      return createCheck("Syllabus in Navigation", "fail", "No module content exists yet.");
+      return createCheck("Syllabus Module Links", "fail", "No module content exists yet.");
     }
 
-    if (data.syllabusModuleLinkMismatches.length > 0 && IS_ISD) {
-      return createCheck("Syllabus in Navigation", "fail", "", {
+    if (data.syllabusModuleLinkMismatches.length > 0) {
+      return createCheck("Syllabus Module Links", "fail", "", {
         action: {
           type: "fixSyllabusModuleLinks",
           label: "Fix Syllabus Links"
@@ -696,7 +696,7 @@
       });
     }
 
-    return createCheck("Syllabus in Navigation", "pass", "Simple Syllabus module links point to this course.");
+    return createCheck("Syllabus Module Links", "pass", "Simple Syllabus module links point to this course.");
   }
 
   function getContentCheck(data) {
@@ -811,8 +811,8 @@
         getLoadingCheck("Group Weights = 100%"),
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
+        getLoadingCheck("Syllabus Module Links"),
         getLoadingCheck("Syllabus in Navigation"),
-        getLoadingCheck("Syllabus Link Enabled"),
         getLoadingCheck("Syllabus", "Loading syllabus status..."),
         ...getManualConfirmationChecks()
       ];
