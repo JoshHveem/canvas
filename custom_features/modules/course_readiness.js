@@ -589,7 +589,7 @@
       "Instructor Evaluation": "instructorEvaluation",
       "Instructors Added": "instructorsAdded",
       "Published": "published",
-      "Syllabus": "syllabus",
+      "Syllabus Submitted": "syllabus",
       "Syllabus Link Enabled": "syllabusLinkEnabled",
       "Syllabus Module Links": "syllabusModuleLinks"
     }[title] || "";
@@ -623,27 +623,27 @@
 
   function getSyllabusCheck(data) {
     if (data.syllabusLoading) {
-      return getLoadingCheck("Syllabus", "Loading syllabus status...");
+      return getLoadingCheck("Syllabus Submitted", "Loading syllabus status...");
     }
 
     if (data.syllabusLoadError) {
-      return createCheck("Syllabus", "fail", "Unable to load syllabus status.");
+      return createCheck("Syllabus Submitted", "fail", "Unable to load syllabus status.");
     }
 
     if (!data.syllabusDoc) {
-      return createCheck("Syllabus", "fail", "No Simple Syllabus record was found for this course.");
+      return createCheck("Syllabus Submitted", "fail", "No Simple Syllabus record was found for this course.");
     }
 
     if (data.syllabusStatus === "completed") {
-      return createCheck("Syllabus", "pass", "Syllabus is completed.");
+      return createCheck("Syllabus Submitted", "pass", "Syllabus is completed.");
     }
 
     if (data.syllabusStatus === "awaiting_approval") {
-      return createCheck("Syllabus", "warn", "Syllabus is awaiting approval.");
+      return createCheck("Syllabus Submitted", "warn", "Syllabus is awaiting approval.");
     }
 
     return createCheck(
-      "Syllabus",
+      "Syllabus Submitted",
       "fail",
       data.syllabusStatus
         ? `Syllabus status is ${data.syllabusStatus.replace(/_/g, " ")}.`
@@ -687,7 +687,7 @@
       return createCheck("Syllabus Module Links", "fail", "No module content exists yet.");
     }
 
-    if (data.syllabusModuleLinkMismatches.length > 0) {
+    if (data.syllabusModuleLinkMismatches.length > 0 && IS_ISD) {
       return createCheck("Syllabus Module Links", "fail", "", {
         action: {
           type: "fixSyllabusModuleLinks",
