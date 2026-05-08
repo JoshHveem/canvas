@@ -813,7 +813,7 @@
         getLoadingCheck("Assignments Published"),
         getLoadingCheck("Syllabus Module Links"),
         getLoadingCheck("Syllabus in Navigation"),
-        getLoadingCheck("Syllabus", "Loading syllabus status..."),
+        getLoadingCheck("Syllabus Submitted", "Loading syllabus status..."),
         ...getManualConfirmationChecks()
       ];
     }
