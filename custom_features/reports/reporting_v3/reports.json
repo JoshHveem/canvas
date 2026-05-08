@@ -1,20 +1,6 @@
 {
   "reportTypes": [
     {
-      "value": "shell",
-      "label": "Shell",
-      "title": "Reporting V3",
-      "component": "reporting-v3-shell",
-      "description": "Base shell for building new reports.",
-      "filters": [],
-      "subMenus": [
-        {
-          "value": "overview",
-          "label": "Overview"
-        }
-      ]
-    },
-    {
       "value": "programs",
       "label": "Programs",
       "title": "Programs",

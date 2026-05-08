@@ -241,7 +241,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
-    if (IS_ME) feature("reports/reporting_v3/main", /^\/$/);
+    if (IS_ISD) feature("reports/reporting_v3/main", /external_tools\/110980/);
     if (IS_ME) feature("reports/logan_test", /^\/$/); // test for logan to build out a dashboard
     if (rCheckInCourse.test(window.location.pathname)) {
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
@@ -302,21 +302,13 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER) {
       feature("files/restore_images", /^\/courses\/[0-9]+/);
       feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
+      feature("modules/course_readiness", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       feature("reports/individual_page/report2", [
         /^\/courses\/[0-9]+\/users\/[0-9]+$/,
         /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
         /^\/users\/[0-9]+$/
       ]);
-      // delete after march 1
-      if (new Date() < new Date(2026, 2, 1)) {
-        feature("reports/individual_page/report", [
-          /^\/courses\/[0-9]+\/users\/[0-9]+$/,
-          /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
-          /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
-          /^\/users\/[0-9]+$/
-        ]);
-      }
     }
     feature("password_reset", [
       /^\/courses\/[0-9]+\/users\/[0-9]+$/,
