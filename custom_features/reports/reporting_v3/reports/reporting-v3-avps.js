@@ -101,6 +101,10 @@
       }
     },
     methods: {
+      getBaseSource() {
+        return String(this.reportMeta?.source || this.reportMeta?.value || "avps").trim();
+      },
+
       buildAvpFilters() {
         const filters = {};
         const selectedYear = Number(this.selectedFilters?.academic_year || 0);
@@ -137,7 +141,7 @@
         this.$set(this.sectionErrors, key, "");
 
         try {
-          const data = await bridgetools.req3("avps", this.buildAvpFilters(), {
+          const data = await bridgetools.req3(this.getBaseSource(), this.buildAvpFilters(), {
             include: [include]
           });
 
