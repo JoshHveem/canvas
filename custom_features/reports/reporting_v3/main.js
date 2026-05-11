@@ -345,6 +345,7 @@
           this.$set(this.settings.subMenuByType, type, value);
           this.ensureAcademicYearFilter();
           this.pruneFilterSelection("programs");
+          this.pruneFilterSelection("avps");
           await this.persistSettings();
         },
 

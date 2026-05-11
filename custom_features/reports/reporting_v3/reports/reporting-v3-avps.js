@@ -110,6 +110,10 @@
       }
     },
     methods: {
+      getBaseSource() {
+        return String(this.reportMeta?.source || this.reportMeta?.value || "avps").trim();
+      },
+
       buildAvpFilters() {
         const filters = {};
         const selectedYear = Number(this.selectedFilters?.academic_year || 0);
