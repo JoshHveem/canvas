@@ -501,7 +501,7 @@ $(".see_bookmarked_banks").after(upload);
   - FB. = Fill in Multiple Blanks (use [blankname] in text, no spaces in brackets)
   - FU. = File Upload
   
-  SAMPLE MC QUESTION:
+  EXAMPLE QUIZ FORMAT:
   Title: Biology Quiz
   
   MC. What is the powerhouse of the cell?
@@ -511,44 +511,35 @@ $(".see_bookmarked_banks").after(upload);
   D. Vacuole
   ?. General feedback for this question
   
-  SAMPLE MA QUESTION:
   MA. Select all that apply
   *A. Red
   ??. This feedback shows for option A
   *B. Blue
   C. Green
   
-  SAMPLE EQ QUESTION:
   EQ. Write an essay about mitochondria
   ?. General instructions or feedback
   
-  SAMPLE TF QUESTION:
   TF. Mitochondria are the powerhouse of the cell.
   *T.
   F.
   ?. True, they produce energy.
-  
-  SAMPLE MT QUESTION:
+
   MT. Match the terms with their definitions
   1. Mitochondria = a. Powerhouse of the cell
   2. Nucleus = b. Control center
   ?. Matching helps identify key concepts.
   
-  SAMPLE TX QUESTION:
   TX. This is an informational text block
   ?. Optional note about the text.
   
-  SAMPLE FB QUESTION:
   FB. Roses are [color1] violets are [color2]
   color1. Red
   color1. red
   color2. blue
   color2. Blue
   ?. Fill in the blanks with colors.
-  
-  NOTE: For FB questions, include case variants (Red/red) if you want case-insensitive answers. Only include exact matches for case-sensitive.
-  
-  SAMPLE FU QUESTION:
+    
   FU. Upload your assignment file
   ?. Make sure to include all required documents.
   
