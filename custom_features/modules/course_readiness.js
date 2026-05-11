@@ -589,8 +589,8 @@
       "Instructor Evaluation": "instructorEvaluation",
       "Instructors Added": "instructorsAdded",
       "Published": "published",
-      "Syllabus": "syllabus",
-      "Syllabus Link Enabled": "syllabusLinkEnabled",
+      "Syllabus Submitted": "syllabus",
+      "Syllabus in Navigation": "syllabusLinkEnabled",
       "Syllabus Module Links": "syllabusModuleLinks"
     }[title] || "";
   }
@@ -623,27 +623,27 @@
 
   function getSyllabusCheck(data) {
     if (data.syllabusLoading) {
-      return getLoadingCheck("Syllabus", "Loading syllabus status...");
+      return getLoadingCheck("Syllabus Submitted", "Loading syllabus status...");
     }
 
     if (data.syllabusLoadError) {
-      return createCheck("Syllabus", "fail", "Unable to load syllabus status.");
+      return createCheck("Syllabus Submitted", "fail", "Unable to load syllabus status.");
     }
 
     if (!data.syllabusDoc) {
-      return createCheck("Syllabus", "fail", "No Simple Syllabus record was found for this course.");
+      return createCheck("Syllabus Submitted", "fail", "No Simple Syllabus record was found for this course.");
     }
 
     if (data.syllabusStatus === "completed") {
-      return createCheck("Syllabus", "pass", "Syllabus is completed.");
+      return createCheck("Syllabus Submitted", "pass", "Syllabus is completed.");
     }
 
     if (data.syllabusStatus === "awaiting_approval") {
-      return createCheck("Syllabus", "warn", "Syllabus is awaiting approval.");
+      return createCheck("Syllabus Submitted", "warn", "Syllabus is awaiting approval.");
     }
 
     return createCheck(
-      "Syllabus",
+      "Syllabus Submitted",
       "fail",
       data.syllabusStatus
         ? `Syllabus status is ${data.syllabusStatus.replace(/_/g, " ")}.`
@@ -657,17 +657,17 @@
     );
 
     if (!simpleSyllabusTab) {
-      return createCheck("Syllabus Link Enabled", "fail", "Simple Syllabus was not found in course navigation.");
+      return createCheck("Syllabus in Navigation", "fail", "Simple Syllabus was not found in course navigation.");
     }
 
     const visibility = String(simpleSyllabusTab.visibility ?? "").toLowerCase();
 
     if (visibility === "public" && simpleSyllabusTab.hidden !== true) {
-      return createCheck("Syllabus Link Enabled", "pass", "Simple Syllabus is enabled in course navigation.");
+      return createCheck("Syllabus in Navigation", "pass", "Simple Syllabus is enabled in course navigation.");
     }
 
     return createCheck(
-      "Syllabus Link Enabled",
+      "Syllabus in Navigation",
       "fail",
       simpleSyllabusTab.visibility
         ? `Simple Syllabus navigation visibility is ${simpleSyllabusTab.visibility}.`
@@ -812,8 +812,8 @@
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
         getLoadingCheck("Syllabus Module Links"),
-        getLoadingCheck("Syllabus Link Enabled"),
-        getLoadingCheck("Syllabus", "Loading syllabus status..."),
+        getLoadingCheck("Syllabus in Navigation"),
+        getLoadingCheck("Syllabus Submitted", "Loading syllabus status..."),
         ...getManualConfirmationChecks()
       ];
     }
