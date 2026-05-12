@@ -399,9 +399,9 @@
             selectors: [],
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
-              { value: 'completion',    label: 'Completion', isd_only: true },
-              { value: 'graduates',    label: 'Graduates', isd_only: true },
-              { value: 'placements',    label: 'Placements', isd_only: true },
+              // { value: 'completion',    label: 'Completion', isd_only: true },
+              // { value: 'graduates',    label: 'Graduates', isd_only: true },
+              // { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'syllabi',  label: 'Syllabi' },
               { value: 'employment-skills',    label: 'Employment Skills' },
             ]
@@ -415,9 +415,9 @@
             selectors: ['programs', 'campus'],
             subMenus: [
               // { value: 'overview',    label: 'Overview' },
-              { value: 'completion',    label: 'Completion', isd_only: true },
-              { value: 'graduates',    label: 'Graduates', isd_only: true },
-              { value: 'placements',    label: 'Placements', isd_only: true },
+              // { value: 'completion',    label: 'Completion', isd_only: true },
+              // { value: 'graduates',    label: 'Graduates', isd_only: true },
+              // { value: 'placements',    label: 'Placements', isd_only: true },
               { value: 'syllabi',  label: 'Syllabi' },
               { value: 'employment-skills',    label: 'Employment Skills' },
             ]
