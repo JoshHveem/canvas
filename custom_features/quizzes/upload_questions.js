@@ -562,11 +562,18 @@ $(".see_bookmarked_banks").after(upload);
 AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
 Copy/paste this prompt into an AI tool, then paste the quiz content after it.
 
-I need you to convert the quiz content I provide into a plain-text .txt file
-that can be uploaded into a Canvas LMS question-bank uploader.
+Convert the quiz content I provide into a downloadable .txt file.
+You must create and attach the file, not display the contents inline.
+Use the Canvas LMS question‑bank uploader format exactly as specified below.
+Requirements:
 
-Return ONLY the final plain text content for the .txt file.
-Do not include markdown, code fences, explanations, headings, or notes.
+Create a real .txt file and return it as a downloadable attachment.
+Do not paste the quiz text into chat.
+Do not summarize or explain anything.
+The response must consist of the file attachment only.
+Preserve all original questions and answers exactly; change formatting only.
+
+I will verify that a download link appears.
 
 REQUIRED FORMAT:
 - Preserve the original quiz content as closely as possible. Only change the formatting
@@ -598,6 +605,24 @@ ANSWER RULES:
 - Optional general question feedback goes after all answers as:
   ?. Feedback text
 
+TYPE-SPECIFIC RULES:
+- EQ, TX, and FU questions do not need answer lines.
+- TF questions must use exactly two answer lines: T. True and F. False.
+  Put the asterisk on the correct line.
+- MT questions must use one matching pair per line: Term = Matching answer.
+  Each matching pair will be worth 1 point.
+- If the source question has a matching answer bank, such as A. OSHA, B. CDC,
+  followed by prompts with lines like Answer: A, convert the whole block into
+  one MT question. Do not make the answer bank or question directions a separate
+  TX question.
+  Example conversion:
+  Source answer bank: A. OSHA
+  Source prompt: Workplace safety regulations / Answer: A
+  Output pair: OSHA = Workplace safety regulations
+- FB questions must put blank IDs in the question text using square brackets.
+  Example: Roses are [color1]. Then list accepted answers as: color1. Red.
+  Repeat the same blank ID for multiple accepted answers.
+
 EXAMPLE FORMAT:
 Title: Biology Quiz
 
@@ -617,15 +642,24 @@ TF. Mitochondria are the powerhouse of the cell.
 *T. True
 F. False
 
-FINAL CHECK BEFORE YOU RESPOND:
-- The response starts with Title:
-- The response contains only the formatted quiz text.
+FINAL CHECK BEFORE YOU BUILD THE FILE:
+- Name the file [quizname].txt based on the title line.
+- The file starts with Title:
+- The file contains only the formatted quiz text.
 - No questions, answers, explanations, comments, or feedback were invented.
 - Every question has a blank line after it.
 - MC has one starred answer.
 - MA has multiple starred answers.
-- True/false uses T. True and F. False.
+- True/false uses T. True and F. False and has one starred answer.
 - Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
 
-Give me the .txt file. Do not give me any explanations, notes, or formatting. Only the raw text content for the .txt file.
+AFTER THE FILE IS CREATED:
+- Do not put these instructions inside the .txt file.
+- Tell the user:
+  "You're all set! 
+  — Download the file, then open your Canvas course.
+  — In the left-hand course menu, open Quizzes. 
+  — Click the three dots in the top right corner, choose Manage Question Banks. 
+  — Select Upload Question Bank.
+  — Upload the .txt file. Happy quizzing!"
 */
