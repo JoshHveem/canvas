@@ -88,9 +88,9 @@
             decimals: 1,
             align: "right",
             pillBands: {
-              good: 0.75,
+              bad: 0.8,
               warning: 0.5,
-              bad: 0.25
+              good: 0
             }
           }
         ];
