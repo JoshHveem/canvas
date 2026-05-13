@@ -67,14 +67,11 @@
             {
               key: "recommendationTagsObject",
               label: "Recommendation Tags",
-              width: "26rem",
-              formatter: (value) => this.formatTagObject(value),
-              sortValue: (row) => row.recommendationTagTotal,
-              cellStyle: {
-                whiteSpace: "normal",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                fontSize: "12px"
-              }
+              format: "tags",
+              denominatorKey: "numSubmissions",
+              denominatorLabel: "Submissions",
+              tagWidth: "8rem",
+              decimals: 1
             }
           ];
         }

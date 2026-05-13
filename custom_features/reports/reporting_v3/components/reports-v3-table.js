@@ -47,7 +47,9 @@
     data() {
       return {
         sortKey: this.defaultSortKey || this.columns[0]?.key || "",
-        sortDir: this.defaultSortDir === -1 ? -1 : 1
+        sortDir: this.defaultSortDir === -1 ? -1 : 1,
+        tagSelections: {},
+        openTagFilterKey: ""
       };
     },
 
@@ -64,7 +66,7 @@
         };
       },
 
-      resolvedColumns() {
+      sourceColumns() {
         return (Array.isArray(this.columns) ? this.columns : []).map((column, index) => ({
           align: "left",
           format: "text",
@@ -75,6 +77,27 @@
           ...column,
           _index: index
         }));
+      },
+
+      tagFilterColumns() {
+        return this.sourceColumns.filter((column) => this.isTagsColumn(column));
+      },
+
+      resolvedColumns() {
+        const columns = [];
+
+        this.sourceColumns.forEach((column) => {
+          if (!this.isTagsColumn(column)) {
+            columns.push(column);
+            return;
+          }
+
+          this.getSelectedTags(column).forEach((tagName) => {
+            columns.push(this.buildTagColumn(column, tagName));
+          });
+        });
+
+        return columns;
       },
 
       sortedRows() {
@@ -104,6 +127,158 @@
         }
 
         return String(left).localeCompare(String(right), undefined, { numeric: true }) * this.sortDir;
+      },
+
+      isTagsColumn(column) {
+        const kind = String(column?.type || column?.format || "").trim().toLowerCase();
+        return kind === "tags";
+      },
+
+      getColumnKey(column) {
+        return String(column?.key || `column-${column?._index || 0}`);
+      },
+
+      parseTagsObject(value) {
+        let source = value;
+
+        if (typeof source === "string") {
+          const trimmed = source.trim();
+          if (!trimmed) return {};
+
+          try {
+            source = JSON.parse(trimmed);
+          } catch (error) {
+            return {};
+          }
+        }
+
+        if (!source || typeof source !== "object" || Array.isArray(source)) {
+          return {};
+        }
+
+        return Object.fromEntries(
+          Object.entries(source)
+            .map(([name, count]) => [String(name || "").trim(), Number(count)])
+            .filter(([name, count]) => name && Number.isFinite(count) && count > 0)
+        );
+      },
+
+      getTagOptions(column) {
+        const totals = new Map();
+
+        (Array.isArray(this.rows) ? this.rows : []).forEach((row) => {
+          const tags = this.parseTagsObject(this.getRawValue(row, column));
+
+          Object.entries(tags).forEach(([name, count]) => {
+            totals.set(name, (totals.get(name) || 0) + count);
+          });
+        });
+
+        return Array.from(totals.entries())
+          .map(([value, count]) => ({ value, label: value, count }))
+          .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+      },
+
+      getSelectedTags(column) {
+        const value = this.tagSelections[this.getColumnKey(column)];
+        return Array.isArray(value) ? value : [];
+      },
+
+      isTagSelected(column, tagName) {
+        return this.getSelectedTags(column).includes(tagName);
+      },
+
+      setTagSelected(column, tagName, selected) {
+        const key = this.getColumnKey(column);
+        const current = this.getSelectedTags(column);
+        const next = selected
+          ? Array.from(new Set([...current, tagName]))
+          : current.filter((value) => value !== tagName);
+
+        this.$set(this.tagSelections, key, next);
+
+        if (!selected && this.sortKey === this.getTagColumnKey(column, tagName)) {
+          this.sortKey = this.defaultSortKey || this.resolvedColumns[0]?.key || "";
+          this.sortDir = this.defaultSortDir === -1 ? -1 : 1;
+        }
+      },
+
+      clearTagSelection(column) {
+        const hadSortedTag = this.getSelectedTags(column).some((tagName) =>
+          this.sortKey === this.getTagColumnKey(column, tagName)
+        );
+
+        this.$set(this.tagSelections, this.getColumnKey(column), []);
+
+        if (hadSortedTag) {
+          this.sortKey = this.defaultSortKey || this.resolvedColumns[0]?.key || "";
+          this.sortDir = this.defaultSortDir === -1 ? -1 : 1;
+        }
+      },
+
+      toggleTagFilter(column) {
+        const key = this.getColumnKey(column);
+        this.openTagFilterKey = this.openTagFilterKey === key ? "" : key;
+      },
+
+      isTagFilterOpen(column) {
+        return this.openTagFilterKey === this.getColumnKey(column);
+      },
+
+      tagFilterButtonLabel(column) {
+        const count = this.getSelectedTags(column).length;
+        if (!count) return "Select tags";
+        if (count === 1) return "1 tag selected";
+        return `${count} tags selected`;
+      },
+
+      getTagColumnKey(column, tagName) {
+        return `${this.getColumnKey(column)}__tag__${tagName}`;
+      },
+
+      getTagDenominator(row, column) {
+        if (typeof column.denominator === "function") {
+          return column.denominator(row, column);
+        }
+
+        const denominatorKey = column.denominatorKey || column.denominator;
+        if (denominatorKey) {
+          return getByPath(row, denominatorKey);
+        }
+
+        return null;
+      },
+
+      getTagRatio(row, column, tagName) {
+        const tags = this.parseTagsObject(this.getRawValue(row, column));
+        const numerator = toNumber(tags[tagName]);
+        const denominator = toNumber(this.getTagDenominator(row, column));
+
+        if (numerator == null || denominator == null || denominator <= 0) {
+          return null;
+        }
+
+        return numerator / denominator;
+      },
+
+      buildTagColumn(column, tagName) {
+        return {
+          align: "right",
+          format: "percent",
+          sortable: true,
+          placeholder: column.placeholder || "-",
+          width: column.tagWidth || column.width || "7rem",
+          decimals: Number.isFinite(Number(column.decimals)) ? Number(column.decimals) : 1,
+          pillBands: column.pillBands,
+          key: this.getTagColumnKey(column, tagName),
+          label: tagName,
+          description: column.denominatorLabel
+            ? `${tagName} / ${column.denominatorLabel}`
+            : tagName,
+          value: (row) => this.getTagRatio(row, column, tagName),
+          sortValue: (row) => this.getTagRatio(row, column, tagName),
+          cellStyle: column.tagCellStyle || column.cellStyle
+        };
       },
 
       getRowKey(row, index) {
@@ -293,7 +468,73 @@
     },
 
     template: `
-      <div class="btech-card btech-theme" style="padding:0; overflow:hidden; display:inline-block; width:fit-content; max-width:100%; vertical-align:top;">
+      <div class="btech-card btech-theme" style="padding:0; overflow:visible; display:inline-block; width:fit-content; max-width:100%; vertical-align:top;">
+        <div
+          v-if="tagFilterColumns.length"
+          style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; padding:12px; border-bottom:1px solid #e2e8f0; background:#fff;"
+        >
+          <div
+            v-for="column in tagFilterColumns"
+            :key="getColumnKey(column)"
+            style="position:relative; min-width:240px;"
+          >
+            <label
+              class="btech-muted"
+              style="display:block; font-size:12px; margin-bottom:4px;"
+            >
+              {{ column.label }}
+            </label>
+
+            <button
+              type="button"
+              :aria-expanded="isTagFilterOpen(column) ? 'true' : 'false'"
+              @click="toggleTagFilter(column)"
+              style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff; color:#111827; cursor:pointer;"
+            >
+              <span>{{ tagFilterButtonLabel(column) }}</span>
+              <span>{{ isTagFilterOpen(column) ? '^' : 'v' }}</span>
+            </button>
+
+            <div
+              v-if="isTagFilterOpen(column)"
+              style="position:absolute; top:100%; left:0; right:0; z-index:30; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; box-shadow:0 12px 24px rgba(15,23,42,0.14); overflow:hidden;"
+            >
+              <div style="max-height:260px; overflow:auto; padding:6px;">
+                <label
+                  v-for="option in getTagOptions(column)"
+                  :key="option.value"
+                  style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:12px;"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="isTagSelected(column, option.value)"
+                    @change="setTagSelected(column, option.value, $event.target.checked)"
+                  >
+                  <span style="flex:1 1 auto; white-space:normal;">{{ option.label }}</span>
+                </label>
+
+                <div
+                  v-if="!getTagOptions(column).length"
+                  class="btech-muted"
+                  style="padding:8px; font-size:12px;"
+                >
+                  No tags available.
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:8px; padding:8px; border-top:1px solid #e2e8f0; background:#f8fafc;">
+                <button
+                  type="button"
+                  @click="clearTagSelection(column)"
+                  style="border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:12px;"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style="overflow:auto; max-width:100%;">
           <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
             <colgroup>
