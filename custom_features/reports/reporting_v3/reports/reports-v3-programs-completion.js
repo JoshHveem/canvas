@@ -101,10 +101,10 @@
 
       buildCompletionBreakdown(program) {
         const palette = window.bridgetools?.colors || {};
-        const completers = this.toWholeNumber(program?.completions_projected__completers);
-        const projectedCompleters = this.toWholeNumber(program?.completions_projected__projected_completers);
-        const exiters = this.toWholeNumber(program?.completions_projected__exiters);
-        const projectedExiters = this.toWholeNumber(program?.completions_projected__projected_exiters);
+        const completers = this.toWholeNumber(program?.completions_projected__num_students__completer);
+        const projectedCompleters = this.toWholeNumber(program?.completions_projected__num_students__completer__projected);
+        const exiters = this.toWholeNumber(program?.completions_projected__num_students__exiter);
+        const projectedExiters = this.toWholeNumber(program?.completions_projected__num_students__exiter__projected);
 
         const projectedCompleterGain = Math.max(0, projectedCompleters - completers);
         const nonCompleters = Math.max(0, exiters - completers);
