@@ -85,6 +85,7 @@
           settings: utils.getDefaultSettings(reportTypes),
           sidebarTab: "reports",
           reportShellHeight: "600px",
+          reportShellWidth: "100%",
           programs: [],
           avps: [],
           viewFilterControls: [],
@@ -463,12 +464,16 @@
           return `${count} selected`;
         },
 
-        updateReportShellHeight() {
+        updateReportShellSize() {
           const root = this.$refs?.reportShell || this.$el;
-          const top = root?.getBoundingClientRect ? root.getBoundingClientRect().top : 0;
-          const available = Math.max(420, window.innerHeight - top - 16);
+          const rect = root?.getBoundingClientRect
+            ? root.getBoundingClientRect()
+            : { top: 0, left: 0 };
+          const availableHeight = Math.max(420, window.innerHeight - rect.top - 2);
+          const availableWidth = Math.max(640, window.innerWidth - rect.left - 2);
 
-          this.reportShellHeight = `${Math.floor(available)}px`;
+          this.reportShellHeight = `${Math.floor(availableHeight)}px`;
+          this.reportShellWidth = `${Math.floor(availableWidth)}px`;
         },
 
         ensureAcademicYearFilter() {
@@ -525,12 +530,12 @@
         this.ensureAcademicYearFilter();
         await this.ensureSharedFilterData();
         this.loading = false;
-        this.$nextTick(this.updateReportShellHeight);
-        window.addEventListener("resize", this.updateReportShellHeight);
+        this.$nextTick(this.updateReportShellSize);
+        window.addEventListener("resize", this.updateReportShellSize);
       },
 
       beforeDestroy() {
-        window.removeEventListener("resize", this.updateReportShellHeight);
+        window.removeEventListener("resize", this.updateReportShellSize);
       }
     });
   }

@@ -2,9 +2,9 @@
   <div
     ref="reportShell"
     class="btech-canvas-report"
-    :style="{ height: reportShellHeight, overflow: 'hidden', boxSizing: 'border-box', padding: '24px 16px 16px' }"
+    :style="{ width: reportShellWidth, maxWidth: reportShellWidth, height: reportShellHeight, overflow: 'hidden', boxSizing: 'border-box', padding: '16px 12px 0 0' }"
   >
-    <div style="max-width:1600px; height:100%; min-height:0; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:nowrap; overflow:hidden;">
+    <div style="width:100%; height:100%; min-height:0; display:flex; gap:24px; align-items:flex-start; flex-wrap:nowrap; overflow:hidden;">
       <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; align-self:flex-start; overflow:visible;">
         <div role="tablist" aria-label="Sidebar sections" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:14px;">
           <button
@@ -210,9 +210,9 @@
           </div>
         </div>
 
-        <div style="flex:1 1 auto; min-height:0; overflow:auto;">
-          <div style="display:flex; justify-content:center; min-width:fit-content;">
-            <div style="width:fit-content; max-width:min(1400px, 100%);">
+        <div style="flex:1 1 auto; min-height:0; min-width:0; overflow:auto;">
+          <div style="display:flex; justify-content:flex-start; width:max-content; min-width:100%; padding-bottom:12px;">
+            <div style="width:fit-content; max-width:none;">
             <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">
               <div class="btech-muted">Loading report shell...</div>
             </div>
