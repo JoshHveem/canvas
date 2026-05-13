@@ -90,6 +90,7 @@
           avps: [],
           viewFilterControls: [],
           openMultiFilterKey: "",
+          viewportLockPrevious: null,
           sharedLoading: {
             programs: false,
             avps: false
@@ -476,6 +477,38 @@
           this.reportShellWidth = `${Math.floor(availableWidth)}px`;
         },
 
+        lockPageViewport() {
+          if (this.viewportLockPrevious) return;
+
+          const html = document.documentElement;
+          const body = document.body;
+          const content = document.getElementById("content");
+
+          this.viewportLockPrevious = {
+            htmlOverflow: html?.style?.overflow || "",
+            bodyOverflow: body?.style?.overflow || "",
+            contentOverflow: content?.style?.overflow || ""
+          };
+
+          if (html) html.style.overflow = "hidden";
+          if (body) body.style.overflow = "hidden";
+          if (content) content.style.overflow = "hidden";
+        },
+
+        unlockPageViewport() {
+          if (!this.viewportLockPrevious) return;
+
+          const html = document.documentElement;
+          const body = document.body;
+          const content = document.getElementById("content");
+
+          if (html) html.style.overflow = this.viewportLockPrevious.htmlOverflow;
+          if (body) body.style.overflow = this.viewportLockPrevious.bodyOverflow;
+          if (content) content.style.overflow = this.viewportLockPrevious.contentOverflow;
+
+          this.viewportLockPrevious = null;
+        },
+
         ensureAcademicYearFilter() {
           if (!this.currentNeedsAcademicYear) return;
 
@@ -527,6 +560,7 @@
         );
 
         this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
+        this.lockPageViewport();
         this.ensureAcademicYearFilter();
         await this.ensureSharedFilterData();
         this.loading = false;
@@ -536,6 +570,7 @@
 
       beforeDestroy() {
         window.removeEventListener("resize", this.updateReportShellSize);
+        this.unlockPageViewport();
       }
     });
   }
