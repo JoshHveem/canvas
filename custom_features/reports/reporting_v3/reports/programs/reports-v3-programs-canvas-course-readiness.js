@@ -25,7 +25,6 @@
     computed: {
       filteredPrograms() {
         const list = Array.isArray(this.programs) ? this.programs : [];
-        console.log(list);
 
         return list
           .map((program) => this.normalizeProgramRow(program))
