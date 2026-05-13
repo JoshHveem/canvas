@@ -47,6 +47,13 @@
               "component": "reports-v3-programs-course-evaluations",
               "source": "programs",
               "include": "course_evaluations_summary"
+            },
+            {
+              "value": "recommendations",
+              "label": "Recommendations",
+              "component": "reports-v3-programs-course-evaluations",
+              "source": "programs",
+              "include": "course_evaluations_summary"
             }
           ]
         },

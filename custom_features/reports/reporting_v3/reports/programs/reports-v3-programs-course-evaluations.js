@@ -20,6 +20,12 @@
       error: {
         type: String,
         default: ""
+      },
+      view: {
+        type: Object,
+        default: function () {
+          return {};
+        }
       }
     },
     computed: {
@@ -32,8 +38,12 @@
           .filter(Boolean);
       },
 
+      isRecommendationsView() {
+        return String(this.view?.value || "") === "recommendations";
+      },
+
       tableColumns() {
-        return [
+        const baseColumns = [
           { key: "programName", label: "Program", width: "16rem" },
           { key: "numSubmissions", label: "Submissions", width: "6rem", format: "integer", align: "right" },
           {
@@ -48,7 +58,29 @@
               warning: 0.5,
               bad: 0.25
             }
-          },
+          }
+        ];
+
+        if (this.isRecommendationsView) {
+          return [
+            ...baseColumns,
+            {
+              key: "recommendationTagsObject",
+              label: "Recommendation Tags",
+              width: "26rem",
+              formatter: (value) => this.formatTagObject(value),
+              sortValue: (row) => row.recommendationTagTotal,
+              cellStyle: {
+                whiteSpace: "normal",
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                fontSize: "12px"
+              }
+            }
+          ];
+        }
+
+        return [
+          ...baseColumns,
           {
             key: "likertCourseObjectivesClear",
             label: "Objectives Clear",
@@ -84,26 +116,6 @@
             decimals: 1,
             align: "right",
             pillBands: this.likertPillBands()
-          },
-          {
-            key: "positiveTags",
-            label: "Positive Themes",
-            width: "18rem",
-            formatter: (value) => this.formatTagSummary(value),
-            sortValue: (row) => row.positiveTagTotal,
-            cellStyle: {
-              whiteSpace: "normal"
-            }
-          },
-          {
-            key: "recommendationTags",
-            label: "Recommendation Themes",
-            width: "18rem",
-            formatter: (value) => this.formatTagSummary(value),
-            sortValue: (row) => row.recommendationTagTotal,
-            cellStyle: {
-              whiteSpace: "normal"
-            }
           }
         ];
       }
@@ -147,6 +159,35 @@
           });
       },
 
+      parseTagObject(value) {
+        let source = value;
+
+        if (typeof source === "string") {
+          const trimmed = source.trim();
+          if (!trimmed) return {};
+
+          try {
+            source = JSON.parse(trimmed);
+          } catch (error) {
+            return {};
+          }
+        }
+
+        if (!source || typeof source !== "object" || Array.isArray(source)) {
+          return {};
+        }
+
+        return Object.fromEntries(
+          Object.entries(source)
+            .map(([name, count]) => [String(name || "").trim(), Math.max(0, Math.round(Number(count) || 0))])
+            .filter(([name, count]) => name && count > 0)
+            .sort((a, b) => {
+              if (b[1] !== a[1]) return b[1] - a[1];
+              return a[0].localeCompare(b[0], undefined, { numeric: true });
+            })
+        );
+      },
+
       formatTagSummary(tags) {
         const list = Array.isArray(tags) ? tags : [];
         if (!list.length) return "-";
@@ -159,6 +200,13 @@
         }
 
         return topTags.join(", ");
+      },
+
+      formatTagObject(tagsObject) {
+        if (!tagsObject || typeof tagsObject !== "object" || Array.isArray(tagsObject)) return "-";
+        if (!Object.keys(tagsObject).length) return "-";
+
+        return JSON.stringify(tagsObject);
       },
 
       tagTotal(tags) {
@@ -179,14 +227,15 @@
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
+        const rawRecommendationTags =
+          program?.course_evaluations_summary__recommendation_tag_counts ??
+          program?.recommendation_tag_counts;
         const positiveTags = this.parseTagCounts(
           program?.course_evaluations_summary__positive_tag_counts ??
           program?.positive_tag_counts
         );
-        const recommendationTags = this.parseTagCounts(
-          program?.course_evaluations_summary__recommendation_tag_counts ??
-          program?.recommendation_tag_counts
-        );
+        const recommendationTags = this.parseTagCounts(rawRecommendationTags);
+        const recommendationTagsObject = this.parseTagObject(rawRecommendationTags);
         const numSubmissions = program?.course_evaluations_summary__num_submissions ?? program?.num_submissions;
         const numRecommendationFeedback =
           program?.course_evaluations_summary__num_submissions_with_feedback_recommendations ??
@@ -222,6 +271,7 @@
           likertWouldRecommendCourse: program?.course_evaluations_summary__likert_would_recommend_course ?? program?.likert_would_recommend_course,
           positiveTags,
           recommendationTags,
+          recommendationTagsObject,
           positiveTagTotal: this.tagTotal(positiveTags),
           recommendationTagTotal: this.tagTotal(recommendationTags)
         };
