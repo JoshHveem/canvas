@@ -1,5 +1,5 @@
 (function () {
-  Vue.component("reports-v3-programs--course-evaluations--initial", {
+  Vue.component("reports-v3-programs--evaluations--course-evaluations", {
     props: {
       programs: {
         type: Array,

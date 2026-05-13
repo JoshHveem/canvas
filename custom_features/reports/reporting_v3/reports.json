@@ -37,23 +37,37 @@
           ]
         },
         {
-          "value": "course-evaluations",
-          "label": "Course Evaluations",
+          "value": "evaluations",
+          "label": "Evaluations",
           "filter_by_year": true,
           "views": [
             {
-              "value": "initial",
-              "label": "Initial View",
-              "component": "reports-v3-programs--course-evaluations--initial",
+              "value": "course-evaluations",
+              "label": "Course Evaluations",
+              "component": "reports-v3-programs--evaluations--course-evaluations",
               "source": "programs",
               "include": "course_evaluations_summary"
             },
             {
-              "value": "recommendations",
-              "label": "Recommendations",
-              "component": "reports-v3-programs--course-evaluations--recommendations",
+              "value": "course-recommendations",
+              "label": "Course Recommendations",
+              "component": "reports-v3-programs--evaluations--course-recommendations",
               "source": "programs",
               "include": "course_evaluations_summary"
+            },
+            {
+              "value": "instructor-evaluations",
+              "label": "Instructor Evaluations",
+              "component": "reports-v3-programs--evaluations--instructor-evaluations",
+              "source": "programs",
+              "include": "instructor_evaluations_summary"
+            },
+            {
+              "value": "instructor-recommendations",
+              "label": "Instructor Recommendations",
+              "component": "reports-v3-programs--evaluations--instructor-recommendations",
+              "source": "programs",
+              "include": "instructor_evaluations_summary"
             }
           ]
         },

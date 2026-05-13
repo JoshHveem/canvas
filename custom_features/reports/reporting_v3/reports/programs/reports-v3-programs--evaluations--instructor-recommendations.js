@@ -1,5 +1,5 @@
 (function () {
-  Vue.component("reports-v3-programs--course-evaluations--recommendations", {
+  Vue.component("reports-v3-programs--evaluations--instructor-recommendations", {
     props: {
       programs: {
         type: Array,
@@ -42,7 +42,7 @@
       },
 
       selectedRecommendationTags() {
-        const value = this.selectedFilters?.course_eval_recommendation_tags;
+        const value = this.selectedFilters?.instructor_recommendation_tags;
         return Array.isArray(value) ? value : [];
       },
 
@@ -64,7 +64,7 @@
         return [
           {
             type: "multiselect",
-            key: "course_eval_recommendation_tags",
+            key: "instructor_recommendation_tags",
             label: "Recommendation Tags",
             placeholder: "Select tags",
             options: this.recommendationTagOptions,
@@ -75,7 +75,8 @@
 
       tableColumns() {
         return [
-          { key: "programName", label: "Program", width: "16rem" },
+          { key: "programCode", label: "Program", width: "6rem" },
+          { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "numSubmissions", label: "Submissions", width: "6rem", format: "integer", align: "right" },
           {
             key: "percRecommendationFeedback",
@@ -119,6 +120,10 @@
       }
     },
     methods: {
+      firstValue(row, field) {
+        return row?.[`instructor_evaluations_summary__${field}`] ?? row?.[field];
+      },
+
       parseTagObject(value) {
         let source = value;
 
@@ -162,36 +167,15 @@
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
-        const rawRecommendationTags =
-          program?.course_evaluations_summary__recommendation_tag_counts ??
-          program?.recommendation_tag_counts;
-        const numSubmissions = program?.course_evaluations_summary__num_submissions ?? program?.num_submissions;
-        const numRecommendationFeedback =
-          program?.course_evaluations_summary__num_submissions_with_feedback_recommendations ??
-          program?.course_evaluations_summary__num_submissions_with_feedback_recom ??
-          program?.num_submissions_with_feedback_recommendations;
+        const numSubmissions = this.firstValue(program, "num_submissions");
+        const numRecommendationFeedback = this.firstValue(program, "num_has_feedback_recommendations");
 
         return {
-          programCode: String(
-            program?.program_code ||
-            program?.course_evaluations_summary__program_code ||
-            ""
-          ).trim(),
-          programName: String(
-            program?.program_name ||
-            program?.course_evaluations_summary__program_name ||
-            program?.program_code ||
-            program?.course_evaluations_summary__program_code ||
-            "Program"
-          ).trim(),
-          academicYear: Number(
-            program?.academic_year ||
-            program?.course_evaluations_summary__academic_year ||
-            0
-          ),
+          programCode: String(this.firstValue(program, "program_code") || program?.program_code || "").trim(),
+          academicYear: Number(this.firstValue(program, "academic_year") || program?.academic_year || 0),
           numSubmissions,
           percRecommendationFeedback: this.ratio(numRecommendationFeedback, numSubmissions),
-          recommendationTagsObject: this.parseTagObject(rawRecommendationTags)
+          recommendationTagsObject: this.parseTagObject(this.firstValue(program, "free_response_recommendations__tags"))
         };
       },
 
@@ -202,17 +186,17 @@
     template: `
       <div style="margin-top:18px;">
         <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-          <div class="btech-muted">Loading course evaluation recommendations...</div>
+          <div class="btech-muted">Loading instructor recommendations...</div>
         </div>
 
         <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-          <div style="font-weight:600; margin-bottom:4px;">Course Evaluation Recommendations Error</div>
+          <div style="font-weight:600; margin-bottom:4px;">Instructor Recommendations Error</div>
           <div class="btech-muted">{{ error }}</div>
         </div>
 
         <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-          <div style="font-weight:600; margin-bottom:4px;">Course Evaluation Recommendations</div>
-          <div class="btech-muted">No course evaluation recommendation rows match the current filters.</div>
+          <div style="font-weight:600; margin-bottom:4px;">Instructor Recommendations</div>
+          <div class="btech-muted">No instructor recommendation rows match the current filters.</div>
         </div>
 
         <reports-v3-table
@@ -220,9 +204,9 @@
           :rows="filteredPrograms"
           :columns="tableColumns"
           :row-key="rowKey"
-          default-sort-key="programName"
+          default-sort-key="programCode"
           :default-sort-dir="1"
-          empty-message="No course evaluation recommendation rows match the current filters."
+          empty-message="No instructor recommendation rows match the current filters."
         />
       </div>
     `
