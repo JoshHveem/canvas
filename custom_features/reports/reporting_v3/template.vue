@@ -1,7 +1,7 @@
 <template>
   <div class="btech-canvas-report" style="padding:24px 16px 32px;">
     <div style="max-width:1600px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-      <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; max-height:calc(100vh - 32px); overflow:auto;">
+      <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; overflow:visible;">
         <div role="tablist" aria-label="Sidebar sections" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:14px;">
           <button
             type="button"
