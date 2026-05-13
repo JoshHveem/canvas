@@ -41,6 +41,12 @@
       emptyMessage: {
         type: String,
         default: "No rows to display."
+      },
+      stickyColumns: {
+        type: Array,
+        default: function () {
+          return [0];
+        }
       }
     },
 
@@ -102,6 +108,31 @@
         return columns;
       },
 
+      stickyColumnIndexes() {
+        const requested = Array.isArray(this.stickyColumns) ? this.stickyColumns : [0];
+        const indexes = requested
+          .map((value) => {
+            if (typeof value === "number") return value;
+            return this.resolvedColumns.findIndex((column) => column.key === value);
+          })
+          .filter((index) => index >= 0 && index < this.resolvedColumns.length);
+
+        return Array.from(new Set(indexes)).sort((a, b) => a - b);
+      },
+
+      stickyColumnOffsets() {
+        const offsets = {};
+        let left = 0;
+
+        this.stickyColumnIndexes.forEach((index) => {
+          const column = this.resolvedColumns[index];
+          offsets[index] = left;
+          left += this.getColumnWidthPx(column);
+        });
+
+        return offsets;
+      },
+
       sortedRows() {
         const rows = Array.isArray(this.rows) ? this.rows.slice() : [];
         const sortColumn = this.resolvedColumns.find((column) => column.key === this.sortKey);
@@ -138,6 +169,30 @@
 
       getColumnKey(column) {
         return String(column?.key || `column-${column?._index || 0}`);
+      },
+
+      getColumnWidthPx(column) {
+        const width = String(column?.width || "").trim();
+        const match = width.match(/^(\d+(?:\.\d+)?)(px|rem)$/);
+
+        if (!match) return 140;
+
+        const value = Number(match[1]);
+        const unit = match[2];
+        if (!Number.isFinite(value)) return 140;
+
+        if (unit === "px") return value;
+        return value * 16;
+      },
+
+      isStickyColumn(column) {
+        const index = this.resolvedColumns.indexOf(column);
+        return this.stickyColumnIndexes.includes(index);
+      },
+
+      getStickyColumnLeft(column) {
+        const index = this.resolvedColumns.indexOf(column);
+        return `${this.stickyColumnOffsets[index] || 0}px`;
       },
 
       parseTagsObject(value) {
@@ -449,10 +504,23 @@
       },
 
       headerStyle(column) {
-        return {
+        const base = {
           width: column.width || undefined,
           textAlign: column.align || "left"
         };
+
+        if (this.isStickyColumn(column)) {
+          return {
+            ...base,
+            position: "sticky",
+            left: this.getStickyColumnLeft(column),
+            zIndex: 6,
+            background: "#f8fafc",
+            boxShadow: "1px 0 0 #e2e8f0"
+          };
+        }
+
+        return base;
       },
 
       cellStyle(column, row) {
@@ -466,7 +534,18 @@
         }
 
         if (column.cellStyle && typeof column.cellStyle === "object") {
-          return { ...base, ...column.cellStyle };
+          Object.assign(base, column.cellStyle);
+        }
+
+        if (this.isStickyColumn(column)) {
+          return {
+            ...base,
+            position: "sticky",
+            left: this.getStickyColumnLeft(column),
+            zIndex: 4,
+            background: "#fff",
+            boxShadow: "1px 0 0 #e2e8f0"
+          };
         }
 
         return base;
@@ -559,7 +638,7 @@
                   @click="setSort(column)"
                   :title="column.description || ''"
                   :style="headerStyle(column)"
-                  style="padding:10px 12px; font-size:12px; font-weight:600; cursor:pointer;"
+                  style="position:sticky; top:0; z-index:5; background:#f8fafc; padding:10px 12px; font-size:12px; font-weight:600; cursor:pointer;"
                 >
                   <span>{{ column.label }}</span>
                   <span v-if="sortKey === column.key" style="margin-left:6px;">{{ sortDir === 1 ? '^' : 'v' }}</span>
