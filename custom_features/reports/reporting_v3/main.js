@@ -35,31 +35,26 @@
     const scripts = [];
     const seen = new Set();
 
-    (Array.isArray(reportTypes) ? reportTypes : []).forEach((report) => {
-      const reportComponent = String(report?.component || "").trim();
-      const reportUrl = getComponentScriptUrl(reportComponent);
+    function addScript(componentName, groupName, required) {
+      const component = String(componentName || "").trim();
+      const url = getComponentScriptUrl(component, groupName);
+      if (!url || seen.has(url)) return;
 
-      if (reportUrl && !seen.has(reportUrl)) {
-        seen.add(reportUrl);
-        scripts.push({
-          url: reportUrl,
-          name: reportComponent,
-          required: true
-        });
-      }
+      seen.add(url);
+      scripts.push({
+        url,
+        name: component,
+        required: !!required
+      });
+    }
+
+    (Array.isArray(reportTypes) ? reportTypes : []).forEach((report) => {
+      addScript(report?.component, "", true);
 
       if (Array.isArray(report?.subMenus)) {
         report.subMenus.forEach((subMenu) => {
-          const componentName = String(subMenu?.component || "").trim();
-          const url = getComponentScriptUrl(componentName, report?.value);
-          if (!url || seen.has(url)) return;
-
-          seen.add(url);
-          scripts.push({
-            url,
-            name: componentName,
-            required: false
-          });
+          const views = utils.getReportViews(subMenu);
+          views.forEach((view) => addScript(view?.component, report?.value, false));
         });
       }
     });
@@ -136,14 +131,35 @@
           return this.currentSubMenus.find((menu) => menu.value === this.currentSubKey) || this.currentSubMenus[0] || {};
         },
 
+        currentViews() {
+          return utils.getReportViews(this.currentSubMenuMeta);
+        },
+
+        currentViewSettingsKey() {
+          return utils.getViewSettingsKey(this.currentReportMeta?.value, this.currentSubMenuMeta?.value);
+        },
+
+        currentViewKey() {
+          const saved = this.settings?.viewByReport?.[this.currentViewSettingsKey];
+          const hasSaved = this.currentViews.some((view) => view.value === saved);
+
+          if (hasSaved) return saved;
+          return this.currentViews[0]?.value || "";
+        },
+
+        currentViewMeta() {
+          return this.currentViews.find((view) => view.value === this.currentViewKey) || this.currentViews[0] || {};
+        },
+
         currentNeedsAcademicYear() {
-          return !!this.currentSubMenuMeta?.filter_by_year;
+          return !!(this.currentSubMenuMeta?.filter_by_year || this.currentViewMeta?.filter_by_year);
         },
 
         currentViewProps() {
           const props = {
             reportMeta: this.currentReportMeta,
             subMenu: this.currentSubKey,
+            currentView: this.currentViewKey,
             settings: this.settings,
             selectedFilters: this.settings.filters || {},
             sharedLoading: this.sharedLoading
@@ -347,6 +363,17 @@
           if (!type) return;
 
           this.$set(this.settings.subMenuByType, type, value);
+          this.ensureCurrentView();
+          this.ensureAcademicYearFilter();
+          this.pruneFilterSelection("programs");
+          this.pruneFilterSelection("avps");
+          await this.persistSettings();
+        },
+
+        async setView(value) {
+          if (!this.currentViewSettingsKey) return;
+
+          this.$set(this.settings.viewByReport, this.currentViewSettingsKey, value);
           this.ensureAcademicYearFilter();
           this.pruneFilterSelection("programs");
           this.pruneFilterSelection("avps");
@@ -373,15 +400,31 @@
           }
         },
 
+        ensureCurrentView() {
+          const firstView = this.currentViews[0];
+          if (!this.currentViewSettingsKey || !firstView) return;
+
+          const saved = this.settings?.viewByReport?.[this.currentViewSettingsKey];
+          const hasSaved = this.currentViews.some((view) => view.value === saved);
+          if (!hasSaved) {
+            this.$set(this.settings.viewByReport, this.currentViewSettingsKey, firstView.value);
+          }
+        },
+
         async drillToReport(payload) {
           const nextType = String(payload?.report || "").trim();
           const nextSubMenu = String(payload?.subMenu || "").trim();
+          const nextView = String(payload?.view || "").trim();
           if (!nextType) return;
 
           this.settings.reportType = nextType;
 
           if (nextSubMenu) {
             this.$set(this.settings.subMenuByType, nextType, nextSubMenu);
+          }
+
+          if (nextSubMenu && nextView) {
+            this.$set(this.settings.viewByReport, utils.getViewSettingsKey(nextType, nextSubMenu), nextView);
           }
 
           await this.onReportChange();

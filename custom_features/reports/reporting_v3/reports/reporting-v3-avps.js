@@ -1,4 +1,18 @@
 (function () {
+  function getReportViews(report) {
+    if (window.ReportingV3Utils?.getReportViews) {
+      return window.ReportingV3Utils.getReportViews(report);
+    }
+
+    if (Array.isArray(report?.views) && report.views.length) {
+      return report.views;
+    }
+
+    return report?.component
+      ? [{ value: "initial", label: "Initial View", component: report.component, source: report.source, include: report.include }]
+      : [];
+  }
+
   Vue.component("reporting-v3-avps", {
     props: {
       reportMeta: {
@@ -8,6 +22,10 @@
         }
       },
       subMenu: {
+        type: String,
+        default: ""
+      },
+      currentView: {
         type: String,
         default: ""
       },
@@ -54,17 +72,29 @@
       activeSectionKey() {
         return String(this.activeSection?.value || "");
       },
+      activeSectionViews() {
+        return getReportViews(this.activeSection);
+      },
+      activeView() {
+        return this.activeSectionViews.find((view) => view.value === this.currentView) || this.activeSectionViews[0] || null;
+      },
+      activeViewKey() {
+        return String(this.activeView?.value || "");
+      },
+      activeDataKey() {
+        return this.getSectionDataKey(this.activeSection, this.activeView);
+      },
       activeSectionComponent() {
-        return String(this.activeSection?.component || "").trim();
+        return String(this.activeView?.component || "").trim();
       },
       activeSectionRows() {
-        return Array.isArray(this.sectionRows[this.activeSectionKey]) ? this.sectionRows[this.activeSectionKey] : [];
+        return Array.isArray(this.sectionRows[this.activeDataKey]) ? this.sectionRows[this.activeDataKey] : [];
       },
       activeSectionLoading() {
-        return !!this.sectionLoading[this.activeSectionKey];
+        return !!this.sectionLoading[this.activeDataKey];
       },
       activeSectionError() {
-        return String(this.sectionErrors[this.activeSectionKey] || "");
+        return String(this.sectionErrors[this.activeDataKey] || "");
       },
       debugActiveSectionRows() {
         const rows = this.activeSectionRows;
@@ -82,11 +112,19 @@
             subMenu: this.subMenu || "",
             sections: this.sections.map((section) => ({
               value: section.value,
-              component: section.component || "",
-              include: section.include || "",
-              rows: Array.isArray(this.sectionRows[section.value]) ? this.sectionRows[section.value].length : 0,
-              loaded: !!this.sectionLoaded[section.value]
+              views: getReportViews(section).map((view) => {
+                const dataKey = this.getSectionDataKey(section, view);
+                return {
+                  value: view.value,
+                  component: view.component || "",
+                  include: view.include || "",
+                  source: view.source || section.source || "avps",
+                  rows: Array.isArray(this.sectionRows[dataKey]) ? this.sectionRows[dataKey].length : 0,
+                  loaded: !!this.sectionLoaded[dataKey]
+                };
+              })
             })),
+            currentView: this.currentView || "",
             selectedFilters: this.selectedFilters || {},
             savedSettings: this.settings || {}
           },
@@ -97,6 +135,12 @@
     },
     watch: {
       subMenu: {
+        immediate: true,
+        handler() {
+          this.ensureActiveSectionData();
+        }
+      },
+      currentView: {
         immediate: true,
         handler() {
           this.ensureActiveSectionData();
@@ -134,31 +178,40 @@
         return String(section?.value || "");
       },
 
-      async ensureActiveSectionData(forceReload = false) {
-        await this.ensureSectionData(this.activeSection, forceReload);
+      getSectionDataKey(section, view) {
+        const sectionKey = this.getSectionKey(section);
+        const viewKey = String(view?.value || "initial");
+        return sectionKey ? `${sectionKey}::${viewKey}` : "";
       },
 
-      async ensureSectionData(section, forceReload = false) {
+      async ensureActiveSectionData(forceReload = false) {
+        await this.ensureSectionData(this.activeSection, this.activeView, forceReload);
+      },
+
+      async ensureSectionData(section, view, forceReload = false) {
         const key = this.getSectionKey(section);
-        const include = String(section?.include || "").trim();
-        if (!key || !include) return;
+        const dataKey = this.getSectionDataKey(section, view);
+        const include = String(view?.include || section?.include || "").trim();
+        const source = String(view?.source || section?.source || this.getBaseSource()).trim() || "avps";
+        if (!key || !dataKey || !include) return;
 
-        if (this.sectionLoading[key]) return;
-        if (!forceReload && this.sectionLoaded[key]) return;
+        if (this.sectionLoading[dataKey]) return;
+        if (!forceReload && this.sectionLoaded[dataKey]) return;
 
-        this.$set(this.sectionLoading, key, true);
-        this.$set(this.sectionErrors, key, "");
+        this.$set(this.sectionLoading, dataKey, true);
+        this.$set(this.sectionErrors, dataKey, "");
 
         try {
           const filters = this.buildAvpFilters();
           console.log("[Reporting V3] AVP section request", {
             key,
             include,
+            source,
             filters,
             forceReload
           });
 
-          const data = await bridgetools.req3("avps", filters, {
+          const data = await bridgetools.req3(source, filters, {
             include: [include]
           });
           console.log("[Reporting V3] AVP section response", {
@@ -167,21 +220,21 @@
             data
           });
 
-          this.$set(this.sectionRows, key, Array.isArray(data?.data) ? data.data : []);
+          this.$set(this.sectionRows, dataKey, Array.isArray(data?.data) ? data.data : []);
           console.log("[Reporting V3] AVP normalized section rows", {
             key,
             include,
-            rowCount: Array.isArray(this.sectionRows[key]) ? this.sectionRows[key].length : 0,
-            rows: this.sectionRows[key]
+            rowCount: Array.isArray(this.sectionRows[dataKey]) ? this.sectionRows[dataKey].length : 0,
+            rows: this.sectionRows[dataKey]
           });
-          this.$set(this.sectionLoaded, key, true);
+          this.$set(this.sectionLoaded, dataKey, true);
         } catch (error) {
           console.error(`Failed to load avp ${key} data`, error);
-          this.$set(this.sectionRows, key, []);
-          this.$set(this.sectionErrors, key, String(error?.message || error || `Failed to load ${key} data.`));
-          this.$set(this.sectionLoaded, key, false);
+          this.$set(this.sectionRows, dataKey, []);
+          this.$set(this.sectionErrors, dataKey, String(error?.message || error || `Failed to load ${key} data.`));
+          this.$set(this.sectionLoaded, dataKey, false);
         } finally {
-          this.$set(this.sectionLoading, key, false);
+          this.$set(this.sectionLoading, dataKey, false);
         }
       }
     },
@@ -192,6 +245,7 @@
           :is="activeSectionComponent"
           :avps="debugActiveSectionRows"
           :selected-filters="selectedFilters"
+          :view="activeView"
           :loading="activeSectionLoading"
           :error="activeSectionError"
         />

@@ -47,14 +47,46 @@
   function getDefaultSettings(reports) {
     const firstReport = reports[0] || {};
     const firstSubMenu = (firstReport.subMenus || [])[0];
+    const firstView = getFirstView(firstSubMenu);
 
     return {
       reportType: firstReport.value || "",
       subMenuByType: firstSubMenu && firstReport.value
         ? { [firstReport.value]: firstSubMenu.value }
         : {},
+      viewByReport: firstView && firstReport.value && firstSubMenu?.value
+        ? { [getViewSettingsKey(firstReport.value, firstSubMenu.value)]: firstView.value }
+        : {},
       filters: {}
     };
+  }
+
+  function getReportViews(report) {
+    if (Array.isArray(report?.views) && report.views.length) {
+      return report.views;
+    }
+
+    const component = String(report?.component || "").trim();
+    if (!component) return [];
+
+    return [
+      {
+        value: "initial",
+        label: "Initial View",
+        component,
+        source: report?.source,
+        include: report?.include,
+        filter_by_year: report?.filter_by_year
+      }
+    ];
+  }
+
+  function getFirstView(report) {
+    return getReportViews(report)[0] || null;
+  }
+
+  function getViewSettingsKey(reportType, reportValue) {
+    return `${String(reportType || "").trim()}::${String(reportValue || "").trim()}`;
   }
 
   function normalizeSettings(settings, reports) {
@@ -66,6 +98,10 @@
 
     if (!normalized.subMenuByType || typeof normalized.subMenuByType !== "object") {
       normalized.subMenuByType = {};
+    }
+
+    if (!normalized.viewByReport || typeof normalized.viewByReport !== "object") {
+      normalized.viewByReport = {};
     }
 
     if (!normalized.filters || typeof normalized.filters !== "object") {
@@ -80,6 +116,15 @@
       normalized.subMenuByType[type] = firstSubMenu.value;
     }
 
+    const activeSubMenuValue = normalized.subMenuByType[type];
+    const activeSubMenu = (report.subMenus || []).find((item) => item.value === activeSubMenuValue) || firstSubMenu;
+    const firstView = getFirstView(activeSubMenu);
+    const viewSettingsKey = getViewSettingsKey(type, activeSubMenu?.value);
+
+    if (type && activeSubMenu?.value && firstView && !normalized.viewByReport[viewSettingsKey]) {
+      normalized.viewByReport[viewSettingsKey] = firstView.value;
+    }
+
     return normalized;
   }
 
@@ -92,6 +137,7 @@
       return {
         reportType: saved.reportType || fallback.reportType,
         subMenuByType: Object.assign({}, fallback.subMenuByType, saved.subMenuByType || {}),
+        viewByReport: Object.assign({}, fallback.viewByReport, saved.viewByReport || {}),
         filters: Object.assign({}, fallback.filters, saved.filters || {})
       };
     } catch (err) {
@@ -129,6 +175,8 @@
     fetchJson,
     fetchText,
     getDefaultSettings,
+    getReportViews,
+    getViewSettingsKey,
     loadCSS,
     loadScriptOnce,
     loadUserSettings,
