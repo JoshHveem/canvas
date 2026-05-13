@@ -820,3 +820,16 @@
   }
 
 })();
+
+/*
+  EXAMPLE RUBRIC INPUT
+
+  This importer expects tab-delimited text, not comma-separated CSV.
+  Copy the lines below into a spreadsheet first, or keep the tab spacing
+  if pasting directly into the Import Rubric textbox.
+
+  Criterion	4	3	2	1
+  Understanding	Complete understanding of the topic	Mostly understands the topic	Partial understanding of the topic	Limited or inaccurate understanding
+  Evidence	Uses strong and specific evidence	Uses relevant evidence	Uses limited or vague evidence	Uses little or no evidence
+  Organization	Clear and logical organization	Mostly organized	Some organization, but hard to follow	Disorganized or incomplete
+*/

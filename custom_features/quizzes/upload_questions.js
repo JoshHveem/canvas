@@ -335,11 +335,12 @@ let VUE_APP = new Vue({
           });
         }
       }
+      let pointsPossible = answers.length || 1;
       await $.post(`/courses/${CURRENT_COURSE_ID}/question_banks/${bank.assessment_question_bank.id}/assessment_questions`, {
         question: {
           question_name: question.name ?? "Question " + pad(+q + 1, 3),
           question_type: 'matching_question',
-          points_possible: 1,
+          points_possible: pointsPossible,
           question_text: `<p>${question.prompt}</p>`,
           answers: answers,
           correct_comments: question.comment,
@@ -557,73 +558,108 @@ $(".see_bookmarked_banks").after(upload);
 
 
 
+/*
+AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
+Copy/paste this prompt into an AI tool, then paste the quiz content after it.
 
-// AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
-// Copy/paste this prompt into an AI tool, then paste the quiz content after it.
-//
-// I need you to convert the quiz content I provide into a plain-text .txt file
-// that can be uploaded into a Canvas LMS question-bank uploader.
-//
-// Return ONLY the final plain text content for the .txt file.
-// Do not include markdown, code fences, explanations, headings, or notes.
-//
-// REQUIRED FORMAT:
-// - Preserve the original quiz content as closely as possible. Only change the formatting
-//   needed to match these rules.
-// - Do not invent, rewrite, expand, or add new questions, answers, explanations, comments,
-//   or feedback.
-// - If the original quiz does not include comments or feedback, do not add any ?. or ??.
-// - The first line must be: Title: [Quiz Name]
-// - Put one blank line after the title.
-// - Every question must start with one of these prefixes:
-//   MC. = multiple choice, exactly one correct answer
-//   MA. = multiple answers, more than one correct answer
-//   EQ. = essay question
-//   TF. = true/false
-//   MT. = matching
-//   TX. = text-only informational block
-//   FB. = fill in multiple blanks
-//   FU. = file upload
-// - End every question with exactly one blank line.
-// - Use plain text only. Do not use bold, italics, bullets, tables, or HTML.
-//
-// ANSWER RULES:
-// - For MC and MA answers, use A. Answer text, B. Answer text, etc.
-// - Mark each correct answer with an asterisk before the letter, like *B. Answer text.
-// - MC questions must have exactly one starred answer.
-// - MA questions must have two or more starred answers.
-// - Optional answer-specific feedback goes immediately after that answer as:
-//   ??. Feedback text
-// - Optional general question feedback goes after all answers as:
-//   ?. Feedback text
-//
-// EXAMPLE FORMAT:
-// Title: Biology Quiz
-//
-// MC. What is the powerhouse of the cell?
-// A. Nucleus
-// *B. Mitochondria
-// C. Ribosome
-// D. Vacuole
-//
-// MA. Select all nucleotide bases.
-// *A. Adenine
-// *B. Guanine
-// C. Glucose
-// *D. Thymine
-//
-// TF. Mitochondria are the powerhouse of the cell.
-// *T. True
-// F. False
-//
-// FINAL CHECK BEFORE YOU RESPOND:
-// - The response starts with Title:
-// - The response contains only the formatted quiz text.
-// - No questions, answers, explanations, comments, or feedback were invented.
-// - Every question has a blank line after it.
-// - MC has one starred answer.
-// - MA has multiple starred answers.
-// - True/false uses T. True and F. False.
-// - Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
-//
-// Quiz content to convert:
+Convert the quiz content I provide into a downloadable .txt file.
+You must create and attach the file, not display the contents inline.
+Use the Canvas LMS question‑bank uploader format exactly as specified below.
+Requirements:
+
+Create a real .txt file and return it as a downloadable attachment.
+Do not paste the quiz text into chat.
+Do not summarize or explain anything.
+The response must consist of the file attachment only.
+Preserve all original questions and answers exactly; change formatting only.
+
+I will verify that a download link appears.
+
+REQUIRED FORMAT:
+- Preserve the original quiz content as closely as possible. Only change the formatting
+  needed to match these rules.
+- Do not invent, rewrite, expand, or add new questions, answers, explanations, comments,
+  or feedback.
+- If the original quiz does not include comments or feedback, do not add any ?. or ??.
+- The first line must be: Title: [Quiz Name]
+- Put one blank line after the title.
+- Every question must start with one of these prefixes:
+  MC. = multiple choice, exactly one correct answer
+  MA. = multiple answers, more than one correct answer
+  EQ. = essay question
+  TF. = true/false
+  MT. = matching
+  TX. = text-only informational block
+  FB. = fill in multiple blanks
+  FU. = file upload
+- End every question with exactly one blank line.
+- Use plain text only. Do not use bold, italics, bullets, tables, or HTML.
+
+ANSWER RULES:
+- For MC and MA answers, use A. Answer text, B. Answer text, etc.
+- Mark each correct answer with an asterisk before the letter, like *B. Answer text.
+- MC questions must have exactly one starred answer.
+- MA questions must have two or more starred answers.
+- Optional answer-specific feedback goes immediately after that answer as:
+  ??. Feedback text
+- Optional general question feedback goes after all answers as:
+  ?. Feedback text
+
+TYPE-SPECIFIC RULES:
+- EQ, TX, and FU questions do not need answer lines.
+- TF questions must use exactly two answer lines: T. True and F. False.
+  Put the asterisk on the correct line.
+- MT questions must use one matching pair per line: Term = Matching answer.
+  Each matching pair will be worth 1 point.
+- If the source question has a matching answer bank, such as A. OSHA, B. CDC,
+  followed by prompts with lines like Answer: A, convert the whole block into
+  one MT question. Do not make the answer bank or question directions a separate
+  TX question.
+  Example conversion:
+  Source answer bank: A. OSHA
+  Source prompt: Workplace safety regulations / Answer: A
+  Output pair: OSHA = Workplace safety regulations
+- FB questions must put blank IDs in the question text using square brackets.
+  Example: Roses are [color1]. Then list accepted answers as: color1. Red.
+  Repeat the same blank ID for multiple accepted answers.
+
+EXAMPLE FORMAT:
+Title: Biology Quiz
+
+MC. What is the powerhouse of the cell?
+A. Nucleus
+*B. Mitochondria
+C. Ribosome
+D. Vacuole
+
+MA. Select all nucleotide bases.
+*A. Adenine
+*B. Guanine
+C. Glucose
+*D. Thymine
+
+TF. Mitochondria are the powerhouse of the cell.
+*T. True
+F. False
+
+FINAL CHECK BEFORE YOU BUILD THE FILE:
+- Name the file [quizname].txt based on the title line.
+- The file starts with Title:
+- The file contains only the formatted quiz text.
+- No questions, answers, explanations, comments, or feedback were invented.
+- Every question has a blank line after it.
+- MC has one starred answer.
+- MA has multiple starred answers.
+- True/false uses T. True and F. False and has one starred answer.
+- Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
+
+AFTER THE FILE IS CREATED:
+- Do not put these instructions inside the .txt file.
+- Tell the user:
+  "You're all set! 
+  — Download the file, then open your Canvas course.
+  — In the left-hand course menu, open Quizzes. 
+  — Click the three dots in the top right corner, choose Manage Question Banks. 
+  — Select Upload Question Bank.
+  — Upload the .txt file. Happy quizzing!"
+*/
