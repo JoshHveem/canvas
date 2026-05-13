@@ -21,10 +21,14 @@
     return Array.isArray(payload?.reportTypes) ? payload.reportTypes : [];
   }
 
-  function getComponentScriptUrl(componentName) {
+  function getComponentScriptUrl(componentName, groupName) {
     const name = String(componentName || "").trim();
     if (!name) return "";
-    return `${SOURCE_URL}${BASE_PATH}/reports/${name}.js?v=${VERSION}`;
+
+    const group = String(groupName || "").trim();
+    const folder = group ? `${group}/` : "";
+
+    return `${SOURCE_URL}${BASE_PATH}/reports/${folder}${name}.js?v=${VERSION}`;
   }
 
   function getReportComponentScripts(reportTypes) {
@@ -47,7 +51,7 @@
       if (Array.isArray(report?.subMenus)) {
         report.subMenus.forEach((subMenu) => {
           const componentName = String(subMenu?.component || "").trim();
-          const url = getComponentScriptUrl(componentName);
+          const url = getComponentScriptUrl(componentName, report?.value);
           if (!url || seen.has(url)) return;
 
           seen.add(url);

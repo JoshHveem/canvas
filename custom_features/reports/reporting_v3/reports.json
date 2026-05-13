@@ -25,6 +25,14 @@
           "include": "canvas_course_readiness"
         },
         {
+          "value": "course-evaluations",
+          "label": "Course Evaluations",
+          "filter_by_year": true,
+          "component": "reports-v3-programs-course-evaluations",
+          "source": "programs",
+          "include": "course_evaluations_summary"
+        },
+        {
           "value": "completions",
           "label": "Completions",
           "filter_by_year": true,
