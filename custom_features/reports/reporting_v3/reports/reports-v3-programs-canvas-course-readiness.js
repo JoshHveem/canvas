@@ -37,7 +37,6 @@
           { key: "programName", label: "Program", width: "12rem" },
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
-          { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "numCourses", label: "Courses", width: "4rem", format: "integer", align: "right" },
           {
             key: "percSyllabiApproved",
@@ -115,18 +114,17 @@
           programCode: String(program?.program_code || "").trim(),
           programName: String(program?.program_name || program?.program_code || "Program").trim(),
           academicYear: Number(program?.academic_year || 0),
-          campusCode: String(program?.campus_code || "").trim(),
-          numCourses: program?.canvas_course_readiness__num_courses,
-          percSyllabiApproved: program?.canvas_course_readiness__perc_syllabi_approved,
-          percCourseEvaluationPublished: program?.canvas_course_readiness__perc_course_evaluation_published,
-          percInstructorEvaluationPublished: program?.canvas_course_readiness__perc_instructor_evaluation_published,
-          percEmploymentSkillsEvaluationPublished: program?.canvas_course_readiness__perc_employment_skills_evaluation_published,
-          percContentPublished: program?.canvas_course_readiness__perc_content_published
+          numCourses: program?.canvas_course_readiness__num_courses ?? program?.num_courses,
+          percSyllabiApproved: program?.canvas_course_readiness__perc_syllabi_approved ?? program?.perc_syllabi_approved,
+          percCourseEvaluationPublished: program?.canvas_course_readiness__perc_course_evaluation_published ?? program?.perc_course_evaluation_published,
+          percInstructorEvaluationPublished: program?.canvas_course_readiness__perc_instructor_evaluation_published ?? program?.perc_instructor_evaluation_published,
+          percEmploymentSkillsEvaluationPublished: program?.canvas_course_readiness__perc_employment_skills_evaluation_published ?? program?.perc_employment_skills_evaluation_published,
+          percContentPublished: program?.canvas_course_readiness__perc_content_published ?? program?.perc_content_published
         };
       },
 
       rowKey(row) {
-        return `${row.programCode}-${row.academicYear}-${row.campusCode || "na"}`;
+        return `${row.programCode}-${row.academicYear}`;
       }
     },
     template: `

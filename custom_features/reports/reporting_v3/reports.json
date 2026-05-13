@@ -13,6 +13,7 @@
           "label": "CPL",
           "filter_by_year": true,
           "component": "reports-v3-programs-cpl",
+          "source": "programs__campuses",
           "include": "cpl"
         },
         {
@@ -20,6 +21,7 @@
           "label": "Course Readiness",
           "filter_by_year": true,
           "component": "reports-v3-programs-canvas-course-readiness",
+          "source": "programs",
           "include": "canvas_course_readiness"
         },
         {
@@ -27,6 +29,7 @@
           "label": "Completions",
           "filter_by_year": true,
           "component": "reports-v3-programs-completion",
+          "source": "programs__campuses",
           "include": "completions_projected"
         },
         {
@@ -34,6 +37,7 @@
           "label": "Graduates",
           "filter_by_year": true,
           "component": "reports-v3-programs-graduates",
+          "source": "programs__campuses",
           "include": "graduates_projected"
         },
         {
@@ -41,6 +45,7 @@
           "label": "Placements",
           "filter_by_year": true,
           "component": "reports-v3-programs-placements",
+          "source": "programs__campuses",
           "include": "placements"
         },
         {
@@ -48,6 +53,7 @@
           "label": "Syllabi",
           "filter_by_year": true,
           "component": "reports-v3-programs-syllabi",
+          "source": "programs",
           "include": "syllabi"
         },
         {
@@ -55,6 +61,7 @@
           "label": "Employment Skills",
           "filter_by_year": true,
           "component": "reports-v3-programs-employment-skills",
+          "source": "programs__campuses",
           "include": "employment_skills_summary"
         }
       ]

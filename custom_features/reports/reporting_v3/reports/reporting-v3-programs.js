@@ -75,6 +75,7 @@
               value: section.value,
               component: section.component || "",
               include: section.include || "",
+              source: section.source || "programs",
               rows: Array.isArray(this.sectionRows[section.value]) ? this.sectionRows[section.value].length : 0,
               loaded: !!this.sectionLoaded[section.value]
             })),
@@ -128,6 +129,7 @@
       async ensureSectionData(section, forceReload = false) {
         const key = this.getSectionKey(section);
         const include = String(section?.include || "").trim();
+        const source = String(section?.source || "programs").trim() || "programs";
         if (!key || !include) return;
 
         if (this.sectionLoading[key]) return;
@@ -137,7 +139,7 @@
         this.$set(this.sectionErrors, key, "");
 
         try {
-          const data = await bridgetools.req3("programs", this.buildProgramFilters(), {
+          const data = await bridgetools.req3(source, this.buildProgramFilters(), {
             include: [include]
           });
 

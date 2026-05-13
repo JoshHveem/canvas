@@ -36,7 +36,6 @@
           { key: "programName", label: "Program", width: "18rem" },
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
-          { key: "campusCode", label: "Campus", width: "4rem" },
           { key: "numCourses", label: "Courses", width: "5rem", format: "integer", align: "right" },
           { key: "percSubmitted", label: "% Submitted", width: "7rem", format: "percent", decimals: 1, align: "right",
             pillBands: {
@@ -63,15 +62,14 @@
           programCode: String(program?.program_code || "").trim(),
           programName: String(program?.program_name || program?.program_code || "Program").trim(),
           academicYear: Number(program?.academic_year || 0),
-          campusCode: String(program?.campus_code || "").trim(),
-          numCourses: program?.syllabi__num_courses,
-          percSubmitted: program?.syllabi__perc_is_submitted,
-          percApproved: program?.syllabi__perc_is_approved
+          numCourses: program?.syllabi__num_courses ?? program?.num_courses,
+          percSubmitted: program?.syllabi__perc_is_submitted ?? program?.perc_is_submitted ?? program?.perc_syllabi_submitted,
+          percApproved: program?.syllabi__perc_is_approved ?? program?.perc_is_approved ?? program?.perc_syllabi_approved
         };
       },
 
       rowKey(row) {
-        return `${row.programCode}-${row.academicYear}-${row.campusCode || "na"}`;
+        return `${row.programCode}-${row.academicYear}`;
       }
     },
     template: `
