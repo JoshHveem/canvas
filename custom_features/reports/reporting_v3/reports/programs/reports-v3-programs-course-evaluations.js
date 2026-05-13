@@ -34,11 +34,20 @@
       tableColumns() {
         return [
           { key: "programName", label: "Program", width: "16rem" },
-          { key: "programCode", label: "Code", width: "4rem" },
-          { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "numSubmissions", label: "Submissions", width: "6rem", format: "integer", align: "right" },
-          { key: "numPositiveFeedback", label: "Positive Feedback", width: "7rem", format: "integer", align: "right" },
-          { key: "numRecommendationFeedback", label: "Recommendations", width: "7rem", format: "integer", align: "right" },
+          {
+            key: "percRecommendationFeedback",
+            label: "% Had Feedback",
+            width: "7rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 0.75,
+              warning: 0.5,
+              bad: 0.25
+            }
+          },
           {
             key: "likertCourseObjectivesClear",
             label: "Objectives Clear",
@@ -155,11 +164,24 @@
         return (Array.isArray(tags) ? tags : []).reduce((sum, tag) => sum + (Number(tag?.count) || 0), 0);
       },
 
+      ratio(numerator, denominator) {
+        const num = Number(numerator);
+        const den = Number(denominator);
+
+        if (!Number.isFinite(num) || !Number.isFinite(den) || den <= 0) {
+          return null;
+        }
+
+        return num / den;
+      },
+
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
         const positiveTags = this.parseTagCounts(program?.course_evaluations_summary__positive_tag_counts);
         const recommendationTags = this.parseTagCounts(program?.course_evaluations_summary__recommendation_tag_counts);
+        const numSubmissions = program?.course_evaluations_summary__num_submissions;
+        const numRecommendationFeedback = program?.course_evaluations_summary__num_submissions_with_feedback_recommendations;
 
         return {
           programCode: String(
@@ -179,9 +201,8 @@
             program?.course_evaluations_summary__academic_year ||
             0
           ),
-          numSubmissions: program?.course_evaluations_summary__num_submissions,
-          numPositiveFeedback: program?.course_evaluations_summary__num_submissions_with_feedback_positive,
-          numRecommendationFeedback: program?.course_evaluations_summary__num_submissions_with_feedback_recommendations,
+          numSubmissions,
+          percRecommendationFeedback: this.ratio(numRecommendationFeedback, numSubmissions),
           likertCourseObjectivesClear: program?.course_evaluations_summary__likert_course_objectives_clear,
           likertCourseContentRelevant: program?.course_evaluations_summary__likert_course_content_relevant,
           likertAssignmentInstructionsClear: program?.course_evaluations_summary__likert_assignment_instructions_clear,
