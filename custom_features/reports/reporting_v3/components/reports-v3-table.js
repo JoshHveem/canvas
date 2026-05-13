@@ -80,7 +80,9 @@
       },
 
       tagFilterColumns() {
-        return this.sourceColumns.filter((column) => this.isTagsColumn(column));
+        return this.sourceColumns.filter((column) =>
+          this.isTagsColumn(column) && column.showFilter !== false && column.hideFilter !== true
+        );
       },
 
       resolvedColumns() {
@@ -180,6 +182,10 @@
       },
 
       getSelectedTags(column) {
+        if (Array.isArray(column?.selectedTags)) {
+          return column.selectedTags;
+        }
+
         const value = this.tagSelections[this.getColumnKey(column)];
         return Array.isArray(value) ? value : [];
       },

@@ -215,6 +215,7 @@
           :view="activeView"
           :loading="activeSectionLoading"
           :error="activeSectionError"
+          @filter-controls-change="$emit('filter-controls-change', $event)"
         />
 
         <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">

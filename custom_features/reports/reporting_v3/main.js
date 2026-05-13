@@ -85,6 +85,8 @@
           settings: utils.getDefaultSettings(reportTypes),
           programs: [],
           avps: [],
+          viewFilterControls: [],
+          openMultiFilterKey: "",
           sharedLoading: {
             programs: false,
             avps: false
@@ -112,6 +114,13 @@
             : this.currentFilters.slice();
 
           return filterKeys.map((filterKey) => this.buildFilterControl(filterKey)).filter(Boolean);
+        },
+
+        allFilterControls() {
+          return [
+            ...this.currentFilterControls,
+            ...(Array.isArray(this.viewFilterControls) ? this.viewFilterControls : [])
+          ];
         },
 
         currentSubMenus() {
@@ -351,7 +360,17 @@
           await utils.saveUserSettings(SETTINGS_NAMESPACE, SETTINGS_KEY, this.settings);
         },
 
+        clearViewFilterControls() {
+          this.viewFilterControls = [];
+          this.openMultiFilterKey = "";
+        },
+
+        setViewFilterControls(controls) {
+          this.viewFilterControls = Array.isArray(controls) ? controls : [];
+        },
+
         async onReportChange() {
+          this.clearViewFilterControls();
           this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
           this.ensureAcademicYearFilter();
           await this.ensureSharedFilterData();
@@ -362,6 +381,7 @@
           const type = this.currentReportMeta?.value;
           if (!type) return;
 
+          this.clearViewFilterControls();
           this.$set(this.settings.subMenuByType, type, value);
           this.ensureCurrentView();
           this.ensureAcademicYearFilter();
@@ -373,6 +393,7 @@
         async setView(value) {
           if (!this.currentViewSettingsKey) return;
 
+          this.clearViewFilterControls();
           this.$set(this.settings.viewByReport, this.currentViewSettingsKey, value);
           this.ensureAcademicYearFilter();
           this.pruneFilterSelection("programs");
@@ -387,6 +408,45 @@
             this.pruneFilterSelection("avps");
           }
           await this.persistSettings();
+        },
+
+        getFilterArrayValue(filterKey) {
+          const value = this.settings?.filters?.[filterKey];
+          return Array.isArray(value) ? value : [];
+        },
+
+        isMultiFilterOptionSelected(filter, value) {
+          return this.getFilterArrayValue(filter?.key).includes(value);
+        },
+
+        async updateMultiFilterValue(filterKey, optionValue, selected) {
+          const current = this.getFilterArrayValue(filterKey);
+          const next = selected
+            ? Array.from(new Set([...current, optionValue]))
+            : current.filter((value) => value !== optionValue);
+
+          this.$set(this.settings.filters, filterKey, next);
+          await this.persistSettings();
+        },
+
+        async clearMultiFilterValue(filterKey) {
+          this.$set(this.settings.filters, filterKey, []);
+          await this.persistSettings();
+        },
+
+        toggleMultiFilter(filterKey) {
+          this.openMultiFilterKey = this.openMultiFilterKey === filterKey ? "" : filterKey;
+        },
+
+        isMultiFilterOpen(filterKey) {
+          return this.openMultiFilterKey === filterKey;
+        },
+
+        multiFilterLabel(filter) {
+          const count = this.getFilterArrayValue(filter?.key).length;
+          if (!count) return filter?.placeholder || "Select options";
+          if (count === 1) return "1 selected";
+          return `${count} selected`;
         },
 
         ensureAcademicYearFilter() {
@@ -418,6 +478,7 @@
           if (!nextType) return;
 
           this.settings.reportType = nextType;
+          this.clearViewFilterControls();
 
           if (nextSubMenu) {
             this.$set(this.settings.subMenuByType, nextType, nextSubMenu);

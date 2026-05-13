@@ -42,6 +42,40 @@
         return String(this.view?.value || "") === "recommendations";
       },
 
+      selectedRecommendationTags() {
+        const value = this.selectedFilters?.course_eval_recommendation_tags;
+        return Array.isArray(value) ? value : [];
+      },
+
+      recommendationTagOptions() {
+        const totals = new Map();
+
+        this.filteredPrograms.forEach((program) => {
+          Object.entries(program.recommendationTagsObject || {}).forEach(([name, count]) => {
+            totals.set(name, (totals.get(name) || 0) + (Number(count) || 0));
+          });
+        });
+
+        return Array.from(totals.entries())
+          .map(([value, count]) => ({ value, label: value, count }))
+          .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+      },
+
+      reportFilterControls() {
+        if (!this.isRecommendationsView) return [];
+
+        return [
+          {
+            type: "multiselect",
+            key: "course_eval_recommendation_tags",
+            label: "Recommendation Tags",
+            placeholder: "Select tags",
+            options: this.recommendationTagOptions,
+            value: this.selectedRecommendationTags
+          }
+        ];
+      },
+
       tableColumns() {
         const baseColumns = [
           { key: "programName", label: "Program", width: "16rem" },
@@ -71,7 +105,9 @@
               denominatorKey: "numSubmissions",
               denominatorLabel: "Submissions",
               tagWidth: "8rem",
-              decimals: 1
+              decimals: 1,
+              selectedTags: this.selectedRecommendationTags,
+              showFilter: false
             }
           ];
         }
@@ -115,6 +151,15 @@
             pillBands: this.likertPillBands()
           }
         ];
+      }
+    },
+    watch: {
+      reportFilterControls: {
+        immediate: true,
+        deep: true,
+        handler(controls) {
+          this.$emit("filter-controls-change", controls);
+        }
       }
     },
     methods: {

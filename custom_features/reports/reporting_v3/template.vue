@@ -85,13 +85,13 @@
           </div>
 
           <div
-            v-if="currentFilterControls.length"
+            v-if="allFilterControls.length"
             style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px;"
           >
             <div
-              v-for="filter in currentFilterControls"
+              v-for="filter in allFilterControls"
               :key="filter.key"
-              style="display:inline-block; min-width:240px;"
+              style="display:inline-block; min-width:240px; position:relative;"
             >
               <label
                 class="btech-muted"
@@ -101,6 +101,7 @@
                 {{ filter.label }}
               </label>
               <select
+                v-if="filter.type !== 'multiselect'"
                 :id="`report-filter-${filter.key}`"
                 :value="filter.value"
                 :disabled="filter.disabled"
@@ -116,6 +117,58 @@
                   {{ option.label }}
                 </option>
               </select>
+
+              <div v-else>
+                <button
+                  type="button"
+                  :id="`report-filter-${filter.key}`"
+                  :disabled="filter.disabled"
+                  :aria-expanded="isMultiFilterOpen(filter.key) ? 'true' : 'false'"
+                  @click="toggleMultiFilter(filter.key)"
+                  style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff; color:#111827; cursor:pointer;"
+                >
+                  <span>{{ multiFilterLabel(filter) }}</span>
+                  <span>{{ isMultiFilterOpen(filter.key) ? '^' : 'v' }}</span>
+                </button>
+
+                <div
+                  v-if="isMultiFilterOpen(filter.key)"
+                  style="position:absolute; top:100%; left:0; right:0; z-index:40; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; box-shadow:0 12px 24px rgba(15,23,42,0.14); overflow:hidden;"
+                >
+                  <div style="max-height:260px; overflow:auto; padding:6px;">
+                    <label
+                      v-for="option in filter.options"
+                      :key="option.value"
+                      style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:12px;"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="isMultiFilterOptionSelected(filter, option.value)"
+                        @change="updateMultiFilterValue(filter.key, option.value, $event.target.checked)"
+                      >
+                      <span style="flex:1 1 auto; white-space:normal;">{{ option.label }}</span>
+                    </label>
+
+                    <div
+                      v-if="!filter.options.length"
+                      class="btech-muted"
+                      style="padding:8px; font-size:12px;"
+                    >
+                      No options available.
+                    </div>
+                  </div>
+
+                  <div style="display:flex; justify-content:flex-end; padding:8px; border-top:1px solid #e2e8f0; background:#f8fafc;">
+                    <button
+                      type="button"
+                      @click="clearMultiFilterValue(filter.key)"
+                      style="border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:12px;"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -131,6 +184,7 @@
                 :is="currentReportMeta.component"
                 v-bind="currentViewProps"
                 @drill-report="drillToReport"
+                @filter-controls-change="setViewFilterControls"
               />
             </keep-alive>
           </div>
