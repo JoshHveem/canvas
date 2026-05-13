@@ -39,7 +39,7 @@
         const likertBands = this.likertPillBands();
 
         return [
-          { key: "programName", label: "Program", width: "6rem" },
+          { key: "programName", label: "Program", width: "16rem" },
           { key: "numSubmissions", label: "Submissions", width: "6rem", format: "integer", align: "right" },
           {
             key: "percPositiveFeedback",
