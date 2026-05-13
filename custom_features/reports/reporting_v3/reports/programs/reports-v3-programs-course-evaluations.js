@@ -179,10 +179,19 @@
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
-        const positiveTags = this.parseTagCounts(program?.course_evaluations_summary__positive_tag_counts);
-        const recommendationTags = this.parseTagCounts(program?.course_evaluations_summary__recommendation_tag_counts);
-        const numSubmissions = program?.course_evaluations_summary__num_submissions;
-        const numRecommendationFeedback = program?.course_evaluations_summary__num_submissions_with_feedback_recommendations;
+        const positiveTags = this.parseTagCounts(
+          program?.course_evaluations_summary__positive_tag_counts ??
+          program?.positive_tag_counts
+        );
+        const recommendationTags = this.parseTagCounts(
+          program?.course_evaluations_summary__recommendation_tag_counts ??
+          program?.recommendation_tag_counts
+        );
+        const numSubmissions = program?.course_evaluations_summary__num_submissions ?? program?.num_submissions;
+        const numRecommendationFeedback =
+          program?.course_evaluations_summary__num_submissions_with_feedback_recommendations ??
+          program?.course_evaluations_summary__num_submissions_with_feedback_recom ??
+          program?.num_submissions_with_feedback_recommendations;
 
         return {
           programCode: String(
@@ -204,10 +213,13 @@
           ),
           numSubmissions,
           percRecommendationFeedback: this.ratio(numRecommendationFeedback, numSubmissions),
-          likertCourseObjectivesClear: program?.course_evaluations_summary__likert_course_objectives_clear,
-          likertCourseContentRelevant: program?.course_evaluations_summary__likert_course_content_relevant,
-          likertAssignmentInstructionsClear: program?.course_evaluations_summary__likert_assignment_instructions_clear,
-          likertWouldRecommendCourse: program?.course_evaluations_summary__likert_would_recommend_course,
+          likertCourseObjectivesClear: program?.course_evaluations_summary__likert_course_objectives_clear ?? program?.likert_course_objectives_clear,
+          likertCourseContentRelevant: program?.course_evaluations_summary__likert_course_content_relevant ?? program?.likert_course_content_relevant,
+          likertAssignmentInstructionsClear:
+            program?.course_evaluations_summary__likert_assignment_instructions_clear ??
+            program?.course_evaluations_summary__likert_assignment_instructions_clea ??
+            program?.likert_assignment_instructions_clear,
+          likertWouldRecommendCourse: program?.course_evaluations_summary__likert_would_recommend_course ?? program?.likert_would_recommend_course,
           positiveTags,
           recommendationTags,
           positiveTagTotal: this.tagTotal(positiveTags),
