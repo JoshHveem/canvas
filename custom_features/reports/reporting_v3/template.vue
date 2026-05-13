@@ -1,7 +1,7 @@
 <template>
   <div class="btech-canvas-report" style="padding:24px 16px 32px;">
     <div style="max-width:1600px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-      <aside class="btech-card btech-theme" style="padding:16px; width:260px; flex:0 0 260px;">
+      <aside class="btech-card btech-theme" style="padding:16px; width:208px; flex:0 0 208px;">
         <div style="margin-bottom:16px;">
           <label
             class="btech-muted"
@@ -57,9 +57,6 @@
               <h3 class="btech-card-title" style="margin:0 0 6px 0;">
                 {{ currentSubMenuMeta.label || currentReportMeta.title || 'Reporting V3' }}
               </h3>
-              <div class="btech-muted" style="font-size:13px;">
-                {{ currentReportMeta.title || currentReportMeta.label }}
-              </div>
             </div>
           </div>
 
