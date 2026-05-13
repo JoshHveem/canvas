@@ -1,7 +1,11 @@
 <template>
-  <div class="btech-canvas-report" style="padding:24px 16px 32px;">
-    <div style="max-width:1600px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-      <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; overflow:visible;">
+  <div
+    ref="reportShell"
+    class="btech-canvas-report"
+    :style="{ height: reportShellHeight, overflow: 'hidden', boxSizing: 'border-box', padding: '24px 16px 16px' }"
+  >
+    <div style="max-width:1600px; height:100%; min-height:0; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:nowrap; overflow:hidden;">
+      <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; align-self:flex-start; overflow:visible;">
         <div role="tablist" aria-label="Sidebar sections" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:14px;">
           <button
             type="button"
@@ -196,8 +200,8 @@
         </div>
       </aside>
 
-      <div style="flex:1 1 960px; min-width:0;">
-        <div style="max-width:1400px; margin:0 auto 16px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1 1 960px; min-width:0; height:100%; min-height:0; display:flex; flex-direction:column; overflow:hidden;">
+        <div style="max-width:1400px; width:100%; margin:0 auto 16px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; flex:0 0 auto;">
           <h3 class="btech-card-title" style="margin:0; font-size:24px;">
             {{ currentSubMenuMeta.label || currentReportMeta.title || 'Reporting V3' }}
           </h3>
@@ -206,8 +210,9 @@
           </div>
         </div>
 
-        <div style="display:flex; justify-content:center;">
-          <div style="width:fit-content; max-width:min(1400px, 100%);">
+        <div style="flex:1 1 auto; min-height:0; overflow:auto;">
+          <div style="display:flex; justify-content:center; min-width:fit-content;">
+            <div style="width:fit-content; max-width:min(1400px, 100%);">
             <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">
               <div class="btech-muted">Loading report shell...</div>
             </div>
@@ -220,6 +225,7 @@
                 @filter-controls-change="setViewFilterControls"
               />
             </keep-alive>
+            </div>
           </div>
         </div>
       </div>

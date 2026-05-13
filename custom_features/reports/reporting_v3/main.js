@@ -84,6 +84,7 @@
           reportTypes,
           settings: utils.getDefaultSettings(reportTypes),
           sidebarTab: "reports",
+          reportShellHeight: "600px",
           programs: [],
           avps: [],
           viewFilterControls: [],
@@ -462,6 +463,14 @@
           return `${count} selected`;
         },
 
+        updateReportShellHeight() {
+          const root = this.$refs?.reportShell || this.$el;
+          const top = root?.getBoundingClientRect ? root.getBoundingClientRect().top : 0;
+          const available = Math.max(420, window.innerHeight - top - 16);
+
+          this.reportShellHeight = `${Math.floor(available)}px`;
+        },
+
         ensureAcademicYearFilter() {
           if (!this.currentNeedsAcademicYear) return;
 
@@ -516,6 +525,12 @@
         this.ensureAcademicYearFilter();
         await this.ensureSharedFilterData();
         this.loading = false;
+        this.$nextTick(this.updateReportShellHeight);
+        window.addEventListener("resize", this.updateReportShellHeight);
+      },
+
+      beforeDestroy() {
+        window.removeEventListener("resize", this.updateReportShellHeight);
       }
     });
   }
