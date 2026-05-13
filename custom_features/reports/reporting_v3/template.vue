@@ -1,71 +1,90 @@
 <template>
   <div class="btech-canvas-report" style="padding:24px 16px 32px;">
     <div style="max-width:1600px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-      <aside class="btech-card btech-theme" style="padding:16px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; max-height:calc(100vh - 32px); overflow:auto;">
-        <div style="margin-bottom:16px;">
-          <label
-            class="btech-muted"
-            for="report-group-select"
-            style="display:block; font-size:12px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;"
-          >
-            Report Group
-          </label>
-          <select
-            id="report-group-select"
-            :value="settings.reportType"
-            @change="settings.reportType = $event.target.value; onReportChange()"
-            style="width:100%; padding:7px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-          >
-            <option
-              v-for="report in reportTypes"
-              :key="report.value"
-              :value="report.value"
-            >
-              {{ report.label }}
-            </option>
-          </select>
-        </div>
-
-        <div class="btech-muted" style="font-size:12px; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">
-          Reports
-        </div>
-        <div
-          role="tablist"
-          aria-label="Reports"
-          style="display:flex; flex-direction:column; gap:8px;"
-        >
+      <aside class="btech-card btech-theme" style="padding:12px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; max-height:calc(100vh - 32px); overflow:auto;">
+        <div role="tablist" aria-label="Sidebar sections" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:14px;">
           <button
-            v-for="subMenu in currentSubMenus"
-            :key="subMenu.value"
             type="button"
             role="tab"
-            :aria-selected="currentSubKey === subMenu.value ? 'true' : 'false'"
-            @click="setSubMenu(subMenu.value)"
-            :style="currentSubKey === subMenu.value
-              ? 'width:100%; text-align:left; border:1px solid #111827; background:#111827; color:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; font-weight:600;'
-              : 'width:100%; text-align:left; border:1px solid #cbd5e1; background:#fff; color:#0f172a; border-radius:12px; padding:10px 12px; cursor:pointer; font-weight:600;'"
+            :aria-selected="sidebarTab === 'reports' ? 'true' : 'false'"
+            @click="sidebarTab = 'reports'"
+            :style="sidebarTab === 'reports'
+              ? 'border:1px solid #111827; background:#111827; color:#fff; border-radius:6px; padding:7px 8px; cursor:pointer; font-weight:600;'
+              : 'border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; padding:7px 8px; cursor:pointer; font-weight:600;'"
           >
-            {{ subMenu.label }}
+            Reports
+          </button>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="sidebarTab === 'filters' ? 'true' : 'false'"
+            @click="sidebarTab = 'filters'"
+            :style="sidebarTab === 'filters'
+              ? 'border:1px solid #111827; background:#111827; color:#fff; border-radius:6px; padding:7px 8px; cursor:pointer; font-weight:600;'
+              : 'border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; padding:7px 8px; cursor:pointer; font-weight:600;'"
+          >
+            Filters
           </button>
         </div>
-      </aside>
 
-      <div style="flex:1 1 960px; min-width:0;">
-        <div style="max-width:1400px; margin:0 auto 20px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
-            <div>
-              <h3 class="btech-card-title" style="margin:0 0 6px 0;">
-                {{ currentSubMenuMeta.label || currentReportMeta.title || 'Reporting V3' }}
-              </h3>
-            </div>
+        <div v-if="sidebarTab === 'reports'">
+          <div style="margin-bottom:14px;">
+            <label
+              class="btech-muted"
+              for="report-group-select"
+              style="display:block; font-size:12px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;"
+            >
+              Group
+            </label>
+            <select
+              id="report-group-select"
+              :value="settings.reportType"
+              @change="settings.reportType = $event.target.value; onReportChange()"
+              style="width:100%; padding:7px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option
+                v-for="report in reportTypes"
+                :key="report.value"
+                :value="report.value"
+              >
+                {{ report.label }}
+              </option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label
+              class="btech-muted"
+              for="report-select"
+              style="display:block; font-size:12px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;"
+            >
+              Report
+            </label>
+            <select
+              id="report-select"
+              :value="currentSubKey"
+              @change="setSubMenu($event.target.value)"
+              style="width:100%; padding:7px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
+            >
+              <option
+                v-for="subMenu in currentSubMenus"
+                :key="subMenu.value"
+                :value="subMenu.value"
+              >
+                {{ subMenu.label }}
+              </option>
+            </select>
           </div>
 
           <div
             v-if="currentViews.length"
             role="tablist"
-            aria-label="Report view"
-            style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:16px;"
+            aria-label="Report views"
+            style="display:flex; flex-direction:column; gap:8px;"
           >
+            <div class="btech-muted" style="font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">
+              Views
+            </div>
             <button
               v-for="view in currentViews"
               :key="view.value"
@@ -74,21 +93,23 @@
               :aria-selected="currentViewKey === view.value ? 'true' : 'false'"
               @click="setView(view.value)"
               :style="currentViewKey === view.value
-                ? 'border:1px solid #475569; background:#475569; color:#fff; border-radius:999px; padding:6px 12px; cursor:pointer;'
-                : 'border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:999px; padding:6px 12px; cursor:pointer;'"
+                ? 'width:100%; text-align:left; border:1px solid #475569; background:#475569; color:#fff; border-radius:8px; padding:8px 10px; cursor:pointer;'
+                : 'width:100%; text-align:left; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:8px; padding:8px 10px; cursor:pointer;'"
             >
               {{ view.label }}
             </button>
           </div>
+        </div>
 
+        <div v-else>
           <div
             v-if="allFilterControls.length"
-            style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px;"
+            style="display:flex; flex-direction:column; gap:12px;"
           >
             <div
               v-for="filter in allFilterControls"
               :key="filter.key"
-              style="display:inline-block; min-width:240px; position:relative;"
+              style="position:relative;"
             >
               <label
                 class="btech-muted"
@@ -168,8 +189,14 @@
               </div>
             </div>
           </div>
-        </div>
 
+          <div v-else class="btech-muted" style="font-size:12px;">
+            No filters for this view.
+          </div>
+        </div>
+      </aside>
+
+      <div style="flex:1 1 960px; min-width:0;">
         <div style="display:flex; justify-content:center;">
           <div style="width:fit-content; max-width:min(1400px, 100%);">
             <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">

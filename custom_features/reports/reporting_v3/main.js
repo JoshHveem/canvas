@@ -83,6 +83,7 @@
           loading: true,
           reportTypes,
           settings: utils.getDefaultSettings(reportTypes),
+          sidebarTab: "reports",
           programs: [],
           avps: [],
           viewFilterControls: [],
