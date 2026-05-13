@@ -197,6 +197,15 @@
       </aside>
 
       <div style="flex:1 1 960px; min-width:0;">
+        <div style="max-width:1400px; margin:0 auto 16px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <h3 class="btech-card-title" style="margin:0; font-size:24px;">
+            {{ currentSubMenuMeta.label || currentReportMeta.title || 'Reporting V3' }}
+          </h3>
+          <div class="btech-muted" style="font-size:14px; font-weight:600;">
+            {{ currentViewMeta.label || 'View' }}
+          </div>
+        </div>
+
         <div style="display:flex; justify-content:center;">
           <div style="width:fit-content; max-width:min(1400px, 100%);">
             <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">
