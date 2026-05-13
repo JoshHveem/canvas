@@ -1,7 +1,7 @@
 <template>
   <div class="btech-canvas-report" style="padding:24px 16px 32px;">
     <div style="max-width:1600px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-      <aside class="btech-card btech-theme" style="padding:16px; width:208px; flex:0 0 208px;">
+      <aside class="btech-card btech-theme" style="padding:16px; width:208px; flex:0 0 208px; position:sticky; top:16px; align-self:flex-start; max-height:calc(100vh - 32px); overflow:auto;">
         <div style="margin-bottom:16px;">
           <label
             class="btech-muted"
