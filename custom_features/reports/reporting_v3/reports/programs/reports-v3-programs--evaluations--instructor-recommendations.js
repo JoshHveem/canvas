@@ -171,6 +171,7 @@
         const numRecommendationFeedback = this.firstValue(program, "num_has_feedback_recommendations");
 
         return {
+          programName: String(this.firstValue(program, "program_name") || program?.program_name || "").trim(),
           programCode: String(this.firstValue(program, "program_code") || program?.program_code || "").trim(),
           academicYear: Number(this.firstValue(program, "academic_year") || program?.academic_year || 0),
           numSubmissions,
