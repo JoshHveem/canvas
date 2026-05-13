@@ -1,5 +1,5 @@
 (function () {
-  Vue.component("reports-v3-programs-cpl", {
+  Vue.component("reports-v3-programs--employment-skills--initial", {
     props: {
       programs: {
         type: Array,
@@ -33,48 +33,29 @@
 
       tableColumns() {
         return [
-          { key: "programName", label: "Program", width: "12rem" },
+          { key: "programName", label: "Program", width: "18rem" },
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
-          {
-            key: "completion",
-            label: "Completion",
-            width: "6rem",
-            format: "percent",
-            decimals: 0,
-            align: "right",
+          { key: "numStudents", label: "Students", width: "6rem", format: "integer", align: "right" },
+          { key: "totalEvalsSubmitted", label: "Submitted", width: "6rem", format: "integer", align: "right" },
+          { key: "totalValidEvals", label: "Valid", width: "6rem", format: "integer", align: "right" },
+          { key: "evalsPerStudent", label: "Evals/Student", width: "6rem", format: "number", decimals: 2, align: "right" },
+          { key: "evalsPerQuarter", label: "Evals/Qtr", width: "6rem", format: "number", decimals: 2, align: "right",
             pillBands: {
-              good: 0.7,
-              warning: 0.6,
+              good: 1.2,
+              warning: 1,
+              bad: 0.8
+            }
+          },
+          { key: "percSubmittedGraded", label: "% Graded", width: "6rem", format: "percent", decimals: 1, align: "right",
+
+            pillBands: {
+              good: 0.9,
+              warning: 0.8,
               bad: 0.5
             }
-          },
-          {
-            key: "placement",
-            label: "Placement",
-            width: "6rem",
-            format: "percent",
-            decimals: 0,
-            align: "right",
-            pillBands: {
-              good: 0.8,
-              warning: 0.7,
-              bad: 0.6
-            }
-          },
-          {
-            key: "licensure",
-            label: "Licensure",
-            width: "6rem",
-            format: "percent",
-            decimals: 0,
-            align: "right",
-            pillBands: {
-              good: 0.8,
-              warning: 0.7,
-              bad: 0.6
-            }
+            
           }
         ];
       }
@@ -85,12 +66,20 @@
 
         return {
           programCode: String(program?.program_code || "").trim(),
-          programName: String(program?.program_name || program?.program_code || "Program").trim(),
+          programName: String(
+            program?.employment_skills_summary__program_name ||
+            program?.program_name ||
+            program?.program_code ||
+            "Program"
+          ).trim(),
           academicYear: Number(program?.academic_year || 0),
           campusCode: String(program?.campus_code || "").trim(),
-          completion: program?.cpl__completion,
-          placement: program?.cpl__placement,
-          licensure: program?.cpl__licensure
+          numStudents: program?.employment_skills_summary__num_students,
+          totalEvalsSubmitted: program?.employment_skills_summary__total_evals_submitted,
+          totalValidEvals: program?.employment_skills_summary__total_valid_evals,
+          evalsPerStudent: program?.employment_skills_summary__evals_per_student,
+          evalsPerQuarter: program?.employment_skills_summary__evals_per_quarter,
+          percSubmittedGraded: program?.employment_skills_summary__perc_submitted_graded
         };
       },
 
@@ -101,17 +90,17 @@
     template: `
       <div style="margin-top:18px;">
         <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-          <div class="btech-muted">Loading CPL data...</div>
+          <div class="btech-muted">Loading employment skills data...</div>
         </div>
 
         <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-          <div style="font-weight:600; margin-bottom:4px;">CPL Data Error</div>
+          <div style="font-weight:600; margin-bottom:4px;">Employment Skills Error</div>
           <div class="btech-muted">{{ error }}</div>
         </div>
 
         <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-          <div style="font-weight:600; margin-bottom:4px;">Programs CPL</div>
-          <div class="btech-muted">No CPL rows match the current filters.</div>
+          <div style="font-weight:600; margin-bottom:4px;">Employment Skills</div>
+          <div class="btech-muted">No employment skills rows match the current filters.</div>
         </div>
 
         <reports-v3-table
@@ -121,7 +110,7 @@
           :row-key="rowKey"
           default-sort-key="programName"
           :default-sort-dir="1"
-          empty-message="No CPL rows match the current filters."
+          empty-message="No employment skills rows match the current filters."
         />
       </div>
     `

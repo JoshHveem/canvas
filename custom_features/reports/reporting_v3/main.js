@@ -106,6 +106,14 @@
         },
 
         currentFilters() {
+          if (Array.isArray(this.currentViewMeta?.filters)) {
+            return this.currentViewMeta.filters;
+          }
+
+          if (Array.isArray(this.currentSubMenuMeta?.filters)) {
+            return this.currentSubMenuMeta.filters;
+          }
+
           return Array.isArray(this.currentReportMeta?.filters) ? this.currentReportMeta.filters : [];
         },
 
@@ -162,7 +170,11 @@
         },
 
         currentNeedsAcademicYear() {
-          return !!(this.currentSubMenuMeta?.filter_by_year || this.currentViewMeta?.filter_by_year);
+          if (Object.prototype.hasOwnProperty.call(this.currentViewMeta || {}, "filter_by_year")) {
+            return !!this.currentViewMeta.filter_by_year;
+          }
+
+          return !!this.currentSubMenuMeta?.filter_by_year;
         },
 
         currentViewProps() {

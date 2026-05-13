@@ -9,7 +9,15 @@
     }
 
     return report?.component
-      ? [{ value: "initial", label: "Initial View", component: report.component, source: report.source, include: report.include }]
+      ? [{
+        value: "initial",
+        label: "Initial View",
+        component: report.component,
+        source: report.source,
+        include: report.include,
+        filters: report.filters,
+        filter_by_year: report.filter_by_year
+      }]
       : [];
   }
 
@@ -90,6 +98,24 @@
       activeSectionRows() {
         return Array.isArray(this.sectionRows[this.activeDataKey]) ? this.sectionRows[this.activeDataKey] : [];
       },
+      activeFilterKeys() {
+        if (Array.isArray(this.activeView?.filters)) {
+          return this.activeView.filters;
+        }
+
+        if (Array.isArray(this.activeSection?.filters)) {
+          return this.activeSection.filters;
+        }
+
+        return Array.isArray(this.reportMeta?.filters) ? this.reportMeta.filters : [];
+      },
+      activeNeedsAcademicYear() {
+        if (Object.prototype.hasOwnProperty.call(this.activeView || {}, "filter_by_year")) {
+          return !!this.activeView.filter_by_year;
+        }
+
+        return !!this.activeSection?.filter_by_year;
+      },
       activeSectionLoading() {
         return !!this.sectionLoading[this.activeDataKey];
       },
@@ -150,11 +176,11 @@
         const selectedYear = Number(this.selectedFilters?.academic_year || 0);
         const selectedProgram = String(this.selectedFilters?.programs || "").trim();
 
-        if (selectedYear) {
+        if (this.activeNeedsAcademicYear && selectedYear) {
           filters.academic_year = { op: "=", value: selectedYear };
         }
 
-        if (selectedProgram) {
+        if (this.activeFilterKeys.includes("programs") && selectedProgram) {
           filters.program_code = { op: "=", value: selectedProgram };
         }
 
@@ -180,7 +206,7 @@
         const dataKey = this.getSectionDataKey(section, view);
         const include = String(view?.include || section?.include || "").trim();
         const source = String(view?.source || section?.source || "programs").trim() || "programs";
-        if (!key || !dataKey || !include) return;
+        if (!key || !dataKey || !source) return;
 
         if (this.sectionLoading[dataKey]) return;
         if (!forceReload && this.sectionLoaded[dataKey]) return;
@@ -189,9 +215,8 @@
         this.$set(this.sectionErrors, dataKey, "");
 
         try {
-          const data = await bridgetools.req3(source, this.buildProgramFilters(), {
-            include: [include]
-          });
+          const options = include ? { include: [include] } : undefined;
+          const data = await bridgetools.req3(source, this.buildProgramFilters(), options);
 
           this.$set(this.sectionRows, dataKey, Array.isArray(data?.data) ? data.data : []);
           this.$set(this.sectionLoaded, dataKey, true);
@@ -211,6 +236,8 @@
           v-if="activeSectionComponent"
           :is="activeSectionComponent"
           :programs="activeSectionRows"
+          :rows="activeSectionRows"
+          :report-data="activeSectionRows"
           :selected-filters="selectedFilters"
           :view="activeView"
           :loading="activeSectionLoading"
@@ -221,7 +248,7 @@
         <div v-else style="margin-top:18px; border:1px dashed #cbd5e1; border-radius:12px; padding:16px; background:#f8fafc;">
           <div style="font-weight:600; margin-bottom:6px;">Next build point</div>
           <div class="btech-muted" style="margin-bottom:12px;">
-            Add a section component and include name in reports.json to render this submenu.
+            Add a view component and data source in reports.json to render this report.
           </div>
           <pre style="margin:0; font-size:12px; line-height:1.5; white-space:pre-wrap;">{{ summary }}</pre>
         </div>

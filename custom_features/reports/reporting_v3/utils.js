@@ -76,6 +76,7 @@
         component,
         source: report?.source,
         include: report?.include,
+        filters: report?.filters,
         filter_by_year: report?.filter_by_year
       }
     ];

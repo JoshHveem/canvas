@@ -1,5 +1,5 @@
 (function () {
-  Vue.component("reports-v3-programs-graduates", {
+  Vue.component("reports-v3-programs--completions--initial", {
     props: {
       programs: {
         type: Array,
@@ -37,11 +37,11 @@
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
-          { key: "graduates", label: "Graduates", width: "6rem", format: "integer", align: "right" },
-          { key: "projectedGraduates", label: "Projected Graduates", width: "6rem", format: "integer", align: "right" },
+          { key: "completers", label: "Completers", width: "6rem", format: "integer", align: "right" },
+          { key: "projectedCompleters", label: "Projected Completers", width: "6rem", format: "integer", align: "right" },
           {
-            key: "graduationRate",
-            label: "Graduation Rate",
+            key: "completionRate",
+            label: "Completion Rate",
             width: "6rem",
             format: "percent",
             decimals: 1,
@@ -53,7 +53,7 @@
             }
           },
           {
-            key: "projectedGraduationRate",
+            key: "projectedCompletionRate",
             label: "Projected Rate",
             width: "6rem",
             format: "percent",
@@ -66,8 +66,8 @@
             }
           },
           {
-            key: "graduationBreakdown",
-            label: "Graduation Breakdown",
+            key: "completionBreakdown",
+            label: "Completion Breakdown",
             width: "16rem",
             sortable: true,
             sortValue: function (row) {
@@ -78,7 +78,7 @@
               const palette = window.bridgetools?.colors || {};
 
               return {
-                segments: row?.graduationBreakdown || [],
+                segments: row?.completionBreakdown || [],
                 height: 16,
                 borderRadius: 999,
                 separatorColor: palette.white || "white",
@@ -88,7 +88,7 @@
             cellStyle: {
               whiteSpace: "normal"
             }
-          }
+          },
         ];
       }
     },
@@ -99,39 +99,39 @@
         return Math.max(0, Math.round(num));
       },
 
-      buildGraduationBreakdown(program) {
+      buildCompletionBreakdown(program) {
         const palette = window.bridgetools?.colors || {};
-        const graduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate);
-        const projectedGraduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate__projected);
-        const exiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter);
-        const projectedExiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter__projected);
+        const completers = this.toWholeNumber(program?.completions_projected__num_students__completer);
+        const projectedCompleters = this.toWholeNumber(program?.completions_projected__num_students__completer__projected);
+        const exiters = this.toWholeNumber(program?.completions_projected__num_students__exiter);
+        const projectedExiters = this.toWholeNumber(program?.completions_projected__num_students__exiter__projected);
 
-        const projectedGraduateGain = Math.max(0, projectedGraduates - graduates);
-        const nonGraduates = Math.max(0, exiters - graduates);
-        const projectedNonGraduates = Math.max(
+        const projectedCompleterGain = Math.max(0, projectedCompleters - completers);
+        const nonCompleters = Math.max(0, exiters - completers);
+        const projectedNonCompleters = Math.max(
           0,
-          (projectedExiters - projectedGraduates) - nonGraduates
+          (projectedExiters - projectedCompleters) - nonCompleters
         );
 
         return [
           {
-            name: `Graduates: ${graduates}`,
-            count: graduates,
-            color: palette.fadedGreen || palette.yellowGreen || palette.green
+            name: `Completers: ${completers}`,
+            count: completers,
+            color: palette.fadedGreen
           },
           {
-            name: `Projected Graduates: ${projectedGraduateGain}`,
-            count: projectedGraduateGain,
+            name: `Projected Completers: ${projectedCompleterGain}`,
+            count: projectedCompleterGain,
             color: palette.green
           },
           {
-            name: `Non Graduates: ${nonGraduates}`,
-            count: nonGraduates,
+            name: `Non Completers: ${nonCompleters}`,
+            count: nonCompleters,
             color: palette.gray
           },
           {
-            name: `Projected Non Graduates: ${projectedNonGraduates}`,
-            count: projectedNonGraduates,
+            name: `Projected Non Completers: ${projectedNonCompleters}`,
+            count: projectedNonCompleters,
             color: palette.darkGray
           }
         ].filter((segment) => segment.count > 0);
@@ -143,35 +143,35 @@
         return {
           programCode: String(
             program?.program_code ||
-            program?.graduates_projected__program_code ||
+            program?.completions_projected__program_code ||
             ""
           ).trim(),
           programName: String(
             program?.program_name ||
-            program?.graduates_projected__program_name ||
+            program?.completions_projected__program_name ||
             program?.program_code ||
-            program?.graduates_projected__program_code ||
+            program?.completions_projected__program_code ||
             "Program"
           ).trim(),
           academicYear: Number(
             program?.academic_year ||
-            program?.graduates_projected__academic_year ||
+            program?.completions_projected__academic_year ||
             0
           ),
           campusCode: String(
             program?.campus_code ||
-            program?.graduates_projected__campus_code ||
+            program?.completions_projected__campus_code ||
             ""
           ).trim(),
-          graduates: program?.graduates_projected__num_students__graduate,
-          exiters: program?.graduates_projected__num_students__exiter,
-          activeStudents: program?.graduates_projected__num_students__active,
-          totalStudents: program?.graduates_projected__num_students,
-          graduationRate: program?.graduates_projected__perc_students__graduate,
-          projectedGraduates: program?.graduates_projected__num_students__graduate__projected,
-          projectedExiters: program?.graduates_projected__num_students__exiter__projected,
-          projectedGraduationRate: program?.graduates_projected__perc_students__graduate__projected,
-          graduationBreakdown: this.buildGraduationBreakdown(program)
+          completers: program?.completions_projected__num_students__completer,
+          exiters: program?.completions_projected__num_students__exiter,
+          activeStudents: program?.completions_projected__num_students__active,
+          totalStudents: program?.completions_projected__num_students,
+          completionRate: program?.completions_projected__perc_students__completer,
+          projectedCompleters: program?.completions_projected__num_students__completer__projected,
+          projectedExiters: program?.completions_projected__num_students__exiter__projected,
+          projectedCompletionRate: program?.completions_projected__perc_students__completer__projected,
+          completionBreakdown: this.buildCompletionBreakdown(program)
         };
       },
 
@@ -182,17 +182,17 @@
     template: `
       <div style="margin-top:18px;">
         <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-          <div class="btech-muted">Loading graduates data...</div>
+          <div class="btech-muted">Loading completion data...</div>
         </div>
 
         <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-          <div style="font-weight:600; margin-bottom:4px;">Graduates Data Error</div>
+          <div style="font-weight:600; margin-bottom:4px;">Completion Data Error</div>
           <div class="btech-muted">{{ error }}</div>
         </div>
 
         <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-          <div style="font-weight:600; margin-bottom:4px;">Program Graduates</div>
-          <div class="btech-muted">No graduate rows match the current filters.</div>
+          <div style="font-weight:600; margin-bottom:4px;">Program Completions</div>
+          <div class="btech-muted">No completion rows match the current filters.</div>
         </div>
 
         <reports-v3-table
@@ -202,7 +202,7 @@
           :row-key="rowKey"
           default-sort-key="programName"
           :default-sort-dir="1"
-          empty-message="No graduate rows match the current filters."
+          empty-message="No completion rows match the current filters."
         />
       </div>
     `

@@ -1,5 +1,5 @@
 (function () {
-  Vue.component("reports-v3-programs-placements", {
+  Vue.component("reports-v3-programs--graduates--initial", {
     props: {
       programs: {
         type: Array,
@@ -37,36 +37,48 @@
           { key: "programCode", label: "Code", width: "4rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "campusCode", label: "Campus", width: "4rem" },
-          { key: "confirmedPlacements", label: "Confirmed Placements", width: "7rem", format: "integer", align: "right" },
-          { key: "placementEligible", label: "Placement Eligible", width: "7rem", format: "integer", align: "right" },
-          { key: "unplaced", label: "Unplaced", width: "6rem", format: "integer", align: "right" },
+          { key: "graduates", label: "Graduates", width: "6rem", format: "integer", align: "right" },
+          { key: "projectedGraduates", label: "Projected Graduates", width: "6rem", format: "integer", align: "right" },
           {
-            key: "placementRate",
-            label: "Placement Rate",
+            key: "graduationRate",
+            label: "Graduation Rate",
             width: "6rem",
             format: "percent",
             decimals: 1,
             align: "right",
             pillBands: {
-              good: 0.8,
-              warning: 0.7,
-              bad: 0.6
+              good: 0.7,
+              warning: 0.6,
+              bad: 0.5
             }
           },
           {
-            key: "placementBreakdown",
-            label: "Placement Breakdown",
+            key: "projectedGraduationRate",
+            label: "Projected Rate",
+            width: "6rem",
+            format: "percent",
+            decimals: 1,
+            align: "right",
+            pillBands: {
+              good: 0.7,
+              warning: 0.6,
+              bad: 0.5
+            }
+          },
+          {
+            key: "graduationBreakdown",
+            label: "Graduation Breakdown",
             width: "16rem",
             sortable: true,
             sortValue: function (row) {
-              return Number(row?.placementEligible || 0);
+              return Number(row?.projectedExiters || 0);
             },
             component: "reports-v3-segmented-bar",
             componentProps: function (row) {
               const palette = window.bridgetools?.colors || {};
 
               return {
-                segments: row?.placementBreakdown || [],
+                segments: row?.graduationBreakdown || [],
                 height: 16,
                 borderRadius: 999,
                 separatorColor: palette.white || "white",
@@ -87,37 +99,40 @@
         return Math.max(0, Math.round(num));
       },
 
-      toRate(value, numerator, denominator) {
-        const direct = Number(value);
-        if (Number.isFinite(direct)) {
-          return Math.max(0, direct);
-        }
-
-        const num = Number(numerator);
-        const den = Number(denominator);
-        if (!Number.isFinite(num) || !Number.isFinite(den) || den <= 0) {
-          return null;
-        }
-
-        return Math.max(0, num / den);
-      },
-
-      buildPlacementBreakdown(program) {
+      buildGraduationBreakdown(program) {
         const palette = window.bridgetools?.colors || {};
-        const confirmedPlacements = this.toWholeNumber(program?.placements__num_students__confirmed_placement);
-        const placementEligible = this.toWholeNumber(program?.placements__num_students__eligible_placement);
-        const unplaced = Math.max(0, placementEligible - confirmedPlacements);
+        const graduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate);
+        const projectedGraduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate__projected);
+        const exiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter);
+        const projectedExiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter__projected);
+
+        const projectedGraduateGain = Math.max(0, projectedGraduates - graduates);
+        const nonGraduates = Math.max(0, exiters - graduates);
+        const projectedNonGraduates = Math.max(
+          0,
+          (projectedExiters - projectedGraduates) - nonGraduates
+        );
 
         return [
           {
-            name: `Confirmed Placements: ${confirmedPlacements}`,
-            count: confirmedPlacements,
+            name: `Graduates: ${graduates}`,
+            count: graduates,
             color: palette.fadedGreen || palette.yellowGreen || palette.green
           },
           {
-            name: `Unplaced: ${unplaced}`,
-            count: unplaced,
+            name: `Projected Graduates: ${projectedGraduateGain}`,
+            count: projectedGraduateGain,
+            color: palette.green
+          },
+          {
+            name: `Non Graduates: ${nonGraduates}`,
+            count: nonGraduates,
             color: palette.gray
+          },
+          {
+            name: `Projected Non Graduates: ${projectedNonGraduates}`,
+            count: projectedNonGraduates,
+            color: palette.darkGray
           }
         ].filter((segment) => segment.count > 0);
       },
@@ -125,41 +140,38 @@
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
-        const confirmedPlacements = program?.placements__num_students__confirmed_placement;
-        const placementEligible = program?.placements__num_students__eligible_placement;
-
         return {
           programCode: String(
             program?.program_code ||
-            program?.placements__program_code ||
+            program?.graduates_projected__program_code ||
             ""
           ).trim(),
           programName: String(
             program?.program_name ||
-            program?.placements__program_name ||
+            program?.graduates_projected__program_name ||
             program?.program_code ||
-            program?.placements__program_code ||
+            program?.graduates_projected__program_code ||
             "Program"
           ).trim(),
           academicYear: Number(
             program?.academic_year ||
-            program?.placements__academic_year ||
+            program?.graduates_projected__academic_year ||
             0
           ),
           campusCode: String(
             program?.campus_code ||
-            program?.placements__campus_code ||
+            program?.graduates_projected__campus_code ||
             ""
           ).trim(),
-          confirmedPlacements,
-          placementEligible,
-          unplaced: Math.max(0, this.toWholeNumber(placementEligible) - this.toWholeNumber(confirmedPlacements)),
-          placementRate: this.toRate(
-            program?.placements__placement_rate,
-            confirmedPlacements,
-            placementEligible
-          ),
-          placementBreakdown: this.buildPlacementBreakdown(program)
+          graduates: program?.graduates_projected__num_students__graduate,
+          exiters: program?.graduates_projected__num_students__exiter,
+          activeStudents: program?.graduates_projected__num_students__active,
+          totalStudents: program?.graduates_projected__num_students,
+          graduationRate: program?.graduates_projected__perc_students__graduate,
+          projectedGraduates: program?.graduates_projected__num_students__graduate__projected,
+          projectedExiters: program?.graduates_projected__num_students__exiter__projected,
+          projectedGraduationRate: program?.graduates_projected__perc_students__graduate__projected,
+          graduationBreakdown: this.buildGraduationBreakdown(program)
         };
       },
 
@@ -170,17 +182,17 @@
     template: `
       <div style="margin-top:18px;">
         <div v-if="loading" class="btech-card btech-theme" style="padding:16px;">
-          <div class="btech-muted">Loading placements data...</div>
+          <div class="btech-muted">Loading graduates data...</div>
         </div>
 
         <div v-else-if="error" class="btech-card btech-theme" style="padding:16px; border-color:#fecaca; background:#fef2f2;">
-          <div style="font-weight:600; margin-bottom:4px;">Placements Data Error</div>
+          <div style="font-weight:600; margin-bottom:4px;">Graduates Data Error</div>
           <div class="btech-muted">{{ error }}</div>
         </div>
 
         <div v-else-if="!filteredPrograms.length" class="btech-card btech-theme" style="padding:16px;">
-          <div style="font-weight:600; margin-bottom:4px;">Program Placements</div>
-          <div class="btech-muted">No placement rows match the current filters.</div>
+          <div style="font-weight:600; margin-bottom:4px;">Program Graduates</div>
+          <div class="btech-muted">No graduate rows match the current filters.</div>
         </div>
 
         <reports-v3-table
@@ -190,7 +202,7 @@
           :row-key="rowKey"
           default-sort-key="programName"
           :default-sort-dir="1"
-          empty-message="No placement rows match the current filters."
+          empty-message="No graduate rows match the current filters."
         />
       </div>
     `
