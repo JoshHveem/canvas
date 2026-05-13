@@ -94,7 +94,7 @@
         const numPositiveFeedback = this.firstValue(program, "num_has_feedback_positives");
 
         return {
-          programCode: String(this.firstValue(program, "program_code") || program?.program_code || "").trim(),
+          programName: String(this.firstValue(program, "program_name") || program?.program_name || "").trim(),
           academicYear: Number(this.firstValue(program, "academic_year") || program?.academic_year || 0),
           numSubmissions,
           percPositiveFeedback: this.ratio(numPositiveFeedback, numSubmissions),
