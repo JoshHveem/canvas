@@ -163,14 +163,14 @@
             program?.completions_projected__campus_code ||
             ""
           ).trim(),
-          completers: program?.completions_projected__completers,
-          exiters: program?.completions_projected__exiters,
-          activeStudents: program?.completions_projected__active_students,
-          totalStudents: program?.completions_projected__total_students,
-          completionRate: program?.completions_projected__completion_rate,
-          projectedCompleters: program?.completions_projected__projected_completers,
-          projectedExiters: program?.completions_projected__projected_exiters,
-          projectedCompletionRate: program?.completions_projected__projected_completion_rate,
+          completers: program?.completions_projected__num_students__completer,
+          exiters: program?.completions_projected__num_students__exiter,
+          activeStudents: program?.completions_projected__num_students__active,
+          totalStudents: program?.completions_projected__num_students,
+          completionRate: program?.completions_projected__perc_students__completer,
+          projectedCompleters: program?.completions_projected__num_students__completer__projected,
+          projectedExiters: program?.completions_projected__num_students__exiter__projected,
+          projectedCompletionRate: program?.completions_projected__perc_students__completer__projected,
           completionBreakdown: this.buildCompletionBreakdown(program)
         };
       },
