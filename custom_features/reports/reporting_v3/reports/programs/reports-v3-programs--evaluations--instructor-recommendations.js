@@ -75,7 +75,7 @@
 
       tableColumns() {
         return [
-          { key: "programCode", label: "Program", width: "6rem" },
+          { key: "programName", label: "Program", width: "6rem" },
           { key: "academicYear", label: "Year", width: "4rem", format: "integer", align: "right" },
           { key: "numSubmissions", label: "Submissions", width: "6rem", format: "integer", align: "right" },
           {
