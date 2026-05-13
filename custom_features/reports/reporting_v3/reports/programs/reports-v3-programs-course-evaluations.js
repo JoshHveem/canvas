@@ -106,6 +106,11 @@
               denominatorLabel: "Submissions",
               tagWidth: "8rem",
               decimals: 1,
+              tagPillBands: {
+                bad: 0.2,
+                warning: 0.1,
+                good: 0
+              },
               selectedTags: this.selectedRecommendationTags,
               showFilter: false
             }

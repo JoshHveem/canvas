@@ -275,7 +275,7 @@
           placeholder: column.placeholder || "-",
           width: column.tagWidth || column.width || "7rem",
           decimals: Number.isFinite(Number(column.decimals)) ? Number(column.decimals) : 1,
-          pillBands: column.pillBands,
+          pillBands: column.tagPillBands || column.pillBands,
           key: this.getTagColumnKey(column, tagName),
           label: tagName,
           description: column.denominatorLabel
