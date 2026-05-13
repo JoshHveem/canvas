@@ -211,8 +211,8 @@
         </div>
 
         <div style="flex:1 1 auto; min-height:0; min-width:0; overflow:auto;">
-          <div style="display:flex; justify-content:flex-start; width:max-content; min-width:100%; padding-bottom:12px;">
-            <div style="width:fit-content; max-width:none;">
+          <div style="display:block; min-width:100%; padding-bottom:12px;">
+            <div style="display:inline-block; min-width:100%;">
             <div v-if="loading" class="btech-card btech-theme" style="padding:20px;">
               <div class="btech-muted">Loading report shell...</div>
             </div>

@@ -474,7 +474,7 @@
     },
 
     template: `
-      <div class="btech-card btech-theme" style="padding:0; overflow:visible; display:inline-block; width:fit-content; max-width:100%; vertical-align:top;">
+      <div class="btech-card btech-theme" style="padding:0; overflow:visible; display:inline-block; width:fit-content; max-width:none; vertical-align:top;">
         <div
           v-if="tagFilterColumns.length"
           style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; padding:12px; border-bottom:1px solid #e2e8f0; background:#fff;"
@@ -541,7 +541,7 @@
           </div>
         </div>
 
-        <div style="overflow:auto; max-width:100%;">
+        <div style="overflow:visible; max-width:none;">
           <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
             <colgroup>
               <col
