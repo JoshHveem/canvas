@@ -101,10 +101,10 @@
 
       buildGraduationBreakdown(program) {
         const palette = window.bridgetools?.colors || {};
-        const graduates = this.toWholeNumber(program?.graduates_projected__graduates);
-        const projectedGraduates = this.toWholeNumber(program?.graduates_projected__projected_graduates);
-        const exiters = this.toWholeNumber(program?.graduates_projected__exiters);
-        const projectedExiters = this.toWholeNumber(program?.graduates_projected__projected_exiters);
+        const graduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate);
+        const projectedGraduates = this.toWholeNumber(program?.graduates_projected__num_students__graduate__projected);
+        const exiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter);
+        const projectedExiters = this.toWholeNumber(program?.graduates_projected__num_students__exiter__projected);
 
         const projectedGraduateGain = Math.max(0, projectedGraduates - graduates);
         const nonGraduates = Math.max(0, exiters - graduates);
@@ -163,14 +163,14 @@
             program?.graduates_projected__campus_code ||
             ""
           ).trim(),
-          graduates: program?.graduates_projected__graduates,
-          exiters: program?.graduates_projected__exiters,
-          activeStudents: program?.graduates_projected__active_students,
-          totalStudents: program?.graduates_projected__total_students,
-          graduationRate: program?.graduates_projected__graduation_rate,
-          projectedGraduates: program?.graduates_projected__projected_graduates,
-          projectedExiters: program?.graduates_projected__projected_exiters,
-          projectedGraduationRate: program?.graduates_projected__projected_graduation_rate,
+          graduates: program?.graduates_projected__num_students__graduate,
+          exiters: program?.graduates_projected__num_students__exiter,
+          activeStudents: program?.graduates_projected__num_students__active,
+          totalStudents: program?.graduates_projected__num_students,
+          graduationRate: program?.graduates_projected__perc_students__graduate,
+          projectedGraduates: program?.graduates_projected__num_students__graduate__projected,
+          projectedExiters: program?.graduates_projected__num_students__exiter__projected,
+          projectedGraduationRate: program?.graduates_projected__perc_students__graduate__projected,
           graduationBreakdown: this.buildGraduationBreakdown(program)
         };
       },
