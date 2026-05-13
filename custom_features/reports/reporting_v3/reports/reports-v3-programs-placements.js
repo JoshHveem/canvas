@@ -104,8 +104,8 @@
 
       buildPlacementBreakdown(program) {
         const palette = window.bridgetools?.colors || {};
-        const confirmedPlacements = this.toWholeNumber(program?.placements__confirmed_placements);
-        const placementEligible = this.toWholeNumber(program?.placements__placement_eligible);
+        const confirmedPlacements = this.toWholeNumber(program?.placements__num_students__confirmed_placement);
+        const placementEligible = this.toWholeNumber(program?.placements__num_students__eligible_placement);
         const unplaced = Math.max(0, placementEligible - confirmedPlacements);
 
         return [
@@ -125,8 +125,8 @@
       normalizeProgramRow(program) {
         if (!program || typeof program !== "object") return null;
 
-        const confirmedPlacements = program?.placements__confirmed_placements;
-        const placementEligible = program?.placements__placement_eligible;
+        const confirmedPlacements = program?.placements__num_students__confirmed_placement;
+        const placementEligible = program?.placements__num_students__eligible_placement;
 
         return {
           programCode: String(
