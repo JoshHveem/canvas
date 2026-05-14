@@ -211,6 +211,21 @@
         if (this.sectionLoading[dataKey]) return;
         if (!forceReload && this.sectionLoaded[dataKey]) return;
 
+        const missingRequiredFilters = (Array.isArray(view?.required_filters) ? view.required_filters : [])
+          .filter((filterKey) => {
+            const value = this.selectedFilters?.[filterKey];
+            if (Array.isArray(value)) return !value.length;
+            return !String(value || "").trim();
+          });
+
+        if (missingRequiredFilters.length) {
+          this.$set(this.sectionRows, dataKey, []);
+          this.$set(this.sectionErrors, dataKey, "");
+          this.$set(this.sectionLoaded, dataKey, true);
+          this.$set(this.sectionLoading, dataKey, false);
+          return;
+        }
+
         this.$set(this.sectionLoading, dataKey, true);
         this.$set(this.sectionErrors, dataKey, "");
 

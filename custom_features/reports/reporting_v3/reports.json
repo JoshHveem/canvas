@@ -56,6 +56,15 @@
               "include": "course_evaluations_summary"
             },
             {
+              "value": "course-recommendation-tags",
+              "label": "Course Recommendation Tags",
+              "component": "reports-v3-programs--evaluations--course-recommendation-tags",
+              "source": "programs__course_eval_rec_tags",
+              "include": "x_ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
               "value": "instructor-evaluations",
               "label": "Instructor Evaluations",
               "component": "reports-v3-programs--evaluations--instructor-evaluations",
