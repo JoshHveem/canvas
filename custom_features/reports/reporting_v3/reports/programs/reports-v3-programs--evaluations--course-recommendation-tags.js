@@ -79,7 +79,7 @@
         const keys = [
           field,
           `programs__course_eval_rec_tags__${field}`,
-          `x_ai_summary__${field}`,
+          `ai_summary__${field}`,
           `programs__course_eval_rec_tags__x_ai_summary__${field}`
         ];
 
