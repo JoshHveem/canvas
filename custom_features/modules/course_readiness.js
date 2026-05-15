@@ -333,10 +333,6 @@
           margin-top: 0.45rem;
         }
 
-        #${cardId} .btech-course-readiness__action-button + .btech-course-readiness__action-button {
-          margin-left: 0.45rem;
-        }
-
         #${cardId} .btech-course-readiness__pill {
           width: 0.8rem;
           height: 0.8rem;
@@ -707,7 +703,7 @@
           },
           {
             type: "fixSyllabusModuleLinks",
-            label: "Fix Syllabus Links"
+            label: "Fix Link"
           }
         ]
       });
@@ -1074,7 +1070,7 @@
           markActionResolved(button);
         } catch (error) {
           console.error("Unable to fix Simple Syllabus module links.", error);
-          button.prop("disabled", false).text("Fix Syllabus Links");
+          button.prop("disabled", false).text("Fix Link");
           alert("Unable to fix the Simple Syllabus module links right now.");
         }
 
