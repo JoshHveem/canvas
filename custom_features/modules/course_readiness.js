@@ -34,6 +34,7 @@
   if (!courseId) return;
 
   let latestSyllabusModuleLinkMismatches = [];
+  let latestLastModule = null;
 
   function extractYear(termName) {
     const match = String(termName ?? "").match(/\b(20\d{2})\b/);
@@ -146,6 +147,36 @@
       const item = mismatches[i];
       await $.delete(`/api/v1/courses/${courseId}/modules/${item.moduleId}/items/${item.id}`);
     }
+  }
+
+  async function createEvaluationAssignment(config) {
+    if (!latestLastModule?.id) {
+      throw new Error("No module found for evaluation placement.");
+    }
+
+    const assignment = await $.post(`/api/v1/courses/${courseId}/assignments`, {
+      assignment: {
+        name: config.title,
+        submission_types: ["external_tool"],
+        points_possible: 1,
+        allowed_attempts: -1,
+        published: true,
+        external_tool_tag_attributes: {
+          url: config.url,
+          new_tab: true
+        }
+      }
+    });
+
+    await $.post(`/api/v1/courses/${courseId}/modules/${latestLastModule.id}/items`, {
+      module_item: {
+        type: "Assignment",
+        content_id: assignment.id,
+        position: 999
+      }
+    });
+
+    return assignment;
   }
 
   function ensureStyles() {
@@ -482,6 +513,7 @@
         moduleName: module.name
       }))
     );
+    latestLastModule = modules.length ? modules[modules.length - 1] : null;
 
     const assignmentModuleIds = new Set(
       moduleItems
@@ -614,7 +646,12 @@
 
   function getEvaluationCheck(assignments, title) {
     if (!assignments.length) {
-      return createCheck(title, "fail", `Add the ${title.toLowerCase()} assignment.`);
+      return createCheck(title, "fail", `Add the ${title.toLowerCase()} assignment.`, {
+        action: {
+          type: title === "Instructor Evaluation" ? "addInstructorEvaluation" : "addCourseEvaluation",
+          label: "Add Eval"
+        }
+      });
     }
 
     const hasPublishedAssignment = assignments.some(assignment =>
@@ -1088,6 +1125,42 @@
           console.error("Unable to remove Simple Syllabus module links.", error);
           button.prop("disabled", false).text("Remove Link");
           alert("Unable to remove the Simple Syllabus module link right now.");
+        }
+
+        return;
+      }
+
+      if (actionType === "addInstructorEvaluation") {
+        button.prop("disabled", true).text("Adding...");
+
+        try {
+          await createEvaluationAssignment({
+            title: "Instructor Evaluation",
+            url: `https://surveys.bridgetools.dev/init?jotform_id=${instructorEvalId}`
+          });
+          markActionResolved(button);
+        } catch (error) {
+          console.error("Unable to add Instructor Evaluation.", error);
+          button.prop("disabled", false).text("Add Eval");
+          alert("Unable to add the Instructor Evaluation right now.");
+        }
+
+        return;
+      }
+
+      if (actionType === "addCourseEvaluation") {
+        button.prop("disabled", true).text("Adding...");
+
+        try {
+          await createEvaluationAssignment({
+            title: "Course Evaluation",
+            url: `https://surveys.bridgetools.dev/init?jotform_id=${courseEvalId}`
+          });
+          markActionResolved(button);
+        } catch (error) {
+          console.error("Unable to add Course Evaluation.", error);
+          button.prop("disabled", false).text("Add Eval");
+          alert("Unable to add the Course Evaluation right now.");
         }
       }
     });
