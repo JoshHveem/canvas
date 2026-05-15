@@ -163,7 +163,7 @@
         published: true,
         external_tool_tag_attributes: {
           url: config.url,
-          new_tab: true
+          new_tab: false
         }
       }
     });
