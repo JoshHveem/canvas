@@ -141,6 +141,13 @@
     }
   }
 
+  async function removeSyllabusModuleLinks(mismatches) {
+    for (let i = 0; i < mismatches.length; i++) {
+      const item = mismatches[i];
+      await $.delete(`/api/v1/courses/${courseId}/modules/${item.moduleId}/items/${item.id}`);
+    }
+  }
+
   function ensureStyles() {
     if (document.getElementById(styleId)) return;
 
@@ -324,6 +331,10 @@
 
         #${cardId} .btech-course-readiness__action {
           margin-top: 0.45rem;
+        }
+
+        #${cardId} .btech-course-readiness__action-button + .btech-course-readiness__action-button {
+          margin-left: 0.45rem;
         }
 
         #${cardId} .btech-course-readiness__pill {
@@ -689,10 +700,16 @@
 
     if (data.syllabusModuleLinkMismatches.length > 0) {
       return createCheck("Syllabus Module Links", "fail", "", {
-        action: {
-          type: "fixSyllabusModuleLinks",
-          label: "Fix Syllabus Links"
-        }
+        actions: [
+          {
+            type: "removeSyllabusModuleLinks",
+            label: "Remove Link"
+          },
+          {
+            type: "fixSyllabusModuleLinks",
+            label: "Fix Syllabus Links"
+          }
+        ]
       });
     }
 
@@ -896,6 +913,11 @@
 
   function renderCheck(check) {
     const checkItems = Array.isArray(check.items) ? check.items : [];
+    const checkActions = Array.isArray(check.actions)
+      ? check.actions
+      : check.action
+        ? [check.action]
+        : [];
     const itemList = checkItems.length
       ? `
         <div class="btech-course-readiness__disclosure">
@@ -910,15 +932,17 @@
       `
       : "";
     const checkControl = `<span class="btech-course-readiness__pill" aria-hidden="true"></span>`;
-    const actionButton = check.action
+    const actionButton = checkActions.length
       ? `
         <div class="btech-course-readiness__action">
-          <button
-            type="button"
-            class="btn btn-small btech-course-readiness__action-button"
-            data-action-type="${escapeHtml(check.action.type)}"
-            data-tab-id="${escapeHtml(check.action.tabId)}"
-          >${escapeHtml(check.action.label)}</button>
+          ${checkActions.map(action => `
+            <button
+              type="button"
+              class="btn btn-small btech-course-readiness__action-button"
+              data-action-type="${escapeHtml(action.type)}"
+              data-tab-id="${escapeHtml(action.tabId)}"
+            >${escapeHtml(action.label)}</button>
+          `).join("")}
         </div>
       `
       : "";
@@ -942,7 +966,7 @@
           <span class="btech-course-readiness__check-title">${escapeHtml(check.title)}</span>
           ${guideLink}
         </div>
-        ${check.state === "pass" || check.action || checkItems.length ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
+        ${check.state === "pass" || checkActions.length || checkItems.length ? "" : `<span class="btech-course-readiness__check-detail">${escapeHtml(check.detail)}</span>`}
         ${actionButton}
         ${itemList}
       </li>
@@ -1052,6 +1076,22 @@
           console.error("Unable to fix Simple Syllabus module links.", error);
           button.prop("disabled", false).text("Fix Syllabus Links");
           alert("Unable to fix the Simple Syllabus module links right now.");
+        }
+
+        return;
+      }
+
+      if (actionType === "removeSyllabusModuleLinks") {
+        button.prop("disabled", true).text("Removing...");
+
+        try {
+          await removeSyllabusModuleLinks(latestSyllabusModuleLinkMismatches);
+          latestSyllabusModuleLinkMismatches = [];
+          markActionResolved(button);
+        } catch (error) {
+          console.error("Unable to remove Simple Syllabus module links.", error);
+          button.prop("disabled", false).text("Remove Link");
+          alert("Unable to remove the Simple Syllabus module link right now.");
         }
       }
     });
