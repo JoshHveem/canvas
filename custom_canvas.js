@@ -276,10 +276,10 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     //OTHER FEATURES
     featureISD('hs_section_adder', /^\/accounts\/[0-9]+$/);
-    featureISD("course_reviewer/assignment_score", /^\/courses\/[0-9]+\/assignments\/[0-9]+/);
-    featureISD("course_reviewer/quiz_score", /^\/courses\/[0-9]+\/quizzes\/[0-9]+/);
-    featureISD("course_reviewer/discussion_score", /^\/courses\/[0-9]+\/discussion_topics\/[0-9]+/);
-    featureISD("course_reviewer/page_score", /^\/courses\/[0-9]+\/pages\/.+/);
+    // featureISD("course_reviewer/assignment_score", /^\/courses\/[0-9]+\/assignments\/[0-9]+/);
+    // featureISD("course_reviewer/quiz_score", /^\/courses\/[0-9]+\/quizzes\/[0-9]+/);
+    // featureISD("course_reviewer/discussion_score", /^\/courses\/[0-9]+\/discussion_topics\/[0-9]+/);
+    // featureISD("course_reviewer/page_score", /^\/courses\/[0-9]+\/pages\/.+/);
     
     // need to load course hours before continuing
     await $.getScript(SOURCE_URL + "/course_data/course_hours.js");
@@ -324,7 +324,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (rCheckInCourse.test(window.location.pathname)) {
       $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
       feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-      featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
+      // featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
       let courseData = await $.get('/api/v1/courses/' + CURRENT_COURSE_ID);
       CURRENT_DEPARTMENT_ID = courseData.account_id;

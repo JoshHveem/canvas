@@ -530,7 +530,7 @@
         };
 
         if (typeof column.cellStyle === "function") {
-          return { ...base, ...column.cellStyle(row, column) };
+          Object.assign(base, column.cellStyle(row, column));
         }
 
         if (column.cellStyle && typeof column.cellStyle === "object") {
