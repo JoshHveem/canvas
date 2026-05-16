@@ -77,6 +77,15 @@
               "component": "reports-v3-programs--evaluations--instructor-recommendations",
               "source": "programs",
               "include": "instructor_evaluations_summary"
+            },
+            {
+              "value": "instructor-recommendation-tags",
+              "label": "Instructor Recommendation Tags",
+              "component": "reports-v3-programs--evaluations--instructor-recommendation-tags",
+              "source": "programs__instructor_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
             }
           ]
         },
