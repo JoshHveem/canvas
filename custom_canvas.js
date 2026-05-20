@@ -322,7 +322,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     //only run if in a course
     if (rCheckInCourse.test(window.location.pathname)) {
-      $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
+      try { $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js"); } catch (e) { console.error("Failed to load d3.v7.js", e); }
       feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       // featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
