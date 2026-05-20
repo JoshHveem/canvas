@@ -181,6 +181,31 @@
       });
     }
 
+    async function getSyllabiStatusRaw({ academicYear }) {
+      const year = Number(academicYear) || new Date().getFullYear();
+      const key = `syllabiStatusRaw::year=${year}`;
+      return cached(cache, key, async () => {
+        const perPage = 50;
+        const rows = [];
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+          const resp = await bridgetools.req3(
+            "reports",
+            { academic_year: year },
+            { params: { dataset: 'syllabi_status', per_page: perPage, page } }
+          );
+
+          rows.push(...(Array.isArray(resp?.data) ? resp.data : []));
+          totalPages = Number(resp?.meta?.total_pages) || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        return rows;
+      });
+    }
+
 
     async function getCoursesRaw({ account, year }) {
       const y = Number(year) || new Date().getFullYear();
@@ -220,6 +245,7 @@
     window.ReportData = {
       getCanvasUser,
       getProgramsRaw,
+      getSyllabiStatusRaw,
       getInstructorsRaw,
       getCoursesRaw,
       getDepartmentsRaw,
@@ -717,7 +743,7 @@
           }
 
           if (ds.includes('programs')) {
-            await this.loadProgramsRaw();
+            await this.loadProgramsRaw(year);
           } else {
             this.programsRaw = [];
           }
@@ -725,12 +751,77 @@
 
         },
 
-        async loadProgramsRaw() {
+        buildProgramSyllabiRollup(rows) {
+          const syllabi = Array.isArray(rows) ? rows.map(row => ({
+            ...row,
+            doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? '',
+            is_published_course: row?.is_published_course ?? null
+          })) : [];
+
+          let needsSubmission = 0;
+          let needsApproval = 0;
+          let completed = 0;
+
+          for (const row of syllabi) {
+            if (row?.is_submitted === true && row?.is_approved === true) {
+              completed += 1;
+              continue;
+            }
+            if (row?.is_submitted === true) {
+              needsApproval += 1;
+              continue;
+            }
+            needsSubmission += 1;
+          }
+
+          const total = syllabi.length;
+
+          return {
+            total,
+            needs_submission: needsSubmission,
+            needs_approval: needsApproval,
+            completed,
+            pct_completed: total > 0 ? (completed / total) : NaN,
+            syllabi
+          };
+        },
+
+        mergeProgramsWithSyllabi(programs, syllabiRows, year) {
+          const list = Array.isArray(programs) ? programs : [];
+          const rows = Array.isArray(syllabiRows) ? syllabiRows : [];
+          const targetYear = Number(year);
+          const byProgram = new Map();
+
+          for (const row of rows) {
+            if (Number(row?.academic_year) !== targetYear) continue;
+
+            const key = String(row?.program_code || '').trim();
+            if (!key) continue;
+
+            if (!byProgram.has(key)) byProgram.set(key, []);
+            byProgram.get(key).push(row);
+          }
+
+          return list.map(program => {
+            const key = String(program?.program || program?.program_code || '').trim();
+            const rollup = this.buildProgramSyllabiRollup(byProgram.get(key) || []);
+            return {
+              ...program,
+              syllabi: rollup
+            };
+          });
+        },
+
+        async loadProgramsRaw(year) {
           try {
             this.sharedLoading.programs = true;
 
-            const raw = await window.ReportData.getProgramsRaw();
-            this.programsRaw = Array.isArray(raw) ? raw : [];
+            const [rawPrograms, syllabiRows] = await Promise.all([
+              window.ReportData.getProgramsRaw(),
+              window.ReportData.getSyllabiStatusRaw({ academicYear: year })
+            ]);
+
+            this.programsRaw = this.mergeProgramsWithSyllabi(rawPrograms, syllabiRows, year);
           } catch (e) {
             console.warn('Failed to load programs', e);
             this.programsRaw = [];
