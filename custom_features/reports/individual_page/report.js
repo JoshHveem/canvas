@@ -6,6 +6,22 @@
 */
 (async function () {
   //Confirm with Instructional Team before going live
+  async function loadFirstAvailableScript(urls) {
+    let lastError;
+
+    for (const url of urls) {
+      try {
+        await $.getScript(url);
+        return url;
+      } catch (err) {
+        lastError = err;
+        console.warn("Failed to load script", url, err);
+      }
+    }
+
+    throw lastError || new Error("Failed to load script from all sources");
+  }
+
   if (true) {
       if (/[0-9]+\/grades/.test(window.location.pathname)) {
         let loadedWarning = false;
@@ -434,7 +450,10 @@
   loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
   await $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/progress_meeting/setGoal.js");
   await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-  $.getScript("https://d3js.org/d3.v6.min.js").done(function () {
+  loadFirstAvailableScript([
+    "https://d3js.org/d3.v6.min.js",
+    "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
+  ]).then(function () {
     $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js").done(function () {
       $.getScript("https://reports.bridgetools.dev/components/icons/alert.js").done(function () {
         $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js").done(function () {
@@ -472,6 +491,8 @@
         });
       });
     });
+  }).catch(function (err) {
+    console.error(err);
   });
   function loadCSS(url) {
     var style = document.createElement('link'),

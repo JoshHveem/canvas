@@ -6,6 +6,22 @@
 */
 (async function () {
   //Confirm with Instructional Team before going live
+  async function loadFirstAvailableScript(urls) {
+    let lastError;
+
+    for (const url of urls) {
+      try {
+        await $.getScript(url);
+        return url;
+      } catch (err) {
+        lastError = err;
+        console.warn("Failed to load script", url, err);
+      }
+    }
+
+    throw lastError || new Error("Failed to load script from all sources");
+  }
+
   async function postLoad() {
     let vueString = '';
     //gen an initial uuid
@@ -359,7 +375,10 @@
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits2.js");
     await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDates.js");
-    await $.getScript("https://d3js.org/d3.v6.min.js");
+    await loadFirstAvailableScript([
+      "https://d3js.org/d3.v6.min.js",
+      "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
+    ]);
     /*
     //libraries
     await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
