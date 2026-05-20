@@ -65,6 +65,15 @@
               "required_filters": ["programs"]
             },
             {
+              "value": "course-recommendation-responses",
+              "label": "Course Recommendation Responses",
+              "component": "reports-v3-programs--evaluations--course-recommendation-responses",
+              "source": "programs__course_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
               "value": "instructor-evaluations",
               "label": "Instructor Evaluations",
               "component": "reports-v3-programs--evaluations--instructor-evaluations",
@@ -77,6 +86,24 @@
               "component": "reports-v3-programs--evaluations--instructor-recommendations",
               "source": "programs",
               "include": "instructor_evaluations_summary"
+            },
+            {
+              "value": "instructor-recommendation-tags",
+              "label": "Instructor Recommendation Tags",
+              "component": "reports-v3-programs--evaluations--instructor-recommendation-tags",
+              "source": "programs__instructor_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
+              "value": "instructor-recommendation-responses",
+              "label": "Instructor Recommendation Responses",
+              "component": "reports-v3-programs--evaluations--instructor-recommendation-responses",
+              "source": "programs__instructor_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
             }
           ]
         },
