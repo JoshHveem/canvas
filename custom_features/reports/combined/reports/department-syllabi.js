@@ -29,9 +29,12 @@ Vue.component('reports-department-syllabi', {
       table,
       tableTick: 0,
       loading: false,
+      loadingDepartments: false,
       loadError: '',
       year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
+      departmentOptions: [],
+      selectedDepartmentName: '',
       loadedDepartmentName: '',
       filters: {
         submitted: '',
@@ -95,18 +98,22 @@ Vue.component('reports-department-syllabi', {
   },
 
   mounted() {
-    this.loadData();
+    this.syncFromReportContext();
+    this.loadDepartmentOptions();
   },
 
   watch: {
     reportContext: {
       deep: true,
-      handler() {
+      async handler() {
         this.syncFromReportContext();
-        this.loadData();
+        await this.loadDepartmentOptions();
       }
     },
-    year() {
+    async year() {
+      await this.loadDepartmentOptions();
+    },
+    selectedDepartmentName() {
       this.loadData();
     },
     rows: {
@@ -152,6 +159,11 @@ Vue.component('reports-department-syllabi', {
       if (Number.isFinite(nextYear) && nextYear !== this.year) {
         this.year = nextYear;
       }
+
+      const nextDepartment = this.getDepartmentName();
+      if (nextDepartment && nextDepartment !== this.selectedDepartmentName) {
+        this.selectedDepartmentName = nextDepartment;
+      }
     },
 
     getDataset() {
@@ -160,7 +172,8 @@ Vue.component('reports-department-syllabi', {
 
     getRequestFilters() {
       return Object.assign({}, this.reportContext?.filters || {}, {
-        academic_year: Number(this.year)
+        academic_year: Number(this.year),
+        department_name: this.selectedDepartmentName
       });
     },
 
@@ -172,8 +185,50 @@ Vue.component('reports-department-syllabi', {
       ).trim();
     },
 
+    async loadDepartmentOptions() {
+      try {
+        this.loadingDepartments = true;
+
+        const rows = await bridgetools.req3(
+          'reports',
+          { academic_year: Number(this.year) },
+          { dataset: 'department_syllabi_summary' }
+        );
+
+        const options = Array.from(new Set(
+          (Array.isArray(rows) ? rows : [])
+            .map(row => String(row?.department_name ?? '').trim())
+            .filter(Boolean)
+        )).sort((a, b) => a.localeCompare(b));
+
+        this.departmentOptions = options;
+
+        if (this.selectedDepartmentName && options.includes(this.selectedDepartmentName)) {
+          return;
+        }
+
+        const routedDepartment = this.getDepartmentName();
+        if (routedDepartment && options.includes(routedDepartment)) {
+          this.selectedDepartmentName = routedDepartment;
+          return;
+        }
+
+        if (!options.includes(this.selectedDepartmentName)) {
+          this.selectedDepartmentName = '';
+        }
+      } catch (e) {
+        console.warn('Failed to load department options', e);
+        this.departmentOptions = [];
+        if (!this.selectedDepartmentName) {
+          this.loadError = 'Unable to load department list.';
+        }
+      } finally {
+        this.loadingDepartments = false;
+      }
+    },
+
     async loadData() {
-      const departmentName = this.getDepartmentName();
+      const departmentName = String(this.selectedDepartmentName || '').trim();
       if (!departmentName) {
         this.rows = [];
         this.loadedDepartmentName = '';
@@ -316,6 +371,15 @@ Vue.component('reports-department-syllabi', {
           :value="optionYear"
         >{{ optionYear }}</option>
       </select>
+      <label class="btech-muted" style="font-size:.75rem;">Department</label>
+      <select v-model="selectedDepartmentName" style="font-size:.75rem; min-width:220px;">
+        <option disabled value="">Select department</option>
+        <option
+          v-for="option in departmentOptions"
+          :key="option"
+          :value="option"
+        >{{ option }}</option>
+      </select>
       <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>
 
@@ -339,7 +403,7 @@ Vue.component('reports-department-syllabi', {
       </div>
     </div>
 
-    <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
+    <div v-if="loading || loadingDepartments" class="btech-muted" style="text-align:center; padding:10px;">
       Loading syllabi...
     </div>
 
