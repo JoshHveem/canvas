@@ -97,7 +97,7 @@
 
         <keep-alive>
           <component
-            :is="currentReportMeta.component"
+            :is="currentComponent"
             @drill-report="drillToReport"
             v-bind="currentReportProps"
           />

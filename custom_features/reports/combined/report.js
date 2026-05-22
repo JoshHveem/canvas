@@ -58,12 +58,12 @@
           {
             value: 'syllabi',
             label: 'Syllabi',
-            component: 'reports-syllabi',
             title: 'Syllabi Report',
             subMenus: [
               {
                 value: 'summary',
                 label: 'Summary',
+                component: 'reports-departments-syllabi',
                 dataset: 'department_syllabi_summary',
                 filters: {
                   academic_year: { source: 'current_year' }
@@ -72,6 +72,7 @@
               {
                 value: 'course-status',
                 label: 'Course Status',
+                component: 'reports-department-syllabi',
                 dataset: 'syllabi_status',
                 filters: {
                   academic_year: { source: 'current_year' },
@@ -83,12 +84,12 @@
           {
             value: 'course-readiness',
             label: 'Course Readiness',
-            component: 'reports-course-readiness',
             title: 'Course Readiness Report',
             subMenus: [
               {
                 value: 'department-summary',
                 label: 'Department Summary',
+                component: 'reports-departments-course-readiness',
                 dataset: 'department_canvas_course_readiness',
                 filters: {
                   academic_year: { source: 'current_year' }
@@ -97,7 +98,25 @@
               {
                 value: 'course-status',
                 label: 'Course Status',
+                component: 'reports-department-course-readiness',
                 dataset: 'canvas_course_readiness',
+                filters: {
+                  academic_year: { source: 'current_year' },
+                  department_name: { source: 'selected_department_name' }
+                }
+              }
+            ]
+          },
+          {
+            value: 'instructors',
+            label: 'Instructors',
+            title: 'Instructors Report',
+            subMenus: [
+              {
+                value: 'department-summary',
+                label: 'Department Summary',
+                component: 'reports-department-instructors',
+                dataset: 'instructors_department_summary',
                 filters: {
                   academic_year: { source: 'current_year' },
                   department_name: { source: 'selected_department_name' }
@@ -113,7 +132,8 @@
             reportType: 'syllabi',
             subMenuByType: {
               syllabi: 'summary',
-              'course-readiness': 'department-summary'
+              'course-readiness': 'department-summary',
+              instructors: 'department-summary'
             }
           },
           selectedDepartmentCode: '',
@@ -142,10 +162,13 @@
           return this.currentSubMenus.find(menu => menu.value === this.currentSubKey) || null;
         },
 
+        currentComponent() {
+          return this.currentSubMeta?.component || null;
+        },
+
         currentReportProps() {
           const subMeta = this.currentSubMeta || {};
           return {
-            subMenu: this.currentSubKey,
             reportContext: {
               reportName: this.currentReportMeta?.value || '',
               reportTitle: this.currentReportMeta?.title || '',
@@ -227,11 +250,9 @@
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-readiness.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
+    if (IS_ME) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
 
