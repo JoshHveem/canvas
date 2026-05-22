@@ -389,9 +389,7 @@ Vue.component('reports-department-syllabi', {
           >{{ option }}</option>
         </select>
       </div>
-    </div>
 
-    <div class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
         <select v-model="filters.submitted" style="font-size:.75rem; min-width:70px;">

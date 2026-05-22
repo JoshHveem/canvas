@@ -56,30 +56,22 @@
       data: function () {
         const reports = [
           {
-            value: 'departments',
-            label: 'Departments',
-            component: 'reports-departments',
-            title: 'Departments Report',
+            value: 'syllabi',
+            label: 'Syllabi',
+            component: 'reports-syllabi',
+            title: 'Syllabi Report',
             subMenus: [
               {
-                value: 'syllabi',
-                label: 'Syllabi',
+                value: 'summary',
+                label: 'Summary',
                 dataset: 'department_syllabi_summary',
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
-              }
-            ]
-          },
-          {
-            value: 'department',
-            label: 'Department',
-            component: 'reports-department',
-            title: 'Department Report',
-            subMenus: [
+              },
               {
-                value: 'syllabi',
-                label: 'Syllabi',
+                value: 'course-status',
+                label: 'Course Status',
                 dataset: 'syllabi_status',
                 filters: {
                   academic_year: { source: 'current_year' },
@@ -93,10 +85,9 @@
         return {
           reportTypes: reports,
           settings: {
-            reportType: 'departments',
+            reportType: 'syllabi',
             subMenuByType: {
-              departments: 'syllabi',
-              department: 'syllabi'
+              syllabi: 'summary'
             }
           },
           selectedDepartmentCode: '',
@@ -147,14 +138,14 @@
       methods: {
         drillToReport(payload) {
           const report = String(payload?.report ?? '').trim();
-          const subMenu = String(payload?.subMenu ?? 'syllabi').trim() || 'syllabi';
+          const subMenu = String(payload?.subMenu ?? 'summary').trim() || 'summary';
           const account = String(payload?.account ?? payload?.department_code ?? '').trim();
           const departmentName = String(payload?.department_name ?? payload?.name ?? '').trim();
 
           if (account) this.selectedDepartmentCode = account;
           if (departmentName) this.selectedDepartmentName = departmentName;
 
-          this.settings.reportType = report || 'departments';
+          this.settings.reportType = report || 'syllabi';
           if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
           this.$set(this.settings.subMenuByType, this.settings.reportType, subMenu);
         },

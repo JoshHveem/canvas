@@ -140,8 +140,8 @@ Vue.component('reports-departments-syllabi', {
 
     emitDrill(department) {
       this.$emit('drill-report', {
-        report: 'department',
-        subMenu: 'syllabi',
+        report: 'syllabi',
+        subMenu: 'course-status',
         account: String(department?.department_code ?? '').trim(),
         department_code: String(department?.department_code ?? '').trim(),
         department_name: String(department?.department_name ?? '').trim()
