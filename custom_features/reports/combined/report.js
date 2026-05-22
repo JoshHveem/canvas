@@ -61,7 +61,14 @@
             component: 'reports-departments',
             title: 'Departments Report',
             subMenus: [
-              { value: 'syllabi', label: 'Syllabi' }
+              {
+                value: 'syllabi',
+                label: 'Syllabi',
+                dataset: 'department_syllabi_summary',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              }
             ]
           },
           {
@@ -70,7 +77,15 @@
             component: 'reports-department',
             title: 'Department Report',
             subMenus: [
-              { value: 'syllabi', label: 'Syllabi' }
+              {
+                value: 'syllabi',
+                label: 'Syllabi',
+                dataset: 'department_syllabi',
+                filters: {
+                  academic_year: { source: 'current_year' },
+                  department_name: { source: 'selected_department_name' }
+                }
+              }
             ]
           }
         ];
@@ -106,11 +121,25 @@
           return this.currentSubMenus[0]?.value || null;
         },
 
+        currentSubMeta() {
+          return this.currentSubMenus.find(menu => menu.value === this.currentSubKey) || null;
+        },
+
         currentReportProps() {
+          const subMeta = this.currentSubMeta || {};
           return {
             subMenu: this.currentSubKey,
-            departmentCode: this.selectedDepartmentCode,
-            departmentName: this.selectedDepartmentName
+            reportContext: {
+              reportName: this.currentReportMeta?.value || '',
+              reportTitle: this.currentReportMeta?.title || '',
+              subMenu: this.currentSubKey,
+              dataset: subMeta.dataset || '',
+              filters: this.resolveFilters(subMeta.filters || {}),
+              routeFilters: {
+                departmentCode: this.selectedDepartmentCode,
+                departmentName: this.selectedDepartmentName
+              }
+            }
           };
         }
       },
@@ -140,6 +169,21 @@
         setSubMenu(value) {
           if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
           this.$set(this.settings.subMenuByType, this.settings.reportType, value);
+        },
+
+        resolveFilters(filterDefs) {
+          const resolved = {};
+          const currentYear = new Date().getFullYear();
+
+          for (const [key, def] of Object.entries(filterDefs || {})) {
+            const source = def?.source;
+            if (source === 'current_year') resolved[key] = currentYear;
+            else if (source === 'selected_department_code') resolved[key] = this.selectedDepartmentCode;
+            else if (source === 'selected_department_name') resolved[key] = this.selectedDepartmentName;
+            else if (Object.prototype.hasOwnProperty.call(def || {}, 'value')) resolved[key] = def.value;
+          }
+
+          return resolved;
         },
 
         close() {

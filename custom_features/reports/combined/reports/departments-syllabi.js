@@ -1,6 +1,7 @@
 // departments-syllabi.js
 Vue.component('reports-departments-syllabi', {
   props: {
+    reportContext: { type: Object, default: () => ({}) },
     anonymous: { type: Boolean, default: false }
   },
 
@@ -29,7 +30,7 @@ Vue.component('reports-departments-syllabi', {
       tableTick: 0,
       loading: false,
       loadError: '',
-      year: new Date().getFullYear(),
+      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       departments: []
     };
   },
@@ -86,6 +87,17 @@ Vue.component('reports-departments-syllabi', {
   },
 
   watch: {
+    reportContext: {
+      deep: true,
+      handler() {
+        const nextYear = Number(this.reportContext?.filters?.academic_year);
+        if (Number.isFinite(nextYear) && nextYear !== this.year) {
+          this.year = nextYear;
+          return;
+        }
+        this.loadData();
+      }
+    },
     year() {
       this.loadData();
     }
@@ -104,10 +116,15 @@ Vue.component('reports-departments-syllabi', {
         this.loading = true;
         this.loadError = '';
 
+        const dataset = String(this.reportContext?.dataset || '').trim();
+        const filters = Object.assign({}, this.reportContext?.filters || {}, {
+          academic_year: Number(this.year)
+        });
+
         const rows = await bridgetools.req3(
           'reports',
-          { academic_year: Number(this.year) },
-          { dataset: 'department_syllabi_summary' }
+          filters,
+          { dataset }
         );
 
         this.departments = (Array.isArray(rows) ? rows : []).map(row => ({
@@ -119,7 +136,7 @@ Vue.component('reports-departments-syllabi', {
           num_courses__approved: Number(row?.num_courses__approved) || 0
         }));
       } catch (e) {
-        console.warn('Failed to load department_syllabi_summary', e);
+        console.warn('Failed to load department summary dataset', e);
         this.departments = [];
         this.loadError = 'Unable to load department syllabi summary.';
       } finally {

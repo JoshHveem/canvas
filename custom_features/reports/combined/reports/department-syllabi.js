@@ -1,8 +1,7 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
   props: {
-    departmentCode: { type: [Number, String], default: '' },
-    departmentName: { type: String, default: '' },
+    reportContext: { type: Object, default: () => ({}) },
     anonymous: { type: Boolean, default: false }
   },
 
@@ -31,7 +30,7 @@ Vue.component('reports-department-syllabi', {
       tableTick: 0,
       loading: false,
       loadError: '',
-      year: new Date().getFullYear(),
+      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
       loadedDepartmentName: '',
       filters: {
@@ -100,8 +99,12 @@ Vue.component('reports-department-syllabi', {
   },
 
   watch: {
-    departmentCode() {
-      this.loadData();
+    reportContext: {
+      deep: true,
+      handler() {
+        this.syncFromReportContext();
+        this.loadData();
+      }
     },
     year() {
       this.loadData();
@@ -138,17 +141,42 @@ Vue.component('reports-department-syllabi', {
 
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Syllabi';
-      const name = this.loadedDepartmentName || this.departmentName || this.departmentCode || 'Department';
+      const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
       return `${this.escapeHtml(name)} - Syllabi`;
     }
   },
 
   methods: {
+    syncFromReportContext() {
+      const nextYear = Number(this.reportContext?.filters?.academic_year);
+      if (Number.isFinite(nextYear) && nextYear !== this.year) {
+        this.year = nextYear;
+      }
+    },
+
+    getDataset() {
+      return String(this.reportContext?.dataset || '').trim();
+    },
+
+    getRequestFilters() {
+      return Object.assign({}, this.reportContext?.filters || {}, {
+        academic_year: Number(this.year)
+      });
+    },
+
+    getDepartmentName() {
+      return String(
+        this.reportContext?.routeFilters?.departmentName ??
+        this.reportContext?.filters?.department_name ??
+        ''
+      ).trim();
+    },
+
     async loadData() {
-      const departmentCode = String(this.departmentCode ?? '').trim();
-      if (!departmentCode) {
+      const departmentName = this.getDepartmentName();
+      if (!departmentName) {
         this.rows = [];
-        this.loadedDepartmentName = this.departmentName || '';
+        this.loadedDepartmentName = '';
         this.loadError = 'Select a department from the summary report to view details.';
         return;
       }
@@ -157,13 +185,13 @@ Vue.component('reports-department-syllabi', {
         this.loading = true;
         this.loadError = '';
 
+        const dataset = this.getDataset();
+        const filters = this.getRequestFilters();
+
         const rows = await bridgetools.req3(
           'reports',
-          {
-            academic_year: Number(this.year),
-            department_code: departmentCode
-          },
-          { dataset: 'syllabi_status' }
+          filters,
+          { dataset }
         );
 
         this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
@@ -177,13 +205,12 @@ Vue.component('reports-department-syllabi', {
         this.loadedDepartmentName = String(
           first?.department_name ??
           first?.dept_name ??
-          this.departmentName ??
-          departmentCode
+          departmentName
         ).trim();
       } catch (e) {
-        console.warn('Failed to load syllabi_status', e);
+        console.warn('Failed to load department detail dataset', e);
         this.rows = [];
-        this.loadedDepartmentName = this.departmentName || departmentCode;
+        this.loadedDepartmentName = departmentName;
         this.loadError = 'Unable to load department syllabi details.';
       } finally {
         this.loading = false;
