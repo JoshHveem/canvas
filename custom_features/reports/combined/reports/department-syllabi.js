@@ -87,12 +87,6 @@ Vue.component('reports-department-syllabi', {
         s => this.boolText(s?.is_published_course),
         s => this.boolPillStyle(s?.is_published_course),
         s => this.boolSort(s?.is_published_course)
-      ),
-      new window.ReportColumn(
-        'Published Syllabus', 'Simple Syllabus published.', '9rem', false, 'string',
-        s => this.boolText(s?.is_published_syllabus),
-        s => this.boolPillStyle(s?.is_published_syllabus),
-        s => this.boolSort(s?.is_published_syllabus)
       )
     ]);
   },
