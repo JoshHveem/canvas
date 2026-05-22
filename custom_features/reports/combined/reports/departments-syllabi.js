@@ -1,37 +1,19 @@
 // departments-syllabi.js
 Vue.component('reports-departments-syllabi', {
-  props: {
-    reportContext: { type: Object, default: () => ({}) },
-    anonymous: { type: Boolean, default: false }
-  },
+  mixins: [
+    window.ReportMixins.formatting,
+    window.ReportMixins.yearSummary({
+      loadErrorMessage: 'Unable to load department syllabi summary.'
+    })
+  ],
 
   data() {
-    const colors = window.bridgetools?.colors || {
-      red: '#b20b0f',
-      orange: '#f59e0b',
-      yellow: '#eab308',
-      green: '#16a34a',
-      gray: '#e5e7eb',
-      black: '#111827',
-      white: '#fff'
-    };
-
-    const table = new window.ReportTable({
-      rows: [],
-      columns: [],
-      sort_column: 'Department',
-      sort_dir: 1,
-      colors
-    });
+    const colors = window.ReportUtils.createColors();
+    const table = window.ReportUtils.createTable('Department', colors);
 
     return {
       colors,
-      table,
-      tableTick: 0,
-      loading: false,
-      loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
-      departments: []
+      table
     };
   },
 
@@ -75,67 +57,23 @@ Vue.component('reports-departments-syllabi', {
       )
     ]);
   },
-
-  mounted() {
-    this.loadData();
-  },
-
-  watch: {
-    reportContext: {
-      deep: true,
-      handler() {
-        const nextYear = Number(this.reportContext?.filters?.academic_year);
-        if (Number.isFinite(nextYear) && nextYear !== this.year) {
-          this.year = nextYear;
-          return;
-        }
-        this.loadData();
-      }
-    },
-    year() {
-      this.loadData();
-    }
-  },
-
   computed: {
     visibleRows() {
-      this.table.setRows(this.departments);
+      this.table.setRows(this.rows);
       return this.table.getSortedRows();
     }
   },
 
   methods: {
-    async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const dataset = String(this.reportContext?.dataset || '').trim();
-        const filters = Object.assign({}, this.reportContext?.filters || {}, {
-          academic_year: Number(this.year)
-        });
-
-        const rows = await bridgetools.req3(
-          'reports',
-          filters,
-          { dataset }
-        );
-
-        this.departments = (Array.isArray(rows) ? rows : []).map(row => ({
-          ...row,
-          department_code: String(row?.department_code ?? '').trim(),
-          department_name: String(row?.department_name ?? '').trim(),
-          num_courses: Number(row?.num_courses) || 0,
-          num_courses__submitted: Number(row?.num_courses__submitted) || 0,
-          num_courses__approved: Number(row?.num_courses__approved) || 0
-        }));
-      } catch (e) {
-        console.warn('Failed to load department summary dataset', e);
-        this.departments = [];
-        this.loadError = 'Unable to load department syllabi summary.';
-      } finally {
-        this.loading = false;
-      }
+    mapRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        department_code: String(row?.department_code ?? '').trim(),
+        department_name: String(row?.department_name ?? '').trim(),
+        num_courses: Number(row?.num_courses) || 0,
+        num_courses__submitted: Number(row?.num_courses__submitted) || 0,
+        num_courses__approved: Number(row?.num_courses__approved) || 0
+      }));
     },
 
     emitDrill(department) {
@@ -147,9 +85,6 @@ Vue.component('reports-departments-syllabi', {
         department_name: String(department?.department_name ?? '').trim()
       });
     },
-
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
     departmentName(department) {
       return String(department?.department_name ?? department?.name ?? department?.department_code ?? '').trim();
@@ -172,36 +107,6 @@ Vue.component('reports-departments-syllabi', {
     pctCompleted(department) {
       const total = this.totalCourses(department);
       return total > 0 ? (this.completedCount(department) / total) : NaN;
-    },
-    pctText(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 'n/a';
-      return (n * 100).toFixed(1) + '%';
-    },
-    pctPillStyle(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      const pct = n * 100;
-      return {
-        backgroundColor: pct < 80 ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-    countPillStyle(count) {
-      const n = Number(count);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return {
-        backgroundColor: n <= 0 ? this.colors.green : (n <= 5 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
   },
 

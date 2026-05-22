@@ -1,40 +1,20 @@
 Vue.component('reports-department-instructors', {
-  props: {
-    reportContext: { type: Object, default: () => ({}) },
-    anonymous: { type: Boolean, default: false }
-  },
+  mixins: [
+    window.ReportMixins.formatting,
+    window.ReportMixins.departmentScoped({
+      optionsDataset: 'instructors_department_summary',
+      emptySelectionMessage: 'Select a department to view instructor summary.',
+      loadErrorMessage: 'Unable to load department instructor summary.'
+    })
+  ],
 
   data() {
-    const colors = window.bridgetools?.colors || {
-      red: '#b20b0f',
-      orange: '#f59e0b',
-      yellow: '#eab308',
-      green: '#16a34a',
-      gray: '#e5e7eb',
-      black: '#111827',
-      white: '#fff'
-    };
-
-    const table = new window.ReportTable({
-      rows: [],
-      columns: [],
-      sort_column: 'Instructor',
-      sort_dir: 1,
-      colors
-    });
+    const colors = window.ReportUtils.createColors();
+    const table = window.ReportUtils.createTable('Instructor', colors);
 
     return {
       colors,
-      table,
-      tableTick: 0,
-      loading: false,
-      loadingDepartments: false,
-      loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
-      rows: [],
-      departmentOptions: [],
-      selectedDepartmentCode: '',
-      loadedDepartmentName: ''
+      table
     };
   },
 
@@ -53,10 +33,10 @@ Vue.component('reports-department-instructors', {
         row => Number(row?.num_assignments_graded ?? -1)
       ),
       new window.ReportColumn(
-        '% Dept Graded', 'Share of department assignments graded.', '8rem', false, 'number',
-        row => this.pctText(row?.perc_department_assignments_graded),
-        row => this.pctPillStyle(row?.perc_department_assignments_graded),
-        row => Number(row?.perc_department_assignments_graded ?? -1)
+        '% Graded', 'Weighted share of department grading done by this instructor.', '8rem', false, 'number',
+        row => this.pctText(row?.perc_department_instructor_support_hours_weighted),
+        row => this.pctPillStyle(row?.perc_department_instructor_support_hours_weighted),
+        row => Number(row?.perc_department_instructor_support_hours_weighted ?? -1)
       ),
       new window.ReportColumn(
         'Avg Score', 'Average score earned on graded work.', '6rem', false, 'number',
@@ -89,18 +69,6 @@ Vue.component('reports-department-instructors', {
         row => Number(row?.avg_days_to_grade ?? -1)
       ),
       new window.ReportColumn(
-        'Support Hours', 'Instructor support hours.', '7rem', false, 'number',
-        row => this.numText(row?.instructor_support_hours, 1),
-        null,
-        row => Number(row?.instructor_support_hours ?? -1)
-      ),
-      new window.ReportColumn(
-        'Weighted Share', 'Share of department weighted support hours.', '8rem', false, 'number',
-        row => this.pctText(row?.perc_department_instructor_support_hours_weighted),
-        row => this.pctPillStyle(row?.perc_department_instructor_support_hours_weighted),
-        row => Number(row?.perc_department_instructor_support_hours_weighted ?? -1)
-      ),
-      new window.ReportColumn(
         'Days to Respond', 'Median days to respond.', '8rem', false, 'number',
         row => this.numText(row?.mdn_days_to_respond, 2),
         row => this.bandDaysToRespond(row?.mdn_days_to_respond),
@@ -116,24 +84,6 @@ Vue.component('reports-department-instructors', {
   },
 
   mounted() {
-    this.syncFromReportContext();
-    this.loadDepartmentOptions();
-  },
-
-  watch: {
-    reportContext: {
-      deep: true,
-      async handler() {
-        this.syncFromReportContext();
-        await this.loadDepartmentOptions(true);
-      }
-    },
-    async year() {
-      await this.loadDepartmentOptions(true);
-    },
-    selectedDepartmentCode() {
-      this.loadData();
-    }
   },
 
   computed: {
@@ -150,146 +100,16 @@ Vue.component('reports-department-instructors', {
   },
 
   methods: {
-    syncFromReportContext() {
-      const nextYear = Number(this.reportContext?.filters?.academic_year);
-      if (Number.isFinite(nextYear) && nextYear !== this.year) {
-        this.year = nextYear;
-      }
-
-      const nextDepartmentCode = this.getDepartmentCode();
-      if (nextDepartmentCode && nextDepartmentCode !== this.selectedDepartmentCode) {
-        this.selectedDepartmentCode = nextDepartmentCode;
-      }
+    mapRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        first_name: String(row?.first_name ?? '').trim(),
+        last_name: String(row?.last_name ?? '').trim(),
+        department_code: String(row?.department_code ?? '').trim(),
+        department_name: String(row?.department_name ?? '').trim(),
+        academic_year: Number(row?.academic_year)
+      }));
     },
-
-    getDataset() {
-      return String(this.reportContext?.dataset || '').trim();
-    },
-
-    getRequestFilters() {
-      return {
-        academic_year: Number(this.year),
-        department_code: this.selectedDepartmentCode
-      };
-    },
-
-    getDepartmentCode() {
-      return String(
-        this.reportContext?.routeFilters?.departmentCode ??
-        this.reportContext?.filters?.department_code ??
-        ''
-      ).trim();
-    },
-
-    getDepartmentName() {
-      return String(
-        this.reportContext?.routeFilters?.departmentName ??
-        this.reportContext?.filters?.department_name ??
-        ''
-      ).trim();
-    },
-
-    async loadDepartmentOptions(forceReloadData = false) {
-      try {
-        this.loadingDepartments = true;
-
-        const rows = await bridgetools.req3(
-          'reports',
-          { academic_year: Number(this.year) },
-          { dataset: 'instructors_department_summary' }
-        );
-
-        const options = Array.from(
-          new Map(
-            (Array.isArray(rows) ? rows : [])
-              .map(row => ({
-                value: String(row?.department_code ?? '').trim(),
-                label: String(row?.department_name ?? '').trim()
-              }))
-              .filter(option => option.value && option.label)
-              .map(option => [option.value, option])
-          ).values()
-        ).sort((a, b) => a.label.localeCompare(b.label));
-
-        this.departmentOptions = options;
-
-        if (this.selectedDepartmentCode && options.some(option => option.value === this.selectedDepartmentCode)) {
-          if (forceReloadData) {
-            this.loadData();
-          }
-          return;
-        }
-
-        const routedDepartmentCode = this.getDepartmentCode();
-        if (routedDepartmentCode && options.some(option => option.value === routedDepartmentCode)) {
-          this.selectedDepartmentCode = routedDepartmentCode;
-          return;
-        }
-
-        if (options.length) {
-          this.selectedDepartmentCode = options[0].value;
-          return;
-        }
-
-        this.selectedDepartmentCode = '';
-      } catch (e) {
-        console.warn('Failed to load department options', e);
-        this.departmentOptions = [];
-        if (!this.selectedDepartmentCode) {
-          this.loadError = 'Unable to load department list.';
-        }
-      } finally {
-        this.loadingDepartments = false;
-      }
-    },
-
-    async loadData() {
-      const departmentCode = String(this.selectedDepartmentCode || '').trim();
-      if (!departmentCode) {
-        this.rows = [];
-        this.loadedDepartmentName = '';
-        this.loadError = 'Select a department to view instructor summary.';
-        return;
-      }
-
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const rows = await bridgetools.req3(
-          'reports',
-          this.getRequestFilters(),
-          { dataset: this.getDataset() }
-        );
-
-        this.rows = (Array.isArray(rows) ? rows : [])
-          .map(row => ({
-          ...row,
-          first_name: String(row?.first_name ?? '').trim(),
-          last_name: String(row?.last_name ?? '').trim(),
-          department_code: String(row?.department_code ?? '').trim(),
-          department_name: String(row?.department_name ?? '').trim(),
-          academic_year: Number(row?.academic_year)
-        }));
-
-        const first = this.rows[0] || {};
-        this.loadedDepartmentName = String(
-          first?.department_name ??
-          this.departmentOptions.find(option => option.value === departmentCode)?.label ??
-          this.getDepartmentName()
-        ).trim();
-      } catch (e) {
-        console.warn('Failed to load department instructors dataset', e);
-        this.rows = [];
-        this.loadedDepartmentName = this.departmentOptions.find(option => option.value === departmentCode)?.label || this.getDepartmentName();
-        this.loadError = 'Unable to load department instructor summary.';
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
     instructorName(row) {
       const first = String(row?.first_name ?? '').trim();
@@ -314,52 +134,6 @@ Vue.component('reports-department-instructors', {
 
       if (!values.length) return NaN;
       return values.reduce((sum, v) => sum + v, 0) / values.length;
-    },
-    intText(v) {
-      const n = Number(v);
-      return Number.isFinite(n) ? Math.round(n).toLocaleString() : 'n/a';
-    },
-    numText(v, decimals = 2) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n.toFixed(decimals) : 'n/a';
-    },
-    pctText(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 'n/a';
-      return (n * 100).toFixed(1) + '%';
-    },
-    pctPillStyle(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      const pct = n * 100;
-      return {
-        backgroundColor: pct < 80 ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-    bandDaysToGrade(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return {
-        backgroundColor: n < 2 ? this.colors.green : (n < 3 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
-    bandDaysToRespond(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return {
-        backgroundColor: n <= 1 ? this.colors.green : (n <= 2 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
   },
 

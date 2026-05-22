@@ -1,41 +1,21 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
-  props: {
-    reportContext: { type: Object, default: () => ({}) },
-    anonymous: { type: Boolean, default: false }
-  },
+  mixins: [
+    window.ReportMixins.formatting,
+    window.ReportMixins.departmentScoped({
+      optionsDataset: 'department_syllabi_summary',
+      emptySelectionMessage: 'Select a department from the summary report to view details.',
+      loadErrorMessage: 'Unable to load department syllabi details.'
+    })
+  ],
 
   data() {
-    const colors = window.bridgetools?.colors || {
-      red: '#b20b0f',
-      orange: '#f59e0b',
-      yellow: '#eab308',
-      green: '#16a34a',
-      gray: '#e5e7eb',
-      black: '#111827',
-      white: '#fff'
-    };
-
-    const table = new window.ReportTable({
-      rows: [],
-      columns: [],
-      sort_column: 'Course',
-      sort_dir: 1,
-      colors
-    });
+    const colors = window.ReportUtils.createColors();
+    const table = window.ReportUtils.createTable('Course', colors);
 
     return {
       colors,
       table,
-      tableTick: 0,
-      loading: false,
-      loadingDepartments: false,
-      loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
-      rows: [],
-      departmentOptions: [],
-      selectedDepartmentCode: '',
-      loadedDepartmentName: '',
       filters: {
         submitted: '',
         approved: '',
@@ -92,24 +72,9 @@ Vue.component('reports-department-syllabi', {
   },
 
   mounted() {
-    this.syncFromReportContext();
-    this.loadDepartmentOptions();
   },
 
   watch: {
-    reportContext: {
-      deep: true,
-      async handler() {
-        this.syncFromReportContext();
-        await this.loadDepartmentOptions(true);
-      }
-    },
-    async year() {
-      await this.loadDepartmentOptions(true);
-    },
-    selectedDepartmentCode() {
-      this.loadData();
-    },
     rows: {
       immediate: true,
       handler() {
@@ -148,148 +113,15 @@ Vue.component('reports-department-syllabi', {
   },
 
   methods: {
-    syncFromReportContext() {
-      const nextYear = Number(this.reportContext?.filters?.academic_year);
-      if (Number.isFinite(nextYear) && nextYear !== this.year) {
-        this.year = nextYear;
-      }
-
-      const nextDepartmentCode = this.getDepartmentCode();
-      if (nextDepartmentCode && nextDepartmentCode !== this.selectedDepartmentCode) {
-        this.selectedDepartmentCode = nextDepartmentCode;
-      }
+    mapRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? '',
+        department_code: String(row?.department_code ?? '').trim(),
+        course_code: String(row?.course_code ?? '').trim(),
+        course_name: String(row?.course_name ?? row?.name ?? '').trim()
+      }));
     },
-
-    getDataset() {
-      return String(this.reportContext?.dataset || '').trim();
-    },
-
-    getRequestFilters() {
-      return {
-        academic_year: Number(this.year),
-        department_code: this.selectedDepartmentCode
-      };
-    },
-
-    getDepartmentCode() {
-      return String(
-        this.reportContext?.routeFilters?.departmentCode ??
-        this.reportContext?.filters?.department_code ??
-        ''
-      ).trim();
-    },
-
-    getDepartmentName() {
-      return String(
-        this.reportContext?.routeFilters?.departmentName ??
-        this.reportContext?.filters?.department_name ??
-        ''
-      ).trim();
-    },
-
-    async loadDepartmentOptions(forceReloadData = false) {
-      try {
-        this.loadingDepartments = true;
-
-        const rows = await bridgetools.req3(
-          'reports',
-          { academic_year: Number(this.year) },
-          { dataset: 'department_syllabi_summary' }
-        );
-
-        const options = Array.from(
-          new Map(
-            (Array.isArray(rows) ? rows : [])
-              .map(row => ({
-                value: String(row?.department_code ?? '').trim(),
-                label: String(row?.department_name ?? '').trim()
-              }))
-              .filter(option => option.value && option.label)
-              .map(option => [option.value, option])
-          ).values()
-        ).sort((a, b) => a.label.localeCompare(b.label));
-
-        this.departmentOptions = options;
-
-        if (this.selectedDepartmentCode && options.some(option => option.value === this.selectedDepartmentCode)) {
-          if (forceReloadData) {
-            this.loadData();
-          }
-          return;
-        }
-
-        const routedDepartmentCode = this.getDepartmentCode();
-        if (routedDepartmentCode && options.some(option => option.value === routedDepartmentCode)) {
-          this.selectedDepartmentCode = routedDepartmentCode;
-          return;
-        }
-
-        if (options.length) {
-          this.selectedDepartmentCode = options[0].value;
-          return;
-        }
-
-        this.selectedDepartmentCode = '';
-      } catch (e) {
-        console.warn('Failed to load department options', e);
-        this.departmentOptions = [];
-        if (!this.selectedDepartmentCode) {
-          this.loadError = 'Unable to load department list.';
-        }
-      } finally {
-        this.loadingDepartments = false;
-      }
-    },
-
-    async loadData() {
-      const departmentCode = String(this.selectedDepartmentCode || '').trim();
-      if (!departmentCode) {
-        this.rows = [];
-        this.loadedDepartmentName = '';
-        this.loadError = 'Select a department from the summary report to view details.';
-        return;
-      }
-
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const dataset = this.getDataset();
-        const filters = this.getRequestFilters();
-
-        const rows = await bridgetools.req3(
-          'reports',
-          filters,
-          { dataset }
-        );
-
-        this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
-          ...row,
-          doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? '',
-          department_code: String(row?.department_code ?? '').trim(),
-          course_code: String(row?.course_code ?? '').trim(),
-          course_name: String(row?.course_name ?? row?.name ?? '').trim()
-        }));
-
-        const first = this.rows[0] || {};
-        this.loadedDepartmentName = String(
-          first?.department_name ??
-          first?.dept_name ??
-          this.departmentOptions.find(option => option.value === departmentCode)?.label ??
-          this.getDepartmentName()
-        ).trim();
-      } catch (e) {
-        console.warn('Failed to load department detail dataset', e);
-        this.rows = [];
-        this.loadedDepartmentName = this.departmentOptions.find(option => option.value === departmentCode)?.label || this.getDepartmentName();
-        this.loadError = 'Unable to load department syllabi details.';
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
     statusText(s) {
       if (s?.is_submitted !== true) return 'Needs submission';
@@ -306,20 +138,6 @@ Vue.component('reports-department-syllabi', {
       if (status === 'Completed') return { backgroundColor: this.colors.green, color: this.colors.white };
       if (status === 'Needs approval') return { backgroundColor: this.colors.yellow, color: this.colors.white };
       return { backgroundColor: this.colors.red, color: this.colors.white };
-    },
-    boolText(v) {
-      if (v === undefined || v === null) return 'n/a';
-      return v ? 'Yes' : 'No';
-    },
-    boolSort(v) {
-      if (v === undefined || v === null) return -1;
-      return v ? 1 : 0;
-    },
-    boolPillStyle(v) {
-      if (v === undefined || v === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return v
-        ? { backgroundColor: this.colors.green, color: this.colors.white }
-        : { backgroundColor: this.colors.red, color: this.colors.white };
     },
     courseCodeText(s) {
       return this.escapeHtml(String(s?.course_code ?? '').trim() || '(no course code)');
@@ -346,14 +164,6 @@ Vue.component('reports-department-syllabi', {
       if (!docCode) return text;
       const url = `https://btech.simplesyllabus.com/en-US/doc/${encodeURIComponent(docCode)}`;
       return `<a href="${url}" target="_blank" rel="noopener">${text}</a>`;
-    },
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     },
     maybePreloadSimpleSyllabusAuth() {
       if (this.anonymous) return;

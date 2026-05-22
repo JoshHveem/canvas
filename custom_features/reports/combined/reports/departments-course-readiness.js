@@ -1,36 +1,18 @@
 Vue.component('reports-departments-course-readiness', {
-  props: {
-    reportContext: { type: Object, default: () => ({}) },
-    anonymous: { type: Boolean, default: false }
-  },
+  mixins: [
+    window.ReportMixins.formatting,
+    window.ReportMixins.yearSummary({
+      loadErrorMessage: 'Unable to load course readiness summary.'
+    })
+  ],
 
   data() {
-    const colors = window.bridgetools?.colors || {
-      red: '#b20b0f',
-      orange: '#f59e0b',
-      yellow: '#eab308',
-      green: '#16a34a',
-      gray: '#e5e7eb',
-      black: '#111827',
-      white: '#fff'
-    };
-
-    const table = new window.ReportTable({
-      rows: [],
-      columns: [],
-      sort_column: 'Department',
-      sort_dir: 1,
-      colors
-    });
+    const colors = window.ReportUtils.createColors();
+    const table = window.ReportUtils.createTable('Department', colors);
 
     return {
       colors,
-      table,
-      tableTick: 0,
-      loading: false,
-      loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
-      departments: []
+      table
     };
   },
 
@@ -92,74 +74,35 @@ Vue.component('reports-departments-course-readiness', {
       )
     ]);
   },
-
-  mounted() {
-    this.loadData();
-  },
-
-  watch: {
-    reportContext: {
-      deep: true,
-      handler() {
-        const nextYear = Number(this.reportContext?.filters?.academic_year);
-        if (Number.isFinite(nextYear) && nextYear !== this.year) {
-          this.year = nextYear;
-          return;
-        }
-        this.loadData();
-      }
-    },
-    year() {
-      this.loadData();
-    }
-  },
-
   computed: {
     visibleRows() {
-      this.table.setRows(this.departments);
+      this.table.setRows(this.rows);
       return this.table.getSortedRows();
     }
   },
 
   methods: {
-    async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const dataset = String(this.reportContext?.dataset || '').trim();
-        const filters = Object.assign({}, this.reportContext?.filters || {}, {
-          academic_year: Number(this.year)
-        });
-
-        const rows = await bridgetools.req3('reports', filters, { dataset });
-        this.departments = (Array.isArray(rows) ? rows : []).map(row => ({
-          ...row,
-          department_code: String(row?.department_code ?? '').trim(),
-          department_name: String(row?.department_name ?? '').trim(),
-          num_courses: Number(row?.num_courses) || 0,
-          num_syllabi_approved: Number(row?.num_syllabi_approved) || 0,
-          perc_syllabi_approved: Number(row?.perc_syllabi_approved),
-          num_course_evaluation_published: Number(row?.num_course_evaluation_published) || 0,
-          perc_course_evaluation_published: Number(row?.perc_course_evaluation_published),
-          num_instructor_evaluation_published: Number(row?.num_instructor_evaluation_published) || 0,
-          perc_instructor_evaluation_published: Number(row?.perc_instructor_evaluation_published),
-          num_employment_skills_evaluation_published: Number(row?.num_employment_skills_evaluation_published) || 0,
-          perc_employment_skills_evaluation_published: Number(row?.perc_employment_skills_evaluation_published),
-          num_content_published: Number(row?.num_content_published) || 0,
-          perc_content_published: Number(row?.perc_content_published),
-          num_courses_ready: Number(row?.num_courses_ready) || 0,
-          perc_courses_ready: Number(row?.perc_courses_ready),
-          num_courses_ready_published: Number(row?.num_courses_ready_published) || 0,
-          perc_courses_ready_published: Number(row?.perc_courses_ready_published)
-        }));
-      } catch (e) {
-        console.warn('Failed to load course readiness summary dataset', e);
-        this.departments = [];
-        this.loadError = 'Unable to load course readiness summary.';
-      } finally {
-        this.loading = false;
-      }
+    mapRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        department_code: String(row?.department_code ?? '').trim(),
+        department_name: String(row?.department_name ?? '').trim(),
+        num_courses: Number(row?.num_courses) || 0,
+        num_syllabi_approved: Number(row?.num_syllabi_approved) || 0,
+        perc_syllabi_approved: Number(row?.perc_syllabi_approved),
+        num_course_evaluation_published: Number(row?.num_course_evaluation_published) || 0,
+        perc_course_evaluation_published: Number(row?.perc_course_evaluation_published),
+        num_instructor_evaluation_published: Number(row?.num_instructor_evaluation_published) || 0,
+        perc_instructor_evaluation_published: Number(row?.perc_instructor_evaluation_published),
+        num_employment_skills_evaluation_published: Number(row?.num_employment_skills_evaluation_published) || 0,
+        perc_employment_skills_evaluation_published: Number(row?.perc_employment_skills_evaluation_published),
+        num_content_published: Number(row?.num_content_published) || 0,
+        perc_content_published: Number(row?.perc_content_published),
+        num_courses_ready: Number(row?.num_courses_ready) || 0,
+        perc_courses_ready: Number(row?.perc_courses_ready),
+        num_courses_ready_published: Number(row?.num_courses_ready_published) || 0,
+        perc_courses_ready_published: Number(row?.perc_courses_ready_published)
+      }));
     },
 
     emitDrill(department) {
@@ -171,9 +114,6 @@ Vue.component('reports-departments-course-readiness', {
         department_name: String(department?.department_name ?? '').trim()
       });
     },
-
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
     departmentName(department) {
       return String(department?.department_name ?? department?.name ?? department?.department_code ?? '').trim();
@@ -228,28 +168,6 @@ Vue.component('reports-departments-course-readiness', {
       const pctText = this.pctText(pct);
       if (!Number.isFinite(n)) return pctText;
       return `${n} (${pctText})`;
-    },
-    pctText(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 'n/a';
-      return (n * 100).toFixed(1) + '%';
-    },
-    pctPillStyle(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      const pct = n * 100;
-      return {
-        backgroundColor: pct < 80 ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
   },
 
