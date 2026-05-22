@@ -532,14 +532,16 @@ Vue.component('reports-department-course-readiness', {
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;" v-html="titleText"></h4>
-      <div style="flex:1;"></div>
-      <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
-    </div>
-
-    <div class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
+  <report-table-shell
+    :title-html="titleText"
+    :table="table"
+    :rows="visibleRows"
+    :loading="loading || loadingDepartments"
+    :load-error="loadError"
+    loading-text="Loading course readiness..."
+    :row-key-fn="(row, index) => row.canvas_course_id || (row.course_code + '-' + index)"
+  >
+    <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
         <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
@@ -575,64 +577,7 @@ Vue.component('reports-department-course-readiness', {
         v-model="filters.course_status"
         placeholder="All"
       ></multi-filter-pill>
-    </div>
-
-    <div v-if="loading || loadingDepartments" class="btech-muted" style="text-align:center; padding:10px;">
-      Loading course readiness...
-    </div>
-
-    <div v-else-if="loadError" class="btech-muted" style="text-align:center; padding:10px;">
-      {{ loadError }}
-    </div>
-
-    <div v-else>
-      <div
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
-        :style="{ 'grid-template-columns': getColumnsWidthsString() }"
-      >
-        <div
-          v-for="col in table.getVisibleColumns()"
-          :key="col.name"
-          :title="col.description"
-          style="display:inline-block; cursor:pointer;"
-          @click="setSortColumn(col.name)"
-        >
-          <span><b>{{ col.name }}</b></span>
-          <span style="margin-left:.25rem;">
-            <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
-              <g>
-                <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
-                  points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 0,194.27 37.087,221.213"/>
-                <polygon :style="{ fill: col.sort_state > 0 ? '#000' : '#E0E0E0' }"
-                  points="404.13,335.988 404.13,61.691 358.301,61.691 358.301,335.99 309.503,268.787 272.416,295.73 381.216,445.54 490,295.715 452.913,268.802"/>
-              </g>
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div
-        v-for="(course, i) in visibleRows"
-        :key="course.canvas_course_id || (course.course_code + '-' + i)"
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
-        :style="{
-          'grid-template-columns': getColumnsWidthsString(),
-          'background-color': (i % 2) ? 'white' : '#F8F8F8'
-        }"
-      >
-        <div
-          v-for="col in table.getVisibleColumns()"
-          :key="col.name"
-          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
-        >
-          <span
-            :class="col.style_formula ? 'btech-pill-text' : ''"
-            :style="col.get_style(course)"
-            v-html="col.getContent(course)"
-          ></span>
-        </div>
-      </div>
-    </div>
-  </div>
+    </template>
+  </report-table-shell>
   `
 });
