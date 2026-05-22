@@ -213,15 +213,17 @@ Vue.component('reports-departments-syllabi', {
       <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>
 
-    <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
-      <label class="btech-muted" style="font-size:.75rem;">Year</label>
-      <select v-model.number="year" style="font-size:.75rem;">
-        <option
-          v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-          :key="optionYear"
-          :value="optionYear"
-        >{{ optionYear }}</option>
-      </select>
+    <div class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Year</label>
+        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+          <option
+            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+            :key="optionYear"
+            :value="optionYear"
+          >{{ optionYear }}</option>
+        </select>
+      </div>
     </div>
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">

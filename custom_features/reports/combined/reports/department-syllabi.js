@@ -366,39 +366,44 @@ Vue.component('reports-department-syllabi', {
       <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>
 
-    <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
-      <label class="btech-muted" style="font-size:.75rem;">Year</label>
-      <select v-model.number="year" style="font-size:.75rem;">
-        <option
-          v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-          :key="optionYear"
-          :value="optionYear"
-        >{{ optionYear }}</option>
-      </select>
-      <label class="btech-muted" style="font-size:.75rem;">Department</label>
-      <select v-model="selectedDepartmentName" style="font-size:.75rem; min-width:220px;">
-        <option disabled value="">Select department</option>
-        <option
-          v-for="option in departmentOptions"
-          :key="option"
-          :value="option"
-        >{{ option }}</option>
-      </select>
+    <div class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Year</label>
+        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+          <option
+            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+            :key="optionYear"
+            :value="optionYear"
+          >{{ optionYear }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Department</label>
+        <select v-model="selectedDepartmentName" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option disabled value="">Select department</option>
+          <option
+            v-for="option in departmentOptions"
+            :key="option"
+            :value="option"
+          >{{ option }}</option>
+        </select>
+      </div>
     </div>
 
-    <div class="btech-row" style="gap:1rem; margin-bottom:8px; align-items:center; justify-content:flex-start;">
-      <div style="display:flex; align-items:center; gap:.5rem;">
+    <div class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
-        <select v-model="filters.submitted" style="font-size:.75rem;">
+        <select v-model="filters.submitted" style="font-size:.75rem; min-width:70px;">
           <option value="">All</option>
           <option :value="true">Yes</option>
           <option :value="false">No</option>
         </select>
       </div>
 
-      <div style="display:flex; align-items:center; gap:.5rem;">
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Approved</label>
-        <select v-model="filters.approved" style="font-size:.75rem;">
+        <select v-model="filters.approved" style="font-size:.75rem; min-width:70px;">
           <option value="">All</option>
           <option :value="true">Yes</option>
           <option :value="false">No</option>
