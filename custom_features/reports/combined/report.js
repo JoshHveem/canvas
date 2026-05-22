@@ -372,14 +372,10 @@
             label: 'Departments',
             component: 'reports-departments',
             title: 'Departments Report',
-            selectors: ['course_tags'],
+            selectors: [],
             datasets: ['departments'],
             subMenus: [
-              { value: 'overview', label: 'Overview' },
-              { value: 'canvas', label: 'Canvas' },
               { value: 'syllabi', label: 'Syllabi' },
-              { value: 'instructors', label: 'Instructors' },
-              { value: 'course-surveys', label: 'Course Surveys' },
             ]
           },
           {
@@ -390,91 +386,7 @@
             datasets: ['departments'],
             selectors: ['departments'],
             subMenus: [
-              { value: 'overview',    label: 'Overview' },
               { value: 'syllabi',     label: 'Syllabi' },
-              { value: 'course-readiness',    label: 'Course Readiness' },
-              { value: 'instructors', label: 'Instructors' },
-              { value: 'courses',     label: 'Courses' },
-              { value: 'occupations', label: 'Occupations' },
-              { value: 'coe',         label: 'COE' },
-            ]
-          },
-          {
-            value: 'programs',
-            label: 'Programs',
-            component: 'reports-programs',
-            title: 'Programs Report',
-            datasets: ['programs'],
-            selectors: [],
-            subMenus: [
-              // { value: 'overview',    label: 'Overview' },
-              // { value: 'completion',    label: 'Completion', isd_only: true },
-              // { value: 'graduates',    label: 'Graduates', isd_only: true },
-              // { value: 'placements',    label: 'Placements', isd_only: true },
-              { value: 'syllabi',  label: 'Syllabi' },
-              { value: 'employment-skills',    label: 'Employment Skills' },
-            ]
-          },
-          {
-            value: 'program',
-            label: 'Program',
-            component: 'reports-program',
-            title: 'Program Report',
-            datasets: ['programs'],
-            selectors: ['programs', 'campus'],
-            subMenus: [
-              // { value: 'overview',    label: 'Overview' },
-              // { value: 'completion',    label: 'Completion', isd_only: true },
-              // { value: 'graduates',    label: 'Graduates', isd_only: true },
-              // { value: 'placements',    label: 'Placements', isd_only: true },
-              { value: 'syllabi',  label: 'Syllabi' },
-              { value: 'employment-skills',    label: 'Employment Skills' },
-            ]
-          },
-          {
-            value: 'instructors',
-            label: 'Instructors',
-            component: 'reports-instructors',
-            title: 'Instructors Report',
-            datasets: ['instructors'],
-            selectors: ['departments'],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
-              { value: 'surveys',  label: 'Surveys' },
-            ]
-          },
-          {
-            value: 'instructor',
-            label: 'Instructor',
-            component: 'reports-instructor',
-            title: 'Instructor Report',
-            selectors: ['instructor', 'departments'],
-            datasets: ['instructors'],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
-            ]
-          },
-          {
-            value: 'courses',
-            label: 'Courses',
-            component: 'reports-courses',
-            title: 'Courses Report',
-            datasets: ['courses'],
-            selectors: ['departments'],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
-              { value: 'surveys',  label: 'Surveys' },
-            ]
-          },
-          {
-            value: 'course',
-            label: 'Course',
-            component: 'reports-course',
-            title: 'Course Report',
-            selectors: ['course', 'departments'],
-            datasets: ['courses'],
-            subMenus: [
-              { value: 'overview', label: 'Overview' },
             ]
           },
         ]
@@ -485,7 +397,7 @@
           settings: {
             anonymous: false,
             account: 0,
-            reportType: 'instructor',
+            reportType: 'departments',
             subMenuByType: {},
             sort_dir: 1,
             filters: { year: '2025', course_tags: [], program: '', campus: ''}
@@ -1149,60 +1061,11 @@
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
-    // Instructor sub-components
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/grading.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/support_hours.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/interactions.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-course-surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-instructor-metrics.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-cpl.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-cpl-placement.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-coe.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-occupations.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/department-statistics.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/menu.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/kpi-tile.js");
-
     // Reports
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/utils/completion.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-overview.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/instructors-surveys.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/dept-head-instructors-report.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-coe.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-courses.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-occupations.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-placements.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-graduates.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-completion.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-employment-skills.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-completion.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-graduates.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-employment-skills.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-placements.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-overview.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-overview.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/courses-surveys.js");
-    // await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-report.js");
 
     postLoad();
   }
