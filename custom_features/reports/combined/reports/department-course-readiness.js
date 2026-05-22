@@ -184,18 +184,6 @@ Vue.component('reports-department-course-readiness', {
         c => this.courseSortKey(c)
       ),
       new window.ReportColumn(
-        'Canvas ID', 'Canvas course id.', '7rem', false, 'number',
-        c => this.canvasIdLinkHtml(c),
-        null,
-        c => Number(c?.canvas_course_id ?? -1)
-      ),
-      new window.ReportColumn(
-        'Source', 'Creation source.', '7rem', false, 'string',
-        c => this.escapeHtml(String(c?.creation_source ?? '').trim() || 'n/a'),
-        null,
-        c => String(c?.creation_source ?? '').trim()
-      ),
-      new window.ReportColumn(
         'Type', 'Course type.', '6rem', false, 'string',
         c => this.escapeHtml(String(c?.course_type_code ?? '').trim() || 'n/a'),
         null,
@@ -552,13 +540,6 @@ Vue.component('reports-department-course-readiness', {
           >{{ option }}</option>
         </select>
       </div>
-
-      <multi-filter-pill
-        label="Source"
-        :options="sourceOptions"
-        v-model="filters.source"
-        placeholder="All"
-      ></multi-filter-pill>
 
       <multi-filter-pill
         label="Type"
