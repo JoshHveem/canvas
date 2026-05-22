@@ -164,7 +164,7 @@ Vue.component('reports-department-course-readiness', {
       year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
       departmentOptions: [],
-      selectedDepartmentName: '',
+      selectedDepartmentCode: '',
       loadedDepartmentName: '',
       filters: {
         source: ['Jenzabar'],
@@ -239,14 +239,14 @@ Vue.component('reports-department-course-readiness', {
       async handler() {
         this.syncFromReportContext();
         this.filtersInitialized = false;
-        await this.loadDepartmentOptions();
+        await this.loadDepartmentOptions(true);
       }
     },
     async year() {
       this.filtersInitialized = false;
-      await this.loadDepartmentOptions();
+      await this.loadDepartmentOptions(true);
     },
-    selectedDepartmentName() {
+    selectedDepartmentCode() {
       this.filtersInitialized = false;
       this.loadData();
     }
@@ -290,9 +290,9 @@ Vue.component('reports-department-course-readiness', {
         this.year = nextYear;
       }
 
-      const nextDepartment = this.getDepartmentName();
-      if (nextDepartment && nextDepartment !== this.selectedDepartmentName) {
-        this.selectedDepartmentName = nextDepartment;
+      const nextDepartmentCode = this.getDepartmentCode();
+      if (nextDepartmentCode && nextDepartmentCode !== this.selectedDepartmentCode) {
+        this.selectedDepartmentCode = nextDepartmentCode;
       }
     },
 
@@ -303,8 +303,16 @@ Vue.component('reports-department-course-readiness', {
     getRequestFilters() {
       return {
         academic_year: Number(this.year),
-        department_name: this.selectedDepartmentName
+        department_code: this.selectedDepartmentCode
       };
+    },
+
+    getDepartmentCode() {
+      return String(
+        this.reportContext?.routeFilters?.departmentCode ??
+        this.reportContext?.filters?.department_code ??
+        ''
+      ).trim();
     },
 
     getDepartmentName() {
@@ -315,7 +323,7 @@ Vue.component('reports-department-course-readiness', {
       ).trim();
     },
 
-    async loadDepartmentOptions() {
+    async loadDepartmentOptions(forceReloadData = false) {
       try {
         this.loadingDepartments = true;
 
@@ -325,31 +333,40 @@ Vue.component('reports-department-course-readiness', {
           { dataset: 'canvas_course_readiness' }
         );
 
-        const options = Array.from(new Set(
-          (Array.isArray(rows) ? rows : [])
-            .map(row => String(row?.department_name ?? '').trim())
-            .filter(Boolean)
-        )).sort((a, b) => a.localeCompare(b));
+        const options = Array.from(
+          new Map(
+            (Array.isArray(rows) ? rows : [])
+              .map(row => ({
+                value: String(row?.department_code ?? '').trim(),
+                label: String(row?.department_name ?? '').trim()
+              }))
+              .filter(option => option.value && option.label)
+              .map(option => [option.value, option])
+          ).values()
+        ).sort((a, b) => a.label.localeCompare(b.label));
 
         this.departmentOptions = options;
 
-        if (this.selectedDepartmentName && options.includes(this.selectedDepartmentName)) {
+        if (this.selectedDepartmentCode && options.some(option => option.value === this.selectedDepartmentCode)) {
+          if (forceReloadData) {
+            this.loadData();
+          }
           return;
         }
 
-        const routedDepartment = this.getDepartmentName();
-        if (routedDepartment && options.includes(routedDepartment)) {
-          this.selectedDepartmentName = routedDepartment;
+        const routedDepartmentCode = this.getDepartmentCode();
+        if (routedDepartmentCode && options.some(option => option.value === routedDepartmentCode)) {
+          this.selectedDepartmentCode = routedDepartmentCode;
           return;
         }
 
-        if (!options.includes(this.selectedDepartmentName)) {
-          this.selectedDepartmentName = '';
+        if (!options.some(option => option.value === this.selectedDepartmentCode)) {
+          this.selectedDepartmentCode = '';
         }
       } catch (e) {
         console.warn('Failed to load department options', e);
         this.departmentOptions = [];
-        if (!this.selectedDepartmentName) {
+        if (!this.selectedDepartmentCode) {
           this.loadError = 'Unable to load department list.';
         }
       } finally {
@@ -358,8 +375,8 @@ Vue.component('reports-department-course-readiness', {
     },
 
     async loadData() {
-      const departmentName = String(this.selectedDepartmentName || '').trim();
-      if (!departmentName) {
+      const departmentCode = String(this.selectedDepartmentCode || '').trim();
+      if (!departmentCode) {
         this.rows = [];
         this.loadedDepartmentName = '';
         this.loadError = 'Select a department from the summary report to view details.';
@@ -378,6 +395,7 @@ Vue.component('reports-department-course-readiness', {
 
         this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
           ...row,
+          department_code: String(row?.department_code ?? '').trim(),
           course_code: String(row?.course_code ?? '').trim(),
           course_name: String(row?.course_name ?? row?.name ?? '').trim(),
           creation_source: String(row?.creation_source ?? '').trim(),
@@ -393,12 +411,13 @@ Vue.component('reports-department-course-readiness', {
         const first = this.rows[0] || {};
         this.loadedDepartmentName = String(
           first?.department_name ??
-          departmentName
+          this.departmentOptions.find(option => option.value === departmentCode)?.label ??
+          this.getDepartmentName()
         ).trim();
       } catch (e) {
         console.warn('Failed to load department course readiness dataset', e);
         this.rows = [];
-        this.loadedDepartmentName = departmentName;
+        this.loadedDepartmentName = this.departmentOptions.find(option => option.value === departmentCode)?.label || this.getDepartmentName();
         this.loadError = 'Unable to load department course readiness details.';
       } finally {
         this.loading = false;
@@ -531,13 +550,13 @@ Vue.component('reports-department-course-readiness', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
-        <select v-model="selectedDepartmentName" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option disabled value="">Select department</option>
           <option
             v-for="option in departmentOptions"
-            :key="option"
-            :value="option"
-          >{{ option }}</option>
+            :key="option.value"
+            :value="option.value"
+          >{{ option.label }}</option>
         </select>
       </div>
 

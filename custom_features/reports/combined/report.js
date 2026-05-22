@@ -76,7 +76,7 @@
                 dataset: 'syllabi_status',
                 filters: {
                   academic_year: { source: 'current_year' },
-                  department_name: { source: 'selected_department_name' }
+                  department_code: { source: 'selected_department_code' }
                 }
               }
             ]
@@ -102,7 +102,7 @@
                 dataset: 'canvas_course_readiness',
                 filters: {
                   academic_year: { source: 'current_year' },
-                  department_name: { source: 'selected_department_name' }
+                  department_code: { source: 'selected_department_code' }
                 }
               }
             ]
@@ -119,7 +119,7 @@
                 dataset: 'instructors_department_summary',
                 filters: {
                   academic_year: { source: 'current_year' },
-                  department_name: { source: 'selected_department_name' }
+                  department_code: { source: 'selected_department_code' }
                 }
               }
             ]
