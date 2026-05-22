@@ -38,7 +38,7 @@ Vue.component('reports-department-instructors', {
       new window.ReportColumn(
         '% Graded', 'Weighted share of department grading done by this instructor.', '8rem', false, 'number',
         row => this.pctText(row?.perc_department_instructor_support_hours_weighted),
-        row => this.pctPillStyle(row?.perc_department_instructor_support_hours_weighted),
+        null,
         row => Number(row?.perc_department_instructor_support_hours_weighted ?? -1)
       ),
       new window.ReportColumn(
