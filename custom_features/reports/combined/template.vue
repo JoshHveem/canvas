@@ -91,7 +91,7 @@
           </button>
         </div>
         <div id="missing-report-explanation">
-          <p><strong>Note:</strong>As part of an update to our reporting data securirty, most reports have been taken down. They will be restored one at a time as they get converted to the new system.</p>
+          <p><strong>Note:</strong> We are converting reports to a new, more secure system. They will be restored as they get converted to the new system.</p>
           <p>Planned Next Report(s) to Restore: Instructors, Surveys</p>
         </div>
 
