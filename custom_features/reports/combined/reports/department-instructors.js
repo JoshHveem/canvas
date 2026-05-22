@@ -226,9 +226,12 @@ Vue.component('reports-department-instructors', {
           return;
         }
 
-        if (!options.some(option => option.value === this.selectedDepartmentCode)) {
-          this.selectedDepartmentCode = '';
+        if (options.length) {
+          this.selectedDepartmentCode = options[0].value;
+          return;
         }
+
+        this.selectedDepartmentCode = '';
       } catch (e) {
         console.warn('Failed to load department options', e);
         this.departmentOptions = [];
@@ -383,7 +386,6 @@ Vue.component('reports-department-instructors', {
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
         <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
-          <option disabled value="">Select department</option>
           <option
             v-for="option in departmentOptions"
             :key="option.value"
