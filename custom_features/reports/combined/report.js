@@ -79,6 +79,31 @@
                 }
               }
             ]
+          },
+          {
+            value: 'course-readiness',
+            label: 'Course Readiness',
+            component: 'reports-course-readiness',
+            title: 'Course Readiness Report',
+            subMenus: [
+              {
+                value: 'summary',
+                label: 'Summary',
+                dataset: 'canvas_course_readiness',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'course-status',
+                label: 'Course Status',
+                dataset: 'canvas_course_readiness',
+                filters: {
+                  academic_year: { source: 'current_year' },
+                  department_name: { source: 'selected_department_name' }
+                }
+              }
+            ]
           }
         ];
 
@@ -87,7 +112,8 @@
           settings: {
             reportType: 'syllabi',
             subMenuByType: {
-              syllabi: 'summary'
+              syllabi: 'summary',
+              'course-readiness': 'summary'
             }
           },
           selectedDepartmentCode: '',
@@ -203,8 +229,11 @@
 
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/course-readiness.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
 
     postLoad();
   }
