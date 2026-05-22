@@ -377,6 +377,7 @@
             subMenus: [
               { value: 'overview', label: 'Overview' },
               { value: 'canvas', label: 'Canvas' },
+              { value: 'syllabi', label: 'Syllabi' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'course-surveys', label: 'Course Surveys' },
             ]
@@ -390,6 +391,7 @@
             selectors: ['departments'],
             subMenus: [
               { value: 'overview',    label: 'Overview' },
+              { value: 'syllabi',     label: 'Syllabi' },
               { value: 'course-readiness',    label: 'Course Readiness' },
               { value: 'instructors', label: 'Instructors' },
               { value: 'courses',     label: 'Courses' },
@@ -683,7 +685,7 @@
           if (instructor) this.$set(this.settings.filters, 'instructor', instructor);
           if (program) this.$set(this.settings.filters, 'program', program);
           if (campus) this.$set(this.settings.filters, 'campus', campus);
-          if (account) this.$set(this.settings.filters, 'account', account);
+          if (account) this.$set(this.settings, 'account', account);
 
           // switch report type
           this.settings.reportType = report;
@@ -732,7 +734,7 @@
 
         },
 
-        buildProgramSyllabiRollup(rows) {
+        buildSyllabiRollup(rows) {
           const syllabi = Array.isArray(rows) ? rows.map(row => ({
             ...row,
             doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? '',
@@ -767,6 +769,31 @@
           };
         },
 
+        buildProgramSyllabiRollup(rows) {
+          return this.buildSyllabiRollup(rows);
+        },
+
+        buildDepartmentSyllabiRollup(rows) {
+          return this.buildSyllabiRollup(rows);
+        },
+
+        buildDepartmentSyllabiSummary(summaryRow) {
+          const total = Number(summaryRow?.num_courses) || 0;
+          const submitted = Number(summaryRow?.num_courses__submitted) || 0;
+          const approved = Number(summaryRow?.num_courses__approved) || 0;
+          const needsApproval = Math.max(submitted - approved, 0);
+          const needsSubmission = Math.max(total - submitted, 0);
+
+          return {
+            total,
+            needs_submission: needsSubmission,
+            needs_approval: needsApproval,
+            completed: approved,
+            pct_completed: total > 0 ? (approved / total) : NaN,
+            syllabi: []
+          };
+        },
+
         mergeProgramsWithSyllabi(programs, syllabiRows, year) {
           const list = Array.isArray(programs) ? programs : [];
           const rows = Array.isArray(syllabiRows) ? syllabiRows : [];
@@ -793,6 +820,35 @@
           });
         },
 
+        mergeDepartmentsWithSyllabi(departments, syllabiRows, year) {
+          const list = Array.isArray(departments) ? departments : [];
+          const rows = Array.isArray(syllabiRows) ? syllabiRows : [];
+          const targetYear = Number(year);
+          const byDepartment = new Map();
+
+          for (const row of rows) {
+            if (Number(row?.academic_year) !== targetYear) continue;
+
+            const key = String(
+              row?.department_code ??
+              row?.dept ??
+              row?.department_id ??
+              ''
+            ).trim();
+            if (!key) continue;
+
+            byDepartment.set(key, row);
+          }
+
+          return list.map(department => {
+            const key = String(department?.dept ?? department?.department_id ?? '').trim();
+            return {
+              ...department,
+              syllabi_summary: this.buildDepartmentSyllabiSummary(byDepartment.get(key) || {})
+            };
+          });
+        },
+
         async loadProgramsRaw(year) {
           try {
             this.sharedLoading.programs = true;
@@ -811,12 +867,19 @@
           }
         },
 
-        async loadDepartmentsRaw() {
+        async loadDepartmentsRaw(account, year) {
           try {
             this.sharedLoading.departments = true;
 
-            const raw = await window.ReportData.getDepartmentsRaw();
-            const depts = Array.isArray(raw) ? raw : [];
+            const [raw, syllabiRows] = await Promise.all([
+              window.ReportData.getDepartmentsRaw(),
+              window.ReportData.getSyllabiStatusRaw({ academicYear: year })
+            ]);
+            const depts = this.mergeDepartmentsWithSyllabi(
+              Array.isArray(raw) ? raw : [],
+              syllabiRows,
+              year
+            );
 
             this.normalizeCourseSurveyTagPcts(depts);
             this.departmentsRaw = depts;
@@ -1111,11 +1174,13 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-overview.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-canvas.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/programs-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-surveys.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-overview.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/program-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");

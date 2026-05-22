@@ -61,6 +61,7 @@ Vue.component('reports-department', {
       <reports-department-syllabi
         v-if="subMenu == 'syllabi'"
         :year="year"
+        :department="department_metrics"
         :syllabi="syllabi"
       ></reports-department-syllabi>
 
