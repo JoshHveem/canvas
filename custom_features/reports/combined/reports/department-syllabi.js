@@ -360,9 +360,13 @@ Vue.component('reports-department-syllabi', {
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+    <div class="btech-row" style="align-items:center; margin-bottom:8px;">
       <h4 class="btech-card-title" style="margin:0;" v-html="titleText"></h4>
       <div style="flex:1;"></div>
+      <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
+    </div>
+
+    <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
       <label class="btech-muted" style="font-size:.75rem;">Year</label>
       <select v-model.number="year" style="font-size:.75rem;">
         <option
@@ -380,7 +384,6 @@ Vue.component('reports-department-syllabi', {
           :value="option"
         >{{ option }}</option>
       </select>
-      <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>
 
     <div class="btech-row" style="gap:1rem; margin-bottom:8px; align-items:center; justify-content:flex-start;">
