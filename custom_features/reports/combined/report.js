@@ -80,7 +80,7 @@
               {
                 value: 'syllabi',
                 label: 'Syllabi',
-                dataset: 'department_syllabi',
+                dataset: 'syllabi_status',
                 filters: {
                   academic_year: { source: 'current_year' },
                   department_name: { source: 'selected_department_name' }

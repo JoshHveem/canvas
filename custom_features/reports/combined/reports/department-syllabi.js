@@ -171,10 +171,10 @@ Vue.component('reports-department-syllabi', {
     },
 
     getRequestFilters() {
-      return Object.assign({}, this.reportContext?.filters || {}, {
+      return {
         academic_year: Number(this.year),
         department_name: this.selectedDepartmentName
-      });
+      };
     },
 
     getDepartmentName() {
