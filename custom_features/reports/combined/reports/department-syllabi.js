@@ -1,10 +1,8 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
   props: {
-    year: { type: [Number, String], required: true },
-    department: { type: Object, required: false, default: () => ({}) },
-    syllabi: { type: Array, required: true },
-    loading: { type: Boolean, default: false },
+    departmentCode: { type: [Number, String], default: '' },
+    departmentName: { type: String, default: '' },
     anonymous: { type: Boolean, default: false }
   },
 
@@ -31,27 +29,17 @@ Vue.component('reports-department-syllabi', {
       colors,
       table,
       tableTick: 0,
+      loading: false,
+      loadError: '',
+      year: new Date().getFullYear(),
+      rows: [],
+      loadedDepartmentName: '',
       filters: {
         submitted: '',
         approved: '',
         published_course: ''
       }
     };
-  },
-
-  watch: {
-    department: {
-      immediate: true,
-      handler() {
-        this.maybePreloadSimpleSyllabusAuth();
-      }
-    },
-    syllabi: {
-      immediate: true,
-      handler() {
-        this.maybePreloadSimpleSyllabusAuth();
-      }
-    }
   },
 
   created() {
@@ -107,15 +95,28 @@ Vue.component('reports-department-syllabi', {
     ]);
   },
 
-  computed: {
-    effectiveSyllabi() {
-      const summaryRows = this.department?.syllabi_summary?.syllabi;
-      if (Array.isArray(summaryRows) && summaryRows.length) return summaryRows;
-      return Array.isArray(this.syllabi) ? this.syllabi : [];
-    },
+  mounted() {
+    this.loadData();
+  },
 
+  watch: {
+    departmentCode() {
+      this.loadData();
+    },
+    year() {
+      this.loadData();
+    },
+    rows: {
+      immediate: true,
+      handler() {
+        this.maybePreloadSimpleSyllabusAuth();
+      }
+    }
+  },
+
+  computed: {
     visibleRows() {
-      const rows = this.effectiveSyllabi.filter(row => {
+      const filtered = this.rows.filter(row => {
         if (this.filters.submitted !== '') {
           const want = this.filters.submitted === true || this.filters.submitted === 'true';
           if ((row?.is_submitted === true) !== want) return false;
@@ -131,26 +132,64 @@ Vue.component('reports-department-syllabi', {
         return true;
       });
 
-      this.table.setRows(rows.map(row => ({
-        ...row,
-        doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? ''
-      })));
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
     },
 
-    departmentName() {
-      if (this.anonymous) return 'DEPARTMENT';
-      return this.escapeHtml(String(
-        this.department?.name ??
-        this.department?.department_name ??
-        this.department?.dept_name ??
-        this.department?.dept ??
-        ''
-      ).trim() || 'Department');
+    titleText() {
+      if (this.anonymous) return 'DEPARTMENT - Syllabi';
+      const name = this.loadedDepartmentName || this.departmentName || this.departmentCode || 'Department';
+      return `${this.escapeHtml(name)} - Syllabi`;
     }
   },
 
   methods: {
+    async loadData() {
+      const departmentCode = String(this.departmentCode ?? '').trim();
+      if (!departmentCode) {
+        this.rows = [];
+        this.loadedDepartmentName = this.departmentName || '';
+        this.loadError = 'Select a department from the summary report to view details.';
+        return;
+      }
+
+      try {
+        this.loading = true;
+        this.loadError = '';
+
+        const rows = await bridgetools.req3(
+          'reports',
+          {
+            academic_year: Number(this.year),
+            department_code: departmentCode
+          },
+          { dataset: 'syllabi_status' }
+        );
+
+        this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
+          ...row,
+          doc_code: row?.doc_code ?? row?.simple_syllabus_doc_id ?? '',
+          course_code: String(row?.course_code ?? '').trim(),
+          course_name: String(row?.course_name ?? row?.name ?? '').trim()
+        }));
+
+        const first = this.rows[0] || {};
+        this.loadedDepartmentName = String(
+          first?.department_name ??
+          first?.dept_name ??
+          this.departmentName ??
+          departmentCode
+        ).trim();
+      } catch (e) {
+        console.warn('Failed to load syllabi_status', e);
+        this.rows = [];
+        this.loadedDepartmentName = this.departmentName || departmentCode;
+        this.loadError = 'Unable to load department syllabi details.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
@@ -170,7 +209,6 @@ Vue.component('reports-department-syllabi', {
       if (status === 'Needs approval') return { backgroundColor: this.colors.yellow, color: this.colors.white };
       return { backgroundColor: this.colors.red, color: this.colors.white };
     },
-
     boolText(v) {
       if (v === undefined || v === null) return 'n/a';
       return v ? 'Yes' : 'No';
@@ -185,7 +223,6 @@ Vue.component('reports-department-syllabi', {
         ? { backgroundColor: this.colors.green, color: this.colors.white }
         : { backgroundColor: this.colors.red, color: this.colors.white };
     },
-
     courseCodeText(s) {
       return this.escapeHtml(String(s?.course_code ?? '').trim() || '(no course code)');
     },
@@ -202,7 +239,6 @@ Vue.component('reports-department-syllabi', {
       const id = s?.canvas_course_id;
       const text = this.courseText(s);
       if (id === undefined || id === null || id === '') return text;
-
       const url = `https://btech.instructure.com/courses/${encodeURIComponent(id)}/external_tools/106228`;
       return `<a href="${url}" target="_blank" rel="noopener">${text}</a>`;
     },
@@ -210,7 +246,6 @@ Vue.component('reports-department-syllabi', {
       const docCode = s?.doc_code;
       const text = this.escapeHtml(docCode || '');
       if (!docCode) return text;
-
       const url = `https://btech.simplesyllabus.com/en-US/doc/${encodeURIComponent(docCode)}`;
       return `<a href="${url}" target="_blank" rel="noopener">${text}</a>`;
     },
@@ -225,8 +260,7 @@ Vue.component('reports-department-syllabi', {
     maybePreloadSimpleSyllabusAuth() {
       if (this.anonymous) return;
       if (window.__ssPreloaded) return;
-
-      const first = this.effectiveSyllabi.find(row => row?.canvas_course_id);
+      const first = this.rows.find(row => row?.canvas_course_id);
       if (!first) return;
 
       window.__ssPreloaded = true;
@@ -244,11 +278,18 @@ Vue.component('reports-department-syllabi', {
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;">{{ departmentName }} - Syllabi</h4>
+    <div class="btech-row" style="align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+      <h4 class="btech-card-title" style="margin:0;" v-html="titleText"></h4>
       <div style="flex:1;"></div>
-      <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Rows: {{ visibleRows.length }}</span>
+      <label class="btech-muted" style="font-size:.75rem;">Year</label>
+      <select v-model.number="year" style="font-size:.75rem;">
+        <option
+          v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+          :key="optionYear"
+          :value="optionYear"
+        >{{ optionYear }}</option>
+      </select>
+      <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>
 
     <div class="btech-row" style="gap:1rem; margin-bottom:8px; align-items:center; justify-content:flex-start;">
@@ -273,6 +314,10 @@ Vue.component('reports-department-syllabi', {
 
     <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
       Loading syllabi...
+    </div>
+
+    <div v-else-if="loadError" class="btech-muted" style="text-align:center; padding:10px;">
+      {{ loadError }}
     </div>
 
     <div v-else>
