@@ -125,11 +125,11 @@ Vue.component('reports-department-instructors', {
       deep: true,
       async handler() {
         this.syncFromReportContext();
-        await this.loadDepartmentOptions();
+        await this.loadDepartmentOptions(true);
       }
     },
     async year() {
-      await this.loadDepartmentOptions();
+      await this.loadDepartmentOptions(true);
     },
     selectedDepartmentName() {
       this.loadData();
@@ -181,7 +181,7 @@ Vue.component('reports-department-instructors', {
       ).trim();
     },
 
-    async loadDepartmentOptions() {
+    async loadDepartmentOptions(forceReloadData = false) {
       try {
         this.loadingDepartments = true;
 
@@ -200,6 +200,9 @@ Vue.component('reports-department-instructors', {
         this.departmentOptions = options;
 
         if (this.selectedDepartmentName && options.includes(this.selectedDepartmentName)) {
+          if (forceReloadData) {
+            this.loadData();
+          }
           return;
         }
 
