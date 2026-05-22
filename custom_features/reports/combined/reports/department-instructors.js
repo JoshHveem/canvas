@@ -14,7 +14,10 @@ Vue.component('reports-department-instructors', {
 
     return {
       colors,
-      table
+      table,
+      filters: {
+        instructor_id: ''
+      }
     };
   },
 
@@ -86,9 +89,37 @@ Vue.component('reports-department-instructors', {
   mounted() {
   },
 
+  watch: {
+    rows: {
+      immediate: true,
+      handler() {
+        const selected = String(this.filters.instructor_id || '').trim();
+        if (!selected) return;
+        if (!this.instructorOptions.some(option => option.value === selected)) {
+          this.filters.instructor_id = '';
+        }
+      }
+    }
+  },
+
   computed: {
+    instructorOptions() {
+      return this.rows
+        .map(row => ({
+          value: String(row?.canvas_user_id ?? '').trim(),
+          label: this.instructorName(row)
+        }))
+        .filter(option => option.value && option.label)
+        .sort((a, b) => a.label.localeCompare(b.label));
+    },
+
     visibleRows() {
-      this.table.setRows(this.rows);
+      const selected = String(this.filters.instructor_id || '').trim();
+      const filtered = !selected
+        ? this.rows
+        : this.rows.filter(row => String(row?.canvas_user_id ?? '').trim() === selected);
+
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
     },
 
@@ -164,6 +195,18 @@ Vue.component('reports-department-instructors', {
         <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in departmentOptions"
+            :key="option.value"
+            :value="option.value"
+          >{{ option.label }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Instructor</label>
+        <select v-model="filters.instructor_id" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option value="">All</option>
+          <option
+            v-for="option in instructorOptions"
             :key="option.value"
             :value="option.value"
           >{{ option.label }}</option>
