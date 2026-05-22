@@ -1,7 +1,7 @@
 <template>
   <div class="btech-modal btech-canvas-report" style="display:inline-block;">
-    <div class="btech-modal-content" style="overflow:visible;">
-      <div class="btech-modal-content-inner" style="overflow:visible;">
+    <div class="btech-modal-content" style="overflow:hidden; max-height:90vh; display:flex; flex-direction:column;">
+      <div class="btech-modal-content-inner" style="overflow:hidden; display:flex; flex-direction:column; min-height:0;">
         <span class="btech-close" v-on:click="close()">&times;</span>
 
         <div class="btech-row" style="align-items:center; margin-bottom:6px;">
@@ -90,18 +90,21 @@
             {{ sm.label }}
           </button>
         </div>
-        <div id="missing-report-explanation">
-          <p><strong>Note:</strong> We are converting reports to a new, more secure system. They will be restored as they get converted to the new system.</p>
-          <p>Planned Next Report(s) to Restore: Instructors, Surveys</p>
-        </div>
 
-        <keep-alive>
-          <component
-            :is="currentComponent"
-            @drill-report="drillToReport"
-            v-bind="currentReportProps"
-          />
-        </keep-alive>
+        <div style="flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px;">
+          <div id="missing-report-explanation">
+            <p><strong>Note:</strong> We are converting reports to a new, more secure system. They will be restored as they get converted to the new system.</p>
+            <p>Planned Next Report(s) to Restore: Instructors, Surveys</p>
+          </div>
+
+          <keep-alive>
+            <component
+              :is="currentComponent"
+              @drill-report="drillToReport"
+              v-bind="currentReportProps"
+            />
+          </keep-alive>
+        </div>
       </div>
     </div>
   </div>
