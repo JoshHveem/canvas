@@ -184,26 +184,7 @@
     async function getSyllabiStatusRaw({ academicYear }) {
       const year = Number(academicYear) || new Date().getFullYear();
       const key = `syllabiStatusRaw::year=${year}`;
-      return cached(cache, key, async () => {
-        const perPage = 50;
-        const rows = [];
-        let page = 1;
-        let totalPages = 1;
-
-        do {
-          const resp = await bridgetools.req3(
-            "reports",
-            { academic_year: year },
-            { params: { dataset: 'syllabi_status', per_page: perPage, page } }
-          );
-
-          rows.push(...(Array.isArray(resp?.data) ? resp.data : []));
-          totalPages = Number(resp?.meta?.total_pages) || 1;
-          page += 1;
-        } while (page <= totalPages);
-
-        return rows;
-      });
+      return await bridgettools.req3('reports', { academic_year: year }, { dataset: 'department_syllabi_summary' });
     }
 
 
