@@ -87,9 +87,9 @@
             title: 'Course Readiness Report',
             subMenus: [
               {
-                value: 'summary',
-                label: 'Summary',
-                dataset: 'canvas_course_readiness',
+                value: 'department-summary',
+                label: 'Department Summary',
+                dataset: 'department_canvas_course_readiness',
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
@@ -113,7 +113,7 @@
             reportType: 'syllabi',
             subMenuByType: {
               syllabi: 'summary',
-              'course-readiness': 'summary'
+              'course-readiness': 'department-summary'
             }
           },
           selectedDepartmentCode: '',

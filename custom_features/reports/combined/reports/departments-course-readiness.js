@@ -49,28 +49,46 @@ Vue.component('reports-departments-course-readiness', {
         d => this.totalCourses(d)
       ),
       new window.ReportColumn(
-        'Ready', 'All tracked areas are complete.', '6rem', false, 'number',
-        d => String(this.readyCount(d)),
-        d => this.countPillStyle(this.totalCourses(d) - this.readyCount(d)),
-        d => this.readyCount(d)
+        'Syllabi Approved', 'Courses with approved syllabi.', '8rem', false, 'number',
+        d => this.countPctText(this.syllabiApprovedCount(d), this.syllabiApprovedPct(d)),
+        d => this.pctPillStyle(this.syllabiApprovedPct(d)),
+        d => this.syllabiApprovedPct(d)
       ),
       new window.ReportColumn(
-        'In Progress', 'Some tracked areas still need work.', '7rem', false, 'number',
-        d => String(this.inProgressCount(d)),
-        d => this.countPillStyle(this.inProgressCount(d)),
-        d => this.inProgressCount(d)
+        'Course Eval Published', 'Courses with published course evaluations.', '9rem', false, 'number',
+        d => this.countPctText(this.courseEvalPublishedCount(d), this.courseEvalPublishedPct(d)),
+        d => this.pctPillStyle(this.courseEvalPublishedPct(d)),
+        d => this.courseEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Needs Attention', 'One or more tracked areas are missing.', '8rem', false, 'number',
-        d => String(this.needsAttentionCount(d)),
-        d => this.countPillStyle(this.needsAttentionCount(d)),
-        d => this.needsAttentionCount(d)
+        'Instructor Eval Published', 'Courses with published instructor evaluations.', '10rem', false, 'number',
+        d => this.countPctText(this.instructorEvalPublishedCount(d), this.instructorEvalPublishedPct(d)),
+        d => this.pctPillStyle(this.instructorEvalPublishedPct(d)),
+        d => this.instructorEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        '% Ready', 'ready / total', '7rem', false, 'number',
-        d => this.pctText(this.pctReady(d)),
-        d => this.pctPillStyle(this.pctReady(d)),
-        d => this.pctReady(d)
+        'Employment Skills Published', 'Courses with published employment skills evaluations.', '11rem', false, 'number',
+        d => this.countPctText(this.employmentSkillsPublishedCount(d), this.employmentSkillsPublishedPct(d)),
+        d => this.pctPillStyle(this.employmentSkillsPublishedPct(d)),
+        d => this.employmentSkillsPublishedPct(d)
+      ),
+      new window.ReportColumn(
+        'Content Published', 'Courses with published Canvas content.', '8rem', false, 'number',
+        d => this.countPctText(this.contentPublishedCount(d), this.contentPublishedPct(d)),
+        d => this.pctPillStyle(this.contentPublishedPct(d)),
+        d => this.contentPublishedPct(d)
+      ),
+      new window.ReportColumn(
+        'Ready', 'Courses that meet readiness requirements.', '6rem', false, 'number',
+        d => this.countPctText(this.readyCount(d), this.readyPct(d)),
+        d => this.pctPillStyle(this.readyPct(d)),
+        d => this.readyPct(d)
+      ),
+      new window.ReportColumn(
+        'Ready + Published', 'Ready courses that are also published.', '8rem', false, 'number',
+        d => this.countPctText(this.readyPublishedCount(d), this.readyPublishedPct(d)),
+        d => this.pctPillStyle(this.readyPublishedPct(d)),
+        d => this.readyPublishedPct(d)
       )
     ]);
   },
@@ -115,7 +133,26 @@ Vue.component('reports-departments-course-readiness', {
         });
 
         const rows = await bridgetools.req3('reports', filters, { dataset });
-        this.departments = this.buildDepartments(Array.isArray(rows) ? rows : []);
+        this.departments = (Array.isArray(rows) ? rows : []).map(row => ({
+          ...row,
+          department_code: String(row?.department_code ?? '').trim(),
+          department_name: String(row?.department_name ?? '').trim(),
+          num_courses: Number(row?.num_courses) || 0,
+          num_syllabi_approved: Number(row?.num_syllabi_approved) || 0,
+          perc_syllabi_approved: Number(row?.perc_syllabi_approved),
+          num_course_evaluation_published: Number(row?.num_course_evaluation_published) || 0,
+          perc_course_evaluation_published: Number(row?.perc_course_evaluation_published),
+          num_instructor_evaluation_published: Number(row?.num_instructor_evaluation_published) || 0,
+          perc_instructor_evaluation_published: Number(row?.perc_instructor_evaluation_published),
+          num_employment_skills_evaluation_published: Number(row?.num_employment_skills_evaluation_published) || 0,
+          perc_employment_skills_evaluation_published: Number(row?.perc_employment_skills_evaluation_published),
+          num_content_published: Number(row?.num_content_published) || 0,
+          perc_content_published: Number(row?.perc_content_published),
+          num_courses_ready: Number(row?.num_courses_ready) || 0,
+          perc_courses_ready: Number(row?.perc_courses_ready),
+          num_courses_ready_published: Number(row?.num_courses_ready_published) || 0,
+          perc_courses_ready_published: Number(row?.perc_courses_ready_published)
+        }));
       } catch (e) {
         console.warn('Failed to load course readiness summary dataset', e);
         this.departments = [];
@@ -123,39 +160,6 @@ Vue.component('reports-departments-course-readiness', {
       } finally {
         this.loading = false;
       }
-    },
-
-    buildDepartments(rows) {
-      const grouped = new Map();
-
-      for (const row of rows) {
-        const department_code = String(row?.department_code ?? '').trim();
-        const department_name = String(row?.department_name ?? '').trim();
-        const key = `${department_code}::${department_name}`;
-
-        if (!grouped.has(key)) {
-          grouped.set(key, {
-            department_code,
-            department_name,
-            num_courses: 0,
-            num_ready: 0,
-            num_in_progress: 0,
-            num_needs_attention: 0
-          });
-        }
-
-        const summary = grouped.get(key);
-        const status = this.overallStatus(row);
-        summary.num_courses += 1;
-
-        if (status === 'Ready') summary.num_ready += 1;
-        else if (status === 'In Progress') summary.num_in_progress += 1;
-        else if (status === 'Needs Attention') summary.num_needs_attention += 1;
-      }
-
-      return Array.from(grouped.values()).sort((a, b) =>
-        this.departmentName(a).localeCompare(this.departmentName(b))
-      );
     },
 
     emitDrill(department) {
@@ -168,24 +172,6 @@ Vue.component('reports-departments-course-readiness', {
       });
     },
 
-    overallStatus(course) {
-      const courseStatus = String(course?.course_status ?? '').trim();
-      if (courseStatus === 'Deleted') return 'N/A';
-
-      const values = [
-        course?.course_status,
-        course?.syllabus_status,
-        course?.course_evaluation_status,
-        course?.instructor_evaluation_status,
-        course?.employment_skills_evaluation_status,
-        course?.canvas_content_status
-      ].map(v => String(v ?? '').trim());
-
-      if (values.includes('None') || values.includes('Unsubmitted')) return 'Needs Attention';
-      if (values.includes('Unpublished') || values.includes('Pending Approval')) return 'In Progress';
-      return 'Ready';
-    },
-
     getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
     setSortColumn(name) { this.table.setSortColumn(name); this.tableTick += 1; },
 
@@ -195,18 +181,53 @@ Vue.component('reports-departments-course-readiness', {
     totalCourses(department) {
       return Number(department?.num_courses) || 0;
     },
+    syllabiApprovedCount(department) {
+      return Number(department?.num_syllabi_approved) || 0;
+    },
+    syllabiApprovedPct(department) {
+      return Number(department?.perc_syllabi_approved);
+    },
+    courseEvalPublishedCount(department) {
+      return Number(department?.num_course_evaluation_published) || 0;
+    },
+    courseEvalPublishedPct(department) {
+      return Number(department?.perc_course_evaluation_published);
+    },
+    instructorEvalPublishedCount(department) {
+      return Number(department?.num_instructor_evaluation_published) || 0;
+    },
+    instructorEvalPublishedPct(department) {
+      return Number(department?.perc_instructor_evaluation_published);
+    },
+    employmentSkillsPublishedCount(department) {
+      return Number(department?.num_employment_skills_evaluation_published) || 0;
+    },
+    employmentSkillsPublishedPct(department) {
+      return Number(department?.perc_employment_skills_evaluation_published);
+    },
+    contentPublishedCount(department) {
+      return Number(department?.num_content_published) || 0;
+    },
+    contentPublishedPct(department) {
+      return Number(department?.perc_content_published);
+    },
     readyCount(department) {
-      return Number(department?.num_ready) || 0;
+      return Number(department?.num_courses_ready) || 0;
     },
-    inProgressCount(department) {
-      return Number(department?.num_in_progress) || 0;
+    readyPct(department) {
+      return Number(department?.perc_courses_ready);
     },
-    needsAttentionCount(department) {
-      return Number(department?.num_needs_attention) || 0;
+    readyPublishedCount(department) {
+      return Number(department?.num_courses_ready_published) || 0;
     },
-    pctReady(department) {
-      const total = this.totalCourses(department);
-      return total > 0 ? (this.readyCount(department) / total) : NaN;
+    readyPublishedPct(department) {
+      return Number(department?.perc_courses_ready_published);
+    },
+    countPctText(count, pct) {
+      const n = Number(count);
+      const pctText = this.pctText(pct);
+      if (!Number.isFinite(n)) return pctText;
+      return `${n} (${pctText})`;
     },
     pctText(v) {
       const n = Number(v);
@@ -219,14 +240,6 @@ Vue.component('reports-departments-course-readiness', {
       const pct = n * 100;
       return {
         backgroundColor: pct < 80 ? this.colors.red : (pct < 90 ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-    countPillStyle(count) {
-      const n = Number(count);
-      if (!Number.isFinite(n)) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      return {
-        backgroundColor: n <= 0 ? this.colors.green : (n <= 5 ? this.colors.yellow : this.colors.red),
         color: this.colors.white
       };
     },
@@ -243,7 +256,7 @@ Vue.component('reports-departments-course-readiness', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
     <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;">Departments - Course Readiness</h4>
+      <h4 class="btech-card-title" style="margin:0;">Departments - Course Readiness Summary</h4>
       <div style="flex:1;"></div>
       <span class="btech-pill">Rows: {{ visibleRows.length }}</span>
     </div>

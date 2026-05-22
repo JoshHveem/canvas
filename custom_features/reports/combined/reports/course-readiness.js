@@ -7,7 +7,7 @@ Vue.component('reports-course-readiness', {
   template: `
     <div>
       <reports-departments-course-readiness
-        v-if="subMenu == 'summary'"
+        v-if="subMenu == 'department-summary'"
         :report-context="reportContext"
         @drill-report="$emit('drill-report', $event)"
       ></reports-departments-course-readiness>
