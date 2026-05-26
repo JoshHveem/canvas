@@ -456,12 +456,33 @@
 
 
     methods: {
+      normalizeKeyPart(value) {
+        return String(value ?? '').trim().toLowerCase();
+      },
+
+      normalizeTimestampKey(value) {
+        if (!value) return '';
+
+        const asDate = new Date(value);
+        if (!isNaN(asDate.getTime())) {
+          const year = asDate.getUTCFullYear();
+          const month = String(asDate.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(asDate.getUTCDate()).padStart(2, '0');
+          const hours = String(asDate.getUTCHours()).padStart(2, '0');
+          const minutes = String(asDate.getUTCMinutes()).padStart(2, '0');
+          const seconds = String(asDate.getUTCSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        return this.normalizeKeyPart(value).replace('t', ' ').replace('z', '');
+      },
+
       buildTermKey(termLike) {
         return [
-          termLike?.sis_user_id || '',
-          termLike?.course_code || '',
-          termLike?.campus_code || '',
-          termLike?.entry_at__original || termLike?.entry_at || ''
+          this.normalizeKeyPart(termLike?.sis_user_id),
+          this.normalizeKeyPart(termLike?.course_code),
+          this.normalizeKeyPart(termLike?.campus_code),
+          this.normalizeTimestampKey(termLike?.entry_at__original || termLike?.entry_at)
         ].join('|');
       },
 
@@ -516,8 +537,7 @@
       },
 
       async loadTerms(filters = {}) {
-        console.log(this.user);
-        const sisUserId = this.user?.sis_user_id;
+        const sisUserId = this.user?.sis_user_id || this.user?.sis_id;
         if (!sisUserId) return;
 
         let query = {
@@ -528,7 +548,6 @@
           bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
         ]);
 
-        console.log(overrideTerms);
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
         if (!this.termsData.length) {
