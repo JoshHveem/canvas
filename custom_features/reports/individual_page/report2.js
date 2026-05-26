@@ -263,7 +263,7 @@
             this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api/v2/students/${userId}`
             );
-            this.bridgetoolsUserV3 = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0]:
+            this.bridgetoolsUserV3 = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0];
             console.log(this.bridgetoolsUserV3);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
@@ -278,9 +278,9 @@
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = this.bridgetoolsUser.last_login;
+          user.last_login = this.bridgetoolsUserV3.last_login;
           user.avatar_url = this.canvasUser.avatar_url;
-          user.sis_id = this.bridgetoolsUser.sis_id;
+          user.sis_id = this.bridgetoolsUserV3.sis_id;
           user.hs_terms = this.bridgetoolsUser.hs_terms;
           user.contracted_hours = this.bridgetoolsUser.contracted_hours;
           let contractedHoursTotal = 0;
