@@ -272,7 +272,7 @@
             btCourses = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'});
             console.log(btCourses);
             btMajors = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'});
-            console.log(btMajors);
+            // console.log(btMajors);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
           } catch (err) {
@@ -282,6 +282,7 @@
           // Be tolerant of missing degrees
           user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
           user.courses = Array.isArray(this.bridgetoolsUser?.courses) ? this.bridgetoolsUser.courses: [];
+          console.log(user.courses);
           user.canvas_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
