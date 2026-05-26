@@ -270,9 +270,13 @@
             btUser = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0];
             console.log(btUser);
             btCourses = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'})) ?? [];
-            console.log(btCourses);
             btMajors = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'});
-            // console.log(btMajors);
+            for (let m = 0; m < btMajors.length; m++) {
+              let major = btMajors[m];
+              let btmCourses = await bridgetools.req3('reports', {major_code: major.major_code, academic_year: major.academic_year__major}, {dataset: 'major_courses'});
+              major.courses = btmCourses;
+            }
+            console.log(btMajors);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
           } catch (err) {
