@@ -80,7 +80,6 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
-          this.tree = this.buildTreeFromDegree(this.currentDegree);
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -148,23 +147,7 @@
           }
         }
       },
-      watch: {
-        currentDegreeId (newVal, oldVal) {
-          const degrees = this.user?.degrees || [];
-          if (!degrees.length) return;
-
-          const deg = degrees.find((d, idx) =>
-            newVal === this.getDegreeId(d, idx)
-          );
-          if (!deg) return;
-
-          const tree = this.buildTreeFromDegree(deg);
-          this.tree = tree;
-          this.user = this.updateUserCourseInfo(this.user, tree);
-        },
-
-        // you can keep your existing watchers here (if any)
-      },
+      watch: {},
       computed: {
         currentReportMeta() {
           const fallback = this.reportTypes[0];
@@ -188,6 +171,9 @@
             id === this.getDegreeId(deg, idx)
           );
           return match || degrees[0];
+        },
+        currentTree() {
+          return this.buildTreeFromDegree(this.currentDegree);
         },
       },
 

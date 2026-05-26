@@ -77,7 +77,7 @@
             :colors="colors"
             :user="user"
             :degree="currentDegree"
-            :tree="tree"
+            :tree="currentTree"
             :settings="settings"
           ></ind-header-credits-2> 
         </div>
@@ -90,7 +90,8 @@
             :degree="currentDegree"
             :settings="settings"
             :colors="colors"
-            :tree="tree"
+            :tree="currentTree"
+            :key="currentDegreeId"
           ></student-courses-report-2>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
