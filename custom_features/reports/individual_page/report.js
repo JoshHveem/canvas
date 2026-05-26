@@ -274,6 +274,7 @@
         },
 
         sumContractedHours(contractedHours) {
+          if (!contractedHours) return 0;
           return Object.values(contractedHours).reduce((sum, value) => {
             return sum + Number(value);
           }, 0);
@@ -390,7 +391,7 @@
             });
           } catch (err) {
             console.error(err);
-            return {};
+            return emptyUser();
           }
         },
 
