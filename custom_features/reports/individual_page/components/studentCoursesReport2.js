@@ -22,7 +22,7 @@ Vue.component('student-courses-report-2', {
       <!-- courses -->
       <div>
         <h2>Core</h2>
-        <div v-for="(course, i) in core">
+        <div v-for="course in core" :key="'core-' + course.course_code">
           <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
@@ -40,7 +40,7 @@ Vue.component('student-courses-report-2', {
         </div>
 
         <h2>Electives</h2>
-        <div v-for="(course, i) in electives">
+        <div v-for="course in electives" :key="'elective-' + course.course_code">
           <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
@@ -58,7 +58,7 @@ Vue.component('student-courses-report-2', {
         </div>
 
         <h2>Other</h2>
-        <div v-for="(course, i) in others">
+        <div v-for="course in others" :key="'other-' + course.course_code">
           <course-row-ind-2
             :progress="(course?.progress ?? 0) * 100"
             :colors="colors"
@@ -92,17 +92,7 @@ Vue.component('student-courses-report-2', {
       return this.buildDegreeCourseList('elective');
     },
     others: function () {
-      const userCourses = this.user?.courses ?? [];
-      const degreeCourseCodes = new Set(
-        ['core', 'elective', 'other']
-          .flatMap(groupName => this.degree?.courses?.[groupName] || [])
-          .map(course => course.course_code)
-      );
-
-      return userCourses
-        .filter(course => !degreeCourseCodes.has(course.course_code))
-        .map(course => this.mergeUserCourseData(course, course.course_code))
-        .sort(this.sortByCourseCode);
+      return this.buildDegreeCourseList('other');
     }
   },
   data() {
