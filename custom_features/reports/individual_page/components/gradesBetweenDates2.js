@@ -394,7 +394,11 @@
     created: async function () {
       this.loadingProgress = 0;
       this.loadingMessage = "Loading Courses";
-      await this.loadTerms();
+      try {
+        await this.loadTerms();
+      } catch (err) {
+        console.error("Failed loading HS terms:", err);
+      }
 
       this.courses = await this.getCourseData();
 
@@ -499,11 +503,14 @@
 
       async loadTerms(filters = {}) {
         const query = Object.assign({}, filters);
-        const canvasUserId = this.user?.canvas_user_id;
+        const canvasUserId = this.userId;
+        if (canvasUserId) {
+          query.canvas_user_id = canvasUserId;
+        }
 
         const [baseTerms, overrideTerms] = await Promise.all([
-          bridgetools.req3('reports', { canvas_user_id: canvasUserId }, { dataset: 'student_hs_terms' }),
-          bridgetools.req3('reports', { canvas_user_id: canvasUserId }, { dataset: 'student_hs_terms__override' })
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
         ]);
 
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
