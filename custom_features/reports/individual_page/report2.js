@@ -341,7 +341,7 @@
             const majorsWithCourses = await Promise.all(
               (studentMajors || []).map(major => this.loadMajorCourseGroups(major))
             );
-            console.log(studentMajorsWithCourses);
+            console.log(majorsWithCourses);
 
             this.bridgetoolsUser = studentProfile;
             this.canvasUser = canvasUser?.[0];
