@@ -708,7 +708,10 @@
             bridgetools.req3('reports', filters, { dataset: 'student_hs_terms__override' })
           ]);
 
-          const mergedTerms = this.mergeTerms(baseTerms, overrideTerms);
+          const selectedOriginalEntryAt = this.normalizeTimestampKey(this.selectedTerm.entry_at__original);
+          const mergedTerms = this.mergeTerms(baseTerms, overrideTerms).filter(term => {
+            return this.normalizeTimestampKey(term.entry_at__original) === selectedOriginalEntryAt;
+          });
           this.bulkTermsToUpdate = await this.hydrateBulkTermsWithNames(mergedTerms);
           const currentTermId = this.selectedTerm?._id;
 
