@@ -111,7 +111,7 @@
     modal.hide();
 
     APP = new Vue({
-      el: '#canvas-individual-report-2-vue',
+      el: '#canvas-individual-report-vue',
       mounted: async function () {
         this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;
