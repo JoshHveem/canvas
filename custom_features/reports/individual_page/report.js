@@ -28,7 +28,7 @@
         try {
           let user = await bridgetoolsReq(`https://reports.bridgetools.dev/api/students/${ENV.current_user_id}`);
           console.log(user);
-          if (user?.enrollment_type == 'HS' && CURRENT_DEPARTMENT_ID === 3824) { //Dental testing this
+          if (user?.enrollment_type == 'HS') { //Dental testing this
             loadedWarning = true;
             $("#content").prepend(`
               <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
