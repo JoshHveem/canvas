@@ -492,6 +492,7 @@
             {},
             "GET"
           );
+          console.log(terms);
 
           this.bulkTermsToUpdate = terms || [];
           const currentTermId = this.selectedTerm?._id;
