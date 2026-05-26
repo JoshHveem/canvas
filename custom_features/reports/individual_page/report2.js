@@ -274,8 +274,13 @@
             for (let m = 0; m < btMajors.length; m++) {
               let major = btMajors[m];
               let btmCourses = await bridgetools.req3('reports', {major_code: major.major_code, academic_year__major: major.academic_year__major}, {dataset: 'major_courses'});
+              let courses = {
+                core: btmCourses.filter(c => c.major_requirement_type_code == 'C'),
+                elective: btmCourses.filter(c => c.major_requirement_type_code == 'E'),
+                other: btmCourses.filter(c => c.major_requirement_type_code != 'E' && c.major_requirement_type_code != 'C'),
+              }
               major.academic_year = major.academic_year__major;
-              major.courses = btmCourses;
+              major.courses = courses;
             }
             console.log(btMajors);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
