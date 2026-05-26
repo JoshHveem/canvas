@@ -85,7 +85,7 @@
 
 
         
-        <div v-show="settings.reportType === 'student-courses'">
+        <div v-if="settings.reportType === 'student-courses'">
           <student-courses-report-2
             :user="user"
             :major="currentMajor"
@@ -97,14 +97,15 @@
             :key="selectedMajorIndex"
           ></student-courses-report-2>
         </div>
-        <div v-show="settings.reportType === 'student-grades'">
+        <div v-if="settings.reportType === 'student-grades'">
           <show-student-grades
             v-if="user != undefined"
             :user="user"
           ></show-student-grades>
         </div>
-        <div v-show="settings.reportType === 'hs-grades'">
+        <div v-if="settings.reportType === 'hs-grades'">
           <grades-between-dates-2
+            v-if="userId"
             :user="user"
             :user-id="userId"
             :terms="user.hs_terms"
@@ -112,8 +113,9 @@
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
         </div>
-        <div v-show="settings.reportType === 'hs-grades-old'">
+        <div v-if="settings.reportType === 'hs-grades-old'">
           <show-grades-between-dates
+            v-if="userId"
             :user="user"
             :user-id="userId"
             :terms="user.hs_terms"
