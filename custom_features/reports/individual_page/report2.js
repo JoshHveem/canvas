@@ -269,7 +269,6 @@
               major.academic_year = major.academic_year__major;
               major.courses = courses;
             }
-            console.log(btMajors);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
           } catch (err) {

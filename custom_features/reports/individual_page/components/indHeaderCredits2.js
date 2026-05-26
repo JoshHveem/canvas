@@ -19,7 +19,7 @@ Vue.component('ind-header-credits-2', {
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="user?.name && tree?.hours" 
+        v-if="user?.name && tree?.credits" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
@@ -83,7 +83,7 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Credits Earned</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-            {{ Math.round((degree?.graded_hours ?? 0) * 10) / 10 }} / {{ tree.hours }}
+            {{ Math.round((degree?.credits_earned ?? 0) * 10) / 10 }} / {{ tree.credits }}
           </span>
 
           <span class="btech-ind-header__label">Avg. Grade</span>
@@ -192,8 +192,8 @@ Vue.component('ind-header-credits-2', {
           { width: 140, height: 140 }
         );
         donut.fillHours({
-          max: this?.tree?.hours ?? 1,
-          hours: this?.degree?.graded_hours ?? 0,
+          max: this?.tree?.credits ?? 1,
+          hours: this?.degree?.credits_earned ?? 0,
           color: this.colors.blue,
         });
       } catch (err) {
