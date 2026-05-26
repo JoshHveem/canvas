@@ -499,10 +499,10 @@
 
       async loadTerms(filters = {}) {
         const query = Object.assign({}, filters);
-        const sisUserId = this.user?.sis_id || this.user?.sis_user_id;
+        const canvasUserId = this.user?.canvas_user_id || this.user?.id;
 
-        if (!query.sis_user_id && sisUserId) {
-          query.sis_user_id = sisUserId;
+        if (!query.canvas_user_id && canvasUserId) {
+          query.canvas_user_id = canvasUserId;
         }
 
         const [baseTerms, overrideTerms] = await Promise.all([
