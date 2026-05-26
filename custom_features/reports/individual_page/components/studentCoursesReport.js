@@ -1,4 +1,4 @@
-Vue.component('student-courses-report-2', {
+Vue.component('student-courses-report', {
   template:` 
     <div>
       <div style="margin-bottom: 5px;">
@@ -23,48 +23,48 @@ Vue.component('student-courses-report-2', {
       <div>
         <h2>Core</h2>
         <div v-for="course in core" :key="'core-' + course.course_code">
-          <course-row-ind-2
-            :progress="(course?.progress ?? 0) * 100"
+          <course-row-ind
+            :progress="course.progress * 100"
             :colors="colors"
-            :credits="course?.credits"
+            :credits="course.credits"
             :score="getDisplayScore(course)"
-            :state="course?.state ?? ''"
+            :state="course.state"
             :course-name="course.course_name"
             :course-id="course.canvas_course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_user_id"
             :extensions="course.num_extensions"
-            :istransfer="course?.is_transfer"
+            :istransfer="course.is_transfer"
             :iswithdraw="false"
-          ></course-row-ind-2>
+          ></course-row-ind>
         </div>
 
         <h2>Electives</h2>
         <div v-for="course in electives" :key="'elective-' + course.course_code">
-          <course-row-ind-2
-            :progress="(course?.progress ?? 0) * 100"
+          <course-row-ind
+            :progress="course.progress * 100"
             :colors="colors"
-            :credits="course?.credits"
+            :credits="course.credits"
             :score="getDisplayScore(course)"
-            :state="course?.state ?? ''"
+            :state="course.state"
             :course-name="course.course_name"
             :course-id="course.canvas_course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_user_id"
             :extensions="course.num_extensions"
-            :istransfer="course?.is_transfer"
+            :istransfer="course.is_transfer"
             :iswithdraw="false"
-          ></course-row-ind-2>
+          ></course-row-ind>
         </div>
 
         <h2>Other</h2>
         <div v-for="course in others" :key="'other-' + course.course_code">
-          <course-row-ind-2
-            :progress="(course?.progress ?? 0) * 100"
+          <course-row-ind
+            :progress="course.progress * 100"
             :colors="colors"
-            :credits="course?.credits"
+            :credits="course.credits"
             :score="getDisplayScore(course)"
-            :state="course?.state ?? ''"
+            :state="course.state"
             :course-name="course.course_name"
             :course-id="course.canvas_course_id"
             :course-code="course.course_code"
@@ -72,7 +72,7 @@ Vue.component('student-courses-report-2', {
             :extensions="course.num_extensions"
             :istransfer="false"
             :iswithdraw="false"
-          ></course-row-ind-2>
+          ></course-row-ind>
         </div>
 
 
@@ -109,7 +109,7 @@ Vue.component('student-courses-report-2', {
         [...this.coreCourses, ...this.electiveCourses, ...this.otherCourses]
           .map(course => course.course_code)
       );
-      const extraUserCourses = (this.user?.courses || [])
+      const extraUserCourses = this.user.courses
         .filter(course => !majorCourseCodes.has(course.course_code))
         .map(course => this.mergeUserCourseData(course, course.course_code));
 
@@ -148,7 +148,7 @@ Vue.component('student-courses-report-2', {
       const data = {
         ...course,
         course_code: courseCode,
-        course_name: course.course_name || course.name || courseCode
+        course_name: course.course_name
       };
       const userData = this.getUserCourseData(courseCode);
 
@@ -156,16 +156,19 @@ Vue.component('student-courses-report-2', {
         if (data.time_in_course != null && data.days_in_course == null) {
           data.days_in_course = this.getDaysInCourse(data.time_in_course);
         }
+        data.progress = 0;
+        data.state = '';
+        data.is_transfer = false;
         return data;
       }
 
-      const isActive = userData.is_active ?? false;
-      const isTransfer = userData.is_transfer ?? false;
+      const isActive = userData.is_active;
+      const isTransfer = userData.is_transfer;
 
       return {
         ...data,
         ...userData,
-        course_name: userData.course_name || userData.name || data.course_name,
+        course_name: userData.course_name,
         is_active: isActive,
         is_transfer: isTransfer,
         num_extensions: userData.num_extensions,
@@ -181,11 +184,10 @@ Vue.component('student-courses-report-2', {
     getDaysInCourse(timeInCourse) {
       if (timeInCourse == null) return undefined;
       if (typeof timeInCourse === 'number') return timeInCourse / (60 * 60 * 24);
-      if (typeof timeInCourse?.days === 'number') return timeInCourse.days;
-      return undefined;
+      return timeInCourse.days;
     },
     getDisplayScore(course) {
-      let score = this.treatUngradedAsZero ? course?.final_score : course?.current_score;
+      let score = this.treatUngradedAsZero ? course.final_score : course.current_score;
       return score;
     },
     updateHeader () {

@@ -1,4 +1,4 @@
-Vue.component('ind-header-credits-2', {
+Vue.component('ind-header-credits', {
   template: `
     <div class="btech-ind-header">
       <!-- Donut + avatar -->
@@ -12,29 +12,29 @@ Vue.component('ind-header-credits-2', {
             class="btech-ind-header__avatar-img">
         </div>
         <div
-          id="btech-department-report-student-progress-donut-2"
+          id="btech-department-report-student-progress-donut"
           class="btech-ind-header__donut-svg">
         </div>
       </div>
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="major?.major_code" 
+        v-if="major.major_code" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
           <!-- row 1 -->
-          <a :href="'https://btech.instructure.com/users/' + user.canvas_id"
+          <a :href="'https://btech.instructure.com/users/' + user.canvas_user_id"
             target="_blank"
             class="btech-ind-header__name">
             <strong>
-              {{ settings.anonymize ? ("Student " + user.canvas_id) : displayName }}
+              {{ settings.anonymize ? ("Student " + user.canvas_user_id) : displayName }}
             </strong>
           </a>
 
           <div
-            v-if="user?.academic_probation?.probation != undefined"
-            :title="user?.academic_probation?.probation == undefined ? 'No current probations' : user?.academic_probation?.probation"
+            v-if="user.academic_probation && user.academic_probation.probation != undefined"
+            :title="user.academic_probation.probation"
             class="btech-ind-header__icon">
             <icon-alert
               :fill="academicProbationStyle"
@@ -83,28 +83,28 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Credits Earned</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-            {{ Math.round((major.credits_earned ?? 0) * 10) / 10 }} / {{ totalCredits }}
+            {{ Math.round(major.credits_earned * 10) / 10 }} / {{ totalCredits }}
           </span>
 
           <span class="btech-ind-header__label">Avg. Grade</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{
-              'background-color': major?.average_score
+              'background-color': major.average_score
                 ? (Math.round(major.average_score) < 60
                     ? colors.red
                     : Math.round(major.average_score) < 80
                       ? colors.yellow
                       : colors.green)
                 : colors.gray,
-              'color': major?.average_score ? colors.white : colors.black,
+              'color': major.average_score ? colors.white : colors.black,
             }">
-            {{ major?.average_score ? Math.round(major.average_score) + '%' : 'N/A' }}
+            {{ major.average_score ? Math.round(major.average_score) + '%' : 'N/A' }}
           </span>
 
           <span class="btech-ind-header__label">Contracted Hours</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.gray, 'color': '#000000' }">
-            {{ user?.contracted_hours_total ?? 0 }} hrs
+            {{ user.contracted_hours_total }} hrs
           </span>
         </div>
 
@@ -135,27 +135,26 @@ Vue.component('ind-header-credits-2', {
   computed: {
     academicProbationStyle: function() {
       let prob = this.user?.academic_probation;
-      let category = prob?.category ?? 0;
-      let code = prob?.code ?? '';
+      let category = prob?.category || 0;
+      let code = prob?.code || '';
       let colors = this.colors;
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
     },
     distanceApproved() {
-      return this.major.is_distance_approved ?? this.user?.distance_approved ?? false;
+      return this.major.is_distance_approved;
     },
     displayName() {
-      if (!this.user) return '';
       if (this.user.name && this.user.sis_user_id) return `${this.user.name} (${this.user.sis_user_id})`;
       if (this.user.name) return this.user.name;
       if (this.user.sis_user_id) return this.user.sis_user_id;
-      return `Student ${this.user.canvas_id || ''}`.trim();
+      return `Student ${this.user.canvas_user_id}`.trim();
     },
     totalCredits() {
-      const courses = this.major?.courses || {};
+      const courses = this.major.courses;
       return ['core', 'elective', 'other'].reduce((sum, groupName) => {
-        const groupCourses = courses[groupName] || [];
+        const groupCourses = courses[groupName];
         return sum + groupCourses.reduce((groupSum, course) => {
-          return groupSum + Number(course.credits || 0);
+          return groupSum + Number(course.credits);
         }, 0);
       }, 0);
     }
@@ -195,13 +194,13 @@ Vue.component('ind-header-credits-2', {
       let donut = this.donut;
       try {
         donut._init(
-          'btech-department-report-student-progress-donut-2',
+          'btech-department-report-student-progress-donut',
           this.colors.gray,
           { width: 140, height: 140 }
         );
         donut.fillHours({
           max: this.totalCredits || 1,
-          hours: this.major.credits_earned ?? 0,
+          hours: this.major.credits_earned,
           color: this.colors.blue,
         });
       } catch (err) {

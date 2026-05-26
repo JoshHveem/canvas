@@ -1,175 +1,127 @@
 <template>
-  <div class='btech-modal' style='display: inline-block;'>
-    <div class='btech-modal-content'>
-      <div class="btech-tabs">
-        <ul>
-          <li @click="menu='report'">Progress Report</li>
-          <li @click="menu='grades'">Grades Report</li>
-          <li @click="menu='hours'">Hours Report</li>
-          <li @click="menu='employment skills'">Employment Skills</li>
-          <li @click="menu='period'">Grades Between Dates</li>
-          <li v-if="IS_TEACHER" @click="menu='enroll'">HS Enrollment Periods</li>
-          <li style='float: right;' v-on:click='close()'>X</li>
-        </ul>
-      </div>
-      <div class='btech-modal-content-inner'>
-          <div><p><span class="btech-pill-text" style="background-color: #B20B0f; color: #FFFFFF;"><b>WARNING</b></span> This report is deprecated and data is not updating. This report will remain available through February and will then be removed. Please refer to Student Report 2. If you see issues with Student Report 2, email isd@btech.edu.</p></div>
-          <div v-if="(accessDenied && menu!=='report')">
-            <p>
-              <b>ERROR:</b> You are not authorized to see all of this student's courses. This often occurs when the
-              student is not enrolled in any courses in which you have admin rights to View Enrollments.
-            </p>
-            <p>
-              Reach out to your Canvas Administrator if you have received this message in error
-            </p>
-          </div>
+  <div class="btech-modal btech-canvas-report" style="display:inline-block;">
+    <div class="btech-modal-content">
+      <div class="btech-modal-content-inner">
+        <span class="btech-close" v-on:click="close()">&times;</span>
 
-          <div v-else>
-            <div v-if="menu=='report'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
-                <select @change="changeTree(user)" v-model="currentDepartment">
-                  <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
-                </select>
-                <show-student-ind-credits
-                    v-if="user.name !== undefined && tree.name !== undefined"
-                    style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                    :colors="colors"
-                    :user="user"
-                    :settings="settings"
-                    :student-tree="tree"
-                ></show-student-ind-credits>
-              </div>
-            </div>
-            <div v-if="menu=='report-old'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;" v-if="!settingGoal">
-                <select @change="changeTree(user)" v-model="currentDepartment">
-                  <option v-for="dept in user.depts" :value="dept">{{dept.dept}} ({{dept.year}})</option>
-                </select>
-                <show-student-ind-credits
-                    v-if="user.name !== undefined && tree.name !== undefined"
-                    style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                    :colors="colors"
-                    :user="user"
-                    :settings="settings"
-                    :student-tree="tree"
-                ></show-student-ind-credits>
-              </div>
-              <div
-                @click="settingGoal = !settingGoal;"
-                style="
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    width: 2rem;
-                    height: 2rem;
-                    border-radius: 50%;
-                    border: none;
-                    background-color: #000000;
-                    color: white;
-                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-                    font-size: 2rem;
-                    text-align: center;
-                    line-height: 2rem;
-                    cursor: pointer;
-                "
-              >
-                <icon-people style="width: 1.5rem; height: 1.5rem;" :fill="colors.white"></icon-people>
-              </div>
-            </div>
-
-            <div v-show="menu=='hours'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;">
-                <show-student-hours
-                  v-if="user.name !== undefined && tree.name !== undefined"
-                  style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                  :colors="colors"
-                  :user="user"
-                  :settings="settings"
-                  :student-tree="tree"
-                  :manual-hours-perc="true"
-                ></show-student-hours>
-              </div>
-            </div>
-
-            <div v-show="menu == 'grades'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;">
-                <show-student-grades
-                  v-if="user.name !== undefined && tree.name !== undefined"
-                  style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                  :colors="colors"
-                  :user="user"
-                  :settings="settings"
-                  :student-tree="tree"
-                  :manual-hours-perc="true"
-                ></show-student-grades>
-                
-              </div>
-            </div>
-
-            <div v-show="menu=='employment skills'">
-              <div class="btech-canvas-report" style="background-color: #ffffff;">
-                <show-student-employment-skills
-                  v-if="user.name !== undefined && tree.name !== undefined"
-                  style="display: inline-block; background-color: #fff; padding: 0.5rem; box-sizing: border-box; width: 100%;"
-                  :colors="colors"
-                  :user="user"
-                  :settings="settings"
-                ></show-student-employment-skills>
-              </div>
-            </div>
-
-            <div v-show="menu=='period'">
-              <show-grades-between-dates
-                v-if="enrollmentData != undefined"
-                :user="user"
-                :enrollments="enrollmentData"
-                :user-id="userId"
-                :terms="terms"
-                :IS-TEACHER="IS_TEACHER"
-              ></show-grades-between-dates>
-            </div>
-
-            <div v-show="menu=='enroll'">
-              <div class='term-data-container'>
-                <span>Start Date</span>
-                <input type='date' v-model='enrollment_tab.saveTerm.startDate'>
-                <span>End Date</span>
-                <input type='date' v-model='enrollment_tab.saveTerm.endDate'>
-                <br>
-                <span>Term Type</span>
-                <select v-model='enrollment_tab.saveTerm.type'>
-                  <option>Semester</option>
-                  <option>Trimester</option>
-                </select>
-                <br>
-                <span>Hours: </span>
-                <input type='number' min='30' max='300' step='15' v-model='enrollment_tab.saveTerm.hours'>
-                <br>
-                <span>School: </span>
-                <select v-model='enrollment_tab.saveTerm.school'>
-                  <option value='' selected disabled>-select school-</option>
-                  <option v-for='school in enrollment_tab.schools' :value='school'>
-                    {{school}}
-                  </option>
-                </select>
-              </div>
-              <input type='button' @click='enrollHS()' value='enroll'>
-              <br>
-              <div class='existing-terms'>
-                <h2>Existing Enrollments</h2>
-                <div v-for='term in terms'>
-                  <span>
-                    <i @click='deleteHSEnrollmentTerm(term);' style='cursor: pointer;' class='icon-trash'></i>
-                  </span>
-                  <span>{{formatDate(term.startDate)}} - {{formatDate(term.endDate)}}</span>
-                  <span>{{term.hours}} HRS</span>
-                  <span>{{term.school}}</span>
-                  <span>{{term.type}}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Title -->
+        <div class="btech-row" style="align-items:center; margin-bottom:6px;">
+          <h3 class="btech-card-title" style="margin:0; width:100%; text-align:center;">
+            {{ currentReportMeta.title }}
+          </h3>
         </div>
+
+        <!-- Report Mode Tabs -->
+        <div
+          role="tablist"
+          aria-label="Report type"
+          style="
+            display:flex; gap:8px; justify-content:center; align-items:center;
+            padding:6px; border-radius:10px; background:#f3f4f6; margin-bottom:6px;
+          "
+        >
+          <button
+            v-for="rt in reportTypes"
+            :key="rt.value"
+            role="tab"
+            :aria-selected="settings.reportType === rt.value ? 'true' : 'false'"
+            :tabindex="settings.reportType === rt.value ? 0 : -1"
+            @click="settings.reportType = rt.value; onReportChange()"
+            style="
+              border:1px solid #e5e7eb;
+              border-radius:12px;
+              padding:6px 12px;
+              font-weight:600;
+              font-size:12px;
+              background: white;
+              cursor:pointer;
+              transition: box-shadow .15s ease, background .15s ease;
+            "
+            :style="settings.reportType === rt.value
+              ? 'background:#111827; color:#fff; border-color:#111827; box-shadow:0 1px 4px rgba(0,0,0,.15);'
+              : 'background:#fff; color:#111827;'"
+          >
+            {{ rt.label }}
+          </button>
+        </div>
+
+        <!-- Degree selector sub-menu -->
+        <div
+          v-if="user.majors.length"
+          class="btech-major-switcher"
+        >
+          <label
+            for="btech-major-select"
+            class="btech-major-switcher__label"
+          >
+            Major:
+          </label>
+
+          <select
+            id="btech-major-select"
+            v-model.number="selectedMajorIndex"
+            @change="onMajorChange"
+            class="btech-major-switcher__select"
+          >
+            <option
+              v-for="(major, idx) in user.majors"
+              :key="idx"
+              :value="idx"
+            >
+              {{ major.major_code + ' ' + major.academic_year__major }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <ind-header-credits
+            :colors="colors"
+            :user="user"
+            :major="currentMajor"
+            :settings="settings"
+            :key="'header-' + selectedMajorIndex"
+          ></ind-header-credits> 
+        </div>
+
+
+        
+        <div v-if="settings.reportType === 'student-courses'">
+          <student-courses-report
+            :user="user"
+            :major="currentMajor"
+            :core-courses="currentMajor.courses.core"
+            :elective-courses="currentMajor.courses.elective"
+            :other-courses="currentMajor.courses.other"
+            :settings="settings"
+            :colors="colors"
+            :key="selectedMajorIndex"
+          ></student-courses-report>
+        </div>
+        <div v-if="settings.reportType === 'student-grades'">
+          <show-student-grades
+            :user="user"
+          ></show-student-grades>
+        </div>
+        <div v-if="settings.reportType === 'hs-grades'">
+          <grades-between-dates
+            v-if="userId"
+            :user="user"
+            :user-id="userId"
+            :colors="colors"
+            :IS-TEACHER="IS_TEACHER"
+          ></grades-between-dates>
+        </div>
+        <div v-if="settings.reportType === 'hs-grades-old'">
+          <show-grades-between-dates-old
+            v-if="userId"
+            :user="user"
+            :user-id="userId"
+            :terms="user.hs_terms"
+            :colors="colors"
+            :IS-TEACHER="IS_TEACHER"
+          ></show-grades-between-dates-old>
+        </div>
+      </div>
     </div>
   </div>
 </template>

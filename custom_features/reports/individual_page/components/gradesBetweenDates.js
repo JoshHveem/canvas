@@ -100,7 +100,7 @@
                     <label style="display:flex; gap:0.5rem; align-items:center;">
                       <input type="checkbox" :value="t._id" v-model="bulkSelectedTermIds">
                       <span>
-                        {{t.student_name || t.student?.hs_name || t.sis_user_id || t.canvas_user_id || "Unknown Student"}}
+                        {{t.sis_user_id}}
                       </span>
                     </label>
                   </div>
@@ -397,7 +397,7 @@
         immediate: true,
         deep: true,
         async handler(user) {
-          const sisUserId = user?.sis_user_id || user?.sis_id;
+          const sisUserId = user.sis_user_id;
           if (!sisUserId) return;
           if (this.loadedTermsSisUserId === sisUserId && this.termsData.length) return;
 
@@ -478,10 +478,10 @@
 
       buildTermKey(termLike) {
         return [
-          this.normalizeKeyPart(termLike?.sis_user_id),
-          this.normalizeKeyPart(termLike?.course_code),
-          this.normalizeKeyPart(termLike?.campus_code),
-          this.normalizeTimestampKey(termLike?.entry_at__original || termLike?.entry_at)
+          this.normalizeKeyPart(termLike.sis_user_id),
+          this.normalizeKeyPart(termLike.course_code),
+          this.normalizeKeyPart(termLike.campus_code),
+          this.normalizeTimestampKey(termLike.entry_at__original || termLike.entry_at)
         ].join('|');
       },
 
@@ -505,9 +505,9 @@
       },
 
       normalizeTerm(baseTerm, overrideTerm) {
-        const effectiveEntryAt = overrideTerm?.entry_at__override || baseTerm.entry_at;
-        const effectiveExitAt = overrideTerm?.exit_at__override || baseTerm.exit_at;
-        const creditsRequiredOverride = overrideTerm?.credits_required__override;
+        const effectiveEntryAt = overrideTerm ? overrideTerm.entry_at__override || baseTerm.entry_at : baseTerm.entry_at;
+        const effectiveExitAt = overrideTerm ? overrideTerm.exit_at__override || baseTerm.exit_at : baseTerm.exit_at;
+        const creditsRequiredOverride = overrideTerm ? overrideTerm.credits_required__override : null;
 
         return {
           ...baseTerm,
@@ -516,13 +516,13 @@
           exit_at__original: baseTerm.exit_at,
           entry_at: effectiveEntryAt,
           exit_at: effectiveExitAt,
-          section_code: baseTerm.section_code || baseTerm.course_code,
-          concurrent_count: Number(baseTerm.concurrent_count) || 1,
+          section_code: baseTerm.section_code,
+          concurrent_count: Number(baseTerm.concurrent_count),
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
             : this.calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_count),
           has_credits_required_override: creditsRequiredOverride != null,
-          override: overrideTerm || null,
+          override: overrideTerm,
         };
       },
 
@@ -537,7 +537,7 @@
       },
 
       async loadTerms(filters = {}) {
-        const sisUserId = this.user?.sis_user_id || this.user?.sis_id;
+        const sisUserId = this.user.sis_user_id;
         if (!sisUserId) return;
 
         let query = {
@@ -992,10 +992,10 @@
               const course = m.get(key) || {
                 id,
                 course_id: id,
-                name: enrollment.course_name || enrollment.course_code,
+                name: enrollment.course_name,
                 course_code: enrollment.course_code,
                 academic_year: enrollment.academic_year,
-                section_name: enrollment.section_name || "",
+                section_name: enrollment.section_name,
               };
 
               m.set(key, course);
