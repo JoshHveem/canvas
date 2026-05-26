@@ -100,7 +100,7 @@
                     <label style="display:flex; gap:0.5rem; align-items:center;">
                       <input type="checkbox" :value="t._id" v-model="bulkSelectedTermIds">
                       <span>
-                        {{t.student?.hs_name || t.student?.sis_id || t.student?.canvas_id || "Unknown Student"}}
+                        {{t.student_name || t.student?.hs_name || t.sis_user_id || t.canvas_user_id || "Unknown Student"}}
                       </span>
                     </label>
                   </div>
@@ -238,10 +238,6 @@
         type: Boolean,
         default: false 
       },
-      terms: {
-        type: Array,
-        default: [] 
-      },
       enrollments: {
         type: Object,
         default: () => ({})
@@ -264,11 +260,15 @@
     },
     computed: {
       sortedTerms() {
-        return [...this.terms].sort((a, b) => {
+        return [...this.termsData].sort((a, b) => {
           return new Date(b.entry_date) - new Date(a.entry_date);
         });
       },
       estimatedCreditsEnrolled() {
+        if (this.selectedTerm?.has_credits_required_override) {
+          return Number(this.selectedTerm.credits_required) || 0;
+        }
+
         const start = this.parseDate(this.submissionDatesStart);
         const end   = this.parseDate(this.submissionDatesEnd);
 
@@ -276,7 +276,8 @@
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
         let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
-        if (this.selectedTerm.concurrent_count > 1) credits *= this.selectedTerm.concurrent_count;
+        const concurrentCount = Number(this.selectedTerm?.concurrent_count) || 1;
+        if (concurrentCount > 1) credits *= concurrentCount;
         return credits;
       },
       weightedGradeForTerm() {
@@ -345,8 +346,10 @@
       termDatesDirty() {
         return (
           !!this.selectedTerm?._id &&
-          this.submissionDatesStart !== this.savedSubmissionDatesStart ||
-          this.submissionDatesEnd !== this.savedSubmissionDatesEnd
+          (
+            this.submissionDatesStart !== this.savedSubmissionDatesStart ||
+            this.submissionDatesEnd !== this.savedSubmissionDatesEnd
+          )
         );
       },
 
@@ -365,6 +368,7 @@
         bulkSaving: false,
 
 
+        termsData: [],
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -390,6 +394,7 @@
     created: async function () {
       this.loadingProgress = 0;
       this.loadingMessage = "Loading Courses";
+      await this.loadTerms();
 
       this.courses = await this.getCourseData();
 
@@ -433,30 +438,141 @@
 
 
     methods: {
+      buildTermKey(termLike) {
+        return [
+          termLike?.sis_user_id || '',
+          termLike?.course_code || '',
+          termLike?.campus_code || '',
+          termLike?.entry_at__original || termLike?.entry_at || ''
+        ].join('|');
+      },
+
+      toReq3DateTime(dateValue) {
+        if (!dateValue) return null;
+        if (String(dateValue).includes(' ')) return dateValue;
+        return `${dateValue} 00:00:00`;
+      },
+
+      calculateCreditsRequired(entryAt, exitAt, concurrentCount = 1) {
+        const start = this.parseDate(entryAt);
+        const end = this.parseDate(exitAt);
+
+        if (!start || !end || end <= start) return 0;
+
+        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
+        let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
+        const concurrent = Number(concurrentCount) || 1;
+        if (concurrent > 1) credits *= concurrent;
+        return credits;
+      },
+
+      normalizeTerm(baseTerm, overrideTerm) {
+        const entryDate = overrideTerm?.entry_at__override || baseTerm.entry_at;
+        const exitDate = overrideTerm?.exit_at__override || baseTerm.exit_at;
+        const creditsRequiredOverride = overrideTerm?.credits_required__override;
+
+        return {
+          ...baseTerm,
+          _id: this.buildTermKey(baseTerm),
+          entry_at__original: baseTerm.entry_at,
+          entry_date: entryDate,
+          exit_date: exitDate,
+          section_code: baseTerm.section_code || baseTerm.course_code,
+          concurrent_count: Number(baseTerm.concurrent_count) || 1,
+          credits_required: creditsRequiredOverride != null
+            ? Number(creditsRequiredOverride)
+            : this.calculateCreditsRequired(entryDate, exitDate, baseTerm.concurrent_count),
+          has_credits_required_override: creditsRequiredOverride != null,
+          override: overrideTerm || null,
+        };
+      },
+
+      mergeTerms(baseTerms, overrideTerms) {
+        const overridesByKey = new Map(
+          (overrideTerms || []).map(term => [this.buildTermKey(term), term])
+        );
+
+        return (baseTerms || []).map(baseTerm => {
+          return this.normalizeTerm(baseTerm, overridesByKey.get(this.buildTermKey(baseTerm)));
+        });
+      },
+
+      async loadTerms(filters = {}) {
+        const query = Object.assign({}, filters);
+        const sisUserId = this.user?.sis_id || this.user?.sis_user_id;
+
+        if (!query.sis_user_id && sisUserId) {
+          query.sis_user_id = sisUserId;
+        }
+
+        const [baseTerms, overrideTerms] = await Promise.all([
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
+        ]);
+
+        this.termsData = this.mergeTerms(baseTerms, overrideTerms);
+
+        if (!this.termsData.length) {
+          this.selectedTermId = '';
+          this.selectedTerm = {};
+          return;
+        }
+
+        const selectedTermStillExists = this.termsData.some(term => term._id === this.selectedTermId);
+        this.selectedTermId = selectedTermStillExists
+          ? this.selectedTermId
+          : this.sortedTerms[0]._id;
+
+        if (this.selectedTermId) {
+          this.updateDatesToSelectedTerm();
+        }
+      },
+
+      buildHsTermUpdatePayload(term) {
+        return {
+          sis_user_id: term.sis_user_id,
+          canvas_user_id: term.canvas_user_id,
+          course_code: term.course_code,
+          campus_code: term.campus_code,
+          academic_year: term.academic_year,
+          entry_at__original: term.entry_at__original,
+          entry_at__override: this.toReq3DateTime(this.submissionDatesStart),
+          exit_at__override: this.toReq3DateTime(this.submissionDatesEnd),
+          credits_required__override: Number(this.estimatedCreditsEnrolled) || 0,
+        };
+      },
+
+      async hsTermsUpdate(payload = {}) {
+        const authCode = await bridgetools.getCanvasAuthCode();
+
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            url: 'https://reports.bridgetools.dev/api3/hs_terms',
+            method: 'POST',
+            data: JSON.stringify(payload),
+            contentType: 'application/json',
+            processData: false,
+            headers: {
+              Authorization: `Bearer ${authCode}`,
+              'X-Canvas-User-Id': String(ENV.current_user_id),
+            },
+          })
+            .done(data => resolve(data))
+            .fail((xhr, status, err) => reject({ xhr, status, err }));
+        });
+      },
+
       async confirmSingleUpdate() {
-        const termId = this.selectedTerm?._id;
-        if (!termId) return;
+        const term = this.selectedTerm;
+        if (!term?._id) return;
 
         this.savingTermDates = true;
 
         try {
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/${termId}/dates`,
-            {
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd,
-            },
-            "POST"
-          );
-
-          // update saved baseline so dirty flag turns off
-          this.savedSubmissionDatesStart = this.submissionDatesStart;
-          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
-
-          // update selectedTerm so dropdown reflects new values
-          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
-          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
-
+          await this.hsTermsUpdate(this.buildHsTermUpdatePayload(term));
+          await this.loadTerms({ sis_user_id: term.sis_user_id });
+          this.selectedTermId = term._id;
+          this.updateDatesToSelectedTerm();
           this.closeBulkModal();
         } catch (err) {
           console.error("Failed saving term dates:", err);
@@ -484,17 +600,18 @@
           this.bulkUpdateStep = "select";
           this.bulkLoading = true;
 
-          const section = this.selectedTerm.section_code;
-          const year = this.selectedTerm.academic_year;
+          const filters = {
+            course_code: this.selectedTerm.course_code,
+            campus_code: this.selectedTerm.campus_code,
+            academic_year: this.selectedTerm.academic_year
+          };
 
-          const terms = await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/by_section/${section}/${year}`,
-            {},
-            "GET"
-          );
-          console.log(terms);
+          const [baseTerms, overrideTerms] = await Promise.all([
+            bridgetools.req3('reports', filters, { dataset: 'student_hs_terms' }),
+            bridgetools.req3('reports', filters, { dataset: 'student_hs_terms__override' })
+          ]);
 
-          this.bulkTermsToUpdate = terms || [];
+          this.bulkTermsToUpdate = this.mergeTerms(baseTerms, overrideTerms);
           const currentTermId = this.selectedTerm?._id;
 
           this.bulkSelectedTermIds = this.bulkTermsToUpdate.map(t => t._id);
@@ -515,24 +632,17 @@
         try {
           this.bulkSaving = true;
 
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
-            {
-              termIds: this.bulkSelectedTermIds,
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd
-            },
-            "POST"
-          );
+          const selectedTerms = this.bulkTermsToUpdate.filter(term => {
+            return this.bulkSelectedTermIds.includes(term._id);
+          });
 
-          // update baseline so dirty flag turns off
-          this.savedSubmissionDatesStart = this.submissionDatesStart;
-          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+          await Promise.all(selectedTerms.map(term => {
+            return this.hsTermsUpdate(this.buildHsTermUpdatePayload(term));
+          }));
 
-          // update selectedTerm so dropdown reflects new values
-          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
-          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
-
+          await this.loadTerms({ sis_user_id: this.selectedTerm.sis_user_id });
+          this.selectedTermId = this.selectedTerm._id;
+          this.updateDatesToSelectedTerm();
           this.closeBulkModal();
           alert("Bulk update complete.");
         } catch (err) {
@@ -543,30 +653,6 @@
         }
       },
 
-
-      async confirmBulkUpdate() {
-        try {
-          this.bulkSaving = true;
-
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
-            {
-              termIds: this.bulkSelectedTermIds,
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd
-            },
-            "POST"
-          );
-
-          this.closeBulkModal();
-          alert("Bulk update complete.");
-        } catch (err) {
-          console.error(err);
-          alert("Failed bulk updating students.");
-        } finally {
-          this.bulkSaving = false;
-        }
-      },
 
       btnStyle(kind = "primary", disabled = false) {
         const blue = this.colors?.blue || "#1a73e8";
@@ -869,7 +955,7 @@
       },
 
       updateDatesToSelectedTerm() {
-        const term = this.terms.find(t => t._id === this.selectedTermId);
+        const term = this.termsData.find(t => t._id === this.selectedTermId);
         if (!term) return;
 
         this.selectedTerm = term;
@@ -887,6 +973,9 @@
 
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.entry_date), new Date(term.exit_date));
+        if (term.has_credits_required_override) {
+          this.estimatedCreditsRequired = Number(term.credits_required) || 0;
+        }
       },
       async saveTermDates() {
         const termId = this.selectedTerm?._id;

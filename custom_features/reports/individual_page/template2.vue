@@ -108,7 +108,6 @@
             v-if="userId"
             :user="user"
             :user-id="userId"
-            :terms="user.hs_terms"
             :colors="colors"
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates-2>
