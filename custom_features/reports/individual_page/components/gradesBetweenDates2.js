@@ -516,7 +516,7 @@
       },
 
       async loadTerms(filters = {}) {
-        const sisUserId = this.user?.sis_user_id || this.user?.sis_id;
+        const sisUserId = this.user?.sis_user_id;
         if (!sisUserId) return;
 
         let query = {
