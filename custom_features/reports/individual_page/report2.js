@@ -263,6 +263,7 @@
             this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api/v2/students/${userId}`
             );
+            console.log(this.bridgetoolsUser);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
           } catch (err) {
