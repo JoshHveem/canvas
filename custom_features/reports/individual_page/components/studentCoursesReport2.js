@@ -104,7 +104,20 @@ Vue.component('student-courses-report-2', {
       return this.buildMajorCourseList(this.electiveCourses);
     },
     others: function () {
-      return this.buildMajorCourseList(this.otherCourses);
+      const majorOtherCourses = this.buildMajorCourseList(this.otherCourses);
+      const majorCourseCodes = new Set(
+        [...this.coreCourses, ...this.electiveCourses, ...this.otherCourses]
+          .map(course => course.course_code)
+      );
+      const extraUserCourses = (this.user?.courses || [])
+        .filter(course => !majorCourseCodes.has(course.course_code))
+        .map(course => this.mergeUserCourseData(course, course.course_code));
+
+      return [...majorOtherCourses, ...extraUserCourses]
+        .filter((course, index, courses) => {
+          return index === courses.findIndex(other => other.course_code === course.course_code);
+        })
+        .sort(this.sortByCourseCode);
     }
   },
   data() {
@@ -112,40 +125,6 @@ Vue.component('student-courses-report-2', {
       colors: bridgetools.colors,
       donut: {},
       treatUngradedAsZero: true,
-    }
-  },
-  watch: {
-    major: {
-      immediate: true,
-      deep: true,
-      handler(major) {
-        console.log('[student-courses-report-2] major prop', {
-          majorCode: major?.major_code,
-          academicYear: major?.academic_year__major,
-          coreCount: major?.courses?.core?.length,
-          electiveCount: major?.courses?.elective?.length,
-          otherCount: major?.courses?.other?.length,
-          major
-        });
-      }
-    },
-    coreCourses: {
-      immediate: true,
-      handler(courses) {
-        console.log('[student-courses-report-2] coreCourses prop', courses);
-      }
-    },
-    electiveCourses: {
-      immediate: true,
-      handler(courses) {
-        console.log('[student-courses-report-2] electiveCourses prop', courses);
-      }
-    },
-    otherCourses: {
-      immediate: true,
-      handler(courses) {
-        console.log('[student-courses-report-2] otherCourses prop', courses);
-      }
     }
   },
   mounted() {
@@ -161,7 +140,6 @@ Vue.component('student-courses-report-2', {
       return ad.localeCompare(bd);
     },
     buildMajorCourseList(majorCourses) {
-      console.log('[student-courses-report-2] buildMajorCourseList input', majorCourses);
       return majorCourses
         .map(course => this.mergeUserCourseData(course, course.course_code))
         .sort(this.sortByCourseCode);

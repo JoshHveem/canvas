@@ -5,6 +5,22 @@
   Show which tab you're on
 */
 (async function () {
+  function emptyMajor() {
+    return {
+      major_code: '',
+      academic_year__major: 0,
+      campus_code: '',
+      credits_earned: 0,
+      average_score: 0,
+      is_distance_approved: false,
+      courses: {
+        core: [],
+        elective: [],
+        other: []
+      }
+    };
+  }
+
   //Confirm with Instructional Team before going live
   async function loadFirstAvailableScript(urls) {
     let lastError;
@@ -160,15 +176,7 @@
 
         currentMajor() {
           const majors = this.user?.majors || [];
-          const major = majors[this.selectedMajorIndex] || null;
-          console.log('[individual-report] currentMajor', {
-            selectedMajorIndex: this.selectedMajorIndex,
-            majorCount: majors.length,
-            majorCode: major?.major_code,
-            academicYear: major?.academic_year__major,
-            courses: major?.courses
-          });
-          return major;
+          return majors[this.selectedMajorIndex] || emptyMajor();
         },
       },
 
