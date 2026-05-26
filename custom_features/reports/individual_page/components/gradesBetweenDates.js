@@ -100,7 +100,7 @@
                     <label style="display:flex; gap:0.5rem; align-items:center;">
                       <input type="checkbox" :value="t._id" v-model="bulkSelectedTermIds">
                       <span>
-                        {{t.sis_user_id}}
+                        {{t.student_name}}
                       </span>
                     </label>
                   </div>
@@ -677,6 +677,21 @@
           : [];
       },
 
+      async hydrateBulkTermsWithNames(terms) {
+        const uniqueCanvasUserIds = [...new Set(terms.map(term => term.canvas_user_id))];
+        const users = await Promise.all(
+          uniqueCanvasUserIds.map(canvasUserId => $.get(`/api/v1/users/${canvasUserId}`))
+        );
+        const namesByCanvasUserId = new Map(
+          users.map(user => [user.id, user.name])
+        );
+
+        return terms.map(term => ({
+          ...term,
+          student_name: namesByCanvasUserId.get(term.canvas_user_id)
+        }));
+      },
+
       async loadBulkUpdateList() {
         try {
           this.bulkUpdateStep = "select";
@@ -693,7 +708,8 @@
             bridgetools.req3('reports', filters, { dataset: 'student_hs_terms__override' })
           ]);
 
-          this.bulkTermsToUpdate = this.mergeTerms(baseTerms, overrideTerms);
+          const mergedTerms = this.mergeTerms(baseTerms, overrideTerms);
+          this.bulkTermsToUpdate = await this.hydrateBulkTermsWithNames(mergedTerms);
           const currentTermId = this.selectedTerm?._id;
 
           this.bulkSelectedTermIds = this.bulkTermsToUpdate.map(t => t._id);
