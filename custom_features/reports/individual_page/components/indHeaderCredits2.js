@@ -145,9 +145,9 @@ Vue.component('ind-header-credits-2', {
     },
     displayName() {
       if (!this.user) return '';
-      if (this.user.name && this.user.sis_id) return `${this.user.name} (${this.user.sis_id})`;
+      if (this.user.name && this.user.sis_user_id) return `${this.user.name} (${this.user.sis_user_id})`;
       if (this.user.name) return this.user.name;
-      if (this.user.sis_id) return this.user.sis_id;
+      if (this.user.sis_user_id) return this.user.sis_user_id;
       return `Student ${this.user.canvas_id || ''}`.trim();
     },
     totalCredits() {

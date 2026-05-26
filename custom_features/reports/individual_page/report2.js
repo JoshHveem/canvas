@@ -300,7 +300,7 @@
             last_update: bridgetools.psqlTimestampToDate(studentHeader?.bridgetools_updated_at),
             last_login: bridgetools.psqlTimestampToDate(studentHeader?.last_login_at),
             avatar_url: studentHeader?.avatar_image_url || canvasUser?.avatar_url,
-            sis_id: studentHeader?.sis_user_id,
+            sis_user_id: studentHeader?.sis_user_id,
             hs_terms: studentRecord?.hs_terms || [],
             contracted_hours: studentHeader?.contracted_hours || {},
             contracted_hours_total: this.sumContractedHours(studentHeader?.contracted_hours),
