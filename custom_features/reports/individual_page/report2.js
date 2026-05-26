@@ -214,6 +214,7 @@
           else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
 
           if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
+          merged.anonymize = merged.anonymous;
           for (const key in merged.filters) {
             const val = merged.filters[key];
             if (val === "true") merged.filters[key] = true;
@@ -244,97 +245,119 @@
           return formattedDate;
         },
 
-        async loadUser(userId) {
-          let user = {};
-          let btUser = {};
-          let btCourses = [];
-          let btMajors = [];
+        sumContractedHours(contractedHours) {
+          return Object.values(contractedHours || {}).reduce((sum, value) => {
+            return sum + (Number(value) || 0);
+          }, 0);
+        },
 
-          try {
-            this.bridgetoolsUser = await bridgetools.req(
-              `https://reports.bridgetools.dev/api/v2/students/${userId}`
-            );
-            btUser = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0];
-            console.log(btUser);
-            btCourses = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'})) ?? [];
-            btMajors = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'});
-            for (let m = 0; m < btMajors.length; m++) {
-              let major = btMajors[m];
-              let btmCourses = await bridgetools.req3('reports', {major_code: major.major_code, academic_year__major: major.academic_year__major}, {dataset: 'major_courses'});
-              let courses = {
-                core: btmCourses.filter(c => c.major_requirement_type_code == 'C'),
-                elective: btmCourses.filter(c => c.major_requirement_type_code == 'E'),
-                other: btmCourses.filter(c => c.major_requirement_type_code != 'E' && c.major_requirement_type_code != 'C'),
-              }
-              major.academic_year = major.academic_year__major;
-              major.courses = courses;
+        async loadMajorCourseGroups(major) {
+          const majorCourses = await bridgetools.req3(
+            'reports',
+            {
+              major_code: major.major_code,
+              academic_year__major: major.academic_year__major
+            },
+            {dataset: 'major_courses'}
+          );
+
+          return {
+            ...major,
+            academic_year: major.academic_year__major,
+            courses: {
+              core: majorCourses.filter(c => c.major_requirement_type_code == 'C'),
+              elective: majorCourses.filter(c => c.major_requirement_type_code == 'E'),
+              other: majorCourses.filter(c => c.major_requirement_type_code != 'E' && c.major_requirement_type_code != 'C'),
             }
-            this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
+          };
+        },
 
-          } catch (err) {
-            console.error(err);
-            return {};
-          }
-          // Be tolerant of missing degrees
-          user.degrees = btMajors;
-          user.courses = btCourses;
-          user.canvas_user_id = this.canvasUser.id;
-          user.name = this.canvasUser.name;
-          user.academic_probation = this.bridgetoolsUser.academic_probation;
-          user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = bridgetools.psqlTimestampToDate(btUser.last_login_at);
-          user.avatar_url = this.canvasUser.avatar_url;
-          user.sis_id = btUser.sis_id;
-          user.hs_terms = this.bridgetoolsUser.hs_terms;
-          user.contracted_hours = this.bridgetoolsUser.contracted_hours;
-          let contractedHoursTotal = 0;
-          for (let day in this.bridgetoolsUser.contracted_hours) {
-            console.log(day);
-            contractedHoursTotal += this.bridgetoolsUser.contracted_hours[day];
-          }
-          user.contracted_hours_total = contractedHoursTotal;
-          user.transfer_courses = [];
-
-          // Guard degree ops
+        getMaxVisibleAcademicYear() {
           const date = new Date();
           let maxyear = date.getFullYear();
           if ((date.getMonth() + 1) <= 6) maxyear -= 1;
+          return maxyear;
+        },
 
-          user.degrees = (user.degrees || [])
-            .filter(d => Number(d?.academic_year) <= maxyear);
-
-          // 1) pick "current" degree by max academic_year, then max graded_hours
-          const current = [...user.degrees].sort((a, b) => {
+        sortDegrees(degrees) {
+          return [...(degrees || [])].sort((a, b) => {
             const ay = Number(a?.academic_year) || 0;
             const by = Number(b?.academic_year) || 0;
-            if (ay !== by) return by - ay; // DESC academic_year
+            if (ay !== by) return by - ay;
 
             const ah = Number(a?.graded_hours) || 0;
             const bh = Number(b?.graded_hours) || 0;
-            if (ah !== bh) return bh - ah; // DESC graded_hours
-
-            return 0;
-          })[0];
-
-          this.currentDegreeId = current?._id ?? 0;
-
-          // 2) sort dropdown by year, then alphabetically (major_code here)
-          user.degrees.sort((a, b) => {
-            const ay = Number(a?.academic_year) || 0;
-            const by = Number(b?.academic_year) || 0;
-            if (ay !== by) return by - ay; // DESC academic_year
+            if (ah !== bh) return bh - ah;
 
             const ad = String(a?.major_code || '').toLowerCase();
             const bd = String(b?.major_code || '').toLowerCase();
             return ad.localeCompare(bd);
           });
- 
+        },
 
+        normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
+          const normalizedDegrees = this.sortDegrees(degrees)
+            .filter(d => Number(d?.academic_year) <= this.getMaxVisibleAcademicYear());
 
-          const selectedMajor = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
+          const user = {
+            degrees: normalizedDegrees,
+            courses: courses || [],
+            canvas_id: canvasUser?.id,
+            canvas_user_id: canvasUser?.id,
+            name: canvasUser?.name,
+            academic_probation: studentProfile?.academic_probation,
+            last_update: studentProfile?.last_update,
+            last_login: bridgetools.psqlTimestampToDate(studentHeader?.last_login_at),
+            avatar_url: canvasUser?.avatar_url,
+            sis_id: studentHeader?.sis_id,
+            hs_terms: studentProfile?.hs_terms,
+            contracted_hours: studentProfile?.contracted_hours || {},
+            contracted_hours_total: this.sumContractedHours(studentProfile?.contracted_hours),
+            transfer_courses: []
+          };
 
-          user = this.updateUserCourseInfo(user, selectedMajor);
+          const currentDegree = normalizedDegrees[0];
+          this.currentDegreeId = currentDegree?._id ?? 0;
+
           return user;
+        },
+
+        async loadUser(userId) {
+          try {
+            const [
+              studentProfile,
+              studentHeader,
+              studentCourses,
+              studentMajors,
+              canvasUser
+            ] = await Promise.all([
+              bridgetools.req(`https://reports.bridgetools.dev/api/v2/students/${userId}`),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
+              canvasGet(`/api/v1/users/${userId}`)
+            ]);
+
+            const majorsWithCourses = await Promise.all(
+              (studentMajors || []).map(major => this.loadMajorCourseGroups(major))
+            );
+
+            this.bridgetoolsUser = studentProfile;
+            this.canvasUser = canvasUser?.[0];
+            let user = this.normalizeUserRecord({
+              canvasUser: this.canvasUser,
+              studentHeader: studentHeader?.[0],
+              studentProfile,
+              courses: studentCourses,
+              degrees: majorsWithCourses
+            });
+
+            const selectedMajor = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
+            return this.updateUserCourseInfo(user, selectedMajor);
+          } catch (err) {
+            console.error(err);
+            return {};
+          }
         },
 
 

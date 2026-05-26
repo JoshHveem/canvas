@@ -87,100 +87,21 @@ Vue.component('student-courses-report-2', {
   },
   computed: {
     core: function () {
-      let courses = this.tree?.courses ?? {};
-      let core = courses?.core ?? {};
-      let list = [];
-      for (let courseCode in core) {
-        let data = core[courseCode];
-        data.course_code = courseCode;
-        let userData = this.getUserCourseData(courseCode);
-        if (userData) {
-          data.is_active = userData.is_active ?? false;
-          data.is_transfer = userData.is_transfer ?? false;
-          data.num_extensions = userData.num_extensions;
-          data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
-          data.canvas_course_id = userData.canvas_course_id;
-          data.progress = userData.progress;
-          data.current_score = userData.current_score;
-          data.final_score = userData.final_score;
-          data.credits_per_day = userData.credits_per_day;
-          data.days_in_course = userData.time_in_course / (60 * 60 * 24);
-        }
-        list.push(data);
-      }
-      list.sort((a, b) => {
-        const ad = String(a.course_code || '').toLowerCase();
-        const bd = String(b.course_code || '').toLowerCase();
-        return ad > bd ? 1 : ad < bd ? -1 : 0;
-      });
-      return list;
+      return this.buildRequirementCourseList('core');
     },
     electives: function () {
-      let courses = this.tree?.courses ?? {};
-      let electives = courses?.elective ?? {};
-      let list = [];
-      for (let courseCode in electives) {
-        let data = electives[courseCode];
-        data.course_code = courseCode;
-        let userData = this.getUserCourseData(courseCode);
-        if (userData) {
-          data.state = userData.canvas_enrollment_state ?? '';
-          data.is_active = userData.is_active ?? false;
-          data.is_transfer = userData.is_transfer ?? false;
-          data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
-          data.num_extensions = userData.num_extensions;
-          data.canvas_course_id = userData.canvas_course_id;
-          data.progress = userData.progress;
-          data.final_score = userData.final_score;
-          data.current_score = userData.current_score;
-          data.credits_per_day = userData.credits_per_day;
-          data.days_in_course = userData.time_in_course / (60 * 60 * 24);
-        }
-        list.push(data);
-      }
-      list.sort((a, b) => {
-        const ad = String(a.course_code || '').toLowerCase();
-        const bd = String(b.course_code || '').toLowerCase();
-        return ad > bd ? 1 : ad < bd ? -1 : 0;
-      });
-      return list;
+      return this.buildRequirementCourseList('elective');
     },
     others: function () {
-      const userCourses = this.user?.courses ?? {};
+      const userCourses = this.user?.courses ?? [];
       const courses = this.tree?.courses ?? {};
       const core = courses.core ?? {};
       const electives = courses.elective ?? {};
 
-      const others = [];
-
-      for (let key in userCourses) {
-        const course = userCourses[key];
-        const code = course.course_code;
-
-        const isCore = code in core;
-        const isElective = code in electives;
-
-        // Only include courses that are NOT in core and NOT in electives
-        if (!isCore && !isElective) {
-          const data = { ...course }; // shallow copy so we don't mutate original
-
-          // If you want days_in_course similar to the others:
-          if (data.time_in_course != null) {
-            data.days_in_course = data.time_in_course.days;
-          }
-
-          others.push(data);
-        }
-      }
-
-      // Optional: keep them sorted like core/electives
-      others.sort((a, b) => {
-        const ad = String(a.course_code || "").toLowerCase();
-        const bd = String(b.course_code || "").toLowerCase();
-        return ad > bd ? 1 : ad < bd ? -1 : 0;
-      });
-
-      return others;
+      return userCourses
+        .filter(course => !(course.course_code in core) && !(course.course_code in electives))
+        .map(course => this.mergeUserCourseData(course, course.course_code))
+        .sort(this.sortByCourseCode);
     }
   },
   data() {
@@ -200,6 +121,52 @@ Vue.component('student-courses-report-2', {
   },
 
   methods: {
+    sortByCourseCode(a, b) {
+      const ad = String(a.course_code || '').toLowerCase();
+      const bd = String(b.course_code || '').toLowerCase();
+      return ad.localeCompare(bd);
+    },
+    buildRequirementCourseList(groupName) {
+      const requirementCourses = this.tree?.courses?.[groupName] ?? {};
+      return Object.entries(requirementCourses)
+        .map(([courseCode, course]) => this.mergeUserCourseData(course, courseCode))
+        .sort(this.sortByCourseCode);
+    },
+    mergeUserCourseData(course, courseCode) {
+      const data = { ...course, course_code: courseCode };
+      const userData = this.getUserCourseData(courseCode);
+
+      if (!userData) {
+        if (data.time_in_course != null && data.days_in_course == null) {
+          data.days_in_course = this.getDaysInCourse(data.time_in_course);
+        }
+        return data;
+      }
+
+      const isActive = userData.is_active ?? false;
+      const isTransfer = userData.is_transfer ?? false;
+
+      return {
+        ...data,
+        ...userData,
+        is_active: isActive,
+        is_transfer: isTransfer,
+        num_extensions: userData.num_extensions,
+        canvas_course_id: userData.canvas_course_id,
+        progress: userData.progress,
+        current_score: userData.current_score,
+        final_score: userData.final_score,
+        credits_per_day: userData.credits_per_day,
+        days_in_course: this.getDaysInCourse(userData.time_in_course),
+        state: isTransfer ? 'Transfer' : isActive ? 'Active' : 'Concluded',
+      };
+    },
+    getDaysInCourse(timeInCourse) {
+      if (timeInCourse == null) return undefined;
+      if (typeof timeInCourse === 'number') return timeInCourse / (60 * 60 * 24);
+      if (typeof timeInCourse?.days === 'number') return timeInCourse.days;
+      return undefined;
+    },
     getDisplayScore(course) {
       let score = this.treatUngradedAsZero ? course?.final_score : course?.current_score;
       return score;

@@ -16,7 +16,7 @@ Vue.component('show-student-grades', {
           <span></span><span></span><span></span>
         </div>
 
-        <div v-else-if="!user || !user.canvas_id" style="display: contents;">
+        <div v-else-if="!canvasUserId" style="display: contents;">
           <span><i>Waiting for Canvas ID…</i></span>
           <span></span><span></span><span></span>
         </div>
@@ -70,29 +70,30 @@ Vue.component('show-student-grades', {
     }
   },
 
+  computed: {
+    canvasUserId() {
+      return this.user?.canvas_id || this.user?.canvas_user_id || null;
+    }
+  },
+
   mounted() {
   },
 
   watch: {
     // Watch specifically for when canvas_id appears/changes
-    'user': {
+    canvasUserId: {
       immediate: true,
-      handler(newUser, oldUser) {
-        let newCanvasId = newUser?.canvas_id;
-        let oldCanvasId = oldUser?.canvas_id;
+      handler(newCanvasId, oldCanvasId) {
         if (!newCanvasId) {
-          // No canvas_id yet; clear state and wait.
           this.enrollments = [];
           this.loading = false;
           this.error = null;
           return;
         }
 
-        // If changed (or appeared), fetch
         if (newCanvasId !== oldCanvasId) {
           this.fetchEnrollments();
         } else if (this.enrollments.length === 0) {
-          // Same id but nothing loaded yet (edge cases)
           this.fetchEnrollments();
         }
       }
@@ -101,7 +102,7 @@ Vue.component('show-student-grades', {
 
   methods: {
     async fetchEnrollments() {
-      const canvasId = this.user && this.user.canvas_id;
+      const canvasId = this.canvasUserId;
       if (!canvasId) return;
 
       const myToken = ++this._fetchToken;
