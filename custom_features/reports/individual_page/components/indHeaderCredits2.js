@@ -44,7 +44,7 @@ Vue.component('ind-header-credits-2', {
           </div>
 
           <span class="btech-ind-header__chip">
-            {{ degree?.campus }}
+            {{ degree?.campus_code }}
           </span>
 
           <div

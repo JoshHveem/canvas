@@ -285,8 +285,7 @@
             return {};
           }
           // Be tolerant of missing degrees
-          user.degrees = Array.isArray(this.bridgetoolsUser?.degrees) ? this.bridgetoolsUser.degrees : [];
-          console.log(user.degrees);
+          user.degrees = btMajors;
           user.courses = btCourses;
           user.canvas_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
