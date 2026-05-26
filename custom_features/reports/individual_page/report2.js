@@ -347,9 +347,15 @@
             const bprog = this.getDegreeProgressValue(b);
             const aActive = a?.is_active_degree ? 1 : 0;
             const bActive = b?.is_active_degree ? 1 : 0;
+            const aYear = Number(a?.academic_year__major ?? a?.academic_year) || 0;
+            const bYear = Number(b?.academic_year__major ?? b?.academic_year) || 0;
 
             if (bActive !== aActive) {
               return bActive - aActive;
+            }
+
+            if (bYear !== aYear) {
+              return bYear - aYear;
             }
 
             if (bprog.progressRatio !== aprog.progressRatio) {
