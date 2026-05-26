@@ -60,6 +60,7 @@
           <select
             id="btech-degree-select"
             v-model.number="currentDegreeIndex"
+            @change="onDegreeChange"
             class="btech-degree-switcher__select"
           >
             <option

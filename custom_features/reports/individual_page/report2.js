@@ -80,6 +80,7 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
+          this.selectedDegree = user.degrees[this.currentDegreeIndex] || null;
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -99,6 +100,7 @@
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
           currentDegreeIndex: 0,
+          selectedDegree: null,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -159,13 +161,17 @@
         },
 
         currentDegree() {
-          const degrees = this.user?.degrees || [];
-          if (!degrees.length) return {};
-          return degrees[this.currentDegreeIndex] || degrees[0];
+          return this.selectedDegree || {};
         },
       },
 
       methods: {
+        onDegreeChange(event) {
+          const nextIndex = Number(event.target.value);
+          this.currentDegreeIndex = nextIndex;
+          this.selectedDegree = this.user.degrees[nextIndex];
+        },
+
         onReportChange() {
           this.saveSettings(this.settings);
         },
@@ -267,6 +273,7 @@
 
           const currentDegree = defaultDegree || normalizedDegrees[0];
           this.currentDegreeIndex = Math.max(0, normalizedDegrees.findIndex(degree => degree === currentDegree));
+          this.selectedDegree = currentDegree;
 
           return user;
         },
