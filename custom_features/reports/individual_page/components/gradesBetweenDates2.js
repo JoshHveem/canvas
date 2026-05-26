@@ -502,10 +502,13 @@
       },
 
       async loadTerms(filters = {}) {
-        console.log(this.selectedTerm);
+        console.log(this.user);
+        let query = {
+          sis_user_id: this.user.sis_user_id
+        }
         const [baseTerms, overrideTerms] = await Promise.all([
-          bridgetools.req3('reports', { sis_user_id: this.selectedTerm.sis_user_id }, { dataset: 'student_hs_terms' }),
-          bridgetools.req3('reports', { sis_user_id: this.selectedTerm.sis_user_id }, { dataset: 'student_hs_terms__override' })
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
         ]);
 
         console.log(overrideTerms);
