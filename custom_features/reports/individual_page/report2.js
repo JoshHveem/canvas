@@ -263,7 +263,7 @@
             this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api/v2/students/${userId}`
             );
-            this.bridgetoolsUserV3 = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'});
+            this.bridgetoolsUserV3 = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0]:
             console.log(this.bridgetoolsUserV3);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
