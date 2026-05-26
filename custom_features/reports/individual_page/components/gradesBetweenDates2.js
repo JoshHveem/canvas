@@ -502,16 +502,10 @@
       },
 
       async loadTerms(filters = {}) {
-        const query = Object.assign({}, filters);
         console.log(this.selectedTerm);
-        const canvasUserId = this.userId;
-        if (canvasUserId) {
-          query.canvas_user_id = canvasUserId;
-        }
-
         const [baseTerms, overrideTerms] = await Promise.all([
-          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
-          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
+          bridgetools.req3('reports', { sis_user_id: this.selectedTerm.sis_user_id }, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', { sis_user_id: this.selectedTerm.sis_user_id }, { dataset: 'student_hs_terms__override' })
         ]);
 
         console.log(overrideTerms);
