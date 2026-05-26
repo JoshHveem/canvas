@@ -15,7 +15,7 @@
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
               <option v-for='term in sortedTerms' :value='term._id'>
-                {{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} (x{{term.concurrent_count}})
+                {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_count}})
               </option>
             </select>
             <span>Start Date:</span>
@@ -261,7 +261,7 @@
     computed: {
       sortedTerms() {
         return [...this.termsData].sort((a, b) => {
-          return new Date(b.entry_date) - new Date(a.entry_date);
+          return new Date(b.entry_at) - new Date(a.entry_at);
         });
       },
       estimatedCreditsEnrolled() {
@@ -506,21 +506,22 @@
       },
 
       normalizeTerm(baseTerm, overrideTerm) {
-        const entryDate = overrideTerm?.entry_at__override || baseTerm.entry_at;
-        const exitDate = overrideTerm?.exit_at__override || baseTerm.exit_at;
+        const effectiveEntryAt = overrideTerm?.entry_at__override || baseTerm.entry_at;
+        const effectiveExitAt = overrideTerm?.exit_at__override || baseTerm.exit_at;
         const creditsRequiredOverride = overrideTerm?.credits_required__override;
 
         return {
           ...baseTerm,
           _id: this.buildTermKey(baseTerm),
           entry_at__original: baseTerm.entry_at,
-          entry_date: entryDate,
-          exit_date: exitDate,
+          exit_at__original: baseTerm.exit_at,
+          entry_at: effectiveEntryAt,
+          exit_at: effectiveExitAt,
           section_code: baseTerm.section_code || baseTerm.course_code,
           concurrent_count: Number(baseTerm.concurrent_count) || 1,
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
-            : this.calculateCreditsRequired(entryDate, exitDate, baseTerm.concurrent_count),
+            : this.calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_count),
           has_credits_required_override: creditsRequiredOverride != null,
           override: overrideTerm || null,
         };
@@ -582,7 +583,7 @@
           payload.entry_at__override = nextEntryAt;
         }
 
-        if (nextExitAt && nextExitAt !== term.exit_date) {
+        if (nextExitAt && nextExitAt !== term.exit_at__original) {
           payload.exit_at__override = nextExitAt;
         }
 
@@ -1037,8 +1038,8 @@
 
         this.selectedTerm = term;
 
-        const start = this.dateToHTMLDate(term.entry_date);
-        const end   = this.dateToHTMLDate(term.exit_date);
+        const start = this.dateToHTMLDate(term.entry_at);
+        const end   = this.dateToHTMLDate(term.exit_at);
 
         // working values used by the report
         this.submissionDatesStart = start;
@@ -1049,7 +1050,7 @@
         this.savedSubmissionDatesEnd   = end;
 
         this.getIncludedAssignmentsBetweenDates();
-        this.drawSubmissionsGraph(new Date(term.entry_date), new Date(term.exit_date));
+        this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
         if (term.has_credits_required_override) {
           this.estimatedCreditsRequired = Number(term.credits_required) || 0;
         }
