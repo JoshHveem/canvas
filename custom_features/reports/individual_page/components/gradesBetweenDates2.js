@@ -559,11 +559,23 @@
       },
 
       async hsTermsUpdate(payload = {}) {
-        return bridgetools.req(
-          'https://reports.bridgetools.dev/api3/hs_terms',
-          payload,
-          'POST'
-        );
+        const authCode = await bridgetools.getCanvasAuthCode();
+
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            url: 'https://reports.bridgetools.dev/api3/hs_terms',
+            method: 'POST',
+            data: JSON.stringify(payload),
+            contentType: 'application/json',
+            processData: false,
+            headers: {
+              Authorization: `Bearer ${authCode}`,
+              'X-Canvas-User-Id': String(ENV.current_user_id),
+            },
+          })
+            .done(data => resolve(data))
+            .fail((xhr, status, err) => reject({ xhr, status, err }));
+        });
       },
 
       getSaveErrorMessage(err) {
