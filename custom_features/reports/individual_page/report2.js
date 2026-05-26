@@ -98,7 +98,7 @@
             { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
-          currentDegreeId: null,
+          currentDegreeIndex: 0,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -161,10 +161,7 @@
         currentDegree() {
           const degrees = this.user?.degrees || [];
           if (!degrees.length) return {};
-
-          const id = this.currentDegreeId;
-          const match = degrees.find(deg => id === this.getDegreeId(deg));
-          return match || degrees[0];
+          return degrees[this.currentDegreeIndex] || degrees[0];
         },
       },
 
@@ -226,10 +223,6 @@
           }, 0);
         },
 
-        getDegreeId(degree) {
-          return `${degree.major_code}-${degree.academic_year__major}`;
-        },
-
         sortDegrees(degrees) {
           return [...(degrees || [])].sort((a, b) => {
             const aActive = a.is_active_degree ? 1 : 0;
@@ -273,7 +266,7 @@
           };
 
           const currentDegree = defaultDegree || normalizedDegrees[0];
-          this.currentDegreeId = currentDegree ? this.getDegreeId(currentDegree) : null;
+          this.currentDegreeIndex = Math.max(0, normalizedDegrees.findIndex(degree => degree === currentDegree));
 
           return user;
         },

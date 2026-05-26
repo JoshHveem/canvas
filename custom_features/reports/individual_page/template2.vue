@@ -59,13 +59,13 @@
 
           <select
             id="btech-degree-select"
-            v-model="currentDegreeId"
+            v-model.number="currentDegreeIndex"
             class="btech-degree-switcher__select"
           >
             <option
               v-for="(deg, idx) in user.degrees"
-              :key="getDegreeId(deg)"
-              :value="getDegreeId(deg)"
+              :key="idx"
+              :value="idx"
             >
               {{ deg.major_code + ' ' + deg.academic_year__major }}
             </option>
@@ -78,6 +78,7 @@
             :user="user"
             :degree="currentDegree"
             :settings="settings"
+            :key="'header-' + currentDegreeIndex"
           ></ind-header-credits-2> 
         </div>
 
@@ -89,7 +90,7 @@
             :degree="currentDegree"
             :settings="settings"
             :colors="colors"
-            :key="currentDegreeId"
+            :key="currentDegreeIndex"
           ></student-courses-report-2>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
