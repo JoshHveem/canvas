@@ -339,6 +339,7 @@
             this.bridgetoolsUser = studentProfile;
             this.canvasUser = Array.isArray(canvasUser) ? canvasUser[0] : canvasUser;
             const hydratedMajors = await this.hydrateMajors(studentMajors);
+            console.log(studentHeader)
             return this.normalizeUserRecord({
               canvasUser: this.canvasUser,
               studentHeader: studentHeader?.[0],
