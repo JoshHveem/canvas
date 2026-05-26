@@ -535,7 +535,7 @@
       buildHsTermUpdatePayload(term) {
         const payload = {
           sis_user_id: term.sis_user_id,
-          canvas_user_id: term.canvas_user_id,
+          canvas_user_id: this.userId,
           course_code: term.course_code,
           campus_code: term.campus_code,
           entry_at: term.entry_at__original,
