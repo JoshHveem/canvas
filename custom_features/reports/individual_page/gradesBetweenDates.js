@@ -558,67 +558,36 @@
 
       async getCourseData() {
         const studentId = String(this.userId || "");
-        let courseId = String(CURRENT_COURSE_ID || "");
-        console.log(studentId);
-        if (courseId === "") {
-          let data = await canvasGet(`/api/v1/users/${studentId}/graded_submissions?include[]=assignment`);
-          if (data.length > 0) courseId = data[0].assignment.course_id;
-        }
-        if (!courseId || !studentId) return [];
-
-        // --- 1) Fetch the student via current course, then all their enrollments ---
-        const query = `
-          query CoursesForStudent {
-            course(id: "${courseId}") {
-              enrollmentsConnection(filter: {userIds: "${studentId}"}) {
-                nodes {
-                  user {
-                    enrollments {
-                      enrollmentState
-                      type
-                      course { _id name courseCode term { name } }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `;
+        if (!studentId) return [];
 
         let enrollments = [];
         try {
-          const res = await $.post("/api/graphql", { query });
-          enrollments =
-            res?.data?.course?.enrollmentsConnection?.nodes?.[0]?.user?.enrollments || [];
+          enrollments = await bridgetools.req3(
+            'reports',
+            { canvas_user_id: studentId },
+            { dataset: 'canvas_enrollments' }
+          );
         } catch (e) {
-          console.error("Failed fetching course enrollments via GraphQL:", e);
+          console.error("Failed fetching course enrollments via req3:", e);
           return [];
         }
 
-        // --- 2) Build REST-shaped courses[] (deduped) ---
         const courses = Array.from(
           enrollments
-            .filter(e => (e?.type || "").toLowerCase().includes("student"))
-            .reduce((m, e) => {
-              const c = e?.course;
-              if (!c?._id) return m;
+            .reduce((m, enrollment) => {
+              const id = Number(enrollment?.canvas_course_id);
+              if (!id) return m;
 
-              const id = Number(c._id);
-              const key = String(Number.isFinite(id) ? id : c._id);
+              const key = String(id);
 
               const course = m.get(key) || {
-                id: Number.isFinite(id) ? id : c._id,
-                course_id: Number.isFinite(id) ? id : c._id,
-                name: c.name,
-                course_code: c.courseCode,
-                term: { name: c.term?.name || "" },
-                enrollments: [],
+                id,
+                course_id: id,
+                name: enrollment.course_code,
+                course_code: enrollment.course_code,
+                academic_year: enrollment.academic_year,
+                section_name: enrollment.section_name || "",
               };
-
-              course.enrollments.push({
-                enrollment_state: String(e.enrollmentState || "").toLowerCase(),
-                type: e.type,
-              });
 
               m.set(key, course);
               return m;
@@ -630,11 +599,8 @@
         const hydrate = async (course, idx, total) => {
           this.loadingMessage = `Loading Course Data for Course ${course.course_id}`;
 
-          const year = this.extractYear(course.term?.name || "");
-          if (year) {
-            const states = new Set((course.enrollments || []).map(e => e.enrollment_state));
-            const state = states.has("active") ? "Active" : states.has("completed") ? "Completed" : "N/A";
-            const row = this.newCourse(course.id, state, course.name, year, course.course_code);
+          if (course.academic_year) {
+            const row = this.newCourse(course.id, "N/A", course.name, course.academic_year, course.course_code);
             course.hours = row.hours;
             course.credits = row.hours / 30;
           }
