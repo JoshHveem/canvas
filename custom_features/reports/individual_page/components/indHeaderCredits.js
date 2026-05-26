@@ -47,6 +47,15 @@ Vue.component('ind-header-credits', {
             {{ major.campus_code }}
           </span>
 
+          <span
+            v-if="user.academic_standing_code"
+            class="btech-pill-text btech-ind-header__pill"
+            :title="user.academic_standing_name"
+            :style="{ 'background-color': colors.red, 'color': '#ffffff' }"
+          >
+            {{ user.academic_standing_code }}
+          </span>
+
           <div
             v-if="distanceApproved"
             :title="distanceApproved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"

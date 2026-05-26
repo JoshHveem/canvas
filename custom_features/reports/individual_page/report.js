@@ -374,6 +374,8 @@
             canvas_user_id: canvasUser.id,
             name: canvasUser.name,
             academic_probation: null,
+            academic_standing_code: studentHeader.academic_standing_code,
+            academic_standing_name: studentHeader.academic_standing_name,
             last_update: bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at),
             last_login: bridgetools.psqlTimestampToDate(studentHeader.last_login_at),
             avatar_url: studentHeader.avatar_image_url || canvasUser.avatar_url,

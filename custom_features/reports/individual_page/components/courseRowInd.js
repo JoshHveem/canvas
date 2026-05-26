@@ -27,10 +27,9 @@ Vue.component('course-row-ind', {
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
             class="btech-pill-text" 
-            v-show="extensions > 0"
             :style="{
               'background-color': extensionsBGColor,
-              'color': colors.white,
+              'color': extensions > 0 ? colors.white : colors.black,
             }">
             {{extensions}} Extn
           </span>
@@ -48,10 +47,10 @@ Vue.component('course-row-ind', {
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
         </div>
-        <course-progress-bar-ind-2
+        <course-progress-bar-ind
           :progress="progress"
           :colors="colors"
-        ></course-progress-bar-ind-2> 
+        ></course-progress-bar-ind> 
         <div style="display: inline-block; width: 5rem; font-size: 1rem;">
           <span
             class="btech-pill-text"
@@ -159,6 +158,7 @@ Vue.component('course-row-ind', {
     },
     extensionsBGColor: function() {
       let vm = this;
+      if (vm.extensions === 0) return vm.colors.gray;
       return vm.extensions > 2 ? vm.colors.red : (vm.extensions == 1 ? vm.colors.yellow : vm.colors.green);
     },
     gradeBGColor: function() {
