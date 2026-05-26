@@ -12,7 +12,7 @@
     }
   }
   
-  Vue.component('show-grades-between-dates', {
+  Vue.component('show-grades-between-dates-old', {
     template: ` 
       <div>
         <div v-if='loadingAssignments'>
