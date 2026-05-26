@@ -160,7 +160,15 @@
 
         currentMajor() {
           const majors = this.user?.majors || [];
-          return majors[this.selectedMajorIndex] || null;
+          const major = majors[this.selectedMajorIndex] || null;
+          console.log('[individual-report] currentMajor', {
+            selectedMajorIndex: this.selectedMajorIndex,
+            majorCount: majors.length,
+            majorCode: major?.major_code,
+            academicYear: major?.academic_year__major,
+            courses: major?.courses
+          });
+          return major;
         },
       },
 
