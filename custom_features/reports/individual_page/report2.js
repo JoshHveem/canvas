@@ -273,13 +273,6 @@
           });
         },
 
-        getMaxVisibleAcademicYear() {
-          const date = new Date();
-          let maxyear = date.getFullYear();
-          if ((date.getMonth() + 1) <= 6) maxyear -= 1;
-          return maxyear;
-        },
-
         getDegreeId(degree, idx = 0) {
           return degree?._id || `${degree?.major_code || 'major'}-${degree?.academic_year || idx}-${idx}`;
         },
@@ -347,8 +340,7 @@
         },
 
         normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
-          const normalizedDegrees = this.sortDegrees(degrees)
-            .filter(d => Number(d?.academic_year) <= this.getMaxVisibleAcademicYear());
+          const normalizedDegrees = this.sortDegrees(degrees);
 
           const activeDegree = normalizedDegrees.find(degree => degree?.is_active_degree) || normalizedDegrees[0];
 
