@@ -81,18 +81,18 @@ Vue.component('student-courses-report-2', {
   `,
   props: {
     user: {},
-    degree: {},
+    major: {},
     settings: {}
   },
   computed: {
     core: function () {
-      return this.buildDegreeCourseList('core');
+      return this.buildMajorCourseList('core');
     },
     electives: function () {
-      return this.buildDegreeCourseList('elective');
+      return this.buildMajorCourseList('elective');
     },
     others: function () {
-      return this.buildDegreeCourseList('other');
+      return this.buildMajorCourseList('other');
     }
   },
   data() {
@@ -101,9 +101,6 @@ Vue.component('student-courses-report-2', {
       donut: {},
       treatUngradedAsZero: true,
     }
-  },
-  watch: {
-    // fires whenever `tree` is replaced by the parent
   },
   mounted() {
     // let entry = new Date();
@@ -117,9 +114,9 @@ Vue.component('student-courses-report-2', {
       const bd = String(b.course_code || '').toLowerCase();
       return ad.localeCompare(bd);
     },
-    buildDegreeCourseList(groupName) {
-      const degreeCourses = this.degree?.courses?.[groupName] || [];
-      return degreeCourses
+    buildMajorCourseList(groupName) {
+      const majorCourses = this.major.courses[groupName];
+      return majorCourses
         .map(course => this.mergeUserCourseData(course, course.course_code))
         .sort(this.sortByCourseCode);
     },

@@ -44,7 +44,7 @@ Vue.component('ind-header-credits-2', {
           </div>
 
           <span class="btech-ind-header__chip">
-            {{ degree?.campus_code }}
+            {{ major.campus_code }}
           </span>
 
           <div
@@ -83,22 +83,22 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Credits Earned</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-            {{ Math.round((degree?.credits_earned ?? 0) * 10) / 10 }} / {{ totalCredits }}
+            {{ Math.round((major.credits_earned ?? 0) * 10) / 10 }} / {{ totalCredits }}
           </span>
 
           <span class="btech-ind-header__label">Avg. Grade</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{
-              'background-color': degree?.average_score
-                ? (Math.round(degree.average_score) < 60
+              'background-color': major?.average_score
+                ? (Math.round(major.average_score) < 60
                     ? colors.red
-                    : Math.round(degree.average_score) < 80
+                    : Math.round(major.average_score) < 80
                       ? colors.yellow
                       : colors.green)
                 : colors.gray,
-              'color': degree?.average_score ? colors.white : colors.black,
+              'color': major?.average_score ? colors.white : colors.black,
             }">
-            {{ degree?.average_score ? Math.round(degree.average_score) + '%' : 'N/A' }}
+            {{ major?.average_score ? Math.round(major.average_score) + '%' : 'N/A' }}
           </span>
 
           <span class="btech-ind-header__label">Contracted Hours</span>
@@ -122,7 +122,7 @@ Vue.component('ind-header-credits-2', {
       type: Object,
       default: () => ({})
     },
-    degree: {
+    major: {
       type: Object,
       default: () => ({})
     },
@@ -141,19 +141,19 @@ Vue.component('ind-header-credits-2', {
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
     },
     distanceApproved() {
-      return this.degree?.is_distance_approved ?? this.user?.distance_approved ?? false;
+      return this.major.is_distance_approved ?? this.user?.distance_approved ?? false;
     },
     totalCredits() {
-      const courses = this.degree?.courses || {};
+      const courses = this.major.courses;
       return ['core', 'elective', 'other'].reduce((sum, groupName) => {
-        return sum + (courses[groupName] || []).reduce((groupSum, course) => {
+        return sum + courses[groupName].reduce((groupSum, course) => {
           return groupSum + Number(course.credits || 0);
         }, 0);
       }, 0);
     }
   },
   watch: {
-    degree: {
+    major: {
       handler (newVal, oldVal) {
         if (!newVal) return;
         this.$nextTick(() => {
@@ -193,7 +193,7 @@ Vue.component('ind-header-credits-2', {
         );
         donut.fillHours({
           max: this.totalCredits || 1,
-          hours: this?.degree?.credits_earned ?? 0,
+          hours: this.major.credits_earned ?? 0,
           color: this.colors.blue,
         });
       } catch (err) {

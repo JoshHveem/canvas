@@ -80,7 +80,7 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
-          this.selectedDegree = user.degrees[this.currentDegreeIndex] || null;
+          this.selectedMajor = user.majors[this.selectedMajorIndex] || null;
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -99,8 +99,8 @@
             { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
-          currentDegreeIndex: 0,
-          selectedDegree: null,
+          selectedMajorIndex: 0,
+          selectedMajor: null,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -160,16 +160,16 @@
           return base;
         },
 
-        currentDegree() {
-          return this.selectedDegree || {};
+        currentMajor() {
+          return this.selectedMajor || {};
         },
       },
 
       methods: {
-        onDegreeChange(event) {
+        onMajorChange(event) {
           const nextIndex = Number(event.target.value);
-          this.currentDegreeIndex = nextIndex;
-          this.selectedDegree = this.user.degrees[nextIndex];
+          this.selectedMajorIndex = nextIndex;
+          this.selectedMajor = this.user.majors[nextIndex];
         },
 
         onReportChange() {
@@ -229,8 +229,8 @@
           }, 0);
         },
 
-        sortDegrees(degrees) {
-          return [...(degrees || [])].sort((a, b) => {
+        sortMajors(majors) {
+          return [...(majors || [])].sort((a, b) => {
             const aActive = a.is_active_degree ? 1 : 0;
             const bActive = b.is_active_degree ? 1 : 0;
             if (aActive !== bActive) return bActive - aActive;
@@ -249,12 +249,12 @@
           });
         },
 
-        normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
-          const normalizedDegrees = this.sortDegrees(degrees);
-          const defaultDegree = normalizedDegrees[0];
+        normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, majors }) {
+          const sortedMajors = this.sortMajors(majors);
+          const defaultMajor = sortedMajors[0];
 
           const user = {
-            degrees: normalizedDegrees,
+            majors: sortedMajors,
             courses: courses || [],
             canvas_id: canvasUser?.id,
             canvas_user_id: canvasUser?.id,
@@ -268,12 +268,12 @@
             contracted_hours: studentProfile?.contracted_hours || {},
             contracted_hours_total: this.sumContractedHours(studentProfile?.contracted_hours),
             transfer_courses: [],
-            distance_approved: defaultDegree?.is_distance_approved ?? false,
+            distance_approved: defaultMajor?.is_distance_approved ?? false,
           };
 
-          const currentDegree = defaultDegree || normalizedDegrees[0];
-          this.currentDegreeIndex = Math.max(0, normalizedDegrees.findIndex(degree => degree === currentDegree));
-          this.selectedDegree = currentDegree;
+          const currentMajor = defaultMajor || sortedMajors[0];
+          this.selectedMajorIndex = Math.max(0, sortedMajors.findIndex(major => major === currentMajor));
+          this.selectedMajor = currentMajor;
 
           return user;
         },
@@ -301,7 +301,7 @@
               studentHeader: studentHeader?.[0],
               studentProfile,
               courses: studentCourses,
-              degrees: studentMajors
+              majors: studentMajors
             });
           } catch (err) {
             console.error(err);

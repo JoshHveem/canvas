@@ -47,51 +47,51 @@
 
         <!-- Degree selector sub-menu -->
         <div
-          v-if="user?.degrees && user.degrees.length"
-          class="btech-degree-switcher"
+          v-if="user?.majors && user.majors.length"
+          class="btech-major-switcher"
         >
           <label
-            for="btech-degree-select"
-            class="btech-degree-switcher__label"
+            for="btech-major-select"
+            class="btech-major-switcher__label"
           >
-            Program:
+            Major:
           </label>
 
           <select
-            id="btech-degree-select"
-            v-model.number="currentDegreeIndex"
-            @change="onDegreeChange"
-            class="btech-degree-switcher__select"
+            id="btech-major-select"
+            v-model.number="selectedMajorIndex"
+            @change="onMajorChange"
+            class="btech-major-switcher__select"
           >
             <option
-              v-for="(deg, idx) in user.degrees"
+              v-for="(major, idx) in user.majors"
               :key="idx"
               :value="idx"
             >
-              {{ deg.major_code + ' ' + deg.academic_year__major }}
+              {{ major.major_code + ' ' + major.academic_year__major }}
             </option>
           </select>
         </div>
 
-        <div>
+        <div v-if="currentMajor && currentMajor.courses">
           <ind-header-credits-2
             :colors="colors"
             :user="user"
-            :degree="currentDegree"
+            :major="currentMajor"
             :settings="settings"
-            :key="'header-' + currentDegreeIndex"
+            :key="'header-' + selectedMajorIndex"
           ></ind-header-credits-2> 
         </div>
 
 
         
-        <div v-show="settings.reportType === 'student-courses'">
+        <div v-show="settings.reportType === 'student-courses'" v-if="currentMajor && currentMajor.courses">
           <student-courses-report-2
             :user="user"
-            :degree="currentDegree"
+            :major="currentMajor"
             :settings="settings"
             :colors="colors"
-            :key="currentDegreeIndex"
+            :key="selectedMajorIndex"
           ></student-courses-report-2>
         </div>
         <div v-show="settings.reportType === 'student-grades'">
