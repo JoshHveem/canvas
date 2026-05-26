@@ -503,6 +503,7 @@
 
       async loadTerms(filters = {}) {
         const query = Object.assign({}, filters);
+        console.log(this.selectedTerm);
         const canvasUserId = this.userId;
         if (canvasUserId) {
           query.canvas_user_id = canvasUserId;
@@ -535,7 +536,6 @@
       buildHsTermUpdatePayload(term) {
         const payload = {
           sis_user_id: term.sis_user_id,
-          canvas_user_id: this.userId,
           course_code: term.course_code,
           campus_code: term.campus_code,
           entry_at: term.entry_at__original,
