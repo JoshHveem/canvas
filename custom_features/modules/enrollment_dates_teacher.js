@@ -18,39 +18,6 @@
     $(".conclude_enrollment_link_holder").css("display", "block");
   }
 
-  // Global "view all dates" handler, reused for every row (currently unused, but kept just in case)
-  async function showAllDatesModal() {
-    $("body").append(`
-      <div class='btech-modal' style='display: inline-block;'>
-        <div class='btech-modal-content' style='max-width: 800px;'>
-          <div class='btech-modal-content-inner'></div>
-        </div>
-      </div>
-    `);
-    let modalContent = $("body .btech-modal-content-inner");
-    let dates = await bridgetoolsReq(
-      `https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`
-    );
-    for (let d in dates) {
-      let date = dates[d];
-      modalContent.append(
-        `<div>
-          <span style="width: 6rem; display: inline-block;">
-            ${dateToString(new Date(date.end_date))}
-          </span>
-          Created By: ${date.creator_name} @
-          ${dateToString(new Date(date.created))}
-        </div>`
-      );
-    }
-    let modal = $("body .btech-modal");
-    modal.on("click", function (event) {
-      if ($(event.target).is(modal)) {
-        modal.remove();
-      }
-    });
-  }
-
   // helpers to actually update/reset a specific enrollment
   function resetDate(enrollment) {
     $.post(`/api/v1/courses/${ENV.COURSE_ID}/enrollments`, {
@@ -86,21 +53,6 @@
         notify: false,
       },
     });
-
-    let postData = {
-      canvas_user_id: ENV.USER_ID,
-      canvas_course_id: ENV.COURSE_ID,
-      canvas_section_id: enrollment.course_section_id,
-      end_date: endAtDate,
-      creator_id: ENV.current_user.id,
-      creator_name: ENV.current_user.display_name,
-    };
-
-    bridgetoolsReq(
-      `https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/users/${ENV.USER_ID}/end_dates`,
-      postData,
-      "POST"
-    );
   }
 
   // ---- NEW: per-enrollment UI wiring ----
