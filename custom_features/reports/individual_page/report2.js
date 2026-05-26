@@ -282,9 +282,9 @@
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
-          user.last_login = bridgetools.psqlTimestampToDate(this.bridgetoolsUserV3.last_login_at);
+          user.last_login = bridgetools.psqlTimestampToDate(btUser.last_login_at);
           user.avatar_url = this.canvasUser.avatar_url;
-          user.sis_id = this.bridgetoolsUserV3.sis_id;
+          user.sis_id = btUser.sis_id;
           user.hs_terms = this.bridgetoolsUser.hs_terms;
           user.contracted_hours = this.bridgetoolsUser.contracted_hours;
           let contractedHoursTotal = 0;
