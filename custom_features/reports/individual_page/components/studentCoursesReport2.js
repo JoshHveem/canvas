@@ -29,10 +29,10 @@ Vue.component('student-courses-report-2', {
             :credits="course?.credits"
             :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
-            :course-name="course.name"
+            :course-name="course.course_name"
             :course-id="course.canvas_course_id"
             :course-code="course.course_code"
-            :user-canvas-id="'' + user.canvas_id"
+            :user-canvas-id="'' + user.canvas_user_id"
             :extensions="course.num_extensions"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
@@ -47,10 +47,10 @@ Vue.component('student-courses-report-2', {
             :credits="course?.credits"
             :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
-            :course-name="course.name"
+            :course-name="course.course_name"
             :course-id="course.canvas_course_id"
             :course-code="course.course_code"
-            :user-canvas-id="'' + user.canvas_id"
+            :user-canvas-id="'' + user.canvas_user_id"
             :extensions="course.num_extensions"
             :istransfer="course?.is_transfer"
             :iswithdraw="false"
@@ -65,10 +65,10 @@ Vue.component('student-courses-report-2', {
             :credits="course?.credits"
             :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
-            :course-name="course.name"
-            :course-id="course.course_id"
+            :course-name="course.course_name"
+            :course-id="course.canvas_course_id"
             :course-code="course.course_code"
-            :user-canvas-id="'' + user.canvas_id"
+            :user-canvas-id="'' + user.canvas_user_id"
             :extensions="course.num_extensions"
             :istransfer="false"
             :iswithdraw="false"
@@ -99,7 +99,7 @@ Vue.component('student-courses-report-2', {
           data.is_transfer = userData.is_transfer ?? false;
           data.num_extensions = userData.num_extensions;
           data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
-          data.course_id = userData.course_id;
+          data.canvas_course_id = userData.canvas_course_id;
           data.progress = userData.progress;
           data.current_score = userData.current_score;
           data.final_score = userData.final_score;
@@ -129,7 +129,7 @@ Vue.component('student-courses-report-2', {
           data.is_transfer = userData.is_transfer ?? false;
           data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
           data.num_extensions = userData.num_extensions;
-          data.course_id = userData.course_id;
+          data.canvas_course_id = userData.canvas_course_id;
           data.progress = userData.progress;
           data.final_score = userData.final_score;
           data.current_score = userData.current_score;
