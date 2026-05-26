@@ -529,17 +529,30 @@
       },
 
       buildHsTermUpdatePayload(term) {
-        return {
+        const payload = {
           sis_user_id: term.sis_user_id,
-          canvas_user_id: term.canvas_user_id,
           course_code: term.course_code,
           campus_code: term.campus_code,
-          academic_year: term.academic_year,
-          entry_at__original: term.entry_at__original,
-          entry_at__override: this.toReq3DateTime(this.submissionDatesStart),
-          exit_at__override: this.toReq3DateTime(this.submissionDatesEnd),
-          credits_required__override: Number(this.estimatedCreditsEnrolled) || 0,
+          entry_at: term.entry_at__original,
         };
+
+        const nextEntryAt = this.toReq3DateTime(this.submissionDatesStart);
+        const nextExitAt = this.toReq3DateTime(this.submissionDatesEnd);
+        const nextCreditsRequired = Number(this.estimatedCreditsEnrolled) || 0;
+
+        if (nextEntryAt && nextEntryAt !== term.entry_at__original) {
+          payload.entry_at__override = nextEntryAt;
+        }
+
+        if (nextExitAt && nextExitAt !== term.exit_date) {
+          payload.exit_at__override = nextExitAt;
+        }
+
+        if (nextCreditsRequired !== this.calculateCreditsRequired(nextEntryAt, nextExitAt, term.concurrent_count)) {
+          payload.credits_required__override = nextCreditsRequired;
+        }
+
+        return payload;
       },
 
       async hsTermsUpdate(payload = {}) {
@@ -569,7 +582,15 @@
         this.savingTermDates = true;
 
         try {
-          await this.hsTermsUpdate(this.buildHsTermUpdatePayload(term));
+          const payload = this.buildHsTermUpdatePayload(term);
+          if (Object.keys(payload).length <= 4) {
+            this.savedSubmissionDatesStart = this.submissionDatesStart;
+            this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+            this.closeBulkModal();
+            return;
+          }
+
+          await this.hsTermsUpdate(payload);
           await this.loadTerms({ sis_user_id: term.sis_user_id });
           this.selectedTermId = term._id;
           this.updateDatesToSelectedTerm();
@@ -636,9 +657,13 @@
             return this.bulkSelectedTermIds.includes(term._id);
           });
 
-          await Promise.all(selectedTerms.map(term => {
-            return this.hsTermsUpdate(this.buildHsTermUpdatePayload(term));
-          }));
+          const payloads = selectedTerms
+            .map(term => this.buildHsTermUpdatePayload(term))
+            .filter(payload => Object.keys(payload).length > 4);
+
+          if (payloads.length) {
+            await Promise.all(payloads.map(payload => this.hsTermsUpdate(payload)));
+          }
 
           await this.loadTerms({ sis_user_id: this.selectedTerm.sis_user_id });
           this.selectedTermId = this.selectedTerm._id;
