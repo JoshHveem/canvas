@@ -23,7 +23,7 @@ function createModal() {
 // Main function that updates the usage columns and attaches click handlers
 async function updateUsageColumns() {
   let fileDict = {};
-  let files = await bridgetools.req(`https://reports.bridgetools.dev/api/courses/${ENV.COURSE_ID}/files`);
+  let files = await bridgetools.req3('reports', {canvas_course_id: ENV.COURSE_ID}, {dataset: 'canvas_course_file_usage'}) || [];
   
   // Cache files by file_id
   for (let file of files) {

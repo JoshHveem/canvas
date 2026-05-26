@@ -169,7 +169,7 @@
             let section = sections[s];
             for (let st in section.students) {
               let student = section.students[st];
-              let userData = await bridgetools.req(`https://reports.bridgetools.dev/api/students/${student.id}`);
+              let userData = await bridgetools.req3('reports', { canvas_user_id: student.id}, {dataset: 'canvas_enrollments'}) || {};
               if (!(student.id in this.enrollmentTypes)) {
                 this.enrollmentTypes[student.id] = userData.enrollment_type;
               }
