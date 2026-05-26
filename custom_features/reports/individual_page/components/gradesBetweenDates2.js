@@ -499,15 +499,11 @@
 
       async loadTerms(filters = {}) {
         const query = Object.assign({}, filters);
-        const canvasUserId = this.user?.canvas_user_id || this.user?.id;
-
-        if (!query.canvas_user_id && canvasUserId) {
-          query.canvas_user_id = canvasUserId;
-        }
+        const canvasUserId = this.user?.canvas_user_id;
 
         const [baseTerms, overrideTerms] = await Promise.all([
-          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
-          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
+          bridgetools.req3('reports', { canvas_user_id: canvasUserId }, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', { canvas_user_id: canvasUserId }, { dataset: 'student_hs_terms__override' })
         ]);
 
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
