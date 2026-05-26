@@ -369,6 +369,7 @@
 
 
         termsData: [],
+        loadedTermsSisUserId: null,
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -391,14 +392,27 @@
         courses: [],
       }
     },
+    watch: {
+      user: {
+        immediate: true,
+        deep: true,
+        async handler(user) {
+          const sisUserId = user?.sis_user_id || user?.sis_id;
+          if (!sisUserId) return;
+          if (this.loadedTermsSisUserId === sisUserId && this.termsData.length) return;
+
+          try {
+            await this.loadTerms();
+            this.loadedTermsSisUserId = sisUserId;
+          } catch (err) {
+            console.error("Failed loading HS terms:", err);
+          }
+        }
+      }
+    },
     created: async function () {
       this.loadingProgress = 0;
       this.loadingMessage = "Loading Courses";
-      try {
-        await this.loadTerms();
-      } catch (err) {
-        console.error("Failed loading HS terms:", err);
-      }
 
       this.courses = await this.getCourseData();
 
@@ -502,16 +516,17 @@
       },
 
       async loadTerms(filters = {}) {
-        console.log(this.user);
+        const sisUserId = this.user?.sis_user_id || this.user?.sis_id;
+        if (!sisUserId) return;
+
         let query = {
-          sis_user_id: this.user.sis_user_id
+          sis_user_id: sisUserId
         }
         const [baseTerms, overrideTerms] = await Promise.all([
           bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
           bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
         ]);
 
-        console.log(overrideTerms);
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
         if (!this.termsData.length) {
