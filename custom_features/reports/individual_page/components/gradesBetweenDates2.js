@@ -812,6 +812,7 @@
             { canvas_user_id: studentId },
             { dataset: 'canvas_enrollments' }
           );
+          console.log(enrollments);
         } catch (e) {
           console.error("Failed fetching course enrollments via req3:", e);
           return [];
