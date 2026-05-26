@@ -513,6 +513,7 @@
           bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
         ]);
 
+        console.log(overrideTerms);
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
         if (!this.termsData.length) {
