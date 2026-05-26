@@ -82,17 +82,29 @@ Vue.component('student-courses-report-2', {
   props: {
     user: {},
     major: {},
+    coreCourses: {
+      type: Array,
+      default: () => []
+    },
+    electiveCourses: {
+      type: Array,
+      default: () => []
+    },
+    otherCourses: {
+      type: Array,
+      default: () => []
+    },
     settings: {}
   },
   computed: {
     core: function () {
-      return this.buildMajorCourseList('core');
+      return this.buildMajorCourseList(this.coreCourses);
     },
     electives: function () {
-      return this.buildMajorCourseList('elective');
+      return this.buildMajorCourseList(this.electiveCourses);
     },
     others: function () {
-      return this.buildMajorCourseList('other');
+      return this.buildMajorCourseList(this.otherCourses);
     }
   },
   data() {
@@ -114,8 +126,7 @@ Vue.component('student-courses-report-2', {
       const bd = String(b.course_code || '').toLowerCase();
       return ad.localeCompare(bd);
     },
-    buildMajorCourseList(groupName) {
-      const majorCourses = this.major.courses[groupName];
+    buildMajorCourseList(majorCourses) {
       return majorCourses
         .map(course => this.mergeUserCourseData(course, course.course_code))
         .sort(this.sortByCourseCode);

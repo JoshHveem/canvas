@@ -89,6 +89,9 @@
           <student-courses-report-2
             :user="user"
             :major="currentMajor"
+            :core-courses="currentMajor.courses.core"
+            :elective-courses="currentMajor.courses.elective"
+            :other-courses="currentMajor.courses.other"
             :settings="settings"
             :colors="colors"
             :key="selectedMajorIndex"

@@ -80,7 +80,6 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
-          this.selectedMajor = user.majors[this.selectedMajorIndex] || null;
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -100,7 +99,6 @@
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
           selectedMajorIndex: 0,
-          selectedMajor: null,
           enrollmentData:  undefined,
           userId: null,
           user: {},
@@ -161,15 +159,14 @@
         },
 
         currentMajor() {
-          return this.selectedMajor || {};
+          const majors = this.user?.majors || [];
+          return majors[this.selectedMajorIndex] || null;
         },
       },
 
       methods: {
         onMajorChange(event) {
-          const nextIndex = Number(event.target.value);
-          this.selectedMajorIndex = nextIndex;
-          this.selectedMajor = this.user.majors[nextIndex];
+          this.selectedMajorIndex = Number(event.target.value);
         },
 
         onReportChange() {
@@ -273,7 +270,6 @@
 
           const currentMajor = defaultMajor || sortedMajors[0];
           this.selectedMajorIndex = Math.max(0, sortedMajors.findIndex(major => major === currentMajor));
-          this.selectedMajor = currentMajor;
 
           return user;
         },
