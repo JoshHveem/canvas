@@ -813,7 +813,6 @@
             { canvas_user_id: studentId },
             { dataset: 'canvas_enrollments' }
           );
-          console.log(enrollments);
         } catch (e) {
           console.error("Failed fetching course enrollments via req3:", e);
           return [];
@@ -874,7 +873,6 @@
         if (!term) return;
 
         this.selectedTerm = term;
-        console.log("Selected term:", term);
 
         const start = this.dateToHTMLDate(term.entry_date);
         const end   = this.dateToHTMLDate(term.exit_date);
