@@ -19,7 +19,7 @@ Vue.component('ind-header-credits-2', {
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="user?.name && tree?.credits" 
+        v-if="user?.name && totalCredits" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
@@ -83,7 +83,7 @@ Vue.component('ind-header-credits-2', {
           <span class="btech-ind-header__label">Credits Earned</span>
           <span class="btech-pill-text btech-ind-header__pill"
             :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
-            {{ Math.round((degree?.credits_earned ?? 0) * 10) / 10 }} / {{ tree.credits }}
+            {{ Math.round((degree?.credits_earned ?? 0) * 10) / 10 }} / {{ totalCredits }}
           </span>
 
           <span class="btech-ind-header__label">Avg. Grade</span>
@@ -126,10 +126,6 @@ Vue.component('ind-header-credits-2', {
       type: Object,
       default: () => ({})
     },
-    tree: {
-      type: Object,
-      default: () => ({})
-    },
     settings: {
       type: Object,
       default: () => ({})
@@ -146,26 +142,33 @@ Vue.component('ind-header-credits-2', {
     },
     distanceApproved() {
       return this.degree?.is_distance_approved ?? this.user?.distance_approved ?? false;
+    },
+    totalCredits() {
+      const courses = this.degree?.courses || {};
+      return ['core', 'elective', 'other'].reduce((sum, groupName) => {
+        return sum + (courses[groupName] || []).reduce((groupSum, course) => {
+          return groupSum + Number(course.credits || 0);
+        }, 0);
+      }, 0);
     }
   },
   watch: {
-    tree: {
+    degree: {
       handler (newVal, oldVal) {
         if (!newVal) return;
-        // make sure DOM is updated before touching the donut, just in case
         this.$nextTick(() => {
           this.updateHeader();
         });
       },
-      deep: true,     // needed if the parent mutates properties inside `tree`
-      immediate: true // optional: also run once on component creation
+      deep: true,
+      immediate: true
     },
     user: {
       handler (newVal, oldVal) {
         if (!newVal) return;
       },
-      deep: true,     // needed if the parent mutates properties inside `tree`
-      immediate: true // optional: also run once on component creation
+      deep: true,
+      immediate: true
 
     }
   },
@@ -189,7 +192,7 @@ Vue.component('ind-header-credits-2', {
           { width: 140, height: 140 }
         );
         donut.fillHours({
-          max: this?.tree?.credits ?? 1,
+          max: this.totalCredits || 1,
           hours: this?.degree?.credits_earned ?? 0,
           color: this.colors.blue,
         });

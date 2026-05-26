@@ -64,10 +64,10 @@
           >
             <option
               v-for="(deg, idx) in user.degrees"
-              :key="getDegreeId(deg, idx)"
-              :value="getDegreeId(deg, idx)"
+              :key="getDegreeId(deg)"
+              :value="getDegreeId(deg)"
             >
-              {{ deg.major_code + ' ' + deg.academic_year }}
+              {{ deg.major_code + ' ' + deg.academic_year__major }}
             </option>
           </select>
         </div>
@@ -77,7 +77,6 @@
             :colors="colors"
             :user="user"
             :degree="currentDegree"
-            :tree="currentTree"
             :settings="settings"
           ></ind-header-credits-2> 
         </div>
@@ -90,7 +89,6 @@
             :degree="currentDegree"
             :settings="settings"
             :colors="colors"
-            :tree="currentTree"
             :key="currentDegreeId"
           ></student-courses-report-2>
         </div>

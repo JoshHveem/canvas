@@ -82,24 +82,25 @@ Vue.component('student-courses-report-2', {
   props: {
     user: {},
     degree: {},
-    tree: {},
     settings: {}
   },
   computed: {
     core: function () {
-      return this.buildRequirementCourseList('core');
+      return this.buildDegreeCourseList('core');
     },
     electives: function () {
-      return this.buildRequirementCourseList('elective');
+      return this.buildDegreeCourseList('elective');
     },
     others: function () {
       const userCourses = this.user?.courses ?? [];
-      const courses = this.tree?.courses ?? {};
-      const core = courses.core ?? {};
-      const electives = courses.elective ?? {};
+      const degreeCourseCodes = new Set(
+        ['core', 'elective', 'other']
+          .flatMap(groupName => this.degree?.courses?.[groupName] || [])
+          .map(course => course.course_code)
+      );
 
       return userCourses
-        .filter(course => !(course.course_code in core) && !(course.course_code in electives))
+        .filter(course => !degreeCourseCodes.has(course.course_code))
         .map(course => this.mergeUserCourseData(course, course.course_code))
         .sort(this.sortByCourseCode);
     }
@@ -126,17 +127,17 @@ Vue.component('student-courses-report-2', {
       const bd = String(b.course_code || '').toLowerCase();
       return ad.localeCompare(bd);
     },
-    buildRequirementCourseList(groupName) {
-      const requirementCourses = this.tree?.courses?.[groupName] ?? {};
-      return Object.entries(requirementCourses)
-        .map(([courseCode, course]) => this.mergeUserCourseData(course, courseCode))
+    buildDegreeCourseList(groupName) {
+      const degreeCourses = this.degree?.courses?.[groupName] || [];
+      return degreeCourses
+        .map(course => this.mergeUserCourseData(course, course.course_code))
         .sort(this.sortByCourseCode);
     },
     mergeUserCourseData(course, courseCode) {
       const data = {
         ...course,
         course_code: courseCode,
-        course_name: course?.course_name || course?.name || courseCode
+        course_name: course.course_name || course.name || courseCode
       };
       const userData = this.getUserCourseData(courseCode);
 
@@ -182,8 +183,8 @@ Vue.component('student-courses-report-2', {
         donut._init('btech-department-report-student-progress-donut', this.colors.gray);
         donut.fillHours( 
           {
-            max: this?.tree?.hours ?? 1, 
-            hours: this?.degree?.graded_hours ?? 0, 
+            max: 1, 
+            hours: 0, 
             color: this.colors.blue, 
           }
         );

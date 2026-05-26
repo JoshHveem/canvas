@@ -104,9 +104,6 @@
           user: {},
           canvasUser: {},
           bridgetoolsUser: {},
-          tree: {
-            other: {}
-          },
           goal: undefined,
           colors: bridgetools.colors,
           settings: {
@@ -147,7 +144,6 @@
           }
         }
       },
-      watch: {},
       computed: {
         currentReportMeta() {
           const fallback = this.reportTypes[0];
@@ -164,16 +160,11 @@
 
         currentDegree() {
           const degrees = this.user?.degrees || [];
-          if (!degrees.length) return {major_code: '', academic_year: 0}; // fallback if you still set it elsewhere
+          if (!degrees.length) return {};
 
           const id = this.currentDegreeId;
-          const match = degrees.find((deg, idx) =>
-            id === this.getDegreeId(deg, idx)
-          );
+          const match = degrees.find(deg => id === this.getDegreeId(deg));
           return match || degrees[0];
-        },
-        currentTree() {
-          return this.buildTreeFromDegree(this.currentDegree);
         },
       },
 
@@ -235,150 +226,33 @@
           }, 0);
         },
 
-        async loadMajorCourseGroups(major) {
-          if (major?.courses?.core || major?.courses?.elective || major?.courses?.other) {
-            return this.normalizeDegree(major);
-          }
-
-          const majorCourses = await bridgetools.req3(
-            'reports',
-            {
-              major_code: major.major_code,
-              academic_year__major: major.academic_year__major
-            },
-            {dataset: 'major_courses'}
-          );
-
-          return this.normalizeDegree({
-            ...major,
-            courses: {
-              core: majorCourses.filter(c => c.major_requirement_type_code == 'C'),
-              elective: majorCourses.filter(c => c.major_requirement_type_code == 'E'),
-              other: majorCourses.filter(c => c.major_requirement_type_code != 'E' && c.major_requirement_type_code != 'C'),
-            }
-          });
-        },
-
-        getDegreeId(degree, idx = 0) {
-          return degree?._id || `${degree?.major_code || 'major'}-${degree?.academic_year || idx}-${idx}`;
+        getDegreeId(degree) {
+          return `${degree.major_code}-${degree.academic_year__major}`;
         },
 
         sortDegrees(degrees) {
           return [...(degrees || [])].sort((a, b) => {
-            const ay = Number(a?.academic_year) || 0;
-            const by = Number(b?.academic_year) || 0;
+            const aActive = a.is_active_degree ? 1 : 0;
+            const bActive = b.is_active_degree ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
+
+            const ay = Number(a.academic_year__major);
+            const by = Number(b.academic_year__major);
             if (ay !== by) return by - ay;
 
-            const ah = Number(a?.credits_earned) || Number(a?.graded_hours) || 0;
-            const bh = Number(b?.credits_earned) || Number(b?.graded_hours) || 0;
-            if (ah !== bh) return bh - ah;
+            const aperc = Number(a.perc_credits_earned);
+            const bperc = Number(b.perc_credits_earned);
+            if (aperc !== bperc) return bperc - aperc;
 
-            const ad = String(a?.major_code || '').toLowerCase();
-            const bd = String(b?.major_code || '').toLowerCase();
+            const ad = String(a.major_code || '').toLowerCase();
+            const bd = String(b.major_code || '').toLowerCase();
             return ad.localeCompare(bd);
           });
         },
 
-        mapCoursesByCode(courses) {
-          return (courses || []).reduce((map, course) => {
-            if (!course?.course_code) return map;
-            map[course.course_code] = course;
-            return map;
-          }, {});
-        },
-
-        calculateDegreeCredits(courses) {
-          return ['core', 'elective', 'other'].reduce((sum, groupName) => {
-            return sum + (courses[groupName] || []).reduce((groupSum, course) => {
-              return groupSum + (Number(course?.credits) || 0);
-            }, 0);
-          }, 0);
-        },
-
-        normalizeDegree(major) {
-          const courses = {
-            core: Array.isArray(major?.courses?.core) ? major.courses.core : [],
-            elective: Array.isArray(major?.courses?.elective) ? major.courses.elective : [],
-            other: Array.isArray(major?.courses?.other) ? major.courses.other : [],
-          };
-
-          return {
-            ...major,
-            academic_year: major?.academic_year ?? major?.academic_year__major,
-            courses,
-            credits_earned: Number(major?.credits_earned) || 0,
-            average_score: Number(major?.average_score) || 0,
-          };
-        },
-
-        buildTreeFromDegree(degree) {
-          const normalizedDegree = this.normalizeDegree(degree || {});
-          const courses = normalizedDegree.courses || { core: [], elective: [], other: [] };
-
-          return {
-            credits: this.calculateDegreeCredits(courses),
-            courses: {
-              core: this.mapCoursesByCode(courses.core),
-              elective: this.mapCoursesByCode(courses.elective),
-              other: this.mapCoursesByCode(courses.other),
-            }
-          };
-        },
-
-        getDegreeProgressValue(degree) {
-          const normalizedDegree = this.normalizeDegree(degree || {});
-          const totalCredits = this.calculateDegreeCredits(normalizedDegree.courses);
-          const earnedCredits = Number(normalizedDegree?.credits_earned) || 0;
-          const progressRatio = totalCredits > 0 ? (earnedCredits / totalCredits) : 0;
-
-          return {
-            earnedCredits,
-            totalCredits,
-            progressRatio
-          };
-        },
-
-        getDefaultDegree(degrees) {
-          const normalizedDegrees = degrees || [];
-          if (!normalizedDegrees.length) return undefined;
-
-          return [...normalizedDegrees].sort((a, b) => {
-            const aprog = this.getDegreeProgressValue(a);
-            const bprog = this.getDegreeProgressValue(b);
-            const aActive = a?.is_active_degree ? 1 : 0;
-            const bActive = b?.is_active_degree ? 1 : 0;
-            const aYear = Number(a?.academic_year__major ?? a?.academic_year) || 0;
-            const bYear = Number(b?.academic_year__major ?? b?.academic_year) || 0;
-
-            if (bActive !== aActive) {
-              return bActive - aActive;
-            }
-
-            if (bYear !== aYear) {
-              return bYear - aYear;
-            }
-
-            if (bprog.progressRatio !== aprog.progressRatio) {
-              return bprog.progressRatio - aprog.progressRatio;
-            }
-
-            if (bprog.earnedCredits !== aprog.earnedCredits) {
-              return bprog.earnedCredits - aprog.earnedCredits;
-            }
-
-            const ay = Number(b?.academic_year) || 0;
-            const by = Number(a?.academic_year) || 0;
-            if (ay !== by) return ay - by;
-
-            const ad = String(a?.major_code || '').toLowerCase();
-            const bd = String(b?.major_code || '').toLowerCase();
-            return ad.localeCompare(bd);
-          })[0];
-        },
-
         normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
           const normalizedDegrees = this.sortDegrees(degrees);
-          const defaultDegree = this.getDefaultDegree(normalizedDegrees);
+          const defaultDegree = normalizedDegrees[0];
 
           const user = {
             degrees: normalizedDegrees,
@@ -399,8 +273,7 @@
           };
 
           const currentDegree = defaultDegree || normalizedDegrees[0];
-          const currentDegreeIndex = normalizedDegrees.findIndex(degree => degree === currentDegree);
-          this.currentDegreeId = currentDegree ? this.getDegreeId(currentDegree, currentDegreeIndex) : null;
+          this.currentDegreeId = currentDegree ? this.getDegreeId(currentDegree) : null;
 
           return user;
         },
@@ -421,33 +294,19 @@
               canvasGet(`/api/v1/users/${userId}`)
             ]);
 
-            const majorsWithCourses = await Promise.all(
-              (studentMajors || []).map(major => this.loadMajorCourseGroups(major))
-            );
-            console.log(majorsWithCourses);
-
             this.bridgetoolsUser = studentProfile;
             this.canvasUser = canvasUser?.[0];
-            let user = this.normalizeUserRecord({
+            return this.normalizeUserRecord({
               canvasUser: this.canvasUser,
               studentHeader: studentHeader?.[0],
               studentProfile,
               courses: studentCourses,
-              degrees: majorsWithCourses
+              degrees: studentMajors
             });
-
-            const selectedMajor = user.degrees.find((degree, idx) => {
-              return this.getDegreeId(degree, idx) === this.currentDegreeId;
-            }) || user.degrees[0];
-            return this.updateUserCourseInfo(user, selectedMajor);
           } catch (err) {
             console.error(err);
             return {};
           }
-        },
-        updateUserCourseInfo(user, tree) {
-          // user = processUserData(user, tree); 
-          return user;
         },
 
       }
