@@ -559,23 +559,25 @@
       },
 
       async hsTermsUpdate(payload = {}) {
-        const authCode = await bridgetools.getCanvasAuthCode();
+        return bridgetools.req(
+          'https://reports.bridgetools.dev/api3/hs_terms',
+          payload,
+          'POST'
+        );
+      },
 
-        return new Promise((resolve, reject) => {
-          $.ajax({
-            url: 'https://reports.bridgetools.dev/api3/hs_terms',
-            method: 'POST',
-            data: JSON.stringify(payload),
-            contentType: 'application/json',
-            processData: false,
-            headers: {
-              Authorization: `Bearer ${authCode}`,
-              'X-Canvas-User-Id': String(ENV.current_user_id),
-            },
-          })
-            .done(data => resolve(data))
-            .fail((xhr, status, err) => reject({ xhr, status, err }));
-        });
+      getSaveErrorMessage(err) {
+        const responseJson = err?.xhr?.responseJSON;
+        const responseText = err?.xhr?.responseText;
+        const message =
+          responseJson?.error ||
+          responseJson?.message ||
+          responseJson?.data?.message ||
+          responseText ||
+          err?.message ||
+          'Failed to save term date changes.';
+
+        return String(message);
       },
 
       async confirmSingleUpdate() {
@@ -600,7 +602,7 @@
           this.closeBulkModal();
         } catch (err) {
           console.error("Failed saving term dates:", err);
-          alert("Failed to save term date changes.");
+          alert(this.getSaveErrorMessage(err));
         } finally {
           this.savingTermDates = false;
         }
@@ -646,7 +648,7 @@
 
         } catch (err) {
           console.error(err);
-          alert("Failed loading students for bulk update.");
+          alert(this.getSaveErrorMessage(err));
           this.closeBulkModal();
         } finally {
           this.bulkLoading = false;
@@ -675,7 +677,7 @@
           alert("Bulk update complete.");
         } catch (err) {
           console.error(err);
-          alert("Failed bulk updating students.");
+          alert(this.getSaveErrorMessage(err));
         } finally {
           this.bulkSaving = false;
         }
