@@ -19,10 +19,10 @@
               </option>
             </select>
             <span>Start Date:</span>
-            <input type="date" v-model="submissionDatesStart" @change="getIncludedAssignmentsBetweenDates()">
+            <input type="date" v-model="submissionDatesStart" @change="onDateRangeChange()">
 
             <span>End Date:</span>
-            <input type="date" v-model="submissionDatesEnd" @change="getIncludedAssignmentsBetweenDates()">
+            <input type="date" v-model="submissionDatesEnd" @change="onDateRangeChange()">
 
             <button
               v-if="termDatesDirty"
@@ -174,7 +174,14 @@
                 <td><b>Grade (Term)*</b></td>
                 <td>{{weightedFinalGradeForTerm}}%</td>
                 <td colspan="2"><b>Credits Required (Term)</b></td>
-                <td>{{estimatedCreditsEnrolled}}</td>
+                <td>
+                  <input
+                    style="padding: 0px 4px; margin: 0px;"
+                    v-model.number="termCreditsRequired"
+                    @input="onTermCreditsRequiredInput"
+                    type="text"
+                  >
+                </td>
               </tr>
               <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
             </tfoot>
@@ -264,11 +271,7 @@
           return new Date(b.entry_at) - new Date(a.entry_at);
         });
       },
-      estimatedCreditsEnrolled() {
-        if (this.selectedTerm?.has_credits_required_override) {
-          return Number(this.selectedTerm.credits_required) || 0;
-        }
-
+      calculatedTermCreditsRequired() {
         const start = this.parseDate(this.submissionDatesStart);
         const end   = this.parseDate(this.submissionDatesEnd);
 
@@ -327,7 +330,7 @@
 
       //
       weightedFinalGradeForTerm() {
-        const requiredCredits = this.estimatedCreditsEnrolled;
+        const requiredCredits = Number(this.termCreditsRequired) || 0;
         const creditsCompleted = this.sumCreditsCompleted();
 
         let grade = this.unweightedGrade;
@@ -348,7 +351,8 @@
           !!this.selectedTerm?._id &&
           (
             this.submissionDatesStart !== this.savedSubmissionDatesStart ||
-            this.submissionDatesEnd !== this.savedSubmissionDatesEnd
+            this.submissionDatesEnd !== this.savedSubmissionDatesEnd ||
+            Number(this.termCreditsRequired) !== Number(this.savedTermCreditsRequired)
           )
         );
       },
@@ -358,6 +362,8 @@
       return {
         savedSubmissionDatesStart: undefined,
         savedSubmissionDatesEnd: undefined,
+        savedTermCreditsRequired: 0,
+        savedTermCreditsHasOverride: false,
         savingTermDates: false,
 
         showBulkUpdateModal: false,
@@ -382,6 +388,8 @@
         courseTotalPoints: {},
         courseAssignmentGroups: {},
         estimatedCreditsRequired: 0,
+        termCreditsRequired: 0,
+        termCreditsManuallyEdited: false,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
         loadingProgress: 0,
@@ -576,7 +584,7 @@
 
         const nextEntryAt = this.toReq3DateTime(this.submissionDatesStart);
         const nextExitAt = this.toReq3DateTime(this.submissionDatesEnd);
-        const nextCreditsRequired = Number(this.estimatedCreditsEnrolled) || 0;
+        const nextCreditsRequired = Number(this.termCreditsRequired) || 0;
 
         if (nextEntryAt && nextEntryAt !== term.entry_at__original) {
           payload.entry_at__override = nextEntryAt;
@@ -638,6 +646,7 @@
           if (Object.keys(payload).length <= 4) {
             this.savedSubmissionDatesStart = this.submissionDatesStart;
             this.savedSubmissionDatesEnd = this.submissionDatesEnd;
+            this.savedTermCreditsRequired = Number(this.termCreditsRequired) || 0;
             this.closeBulkModal();
             return;
           }
@@ -991,6 +1000,10 @@
         // saved baseline used to detect dirty state
         this.savedSubmissionDatesStart = start;
         this.savedSubmissionDatesEnd   = end;
+        this.termCreditsRequired = Number(term.credits_required) || 0;
+        this.savedTermCreditsRequired = Number(term.credits_required) || 0;
+        this.savedTermCreditsHasOverride = !!term.has_credits_required_override;
+        this.termCreditsManuallyEdited = !!term.has_credits_required_override;
 
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
@@ -1014,7 +1027,21 @@
       revertTermDates() {
         this.submissionDatesStart = this.savedSubmissionDatesStart;
         this.submissionDatesEnd = this.savedSubmissionDatesEnd;
+        this.termCreditsRequired = this.savedTermCreditsRequired;
+        this.termCreditsManuallyEdited = this.savedTermCreditsHasOverride;
         this.getIncludedAssignmentsBetweenDates();
+      },
+
+      onDateRangeChange() {
+        if (!this.termCreditsManuallyEdited) {
+          this.termCreditsRequired = this.calculatedTermCreditsRequired;
+        }
+        this.getIncludedAssignmentsBetweenDates();
+      },
+
+      onTermCreditsRequiredInput() {
+        this.termCreditsManuallyEdited = true;
+        this.calcGradesFromIncludedAssignments();
       },
 
 
@@ -1248,7 +1275,7 @@
         this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
         //this value can be edited by the instructor
-        let estimatedCreditsRequired = Math.round(this.estimatedCreditsEnrolled * midtermPercentCompleted * 100) / 100;
+        let estimatedCreditsRequired = Math.round(Number(this.termCreditsRequired) * midtermPercentCompleted * 100) / 100;
         if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
         this.estimatedCreditsRequired = estimatedCreditsRequired;
       },
