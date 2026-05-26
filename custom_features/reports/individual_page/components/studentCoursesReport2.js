@@ -30,7 +30,7 @@ Vue.component('student-courses-report-2', {
             :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
-            :course-id="course.course_id"
+            :course-id="course.canvas_course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :extensions="course.num_extensions"
@@ -48,7 +48,7 @@ Vue.component('student-courses-report-2', {
             :score="getDisplayScore(course)"
             :state="course?.state ?? ''"
             :course-name="course.name"
-            :course-id="course.course_id"
+            :course-id="course.canvas_course_id"
             :course-code="course.course_code"
             :user-canvas-id="'' + user.canvas_id"
             :extensions="course.num_extensions"
@@ -95,10 +95,10 @@ Vue.component('student-courses-report-2', {
         data.course_code = courseCode;
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
-          data.state = userData.canvas_enrollment_state ?? '';
-          data.is_transfer = userData.is_transfer;
+          data.is_active = userData.is_active ?? false;
+          data.is_transfer = userData.is_transfer ?? false;
           data.num_extensions = userData.num_extensions;
-          if (data.state == '' && data.is_transfer) data.state = 'transfer';
+          data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
           data.course_id = userData.course_id;
           data.progress = userData.progress;
           data.current_score = userData.current_score;
@@ -125,8 +125,9 @@ Vue.component('student-courses-report-2', {
         let userData = this.getUserCourseData(courseCode);
         if (userData) {
           data.state = userData.canvas_enrollment_state ?? '';
-          data.is_transfer = userData.is_transfer;
-          if (data.state == '' && data.is_transfer) data.state = 'transfer';
+          data.is_active = userData.is_active ?? false;
+          data.is_transfer = userData.is_transfer ?? false;
+          data.state = data.is_transfer ? 'Transfer' : data.is_active ? 'Active' : 'Concluded';
           data.num_extensions = userData.num_extensions;
           data.course_id = userData.course_id;
           data.progress = userData.progress;
@@ -165,7 +166,7 @@ Vue.component('student-courses-report-2', {
 
           // If you want days_in_course similar to the others:
           if (data.time_in_course != null) {
-            data.days_in_course = data.time_in_course / (60 * 60 * 24);
+            data.days_in_course = data.time_in_course.days;
           }
 
           others.push(data);
