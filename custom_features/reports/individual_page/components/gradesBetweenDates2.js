@@ -463,18 +463,17 @@
       normalizeTimestampKey(value) {
         if (!value) return '';
 
-        const asDate = new Date(value);
-        if (!isNaN(asDate.getTime())) {
-          const year = asDate.getUTCFullYear();
-          const month = String(asDate.getUTCMonth() + 1).padStart(2, '0');
-          const day = String(asDate.getUTCDate()).padStart(2, '0');
-          const hours = String(asDate.getUTCHours()).padStart(2, '0');
-          const minutes = String(asDate.getUTCMinutes()).padStart(2, '0');
-          const seconds = String(asDate.getUTCSeconds()).padStart(2, '0');
-          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        const normalized = this.normalizeKeyPart(value)
+          .replace('t', ' ')
+          .replace('z', '')
+          .split('.')[0];
+
+        const match = normalized.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+        if (match) {
+          return `${match[1]} ${match[2]}`;
         }
 
-        return this.normalizeKeyPart(value).replace('t', ' ').replace('z', '');
+        return normalized;
       },
 
       buildTermKey(termLike) {
