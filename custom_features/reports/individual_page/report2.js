@@ -286,7 +286,7 @@
           });
         },
 
-        normalizeUserRecord({ canvasUser, studentHeader, courses, majors }) {
+        normalizeUserRecord({ canvasUser, studentHeader, studentRecord, courses, majors }) {
           const sortedMajors = this.sortMajors(majors);
           const defaultMajor = sortedMajors[0];
 
@@ -301,7 +301,7 @@
             last_login: bridgetools.psqlTimestampToDate(studentHeader?.last_login_at),
             avatar_url: studentHeader?.avatar_image_url || canvasUser?.avatar_url,
             sis_id: studentHeader?.sis_user_id,
-            hs_terms: [],
+            hs_terms: studentRecord?.hs_terms || [],
             contracted_hours: studentHeader?.contracted_hours || {},
             contracted_hours_total: this.sumContractedHours(studentHeader?.contracted_hours),
             transfer_courses: [],
@@ -317,11 +317,13 @@
         async loadUser(userId) {
           try {
             const [
+              studentRecord,
               studentHeader,
               studentCourses,
               studentMajors,
               canvasUser
             ] = await Promise.all([
+              bridgetools.req(`https://reports.bridgetools.dev/api/v2/students/${userId}`),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
@@ -333,6 +335,7 @@
             return this.normalizeUserRecord({
               canvasUser: this.canvasUser,
               studentHeader: studentHeader?.[0],
+              studentRecord,
               courses: studentCourses,
               majors: hydratedMajors
             });
