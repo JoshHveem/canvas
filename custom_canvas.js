@@ -290,14 +290,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         /^\/courses\/[0-9]+\/grades$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/
       ]);
-      // delete after march 1
-      if (new Date() < new Date(2026, 2, 1)) {
-        feature("reports/individual_page/report", [
-          /^\/$/,
-          /^\/courses\/[0-9]+\/grades$/,
-          /^\/courses\/[0-9]+\/grades\/[0-9]+$/
-        ]);
-      }
     }
     if (IS_TEACHER) {
       feature("files/restore_images", /^\/courses\/[0-9]+/);
