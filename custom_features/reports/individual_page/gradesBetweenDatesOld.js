@@ -560,66 +560,10 @@
         const studentId = String(this.userId || "");
         if (!studentId) return [];
 
-        let enrollments = [];
-        try {
-          enrollments = await bridgetools.req3(
-            'reports',
-            { canvas_user_id: studentId },
-            { dataset: 'canvas_enrollments' }
-          );
-        } catch (e) {
-          console.error("Failed fetching course enrollments via req3:", e);
-          return [];
-        }
-
-        const courses = Array.from(
-          enrollments
-            .reduce((m, enrollment) => {
-              const id = Number(enrollment?.canvas_course_id);
-              if (!id) return m;
-
-              const key = String(id);
-
-              const course = m.get(key) || {
-                id,
-                course_id: id,
-                name: enrollment.course_name || enrollment.course_code,
-                course_code: enrollment.course_code,
-                academic_year: enrollment.academic_year,
-                section_name: enrollment.section_name || "",
-              };
-
-              m.set(key, course);
-              return m;
-            }, new Map())
-            .values()
-        );
-
-        // Small helper: decorate + fetch assignments/submissions
-        const hydrate = async (course, idx, total) => {
-          this.loadingMessage = `Loading Course Data for Course ${course.course_id}`;
-
-          if (course.academic_year) {
-            const row = this.newCourse(course.id, "N/A", course.name, course.academic_year, course.course_code);
-            course.hours = row.hours;
-            course.credits = row.hours / 30;
-          }
-
-          this.loadingProgress += (50 / total) * 0.5;
-
-          this.loadingMessage = `Loading Assignment Data for Course ${course.id}`;
-          const additionalData = await this.getGraphQLData(course);
-          course.additionalData = additionalData;
-          course.assignments = additionalData.submissions;
-
-          this.loadingProgress += (50 / total) * 0.5;
-        };
-
-        for (let i = 0; i < courses.length; i++) {
-          await hydrate(courses[i], i, courses.length);
-        }
-
-        return courses;
+        return window.loadIndividualReportHSGradeCourses(studentId, ({ message, progress }) => {
+          this.loadingMessage = message;
+          this.loadingProgress = progress;
+        });
       },
 
       updateDatesToSelectedTerm() {

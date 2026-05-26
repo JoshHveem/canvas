@@ -43,6 +43,182 @@
     ].join('|');
   }
 
+  const hsGradeCourseCache = new Map();
+
+  async function fetchAllCourseConnection(courseId, connectionField, args = {}, nodeSelection = '') {
+    const pageSize = 50;
+    let allNodes = [];
+    let hasNext = true;
+    let after = null;
+
+    while (hasNext) {
+      const argsStr = Object.entries({ ...args, first: pageSize, after })
+        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .join(", ");
+
+      const query = `{
+        course(id: "${courseId}") {
+          ${connectionField}(${argsStr}) {
+            ${nodeSelection}
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }`;
+
+      const res = await $.post("/api/graphql", { query });
+      const conn = res.data.course[connectionField];
+      allNodes.push(...conn.nodes);
+      hasNext = conn.pageInfo.hasNextPage;
+      after = conn.pageInfo.endCursor;
+    }
+
+    return allNodes;
+  }
+
+  async function getAllAssignmentsByGroup(course) {
+    const assignments = await fetchAllCourseConnection(
+      course.id,
+      "assignmentsConnection",
+      {},
+      `nodes { _id name published pointsPossible assignmentGroupId }`
+    );
+
+    return assignments.reduce((map, assignment) => {
+      const groupId = assignment.assignmentGroupId || "__ungrouped";
+      if (!map[groupId]) map[groupId] = [];
+      map[groupId].push(assignment);
+      return map;
+    }, {});
+  }
+
+  async function getAllSubmissions(course, userId) {
+    return fetchAllCourseConnection(
+      course.id,
+      "submissionsConnection",
+      { studentIds: String(userId) },
+      `nodes {
+        id assignmentId submittedAt grade gradedAt score userId
+        assignment { name published pointsPossible }
+      }`
+    );
+  }
+
+  async function getCourseGraphQLData(course, userId) {
+    try {
+      const groupQuery = `{
+        course(id: "${course.id}") {
+          assignmentGroupsConnection {
+            nodes {
+              _id name groupWeight state
+            }
+          }
+        }
+      }`;
+      const groupRes = await $.post("/api/graphql", { query: groupQuery });
+      const groups = groupRes.data.course.assignmentGroupsConnection.nodes
+        .filter(group => group.state === "available");
+
+      const assignmentsByGroup = await getAllAssignmentsByGroup(course);
+      const submissions = await getAllSubmissions(course, userId);
+
+      groups.forEach(group => {
+        group.assignments = assignmentsByGroup[group._id] || [];
+      });
+
+      return {
+        name: course.name,
+        assignment_groups: groups,
+        submissions
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        name: course.name,
+        assignment_groups: [],
+        submissions: []
+      };
+    }
+  }
+
+  function buildHSCourseHours(course) {
+    const hours = COURSE_HOURS?.[course.course_code]?.hours ?? 0;
+    return {
+      ...course,
+      hours,
+      credits: hours / 30
+    };
+  }
+
+  async function loadHSGradeCoursesInternal(userId, onProgress = () => {}) {
+    const studentId = String(userId);
+    let enrollments = [];
+
+    try {
+      enrollments = await bridgetools.req3(
+        'reports',
+        { canvas_user_id: studentId },
+        { dataset: 'canvas_enrollments' }
+      );
+    } catch (err) {
+      console.error("Failed fetching course enrollments via req3:", err);
+      return [];
+    }
+
+    const courses = Array.from(
+      enrollments
+        .reduce((map, enrollment) => {
+          const id = Number(enrollment.canvas_course_id);
+          if (!id) return map;
+
+          const key = String(id);
+          if (!map.has(key)) {
+            const course = {
+              id,
+              course_id: id,
+              name: enrollment.course_name,
+              course_code: enrollment.course_code,
+              academic_year: enrollment.academic_year,
+              section_name: enrollment.section_name,
+            };
+            map.set(key, buildHSCourseHours(course));
+          }
+          return map;
+        }, new Map())
+        .values()
+    );
+
+    for (let i = 0; i < courses.length; i++) {
+      const course = courses[i];
+      onProgress({
+        message: `Loading Assignment Data for Course ${course.id}`,
+        progress: courses.length ? ((i / courses.length) * 100) : 100
+      });
+      course.additionalData = await getCourseGraphQLData(course, studentId);
+      course.assignments = course.additionalData.submissions;
+    }
+
+    onProgress({ message: "Data loading complete.", progress: 100 });
+    return courses;
+  }
+
+  function cloneHSGradeCourses(courses) {
+    return JSON.parse(JSON.stringify(courses));
+  }
+
+  window.loadIndividualReportHSGradeCourses = async function(userId, onProgress) {
+    const key = String(userId);
+
+    if (!hsGradeCourseCache.has(key)) {
+      hsGradeCourseCache.set(key, loadHSGradeCoursesInternal(key, onProgress));
+    }
+
+    const courses = await hsGradeCourseCache.get(key);
+    return cloneHSGradeCourses(courses);
+  };
+
   function emptyUser() {
     return {
       majors: [],
@@ -122,6 +298,10 @@
         } else {
           this.userId = ENV.current_user_id;
         }
+
+        window.loadIndividualReportHSGradeCourses(this.userId).catch(err => {
+          console.error("Failed preloading HS grade courses:", err);
+        });
 
         this.loadingMessage = "Loading Settings";
         let settings = await this.loadSettings(this.settings);
