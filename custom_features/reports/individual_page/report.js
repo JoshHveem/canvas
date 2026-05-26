@@ -280,6 +280,33 @@
           }, 0);
         },
 
+        async loadMajorCourses(major) {
+          const majorCourses = await bridgetools.req3(
+            'reports',
+            {
+              major_code: major.major_code,
+              academic_year__major: major.academic_year__major
+            },
+            { dataset: 'major_courses' }
+          );
+
+          return {
+            ...major,
+            courses: {
+              core: majorCourses.filter(course => course.major_requirement_type_code === 'C'),
+              elective: majorCourses.filter(course => course.major_requirement_type_code === 'E'),
+              other: majorCourses.filter(course => course.major_requirement_type_code !== 'C' && course.major_requirement_type_code !== 'E'),
+            }
+          };
+        },
+
+        async normalizeMajors(majors) {
+          return Promise.all(majors.map(async major => {
+            if (major.courses) return major;
+            return this.loadMajorCourses(major);
+          }));
+        },
+
         sortMajors(majors) {
           return [...majors].sort((a, b) => {
             const aActive = a.is_active_degree ? 1 : 0;
@@ -382,12 +409,13 @@
             ]);
 
             this.canvasUser = canvasUser;
+            const majors = await this.normalizeMajors(studentMajors);
             return this.normalizeUserRecord({
               canvasUser,
               studentHeader: studentHeader[0],
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
-              majors: studentMajors
+              majors
             });
           } catch (err) {
             console.error(err);
