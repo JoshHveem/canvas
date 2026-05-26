@@ -278,7 +278,7 @@
           // Be tolerant of missing degrees
           user.degrees = btMajors;
           user.courses = btCourses;
-          user.canvas_id = this.canvasUser.id;
+          user.canvas_user_id = this.canvasUser.id;
           user.name = this.canvasUser.name;
           user.academic_probation = this.bridgetoolsUser.academic_probation;
           user.last_update = this.bridgetoolsUser.last_update;
