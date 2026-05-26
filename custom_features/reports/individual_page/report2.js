@@ -87,11 +87,7 @@
         this.settings = settings;
         this.loadingProgress += 10;
 
-        //load data from bridgetools
         this.loadingMessage = "Loading User Data";
-        //Pulled enrollment data out of loadUser func because it is ready to use for Grades between dates out of the box and doesn't need to wait on all of the other stuff loadUser does
-        let enrollmentData = await bridgetools.req("https://reports.bridgetools.dev/api/students/canvas_enrollments/" + this.userId);
-        this.enrollmentData = enrollmentData;
 
         try {
           let user = await this.loadUser(this.userId);
@@ -115,11 +111,9 @@
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
           ],
           selectedMajorIndex: 0,
-          enrollmentData:  undefined,
           userId: null,
           user: {},
           canvasUser: {},
-          bridgetoolsUser: {},
           goal: undefined,
           colors: bridgetools.colors,
           settings: {
@@ -292,7 +286,7 @@
           });
         },
 
-        normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, majors }) {
+        normalizeUserRecord({ canvasUser, studentHeader, courses, majors }) {
           const sortedMajors = this.sortMajors(majors);
           const defaultMajor = sortedMajors[0];
 
@@ -302,14 +296,14 @@
             canvas_id: canvasUser?.id,
             canvas_user_id: canvasUser?.id,
             name: canvasUser?.name,
-            academic_probation: studentProfile?.academic_probation,
-            last_update: studentProfile?.last_update,
+            academic_probation: null,
+            last_update: bridgetools.psqlTimestampToDate(studentHeader?.bridgetools_updated_at),
             last_login: bridgetools.psqlTimestampToDate(studentHeader?.last_login_at),
-            avatar_url: canvasUser?.avatar_url,
-            sis_id: studentHeader?.sis_id,
-            hs_terms: studentProfile?.hs_terms,
-            contracted_hours: studentProfile?.contracted_hours || {},
-            contracted_hours_total: this.sumContractedHours(studentProfile?.contracted_hours),
+            avatar_url: studentHeader?.avatar_image_url || canvasUser?.avatar_url,
+            sis_id: studentHeader?.sis_user_id,
+            hs_terms: [],
+            contracted_hours: studentHeader?.contracted_hours || {},
+            contracted_hours_total: this.sumContractedHours(studentHeader?.contracted_hours),
             transfer_courses: [],
             distance_approved: defaultMajor?.is_distance_approved ?? false,
           };
@@ -323,27 +317,22 @@
         async loadUser(userId) {
           try {
             const [
-              studentProfile,
               studentHeader,
               studentCourses,
               studentMajors,
               canvasUser
             ] = await Promise.all([
-              bridgetools.req(`https://reports.bridgetools.dev/api/v2/students/${userId}`),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
               canvasGet(`/api/v1/users/${userId}`)
             ]);
 
-            this.bridgetoolsUser = studentProfile;
             this.canvasUser = Array.isArray(canvasUser) ? canvasUser[0] : canvasUser;
             const hydratedMajors = await this.hydrateMajors(studentMajors);
-            console.log(studentHeader)
             return this.normalizeUserRecord({
               canvasUser: this.canvasUser,
               studentHeader: studentHeader?.[0],
-              studentProfile,
               courses: studentCourses,
               majors: hydratedMajors
             });

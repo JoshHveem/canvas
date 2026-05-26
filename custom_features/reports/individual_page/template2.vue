@@ -105,9 +105,7 @@
         </div>
         <div v-show="settings.reportType === 'hs-grades'">
           <grades-between-dates-2
-            v-if="enrollmentData != undefined"
             :user="user"
-            :enrollments="enrollmentData"
             :user-id="userId"
             :terms="user.hs_terms"
             :colors="colors"
@@ -116,9 +114,7 @@
         </div>
         <div v-show="settings.reportType === 'hs-grades-old'">
           <show-grades-between-dates
-            v-if="enrollmentData != undefined"
             :user="user"
-            :enrollments="enrollmentData"
             :user-id="userId"
             :terms="user.hs_terms"
             :colors="colors"
