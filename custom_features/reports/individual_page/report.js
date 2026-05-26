@@ -23,6 +23,7 @@
   }
 
   if (true) {
+      console.log("Loading Individual Report");
       if (/[0-9]+\/grades/.test(window.location.pathname)) {
         let loadedWarning = false;
         try {
