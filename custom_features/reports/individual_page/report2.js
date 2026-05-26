@@ -259,15 +259,19 @@
 
         async loadUser(userId) {
           let user = {};
+          let btUser = {};
+          let btCourses = [];
+          let btMajors = [];
+
           try {
             this.bridgetoolsUser = await bridgetools.req(
               `https://reports.bridgetools.dev/api/v2/students/${userId}`
             );
-            let btUser = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0];
-            let btCourses = await bridgetools.req('reports', {canvas_user_id: userId}, {dataset: 'student_courses'});
-            let btMajors = await bridgetools.req('reports', {canvas_user_id: userId}, {dataset: 'student_majors'});
+            btUser = (await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}))?.[0];
             console.log(btUser);
+            btCourses = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'});
             console.log(btCourses);
+            btMajors = await bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'});
             console.log(btMajors);
             this.canvasUser = (await canvasGet(`/api/v1/users/${userId}`))?.[0];
 
