@@ -80,6 +80,7 @@
         try {
           let user = await this.loadUser(this.userId);
           this.user = user;
+          this.tree = this.buildTreeFromDegree(this.currentDegree);
         } catch(err) {
           console.error(err);
           this.user = {};
@@ -148,20 +149,17 @@
         }
       },
       watch: {
-        async currentDegreeId (newVal, oldVal) {
+        currentDegreeId (newVal, oldVal) {
           const degrees = this.user?.degrees || [];
           if (!degrees.length) return;
 
           const deg = degrees.find((d, idx) =>
-            newVal === (d._id || idx)
+            newVal === this.getDegreeId(d, idx)
           );
           if (!deg) return;
 
-          // Load new tree for the selected program
-          const tree = await this.loadTree(deg.major_code, deg.academic_year);
+          const tree = this.buildTreeFromDegree(deg);
           this.tree = tree;
-
-          // If you eventually process user-course info based on tree:
           this.user = this.updateUserCourseInfo(this.user, tree);
         },
 
@@ -187,7 +185,7 @@
 
           const id = this.currentDegreeId;
           const match = degrees.find((deg, idx) =>
-            id === (deg._id || idx)
+            id === this.getDegreeId(deg, idx)
           );
           return match || degrees[0];
         },
@@ -252,6 +250,10 @@
         },
 
         async loadMajorCourseGroups(major) {
+          if (major?.courses?.core || major?.courses?.elective || major?.courses?.other) {
+            return this.normalizeDegree(major);
+          }
+
           const majorCourses = await bridgetools.req3(
             'reports',
             {
@@ -261,15 +263,14 @@
             {dataset: 'major_courses'}
           );
 
-          return {
+          return this.normalizeDegree({
             ...major,
-            academic_year: major.academic_year__major,
             courses: {
               core: majorCourses.filter(c => c.major_requirement_type_code == 'C'),
               elective: majorCourses.filter(c => c.major_requirement_type_code == 'E'),
               other: majorCourses.filter(c => c.major_requirement_type_code != 'E' && c.major_requirement_type_code != 'C'),
             }
-          };
+          });
         },
 
         getMaxVisibleAcademicYear() {
@@ -279,14 +280,18 @@
           return maxyear;
         },
 
+        getDegreeId(degree, idx = 0) {
+          return degree?._id || `${degree?.major_code || 'major'}-${degree?.academic_year || idx}-${idx}`;
+        },
+
         sortDegrees(degrees) {
           return [...(degrees || [])].sort((a, b) => {
             const ay = Number(a?.academic_year) || 0;
             const by = Number(b?.academic_year) || 0;
             if (ay !== by) return by - ay;
 
-            const ah = Number(a?.graded_hours) || 0;
-            const bh = Number(b?.graded_hours) || 0;
+            const ah = Number(a?.credits_earned) || Number(a?.graded_hours) || 0;
+            const bh = Number(b?.credits_earned) || Number(b?.graded_hours) || 0;
             if (ah !== bh) return bh - ah;
 
             const ad = String(a?.major_code || '').toLowerCase();
@@ -295,9 +300,57 @@
           });
         },
 
+        mapCoursesByCode(courses) {
+          return (courses || []).reduce((map, course) => {
+            if (!course?.course_code) return map;
+            map[course.course_code] = course;
+            return map;
+          }, {});
+        },
+
+        calculateDegreeCredits(courses) {
+          return ['core', 'elective', 'other'].reduce((sum, groupName) => {
+            return sum + (courses[groupName] || []).reduce((groupSum, course) => {
+              return groupSum + (Number(course?.credits) || 0);
+            }, 0);
+          }, 0);
+        },
+
+        normalizeDegree(major) {
+          const courses = {
+            core: Array.isArray(major?.courses?.core) ? major.courses.core : [],
+            elective: Array.isArray(major?.courses?.elective) ? major.courses.elective : [],
+            other: Array.isArray(major?.courses?.other) ? major.courses.other : [],
+          };
+
+          return {
+            ...major,
+            academic_year: major?.academic_year ?? major?.academic_year__major,
+            courses,
+            credits_earned: Number(major?.credits_earned) || 0,
+            average_score: Number(major?.average_score) || 0,
+          };
+        },
+
+        buildTreeFromDegree(degree) {
+          const normalizedDegree = this.normalizeDegree(degree || {});
+          const courses = normalizedDegree.courses || { core: [], elective: [], other: [] };
+
+          return {
+            credits: this.calculateDegreeCredits(courses),
+            courses: {
+              core: this.mapCoursesByCode(courses.core),
+              elective: this.mapCoursesByCode(courses.elective),
+              other: this.mapCoursesByCode(courses.other),
+            }
+          };
+        },
+
         normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
           const normalizedDegrees = this.sortDegrees(degrees)
             .filter(d => Number(d?.academic_year) <= this.getMaxVisibleAcademicYear());
+
+          const activeDegree = normalizedDegrees.find(degree => degree?.is_active_degree) || normalizedDegrees[0];
 
           const user = {
             degrees: normalizedDegrees,
@@ -313,11 +366,13 @@
             hs_terms: studentProfile?.hs_terms,
             contracted_hours: studentProfile?.contracted_hours || {},
             contracted_hours_total: this.sumContractedHours(studentProfile?.contracted_hours),
-            transfer_courses: []
+            transfer_courses: [],
+            distance_approved: activeDegree?.is_distance_approved ?? false,
           };
 
-          const currentDegree = normalizedDegrees[0];
-          this.currentDegreeId = currentDegree?._id ?? 0;
+          const currentDegree = activeDegree || normalizedDegrees[0];
+          const currentDegreeIndex = normalizedDegrees.findIndex(degree => degree === currentDegree);
+          this.currentDegreeId = currentDegree ? this.getDegreeId(currentDegree, currentDegreeIndex) : null;
 
           return user;
         },
@@ -353,21 +408,15 @@
               degrees: majorsWithCourses
             });
 
-            const selectedMajor = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
+            const selectedMajor = user.degrees.find((degree, idx) => {
+              return this.getDegreeId(degree, idx) === this.currentDegreeId;
+            }) || user.degrees[0];
             return this.updateUserCourseInfo(user, selectedMajor);
           } catch (err) {
             console.error(err);
             return {};
           }
         },
-
-
-        async changeTree(user) {
-          let tree = await this.loadTree(this.currentDegree.major_code, this.currentDegree.academic_year);
-          user = this.updateUserCourseInfo(user, tree);
-          this.user = user;
-        },
-
         updateUserCourseInfo(user, tree) {
           // user = processUserData(user, tree); 
           return user;

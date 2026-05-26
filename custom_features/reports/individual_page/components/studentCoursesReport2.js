@@ -133,7 +133,11 @@ Vue.component('student-courses-report-2', {
         .sort(this.sortByCourseCode);
     },
     mergeUserCourseData(course, courseCode) {
-      const data = { ...course, course_code: courseCode };
+      const data = {
+        ...course,
+        course_code: courseCode,
+        course_name: course?.course_name || course?.name || courseCode
+      };
       const userData = this.getUserCourseData(courseCode);
 
       if (!userData) {
@@ -149,6 +153,7 @@ Vue.component('student-courses-report-2', {
       return {
         ...data,
         ...userData,
+        course_name: userData.course_name || userData.name || data.course_name,
         is_active: isActive,
         is_transfer: isTransfer,
         num_extensions: userData.num_extensions,

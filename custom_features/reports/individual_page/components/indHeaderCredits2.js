@@ -48,11 +48,11 @@ Vue.component('ind-header-credits-2', {
           </span>
 
           <div
-            v-if="user?.distance_approved"
-            :title="user.distance_approved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"
+            v-if="distanceApproved"
+            :title="distanceApproved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"
             class="btech-ind-header__icon">
             <icon-distance-approved
-              :class="{'distance-approved': user.distance_approved, 'not-distance-approved': !user.distance_approved}"
+              :class="{'distance-approved': distanceApproved, 'not-distance-approved': !distanceApproved}"
               width="1.5rem"
               height="1.5rem">
             </icon-distance-approved>
@@ -143,6 +143,9 @@ Vue.component('ind-header-credits-2', {
       let code = prob?.code ?? '';
       let colors = this.colors;
       return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
+    },
+    distanceApproved() {
+      return this.degree?.is_distance_approved ?? this.user?.distance_approved ?? false;
     }
   },
   watch: {
