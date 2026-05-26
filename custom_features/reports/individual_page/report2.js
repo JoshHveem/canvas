@@ -244,19 +244,6 @@
           return formattedDate;
         },
 
-        async loadTree(majorCode, majorYear) {
-          let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + majorCode + "&year=" + majorYear;
-          let data = await bridgetools.req(url);
-          let tree = data[0] ?? {};
-          if (tree?.courses === undefined) tree.courses = {};
-          if (tree?.courses?.core === undefined) tree.courses.core = {};
-          if (tree?.courses?.elective === undefined) tree.courses.elective = {};
-          if (tree?.courses?.other === undefined) tree.courses.other = {};
-
-          this.tree = tree;
-          return tree;
-        },
-
         async loadUser(userId) {
           let user = {};
           let btUser = {};
@@ -345,15 +332,9 @@
  
 
 
-          let tree;
-          if (this.currentDegreeId) {
-            const selected = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
-            tree = await this.loadTree(selected.major_code, selected.academic_year);
-          } else {
-            tree = { hours: 0, name: "", courses: { core: {}, elective: {}, other: {} } };
-          }
+          const selectedMajor = user.degrees.find(d => d._id === this.currentDegreeId) || user.degrees[0];
 
-          user = this.updateUserCourseInfo(user, tree);
+          user = this.updateUserCourseInfo(user, selectedMajor);
           return user;
         },
 
