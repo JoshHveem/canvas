@@ -610,7 +610,7 @@
           }
 
           await this.hsTermsUpdate(payload);
-          await this.loadTerms({ sis_user_id: term.sis_user_id });
+          await this.loadTerms();
           this.selectedTermId = term._id;
           this.updateDatesToSelectedTerm();
           this.closeBulkModal();
@@ -684,7 +684,7 @@
             await Promise.all(payloads.map(payload => this.hsTermsUpdate(payload)));
           }
 
-          await this.loadTerms({ sis_user_id: this.selectedTerm.sis_user_id });
+          await this.loadTerms();
           this.selectedTermId = this.selectedTerm._id;
           this.updateDatesToSelectedTerm();
           this.closeBulkModal();
