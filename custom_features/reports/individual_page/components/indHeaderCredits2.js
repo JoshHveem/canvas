@@ -19,7 +19,7 @@ Vue.component('ind-header-credits-2', {
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="user?.name && totalCredits" 
+        v-if="user?.name && major?.major_code" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
@@ -144,9 +144,10 @@ Vue.component('ind-header-credits-2', {
       return this.major.is_distance_approved ?? this.user?.distance_approved ?? false;
     },
     totalCredits() {
-      const courses = this.major.courses;
+      const courses = this.major?.courses || {};
       return ['core', 'elective', 'other'].reduce((sum, groupName) => {
-        return sum + courses[groupName].reduce((groupSum, course) => {
+        const groupCourses = courses[groupName] || [];
+        return sum + groupCourses.reduce((groupSum, course) => {
           return groupSum + Number(course.credits || 0);
         }, 0);
       }, 0);

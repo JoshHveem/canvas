@@ -73,7 +73,7 @@
           </select>
         </div>
 
-        <div v-if="currentMajor && currentMajor.courses">
+        <div>
           <ind-header-credits-2
             :colors="colors"
             :user="user"
@@ -85,13 +85,13 @@
 
 
         
-        <div v-show="settings.reportType === 'student-courses'" v-if="currentMajor && currentMajor.courses">
+        <div v-show="settings.reportType === 'student-courses'">
           <student-courses-report-2
             :user="user"
             :major="currentMajor"
-            :core-courses="currentMajor.courses.core"
-            :elective-courses="currentMajor.courses.elective"
-            :other-courses="currentMajor.courses.other"
+            :core-courses="(currentMajor.courses && currentMajor.courses.core) || []"
+            :elective-courses="(currentMajor.courses && currentMajor.courses.elective) || []"
+            :other-courses="(currentMajor.courses && currentMajor.courses.other) || []"
             :settings="settings"
             :colors="colors"
             :key="selectedMajorIndex"
