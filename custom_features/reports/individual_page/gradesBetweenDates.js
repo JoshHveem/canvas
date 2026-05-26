@@ -583,7 +583,7 @@
               const course = m.get(key) || {
                 id,
                 course_id: id,
-                name: enrollment.course_code,
+                name: enrollment.course_name || enrollment.course_code,
                 course_code: enrollment.course_code,
                 academic_year: enrollment.academic_year,
                 section_name: enrollment.section_name || "",
