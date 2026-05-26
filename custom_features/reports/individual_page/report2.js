@@ -325,10 +325,54 @@
           };
         },
 
+        getDegreeProgressValue(degree) {
+          const normalizedDegree = this.normalizeDegree(degree || {});
+          const totalCredits = this.calculateDegreeCredits(normalizedDegree.courses);
+          const earnedCredits = Number(normalizedDegree?.credits_earned) || 0;
+          const progressRatio = totalCredits > 0 ? (earnedCredits / totalCredits) : 0;
+
+          return {
+            earnedCredits,
+            totalCredits,
+            progressRatio
+          };
+        },
+
+        getDefaultDegree(degrees) {
+          const normalizedDegrees = degrees || [];
+          if (!normalizedDegrees.length) return undefined;
+
+          return [...normalizedDegrees].sort((a, b) => {
+            const aprog = this.getDegreeProgressValue(a);
+            const bprog = this.getDegreeProgressValue(b);
+            const aActive = a?.is_active_degree ? 1 : 0;
+            const bActive = b?.is_active_degree ? 1 : 0;
+
+            if (bActive !== aActive) {
+              return bActive - aActive;
+            }
+
+            if (bprog.progressRatio !== aprog.progressRatio) {
+              return bprog.progressRatio - aprog.progressRatio;
+            }
+
+            if (bprog.earnedCredits !== aprog.earnedCredits) {
+              return bprog.earnedCredits - aprog.earnedCredits;
+            }
+
+            const ay = Number(b?.academic_year) || 0;
+            const by = Number(a?.academic_year) || 0;
+            if (ay !== by) return ay - by;
+
+            const ad = String(a?.major_code || '').toLowerCase();
+            const bd = String(b?.major_code || '').toLowerCase();
+            return ad.localeCompare(bd);
+          })[0];
+        },
+
         normalizeUserRecord({ canvasUser, studentHeader, studentProfile, courses, degrees }) {
           const normalizedDegrees = this.sortDegrees(degrees);
-
-          const activeDegree = normalizedDegrees.find(degree => degree?.is_active_degree) || normalizedDegrees[0];
+          const defaultDegree = this.getDefaultDegree(normalizedDegrees);
 
           const user = {
             degrees: normalizedDegrees,
@@ -345,10 +389,10 @@
             contracted_hours: studentProfile?.contracted_hours || {},
             contracted_hours_total: this.sumContractedHours(studentProfile?.contracted_hours),
             transfer_courses: [],
-            distance_approved: activeDegree?.is_distance_approved ?? false,
+            distance_approved: defaultDegree?.is_distance_approved ?? false,
           };
 
-          const currentDegree = activeDegree || normalizedDegrees[0];
+          const currentDegree = defaultDegree || normalizedDegrees[0];
           const currentDegreeIndex = normalizedDegrees.findIndex(degree => degree === currentDegree);
           this.currentDegreeId = currentDegree ? this.getDegreeId(currentDegree, currentDegreeIndex) : null;
 
