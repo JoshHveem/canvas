@@ -19,7 +19,7 @@ Vue.component('ind-header-credits-2', {
 
       <!-- All user data on one (wrappable) line -->
       <div 
-        v-if="user?.name && major?.major_code" 
+        v-if="major?.major_code" 
       class="btech-ind-header__info">
 
         <div class="btech-ind-header__row">
@@ -28,7 +28,7 @@ Vue.component('ind-header-credits-2', {
             target="_blank"
             class="btech-ind-header__name">
             <strong>
-              {{ settings.anonymize ? ("Student " + user.canvas_id) : user.name + " (" + user.sis_id + ")" }}
+              {{ settings.anonymize ? ("Student " + user.canvas_id) : displayName }}
             </strong>
           </a>
 
@@ -142,6 +142,13 @@ Vue.component('ind-header-credits-2', {
     },
     distanceApproved() {
       return this.major.is_distance_approved ?? this.user?.distance_approved ?? false;
+    },
+    displayName() {
+      if (!this.user) return '';
+      if (this.user.name && this.user.sis_id) return `${this.user.name} (${this.user.sis_id})`;
+      if (this.user.name) return this.user.name;
+      if (this.user.sis_id) return this.user.sis_id;
+      return `Student ${this.user.canvas_id || ''}`.trim();
     },
     totalCredits() {
       const courses = this.major?.courses || {};

@@ -184,6 +184,9 @@
           const merged = JSON.parse(JSON.stringify(fallback));
           merged.account = saved.account ?? fallback.account;
           merged.reportType = saved.reportType ?? fallback.reportType;
+          if (!this.reportTypes.some(report => report.value === merged.reportType)) {
+            merged.reportType = fallback.reportType;
+          }
 
           if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
           else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
@@ -291,7 +294,7 @@
             ]);
 
             this.bridgetoolsUser = studentProfile;
-            this.canvasUser = canvasUser?.[0];
+            this.canvasUser = Array.isArray(canvasUser) ? canvasUser[0] : canvasUser;
             return this.normalizeUserRecord({
               canvasUser: this.canvasUser,
               studentHeader: studentHeader?.[0],
