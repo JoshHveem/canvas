@@ -516,6 +516,7 @@
       },
 
       async loadTerms(filters = {}) {
+        console.log(this.user);
         const sisUserId = this.user?.sis_user_id;
         if (!sisUserId) return;
 
