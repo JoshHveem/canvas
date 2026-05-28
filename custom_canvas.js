@@ -323,6 +323,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       //AVAILABLE TO EVERYONE
       feature("quizzes/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
       //uplaod rubric goes here
+      feature("rubrics/upload_rubric/create_rubric_from_json", /^\/courses\/[0-9]+\/rubrics$/);
       feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
       feature("quizzes/quiz_analytics_print_margin", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics/);
       feature('speed_grader/next_submitted_assignment', /^\/courses\/([0-9]+)\/gradebook\/speed_grader/); // Primarily used by Drafting / Digital Design. Possibly others
