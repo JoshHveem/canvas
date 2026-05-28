@@ -90,7 +90,10 @@
             </div>
             <div class='btech-modal-content-inner'>
               <h2><a target='#' v-bind:href="'/courses/'+courseId+'/assignments/'+currentAssignment.id">{{currentAssignment.name}}</a></h2>
-              <div v-if='getFilteredSubmissions(submissions).length > 0'>
+              <div v-if='loadingAssignmentDetails'>
+                Loading assignment details...
+              </div>
+              <div v-else-if='getFilteredSubmissions(submissions).length > 0'>
                 <div
                   class="submission-row"
                 >
@@ -282,10 +285,24 @@
             sortBy: "name",
             campuses: {},
             enrollmentTypes: {},
-            loadingCourse: true
+            loadingCourse: true,
+            loadingAssignmentDetails: false
           }
         },
         methods: {
+          normalizeSubmission(sub, includeDetails = false) {
+            return {
+              ...sub,
+              quiz_id: sub?.quiz?._id,
+              user: {
+                id: sub.user._id,
+                name: sub.user.name
+              },
+              comments: includeDetails ? (sub.commentsConnection?.nodes || []) : [],
+              rubric_assessments: includeDetails ? (sub.rubricAssessmentsConnection?.nodes || []) : [],
+              detailsLoaded: includeDetails
+            };
+          },
           getSubmissionDate(submission) {
             let date = submission.submittedAt;
             if (date === null) {
@@ -418,7 +435,7 @@
             return allAssignments;
           },
 
-          async getSubmissions(assignmentId) {
+          async getSubmissions(assignmentId, { includeDetails = false } = {}) {
             let allSubmissions = [];
             let hasNextPage = true;
             let after = null;
@@ -451,19 +468,8 @@
                         submissionStatus
                         submittedAt
                         gradedAt
-                        postedAt
-                        updatedAt
-                        url
                         score
-                        attempt
-                        body
-                        createdAt
-                        deductedPoints
-                        enteredGrade
-                        excused
-                        extraAttempts
-                        grade
-                        late
+                        ${includeDetails ? `
                         previewUrl
                         submissionCommentDownloadUrl
                         attachments {
@@ -489,7 +495,7 @@
                             score
                             assessmentType
                           }
-                        }
+                        }` : ''}
                       }
                     }
                   }
@@ -516,17 +522,8 @@
 
                 for (let assignment of group.assignments) {
                   const submissions = await this.getSubmissions(assignment._id);
-
-                  assignment.submissions = submissions.map(sub => ({
-                    ...sub,
-                    quiz_id: sub?.quiz?._id,
-                    user: {
-                      id: sub.user._id,
-                      name: sub.user.name
-                    },
-                    comments: sub.commentsConnection?.nodes || [],
-                    rubric_assessments: sub.rubricAssessmentsConnection?.nodes || []
-                  }));
+                  assignment.submissions = submissions.map(sub => this.normalizeSubmission(sub));
+                  assignment.submissionDetailsLoaded = false;
                 }
               }
 
@@ -940,9 +937,18 @@
             app.showModal = true;
             app.currentAssignment = assignment;
             app.submissions = [];
-            // if (assignment.submissions.length == 0) {
-            //   await app.getAllSubmissions(assignment.id);
-            // }
+            if (assignment.submissionDetailsLoaded !== true) {
+              app.loadingAssignmentDetails = true;
+              try {
+                const submissions = await app.getSubmissions(assignment.id, { includeDetails: true });
+                assignment.submissions = submissions.map(sub => app.normalizeSubmission(sub, true));
+                assignment.submissionDetailsLoaded = true;
+              } catch (err) {
+                console.error(err);
+              } finally {
+                app.loadingAssignmentDetails = false;
+              }
+            }
             app.submissions = assignment.submissions;
           },
           submittedAssignments(submissions) {
