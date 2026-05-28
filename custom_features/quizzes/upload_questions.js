@@ -643,7 +643,11 @@ TF. Mitochondria are the powerhouse of the cell.
 F. False
 
 FINAL CHECK BEFORE YOU BUILD THE FILE:
-- Name the file [quizname].txt based on the title line.
+- Name the file using the quiz title in a readable underscore format.
+  Replace spaces and punctuation with underscores, remove duplicate underscores,
+  and do not URL-encode spaces or special characters.
+  Example: Title: Chapter 22 Regulatory Advisory Agencies
+  File name: Chapter_22_Regulatory_Advisory_Agencies.txt
 - The file starts with Title:
 - The file contains only the formatted quiz text.
 - No questions, answers, explanations, comments, or feedback were invented.
