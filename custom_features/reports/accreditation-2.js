@@ -290,6 +290,27 @@
           }
         },
         methods: {
+          async mapWithConcurrency(items, limit, worker) {
+            const results = new Array(items.length);
+            let nextIndex = 0;
+
+            async function runWorker() {
+              while (true) {
+                const currentIndex = nextIndex;
+                nextIndex += 1;
+                if (currentIndex >= items.length) return;
+                results[currentIndex] = await worker(items[currentIndex], currentIndex);
+              }
+            }
+
+            const workerCount = Math.min(limit, items.length);
+            const workers = [];
+            for (let i = 0; i < workerCount; i++) {
+              workers.push(runWorker());
+            }
+            await Promise.all(workers);
+            return results;
+          },
           normalizeSubmission(sub, includeDetails = false) {
             return {
               ...sub,
@@ -516,16 +537,23 @@
             try {
               const meta = await this.getCourseMeta(courseId);
               const assignmentGroups = meta.assignmentGroupsConnection.nodes.filter(g => g.state === 'available');
+              const assignmentConcurrency = 6;
 
-              for (let group of assignmentGroups) {
+              await Promise.all(assignmentGroups.map(async group => {
                 group.assignments = await this.getAssignments(group.id);
+              }));
 
-                for (let assignment of group.assignments) {
+              const assignments = assignmentGroups.flatMap(group => group.assignments || []);
+              await this.mapWithConcurrency(assignments, assignmentConcurrency, async assignment => {
+                try {
                   const submissions = await this.getSubmissions(assignment._id);
                   assignment.submissions = submissions.map(sub => this.normalizeSubmission(sub));
-                  assignment.submissionDetailsLoaded = false;
+                } catch (err) {
+                  console.error(`Failed to load submissions for assignment ${assignment._id}`, err);
+                  assignment.submissions = [];
                 }
-              }
+                assignment.submissionDetailsLoaded = false;
+              });
 
               return {
                 id: courseId,
