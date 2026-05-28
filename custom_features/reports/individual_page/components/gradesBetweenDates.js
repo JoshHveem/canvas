@@ -15,7 +15,7 @@
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
               <option v-for='term in sortedTerms' :value='term._id'>
-                {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_count}})
+                {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_sections}})
               </option>
             </select>
             <span>Start Date:</span>
@@ -279,7 +279,7 @@
 
         const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
         let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
-        const concurrentCount = Number(this.selectedTerm?.concurrent_count) || 1;
+        const concurrentCount = Number(this.selectedTerm?.concurrent_sections) || 1;
         if (concurrentCount > 1) credits *= concurrentCount;
         return credits;
       },
@@ -525,10 +525,10 @@
           entry_at: effectiveEntryAt,
           exit_at: effectiveExitAt,
           section_code: baseTerm.section_code,
-          concurrent_count: Number(baseTerm.concurrent_count),
+          concurrent_sections: Number(baseTerm.concurrent_sections),
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
-            : this.calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_count),
+            : this.calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_sections),
           has_credits_required_override: creditsRequiredOverride != null,
           override: overrideTerm,
         };
@@ -594,7 +594,7 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (nextCreditsRequired !== this.calculateCreditsRequired(nextEntryAt, nextExitAt, term.concurrent_count)) {
+        if (nextCreditsRequired !== this.calculateCreditsRequired(nextEntryAt, nextExitAt, term.concurrent_sections)) {
           payload.credits_required__override = nextCreditsRequired;
         }
 
