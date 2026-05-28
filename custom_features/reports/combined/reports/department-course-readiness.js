@@ -2,9 +2,9 @@ Vue.component('multi-filter-pill', {
   props: {
     label: { type: String, required: true },
     options: { type: Array, required: true },
-    value: { type: Array, required: true }, // selected
+    value: { type: Array, required: true },
     placeholder: { type: String, default: 'All' },
-    maxSummaryItems: { type: Number, default: 2 },
+    maxSummaryItems: { type: Number, default: 2 }
   },
 
   data() {
@@ -15,11 +15,8 @@ Vue.component('multi-filter-pill', {
     summary() {
       const selected = Array.isArray(this.value) ? this.value : [];
       if (!selected.length) return this.placeholder;
-
-      // if everything selected
       if (selected.length === this.options.length) return 'All';
 
-      // show up to maxSummaryItems then "+N"
       const first = selected.slice(0, this.maxSummaryItems);
       const rest = selected.length - first.length;
       return rest > 0 ? `${first.join(', ')} +${rest}` : first.join(', ');
@@ -36,6 +33,7 @@ Vue.component('multi-filter-pill', {
 
   methods: {
     toggleOpen() { this.open = !this.open; },
+    close() { this.open = false; },
 
     onDocClick(e) {
       if (!this.open) return;
@@ -64,9 +62,7 @@ Vue.component('multi-filter-pill', {
 
     clearAll() {
       this.$emit('input', []);
-    },
-
-    close() { this.open = false; }
+    }
   },
 
   template: `
@@ -134,355 +130,279 @@ Vue.component('multi-filter-pill', {
 });
 
 Vue.component('reports-department-course-readiness', {
-  props: {
-    year: { type: [Number, String], required: true },
-    courseReadiness: { type: Object, required: true },
-    anonymous: { type: Boolean, default: false },
-  },
+  mixins: [
+    window.ReportMixins.formatting,
+    window.ReportMixins.departmentScoped({
+      optionsDataset: 'canvas_course_readiness',
+      emptySelectionMessage: 'Select a department from the summary report to view details.',
+      loadErrorMessage: 'Unable to load department course readiness details.'
+    })
+  ],
 
   data() {
-    const colors = (window.bridgetools?.colors) || {
-      red:'#b20b0f', orange:'#f59e0b', yellow:'#eab308',
-      green:'#16a34a', gray:'#e5e7eb', black:'#111827', white:'#fff'
-    };
-
-    const table = new window.ReportTable({
-      rows: [],
-      columns: [],
-      sort_column: "Course",
-      sort_dir: 1,
-      colors
-    });
+    const colors = window.ReportUtils.createColors();
+    const table = window.ReportUtils.createTable('Course', colors);
 
     return {
       colors,
       table,
-      tableTick: 0,
-
-      // --- FILTER STATE ---
       filters: {
-        source: ['Jenzabar'],   // default
-        type: ['CS'],           // default
-        course_status: []       // will be initialized to "all except Deleted" once we know options
+        source: ['Jenzabar'],
+        type: ['CS'],
+        course_status: []
       },
-
-      filtersInitialized: false,
+      filtersInitialized: false
     };
   },
 
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Course', 'Course code.', '14rem', false, 'string',
-        c => this.anonymous ? 'COURSE' : (c?.course_code ?? ''),
+        'Course', 'Course code and name.', '18rem', false, 'string',
+        c => this.courseLinkHtml(c),
         null,
-        c => (c?.course_code ?? '')
+        c => this.courseSortKey(c)
       ),
-
       new window.ReportColumn(
-        'Canvas ID', 'Canvas course id.', '7rem', false, 'number',
-        // c => (c?.canvas_course_id ?? 'n/a'),
-        c => `<a href="/courses/${c?.canvas_course_id}" target="_blank" rel="noopener noreferrer">${c?.canvas_course_id ?? 'n/a'}</a>`,
+        'Type', 'Course type.', '6rem', false, 'string',
+        c => this.escapeHtml(String(c?.course_type_code ?? '').trim() || 'n/a'),
         null,
-        c => Number(c?.canvas_course_id ?? -1)
+        c => String(c?.course_type_code ?? '').trim()
       ),
-
       new window.ReportColumn(
-        'Source', 'Creation source.', '7rem', false, 'string',
-        c => (c?.creation_source ?? ''),
-        null,
-        c => (c?.creation_source ?? '')
-      ),
-
-      new window.ReportColumn(
-        'Type', 'Course type.', '7rem', false, 'string',
-        c => (c?.course_type ?? ''),
-        null,
-        c => (c?.course_type ?? '')
-      ),
-
-      new window.ReportColumn(
-        'Course Status', 'Status of the Canvas course (published, etc.).', '8rem', false, 'string',
+        'Course Status', 'Status of the Canvas course.', '8rem', false, 'string',
         c => this.statusText(c?.course_status),
         c => this.statusStyle(c?.course_status),
         c => String(c?.course_status ?? '')
       ),
-
       new window.ReportColumn(
         'Syllabus', 'Syllabus status.', '7rem', false, 'string',
         c => this.statusText(c?.syllabus_status),
         c => this.statusStyle(c?.syllabus_status),
         c => String(c?.syllabus_status ?? '')
       ),
-
       new window.ReportColumn(
         'Course Eval', 'Course evaluation status.', '8rem', false, 'string',
         c => this.statusText(c?.course_evaluation_status),
         c => this.statusStyle(c?.course_evaluation_status),
         c => String(c?.course_evaluation_status ?? '')
       ),
-
       new window.ReportColumn(
         'Instructor Eval', 'Instructor evaluation status.', '9rem', false, 'string',
         c => this.statusText(c?.instructor_evaluation_status),
         c => this.statusStyle(c?.instructor_evaluation_status),
         c => String(c?.instructor_evaluation_status ?? '')
       ),
-
       new window.ReportColumn(
         'Employment Skills', 'Employment skills evaluation status.', '10rem', false, 'string',
         c => this.statusText(c?.employment_skills_evaluation_status),
         c => this.statusStyle(c?.employment_skills_evaluation_status),
         c => String(c?.employment_skills_evaluation_status ?? '')
       ),
-
       new window.ReportColumn(
         'Canvas Content', 'Canvas content status.', '8rem', false, 'string',
         c => this.statusText(c?.canvas_content_status),
         c => this.statusStyle(c?.canvas_content_status),
         c => String(c?.canvas_content_status ?? '')
-      ),
+      )
     ]);
+  },
+
+  mounted() {
+  },
+
+  watch: {
+    reportContext: {
+      deep: true,
+      handler() {
+        this.filtersInitialized = false;
+      }
+    },
+    async year() {
+      this.filtersInitialized = false;
+    },
+    selectedDepartmentCode() {
+      this.filtersInitialized = false;
+    }
   },
 
   computed: {
     allCourses() {
-      return Array.isArray(this.courseReadiness?.courses) ? this.courseReadiness.courses : [];
+      return Array.isArray(this.rows) ? this.rows : [];
     },
 
-    // --- filter option lists derived from data ---
     sourceOptions() {
       return this.uniqueSorted(this.allCourses.map(c => String(c?.creation_source ?? '').trim()).filter(Boolean));
     },
+
     typeOptions() {
-      return this.uniqueSorted(this.allCourses.map(c => String(c?.course_type ?? '').trim()).filter(Boolean));
+      return this.uniqueSorted(this.allCourses.map(c => String(c?.course_type_code ?? '').trim()).filter(Boolean));
     },
+
     courseStatusOptions() {
       return this.uniqueSorted(this.allCourses.map(c => String(c?.course_status ?? '').trim()).filter(Boolean));
     },
 
-    // rows after filtering + sorting
     visibleRows() {
-      // initialize defaults once options exist
       this.initDefaultsOnce();
-
-      const rows = this.allCourses.filter(this.passesFilters);
-
-      this.table.setRows(rows);
+      const filtered = this.allCourses.filter(this.passesFilters);
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
+    },
+
+    titleText() {
+      if (this.anonymous) return 'DEPARTMENT - Course Readiness';
+      const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
+      return `${this.escapeHtml(name)} - Course Readiness`;
     }
   },
 
   methods: {
-    // --- init defaults when data arrives ---
+    mapRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        department_code: String(row?.department_code ?? '').trim(),
+        course_code: String(row?.course_code ?? '').trim(),
+        course_name: String(row?.course_name ?? row?.name ?? '').trim(),
+        creation_source: String(row?.creation_source ?? '').trim(),
+        course_type_code: String(row?.course_type_code ?? row?.course_type ?? '').trim(),
+        course_status: String(row?.course_status ?? '').trim(),
+        syllabus_status: String(row?.syllabus_status ?? '').trim(),
+        course_evaluation_status: String(row?.course_evaluation_status ?? '').trim(),
+        instructor_evaluation_status: String(row?.instructor_evaluation_status ?? '').trim(),
+        employment_skills_evaluation_status: row?.employment_skills_evaluation_status,
+        canvas_content_status: String(row?.canvas_content_status ?? '').trim()
+      }));
+    },
+
     initDefaultsOnce() {
       if (this.filtersInitialized) return;
       if (!this.allCourses.length) return;
 
-      // Default course_status = all except Deleted
-      const opts = this.courseStatusOptions;
-      if (!this.filters.course_status || this.filters.course_status.length === 0) {
-        this.filters.course_status = opts.filter(s => s !== 'Deleted');
+      const courseStatusOptions = this.courseStatusOptions;
+      if (!this.filters.course_status.length) {
+        this.filters.course_status = courseStatusOptions.filter(status => status !== 'Deleted');
       }
 
-      // Default source/type: only set if those values exist; otherwise fall back to "all"
-      if (this.filters.source?.length) {
-        if (!this.sourceOptions.includes(this.filters.source[0])) {
-          this.filters.source = [...this.sourceOptions]; // fallback: all
+      if (this.filters.source.length) {
+        if (!this.filters.source.some(value => this.sourceOptions.includes(value))) {
+          this.filters.source = [...this.sourceOptions];
         }
       } else {
-        this.filters.source = ['Jenzabar'];
+        this.filters.source = this.sourceOptions.includes('Jenzabar') ? ['Jenzabar'] : [...this.sourceOptions];
       }
 
-      if (this.filters.type?.length) {
-        if (!this.typeOptions.includes(this.filters.type[0])) {
-          this.filters.type = [...this.typeOptions]; // fallback: all
+      if (this.filters.type.length) {
+        if (!this.filters.type.some(value => this.typeOptions.includes(value))) {
+          this.filters.type = [...this.typeOptions];
         }
       } else {
-        this.filters.type = ['CS'];
+        this.filters.type = this.typeOptions.includes('CS') ? ['CS'] : [...this.typeOptions];
       }
 
       this.filtersInitialized = true;
     },
 
-    // --- general utilities ---
-    uniqueSorted(arr) {
-      return Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b));
-    },
-
-    // --- multi-select handler ---
-    onMultiSelectChange(field, evt) {
-      const selected = Array.from(evt.target.selectedOptions).map(o => o.value);
-      this.$set(this.filters, field, selected);
-      this.tableTick++; // force re-render if needed
-    },
-
-    selectAll(field, options) {
-      this.$set(this.filters, field, [...options]);
-      this.tableTick++;
-    },
-
-    selectNone(field) {
-      this.$set(this.filters, field, []);
-      this.tableTick++;
-    },
-
     passesFilters(course) {
       const src = String(course?.creation_source ?? '').trim();
-      const typ = String(course?.course_type ?? '').trim();
-      const cs  = String(course?.course_status ?? '').trim();
+      const typ = String(course?.course_type_code ?? '').trim();
+      const status = String(course?.course_status ?? '').trim();
 
-      // If a filter list is empty, treat as "no filter" OR "show none"?
-      // Most UIs treat empty selection as "show all". We'll do that.
-      const srcOk = !this.filters.source?.length || this.filters.source.includes(src);
-      const typOk = !this.filters.type?.length || this.filters.type.includes(typ);
-      const csOk  = !this.filters.course_status?.length || this.filters.course_status.includes(cs);
+      const srcOk = !this.filters.source.length || this.filters.source.includes(src);
+      const typOk = !this.filters.type.length || this.filters.type.includes(typ);
+      const statusOk = !this.filters.course_status.length || this.filters.course_status.includes(status);
 
-      return srcOk && typOk && csOk;
+      return srcOk && typOk && statusOk;
     },
 
-    // --- report table plumbing ---
-    getColumnsWidthsString() { return this.table.getColumnsWidthsString(); },
-    setSortColumn(name) { this.table.setSortColumn(name); this.tableTick++; },
-
-    // --- status helpers (your bucket rules) ---
     statusStyle(s) {
-      const v = String(s ?? '').trim();
+      const value = String(s ?? '').trim();
 
-      if (!v || v === 'N/A') return { backgroundColor: this.colors.gray, color: this.colors.black };
-      if (v === 'Deleted')   return { backgroundColor: this.colors.gray, color: this.colors.black };
-
-      if (v === 'Published' || v === 'Approved') {
+      if (!value || value === 'N/A') return { backgroundColor: this.colors.gray, color: this.colors.black };
+      if (value === 'Deleted') return { backgroundColor: this.colors.gray, color: this.colors.black };
+      if (value === 'Published' || value === 'Approved') {
         return { backgroundColor: this.colors.green, color: this.colors.white };
       }
-      if (v === 'Unpublished' || v === 'Pending Approval') {
+      if (value === 'Unpublished' || value === 'Pending Approval') {
         return { backgroundColor: this.colors.yellow, color: this.colors.black };
       }
-      if (v === 'None' || v === 'Unsubmitted' || v === 'Unpublished') {
+      if (value === 'None' || value === 'Unsubmitted') {
         return { backgroundColor: this.colors.red, color: this.colors.white };
       }
       return { backgroundColor: this.colors.gray, color: this.colors.black };
     },
 
     statusText(s) {
-      const v = String(s ?? '').trim();
-      return v ? v : 'N/A';
+      const value = String(s ?? '').trim();
+      return value || 'N/A';
     },
 
-    overallStatus(course) {
-      const cs = String(course?.course_status ?? '').trim();
-      if (cs === 'Deleted') return 'N/A';
-
-      const vals = [
-        course?.course_status,
-        course?.syllabus_status,
-        course?.course_evaluation_status,
-        course?.instructor_evaluation_status,
-        course?.employment_skills_evaluation_status,
-        course?.canvas_content_status
-      ].map(v => String(v ?? '').trim());
-
-      if (vals.includes('None') || vals.includes('Unsubmitted')) return 'Needs Attention';
-      if (vals.includes('Unpublished') || vals.includes('Pending Approval') || cs === 'Unpublished') return 'In Progress';
-      return 'Ready';
+    courseText(course) {
+      const code = String(course?.course_code ?? '').trim();
+      const name = String(course?.course_name ?? '').trim();
+      if (code && name) return `${code} - ${name}`;
+      return code || name || '(no course)';
     },
 
-    overallStyle(label) {
-      if (label === 'Ready') return { backgroundColor: this.colors.green, color: this.colors.white };
-      if (label === 'In Progress') return { backgroundColor: this.colors.yellow, color: this.colors.black };
-      if (label === 'Needs Attention') return { backgroundColor: this.colors.red, color: this.colors.white };
-      return { backgroundColor: this.colors.gray, color: this.colors.black };
+    courseSortKey(course) {
+      return `${String(course?.course_code ?? '').trim()} ${String(course?.course_name ?? '').trim()}`.toLowerCase();
     },
+
+    courseLinkHtml(course) {
+      const id = course?.canvas_course_id;
+      const text = this.escapeHtml(this.courseText(course));
+      if (id === undefined || id === null || id === '') return text;
+      return `<a href="/courses/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    }
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div class="btech-row" style="align-items:center; margin-bottom:8px;">
-      <h4 class="btech-card-title" style="margin:0;">Course Readiness</h4>
-      <div style="flex:1;"></div>
-      <span class="btech-pill" style="margin-left:8px;">Year: {{ year }}</span>
-      <span class="btech-pill" style="margin-left:8px;">Courses: {{ visibleRows.length }}</span>
-    </div>
-
-    <div v-if="!courseReadiness || !courseReadiness.courses" class="btech-muted" style="text-align:center; padding:10px;">
-      No course readiness data.
-    </div>
-
-    <div v-else>
-      <!-- Filters -->
-      <div style="gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
-        <multi-filter-pill
-          label="Source"
-          :options="sourceOptions"
-          v-model="filters.source"
-          placeholder="All"
-        ></multi-filter-pill>
-
-        <multi-filter-pill
-          label="Type"
-          :options="typeOptions"
-          v-model="filters.type"
-          placeholder="All"
-        ></multi-filter-pill>
-
-        <multi-filter-pill
-          label="Course Status"
-          :options="courseStatusOptions"
-          v-model="filters.course_status"
-          placeholder="All"
-          :max-summary-items="2"
-        ></multi-filter-pill>
-      </div> 
-
-      <!-- Column headers -->
-      <div
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
-        :style="{ 'grid-template-columns': getColumnsWidthsString() }"
-      >
-        <div
-          v-for="col in table.getVisibleColumns()"
-          :key="col.name"
-          :title="col.description"
-          style="display:inline-block; cursor:pointer;"
-          @click="setSortColumn(col.name)"
-        >
-          <span><b>{{ col.name }}</b></span>
-          <span style="margin-left:.25rem;">
-            <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
-              <g>
-                <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
-                  points="85.877,154.014 85.877,428.309 131.706,428.309 131.706,154.014 180.497,221.213 217.584,194.27 108.792,44.46 0,194.27 37.087,221.213"/>
-                <polygon :style="{ fill: col.sort_state > 0 ? '#000' : '#E0E0E0' }"
-                  points="404.13,335.988 404.13,61.691 358.301,61.691 358.301,335.99 309.503,268.787 272.416,295.73 381.216,445.54 490,295.715 452.913,268.802"/>
-              </g>
-            </svg>
-          </span>
-        </div>
+  <report-table-shell
+    :title-html="titleText"
+    :table="table"
+    :rows="visibleRows"
+    :loading="loading || loadingDepartments"
+    :load-error="loadError"
+    loading-text="Loading course readiness..."
+    :row-key-fn="(row, index) => row.canvas_course_id || (row.course_code + '-' + index)"
+  >
+    <template #filters>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Year</label>
+        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+          <option
+            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+            :key="optionYear"
+            :value="optionYear"
+          >{{ optionYear }}</option>
+        </select>
       </div>
 
-      <!-- Rows -->
-      <div
-        v-for="(course, i) in visibleRows"
-        :key="course.canvas_course_id || (course.course_code + '-' + i)"
-        style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
-        :style="{
-          'grid-template-columns': getColumnsWidthsString(),
-          'background-color': (i % 2) ? 'white' : '#F8F8F8'
-        }"
-      >
-        <div
-          v-for="col in table.getVisibleColumns()"
-          :key="col.name"
-          style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
-        >
-          <span
-            :class="col.style_formula ? 'btech-pill-text' : ''"
-            :style="col.get_style(course)"
-            v-html="col.getContent(course)"
-          ></span>
-        </div>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Department</label>
+        <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option
+            v-for="option in departmentOptions"
+            :key="option.value"
+            :value="option.value"
+          >{{ option.label }}</option>
+        </select>
       </div>
-    </div>
-  </div>
+
+      <multi-filter-pill
+        label="Type"
+        :options="typeOptions"
+        v-model="filters.type"
+        placeholder="All"
+      ></multi-filter-pill>
+
+      <multi-filter-pill
+        label="Course Status"
+        :options="courseStatusOptions"
+        v-model="filters.course_status"
+        placeholder="All"
+      ></multi-filter-pill>
+    </template>
+  </report-table-shell>
   `
 });

@@ -5,6 +5,239 @@
   Show which tab you're on
 */
 (async function () {
+  function emptyMajor() {
+    return {
+      major_code: '',
+      academic_year__major: 0,
+      campus_code: '',
+      credits_earned: 0,
+      average_score: 0,
+      is_distance_approved: false,
+      courses: {
+        core: [],
+        elective: [],
+        other: []
+      }
+    };
+  }
+
+  function normalizeKeyPart(value) {
+    return String(value).trim().toLowerCase();
+  }
+
+  function normalizeTimestampKey(value) {
+    return String(value)
+      .trim()
+      .toLowerCase()
+      .replace('t', ' ')
+      .replace('z', '')
+      .split('.')[0];
+  }
+
+  function buildHsTermKey(term) {
+    return [
+      normalizeKeyPart(term.sis_user_id),
+      normalizeKeyPart(term.course_code),
+      normalizeKeyPart(term.campus_code),
+      normalizeTimestampKey(term.entry_at__original || term.entry_at),
+    ].join('|');
+  }
+
+  const hsGradeCourseCache = new Map();
+
+  async function fetchAllCourseConnection(courseId, connectionField, args = {}, nodeSelection = '') {
+    const pageSize = 50;
+    let allNodes = [];
+    let hasNext = true;
+    let after = null;
+
+    while (hasNext) {
+      const argsStr = Object.entries({ ...args, first: pageSize, after })
+        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .join(", ");
+
+      const query = `{
+        course(id: "${courseId}") {
+          ${connectionField}(${argsStr}) {
+            ${nodeSelection}
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }`;
+
+      const res = await $.post("/api/graphql", { query });
+      const conn = res.data.course[connectionField];
+      allNodes.push(...conn.nodes);
+      hasNext = conn.pageInfo.hasNextPage;
+      after = conn.pageInfo.endCursor;
+    }
+
+    return allNodes;
+  }
+
+  async function getAllAssignmentsByGroup(course) {
+    const assignments = await fetchAllCourseConnection(
+      course.id,
+      "assignmentsConnection",
+      {},
+      `nodes { _id name published pointsPossible assignmentGroupId }`
+    );
+
+    return assignments.reduce((map, assignment) => {
+      const groupId = assignment.assignmentGroupId || "__ungrouped";
+      if (!map[groupId]) map[groupId] = [];
+      map[groupId].push(assignment);
+      return map;
+    }, {});
+  }
+
+  async function getAllSubmissions(course, userId) {
+    return fetchAllCourseConnection(
+      course.id,
+      "submissionsConnection",
+      { studentIds: String(userId) },
+      `nodes {
+        id assignmentId submittedAt grade gradedAt score userId
+        assignment { name published pointsPossible }
+      }`
+    );
+  }
+
+  async function getCourseGraphQLData(course, userId) {
+    try {
+      const groupQuery = `{
+        course(id: "${course.id}") {
+          assignmentGroupsConnection {
+            nodes {
+              _id name groupWeight state
+            }
+          }
+        }
+      }`;
+      const groupRes = await $.post("/api/graphql", { query: groupQuery });
+      const groups = groupRes.data.course.assignmentGroupsConnection.nodes
+        .filter(group => group.state === "available");
+
+      const assignmentsByGroup = await getAllAssignmentsByGroup(course);
+      const submissions = await getAllSubmissions(course, userId);
+
+      groups.forEach(group => {
+        group.assignments = assignmentsByGroup[group._id] || [];
+      });
+
+      return {
+        name: course.name,
+        assignment_groups: groups,
+        submissions
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        name: course.name,
+        assignment_groups: [],
+        submissions: []
+      };
+    }
+  }
+
+  function buildHSCourseHours(course) {
+    const hours = COURSE_HOURS?.[course.course_code]?.hours ?? 0;
+    return {
+      ...course,
+      hours,
+      credits: hours / 30
+    };
+  }
+
+  async function loadHSGradeCoursesInternal(userId, onProgress = () => {}) {
+    const studentId = String(userId);
+    let enrollments = [];
+
+    try {
+      enrollments = await bridgetools.req3(
+        'reports',
+        { canvas_user_id: studentId },
+        { dataset: 'canvas_enrollments' }
+      );
+    } catch (err) {
+      console.error("Failed fetching course enrollments via req3:", err);
+      return [];
+    }
+
+    const courses = Array.from(
+      enrollments
+        .reduce((map, enrollment) => {
+          const id = Number(enrollment.canvas_course_id);
+          if (!id) return map;
+
+          const key = String(id);
+          if (!map.has(key)) {
+            const course = {
+              id,
+              course_id: id,
+              name: enrollment.course_name,
+              course_code: enrollment.course_code,
+              academic_year: enrollment.academic_year,
+              section_name: enrollment.section_name,
+            };
+            map.set(key, buildHSCourseHours(course));
+          }
+          return map;
+        }, new Map())
+        .values()
+    );
+
+    for (let i = 0; i < courses.length; i++) {
+      const course = courses[i];
+      onProgress({
+        message: `Loading Assignment Data for Course ${course.id}`,
+        progress: courses.length ? ((i / courses.length) * 100) : 100
+      });
+      course.additionalData = await getCourseGraphQLData(course, studentId);
+      course.assignments = course.additionalData.submissions;
+    }
+
+    onProgress({ message: "Data loading complete.", progress: 100 });
+    return courses;
+  }
+
+  function cloneHSGradeCourses(courses) {
+    return JSON.parse(JSON.stringify(courses));
+  }
+
+  window.loadIndividualReportHSGradeCourses = async function(userId, onProgress) {
+    const key = String(userId);
+
+    if (!hsGradeCourseCache.has(key)) {
+      hsGradeCourseCache.set(key, loadHSGradeCoursesInternal(key, onProgress));
+    }
+
+    const courses = await hsGradeCourseCache.get(key);
+    return cloneHSGradeCourses(courses);
+  };
+
+  function emptyUser() {
+    return {
+      majors: [],
+      courses: [],
+      canvas_user_id: null,
+      name: '',
+      academic_probation: null,
+      last_update: null,
+      last_login: null,
+      avatar_url: null,
+      sis_user_id: null,
+      hs_terms: [],
+      contracted_hours: {},
+      contracted_hours_total: 0,
+      transfer_courses: [],
+      distance_approved: false,
+    };
+  }
+
   //Confirm with Instructional Team before going live
   async function loadFirstAvailableScript(urls) {
     let lastError;
@@ -22,65 +255,7 @@
     throw lastError || new Error("Failed to load script from all sources");
   }
 
-  if (true) {
-      if (/[0-9]+\/grades/.test(window.location.pathname)) {
-        let loadedWarning = false;
-        try {
-          let user = await bridgetoolsReq(`https://reports.bridgetools.dev/api/students/${ENV.current_user_id}`);
-          if (user?.enrollment_type == 'HS' && CURRENT_DEPARTMENT_ID === 3824) { //Dental testing this
-            loadedWarning = true;
-            $("#content").prepend(`
-              <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
-                <div class="ic-notification__icon" role="presentation">
-                  <i class="icon-info"></i>
-                  <span class="screenreader-only">
-                    information
-                  </span>
-                </div>
-                <div class="ic-notification__content">
-                  <div class="ic-notification__message">
-                    <h4 class="ic-notification__title">
-                      High School Students!
-                    </h4>
-                    <p class="notification_message">The grade here is your course grade, but may <strong>NOT</strong> be your final grade submitted to your high school at the end of the term. Your term grade will be based on only the assignments submitted during the term and may be based on the ammount of work you completed across multiple courses.</p>
-                    <p>Contact your instructor if you have any questions about your grade.</p>
-                  </div>
-                </div>
-              </div>
-            `);
-          }
-        } catch(err) {
-
-        }
-        if (!loadedWarning) {
-        $("#content").prepend(`
-          <div style="background-color: white; position:relative; left: 0; bottom: 0;" class="ic-notification ic-notification--danger">
-            <div class="ic-notification__icon" role="presentation">
-              <i class="icon-info"></i>
-              <span class="screenreader-only">
-                information
-              </span>
-            </div>
-            <div class="ic-notification__content">
-              <div class="ic-notification__message">
-                <h4 class="ic-notification__title">
-                  Final Grades! 
-                </h4>
-                <p class="notification_message">The default grade shown by Canvas only takes into account graded items, and may <strong>NOT</strong> reflect the final grade. You may uncheck the box labeled "Calculate based only on graded assignments" to show the actual grade including ungraded assignments. Assignments which show a - by them have not been submitted.</p>
-                <p>Contact an instructor if you have any questions about grades.</p>
-              </div>
-            </div>
-          </div>
-        `);
-
-        }
-      } else {
-
-      }
-  }
-
   async function postLoad() {
-    let app = this;
     let vueString = '';
     //gen an initial uuid
     await $.get(SOURCE_URL + '/custom_features/reports/individual_page/template.vue', null, function (html) {
@@ -106,16 +281,15 @@
       gen_report_button = $('<a class="btn button-sidebar-wide" id="canvas-individual-report-vue-gen"></a>');
       menu_bar = $("#right-side div").first();
     }
-    gen_report_button.append('Student Report (Deprecated)');
+    gen_report_button.append('Student Report');
     gen_report_button.appendTo(menu_bar);
     let modal = $('#canvas-individual-report-vue');
     modal.hide();
 
-    this.APP = new Vue({
+    APP = new Vue({
       el: '#canvas-individual-report-vue',
       mounted: async function () {
-        let app = this;
-        app.loadingProgress = 0;
+        this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;
         // if (!IS_TEACHER) this.menu = 'period';
         if (IS_TEACHER) { //also change this to ref the url and not whether or not is teacher
@@ -125,41 +299,51 @@
           this.userId = ENV.current_user_id;
         }
 
+        window.loadIndividualReportHSGradeCourses(this.userId).catch(err => {
+          console.error("Failed preloading HS grade courses:", err);
+        });
+
         this.loadingMessage = "Loading Settings";
-        let settings = await app.loadSettings();
+        let settings = await this.loadSettings(this.settings);
         this.settings = settings;
         this.loadingProgress += 10;
 
-        //load data from bridgetools
         this.loadingMessage = "Loading User Data";
-        //Pulled enrollment data out of loadUser func because it is ready to use for Grades between dates out of the box and doesn't need to wait on all of the other stuff loadUser does
-        let enrollmentData = await bridgetoolsReq("https://reports.bridgetools.dev/api/students/canvas_enrollments/" + this.userId);
-        this.enrollmentData = enrollmentData;
 
         try {
-          let user = await app.loadUser(this.userId);
+          let user = await this.loadUser(this.userId);
           this.user = user;
         } catch(err) {
           console.error(err);
-          app.user = {};
+          this.user = emptyUser();
         }
-        app.loadingProgress += 10;
+        this.loadingProgress += 10;
         this.loading = false;
-        
       },
-
       data: function () {
         return {
-          currentDepartment: {},
-          enrollmentData:  undefined,
-          userId: null,
-          user: {},
-          tree: {
-            other: {}
+          currentReportMeta: {
+            title: 'Courses'
           },
+          reportTypes: [
+            { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
+            // { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Course Grades' },
+            { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
+            { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
+          ],
+          selectedMajorIndex: 0,
+          userId: null,
+          user: emptyUser(),
+          canvasUser: null,
           goal: undefined,
           colors: bridgetools.colors,
-          settings: {},
+          settings: {
+            anonymous: false,
+            account: 0,
+            reportType: 'student-courses',
+            sort_dir: 1,
+            filters: { year: '2025' }
+          },
           terms: [],
           sections: [],
           loading: true,
@@ -167,7 +351,6 @@
           loadingProgress: 0,
           accessDenied: false,
           settingGoal: false,
-          menu: 'report',
           IS_TEACHER: false,
           enrollment_tab: {
             managedStudent: {},
@@ -188,57 +371,74 @@
             studentIdInput: '',
             studentsFound: [],
             studentsNotFound: [],
-            dept: '',
+            major_code: '',
           }
         }
       },
-
       computed: {
-        visibleColumns: function () {
-          return this.columns.filter(function (c) {
-            return c.visible;
-          })
-        }
+        currentReportMeta() {
+          const fallback = this.reportTypes[0];
+          return this.reportTypes.find(r => r.value === (this.settings.reportType || 'instructor')) || fallback;
+        },
+        currentReportProps() {
+          const base = {
+            year: this.settings.filters.year,
+            account: this.settings.account,
+            instructorId: ENV.current_user_id
+          };
+          return base;
+        },
+
+        currentMajor() {
+          return this.user.majors[this.selectedMajorIndex] || emptyMajor();
+        },
       },
 
       methods: {
-        close() {
-          let modal = $('#canvas-individual-report-vue');
-          modal.hide();
-        },
-        async loadSettings() {
-          let settings = await bridgetoolsReq("https://reports.bridgetools.dev/api/settings/" + ENV.current_user_id);
-          if (settings.individualReport == undefined) {
-            settings.individualReport = {
-            }
-          }
-          if (settings.individualReport.attendanceCutoffs == undefined) {
-            settings.individualReport.attendanceCutoffs = {
-              good: 90,
-              checkIn: 80,
-              critical: 0,
-              show: false
-            }
-            //app.saveSettings("individualReport");
-          }
-          return settings;
-        },
-        setGoal(goal) {
-          this.goal = goal;
+        onMajorChange(event) {
+          this.selectedMajorIndex = Number(event.target.value);
         },
 
-        async refreshHSEnrollmentTerms() {
-          let app = this;
-          let terms;
-          await $.get("https://canvas.bridgetools.dev/api/enroll_hs/" + app.userId, function (data) {
-            terms = data;
+        onReportChange() {
+          this.saveSettings(this.settings);
+        },
+
+        async loadSettings(settings) {
+          const fallback = JSON.parse(JSON.stringify(settings));
+          let saved = {};
+          try {
+            const resp = await $.get(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`);
+            if (resp.data && resp.data.settings) saved = resp.data.settings;
+          } catch (err) { /* keep defaults */ }
+
+          const merged = JSON.parse(JSON.stringify(fallback));
+          merged.account = saved.account ?? fallback.account;
+          merged.reportType = saved.reportType ?? fallback.reportType;
+          if (!this.reportTypes.some(report => report.value === merged.reportType)) {
+            merged.reportType = fallback.reportType;
+          }
+
+          if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
+          else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
+
+          if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
+          merged.anonymize = merged.anonymous;
+          for (const key in merged.filters) {
+            const val = merged.filters[key];
+            if (val === "true") merged.filters[key] = true;
+            else if (val === "false") merged.filters[key] = false;
+          }
+          merged.filters.section = 'All';
+          return merged;
+        },
+
+        async saveSettings(settings) {
+          await $.put(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`, {
+            data: { settings: settings }
           });
-          app.terms = terms
         },
 
-        async getHSEnrollment() {
-
-        },
+        close() { $(this.$el).hide(); },
 
         formatDate(date) {
           date = new Date(date);
@@ -252,189 +452,164 @@
           let formattedDate = month + "/" + day + "/" + date.getFullYear();
           return formattedDate;
         },
-        async deleteHSEnrollmentTerm(term) {
-          let app = this;
-          await $.delete('https://canvas.bridgetools.dev/api/enroll_hs/' + term._id, {});
-          for (let i = 0; i < app.terms.length; i++) {
-            if (app.terms[i]._id === term._id) {
-              app.terms.splice(i, 1);
-              return;
+
+        sumContractedHours(contractedHours) {
+          if (!contractedHours) return 0;
+          return Object.values(contractedHours).reduce((sum, value) => {
+            return sum + Number(value);
+          }, 0);
+        },
+
+        async loadMajorCourses(major) {
+          const majorCourses = await bridgetools.req3(
+            'reports',
+            {
+              major_code: major.major_code,
+              academic_year__major: major.academic_year__major
+            },
+            { dataset: 'major_courses' }
+          );
+
+          return {
+            ...major,
+            courses: {
+              core: majorCourses.filter(course => course.major_requirement_type_code === 'C'),
+              elective: majorCourses.filter(course => course.major_requirement_type_code === 'E'),
+              other: majorCourses.filter(course => course.major_requirement_type_code !== 'C' && course.major_requirement_type_code !== 'E'),
             }
-          }
+          };
         },
 
-        async enrollHS() {
-          let app = this;
-          await $.post('https://canvas.bridgetools.dev/api/enroll_hs', {
-            'students': JSON.stringify([app.userId]),
-            'term_data': JSON.stringify({
-              hours: app.enrollment_tab.saveTerm.hours,
-              type: app.enrollment_tab.saveTerm.type,
-              startDate: app.enrollment_tab.saveTerm.startDate,
-              endDate: app.enrollment_tab.saveTerm.endDate,
-              school: app.enrollment_tab.saveTerm.school
-            }),
-          }, function (data) {
-            app.refreshHSEnrollmentTerms();
-          })
+        async normalizeMajors(majors) {
+          return Promise.all(majors.map(async major => {
+            if (major.courses) return major;
+            return this.loadMajorCourses(major);
+          }));
         },
 
+        sortMajors(majors) {
+          return [...majors].sort((a, b) => {
+            const aActive = a.is_active_degree ? 1 : 0;
+            const bActive = b.is_active_degree ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
 
-        async loadTree(deptCode, deptYear) {
-          let url = "https://reports.bridgetools.dev/api/trees?dept_code=" + deptCode + "&year=" + deptYear;
-          let data = await bridgetoolsReq(url);
-          let tree = data[0] ?? {};
-          if (tree?.courses === undefined) tree.courses = {};
-          if (tree?.courses?.core === undefined) tree.courses.core = {};
-          if (tree?.courses?.elective === undefined) tree.courses.elective = {};
-          if (tree?.courses?.other === undefined) tree.courses.other = {};
+            const ay = Number(a.academic_year__major);
+            const by = Number(b.academic_year__major);
+            if (ay !== by) return by - ay;
 
-          this.tree = tree;
-          return tree;
+            const aperc = Number(a.perc_credits_earned);
+            const bperc = Number(b.perc_credits_earned);
+            if (aperc !== bperc) return bperc - aperc;
+
+            const ad = String(a.major_code || '').toLowerCase();
+            const bd = String(b.major_code || '').toLowerCase();
+            return ad.localeCompare(bd);
+          });
+        },
+
+        calculateCreditsRequired(entryAt, exitAt, concurrentCount = 1) {
+          const start = new Date(entryAt);
+          const end = new Date(exitAt);
+          if (end <= start) return 0;
+
+          const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
+          let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
+          if (concurrentCount > 1) credits *= concurrentCount;
+          return credits;
+        },
+
+        mergeHSTerms(baseTerms, overrideTerms) {
+          const overridesByKey = new Map(
+            overrideTerms.map(term => [buildHsTermKey(term), term])
+          );
+
+          return baseTerms.map(baseTerm => {
+            const overrideTerm = overridesByKey.get(buildHsTermKey(baseTerm));
+            const entryAt = overrideTerm?.entry_at__override || baseTerm.entry_at;
+            const exitAt = overrideTerm?.exit_at__override || baseTerm.exit_at;
+            const creditsRequired = overrideTerm?.credits_required__override != null
+              ? Number(overrideTerm.credits_required__override)
+              : this.calculateCreditsRequired(entryAt, exitAt, Number(baseTerm.concurrent_count) || 1);
+
+            return {
+              ...baseTerm,
+              _id: buildHsTermKey(baseTerm),
+              entry_at__original: baseTerm.entry_at,
+              entry_at: entryAt,
+              exit_at: exitAt,
+              entry_date: entryAt,
+              exit_date: exitAt,
+              hours: creditsRequired * 30,
+            };
+          });
+        },
+
+        normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors }) {
+          const sortedMajors = this.sortMajors(majors);
+          const defaultMajor = sortedMajors[0];
+
+          const user = {
+            majors: sortedMajors,
+            courses,
+            canvas_user_id: canvasUser.id,
+            name: canvasUser.name,
+            academic_probation: null,
+            academic_standing_code: studentHeader.academic_standing_code,
+            academic_standing_name: studentHeader.academic_standing_name,
+            last_update: bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at),
+            last_login: bridgetools.psqlTimestampToDate(studentHeader.last_login_at),
+            avatar_url: studentHeader.avatar_image_url || canvasUser.avatar_url,
+            sis_user_id: studentHeader.sis_user_id,
+            hs_terms: hsTerms,
+            contracted_hours: studentHeader.contracted_hours,
+            contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours),
+            transfer_courses: [],
+            distance_approved: defaultMajor.is_distance_approved,
+          };
+
+          this.selectedMajorIndex = 0;
+
+          return user;
         },
 
         async loadUser(userId) {
-          let user, tree;
-          let reqUrl = "/api/v1/users/" + ENV.current_user_id + "/custom_data/btech-reports?ns=dev.bridgetools.reports";
-          let authCode = '';
-          await $.get(reqUrl, data => {
-            authCode = data.data.auth_code;
-          });
-          await $.get("https://reports.bridgetools.dev/api/students/" + userId + "?requester_id=" + ENV.current_user_id + "&auth_code=" + authCode, function (data) {
-            user = data;
-          });
-          if (user === "") {
-            try {
-              await $.get("/api/v1/users/" + userId, function (data) {
-                user = {
-                  name: data.name,
-                  sis_id: data.sis_user_id,
-                  canvas_id: data.id,
-                  enrollment_type: "",
-                  last_login: "",
-                  enrolled_hours: 0,
-                  enrolledHours: 0,
-                  completedHours: 0,
-                  avatar_url: data.avatar_url,
-                  courses: {},
-                  treeCourses: {
-                    other: []
-                  },
-                  submissions: [],
-                }
-              });
-            } catch (err) {
-              user = {
-                name: "",
-                sis_id: "",
-                canvas_id: this.userId,
-                enrollment_type: "",
-                last_login: "",
-                enrolled_hours: 0,
-                enrolledHours: 0,
-                completedHours: 0,
-                avatar_url: "",
-                courses: {},
-                treeCourses: {
-                  other: []
-                },
-                submissions: [],
-              }
-            }
+          try {
+            const [
+              studentHeader,
+              studentCourses,
+              studentMajors,
+              studentHSTerms,
+              studentHSTermOverrides,
+              canvasUser
+            ] = await Promise.all([
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms__override'}),
+              $.get(`/api/v1/users/${userId}`)
+            ]);
 
-            let enrollmentData = this.enrollmentData;
-            for (let e in enrollmentData) {
-              let enrollment = enrollmentData[e];
-              let courseName = "";
-              await $.get("/api/v1/courses/" + enrollment.course_id, function (data) {
-                courseName = data.name;
-              })
-              let final_score = enrollment.grades.final_score;
-              if (final_score === undefined || final_score === null) final_score = 0;
-              let current_score = enrollment.grades.current_score;
-              if (current_score === undefined || current_score === null) current_score = 0;
-              let progress = 0;
-              if (current_score !== 0) progress = (final_score / current_score) * 100;
-              let courseCode = "";
-              let courseCodeM = "";
-              if (enrollment.sis_course_id != null) {
-                courseCodeM = enrollment.sis_course_id.match(/([A-Z]{4} [0-9]{4})/);
-                if (courseCodeM) courseCode = courseCodeM[1];
-              }
-              if (courseCode !== "") {
-                let courseData = {
-                  code: courseCode,
-                  course_id: enrollment.course_id,
-                  hours: 0,
-                  last_activity: enrollment.last_activity_at,
-                  start: enrollment.created_at,
-                  progress: progress,
-                  state: enrollment.enrollment_state,
-                  enabled: true,
-                  name: courseName,
-                  score: current_score
-                }
-                user.courses[courseCode] = courseData;
-                user.treeCourses.other.push(courseData)
-              }
-            }
-            tree = {
-              hours: 0,
-              name: "",
-              courses: {
-                core: {},
-                elective: {}
-              }
-            }
-          } else {
-            let date = new Date();
-            let maxyear = date.getFullYear();
-            let month = date.getMonth() + 1;
-            if (month <= 6) maxyear -= 1;
-
-            user.depts = user.depts.filter((dept) => dept.year <= maxyear);
-            user.depts.sort((a, b) => {
-              if (a.year == b.year) {
-                return (a.dept.toLowerCase() > b.dept.toLowerCase()) ? 1 : ((a.dept.toLowerCase() < b.dept.toLowerCase()) ? -1 : 0)
-              }
-              return (a.year > b.year) ? -1 : ((a.year < b.year) ? 1 : 0)
+            this.canvasUser = canvasUser;
+            const majors = await this.normalizeMajors(studentMajors);
+            return this.normalizeUserRecord({
+              canvasUser,
+              studentHeader: studentHeader[0],
+              hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
+              courses: studentCourses,
+              majors
             });
-            this.currentDepartment = user?.depts?.[0] ?? {dept: '', year: ''};
-            if (user?.depts?.[0]) {
-              tree = await this.loadTree(user.depts[0].dept, user.depts[0].year);
-            } else {
-              tree = {
-                hours: 0,
-                name: "",
-                courses: {
-                  core: {},
-                  elective: {}
-                }
-              }
-            }
+          } catch (err) {
+            console.error(err);
+            return emptyUser();
           }
-
-          user = this.updateUserCourseInfo(user, tree);
-          return user;
-        },
-
-        async changeTree(user) {
-          let app = this;
-          let tree = await app.loadTree(app.currentDepartment.dept, app.currentDepartment.year);
-          user = app.updateUserCourseInfo(user, tree);
-          app.user = user;
-        },
-
-        updateUserCourseInfo(user, tree) {
-          user = bridgetools.processUserData(user, tree); 
-          return user;
         },
 
       }
     })
     gen_report_button.click(function () {
       let modal = $('#canvas-individual-report-vue');
-      app.APP.refreshHSEnrollmentTerms();
+      // APP.refreshHSEnrollmentTerms();
       $.post("https://tracking.bridgetools.dev/api/hit", {
         "tool": "reports-individual_page",
         "canvasId": ENV.current_user_id
@@ -445,55 +620,40 @@
   
   
 
-  await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
-  loadCSS("https://reports.bridgetools.dev/style/main.css");
-  loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-  await $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/progress_meeting/setGoal.js");
-  await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-  loadFirstAvailableScript([
-    "https://d3js.org/d3.v6.min.js",
-    "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
-  ]).then(function () {
-    $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js").done(function () {
-      $.getScript("https://reports.bridgetools.dev/components/icons/alert.js").done(function () {
-        $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js").done(function () {
-          $.getScript("https://reports.bridgetools.dev/department_report/components/courseRowInd.js").done(function () {
-            $.getScript("https://reports.bridgetools.dev/department_report/components/courseProgressBarInd.js").done(function () {
-              $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js").done(function () {
-                $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js").done(function () {
-                  $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js").done(function () {
-                    $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js").done(function () {
-                      $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indGraphs.js").done(function () {
-                        $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indHeader.js").done(function () {
-                          $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/indHeaderCredits.js").done(function () {
-                            $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentInd.js").done(function () {
-                              $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentIndCredits.js").done(function () {
-                                $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentHours.js").done(function () {
-                                  $.getScript("https://reports.bridgetools.dev/department_report/components/individual_report/showStudentEmploymentSkills.js").done(function () {
-                                    $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/showStudentGrades.js').done(function () {
-                                      $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/gradesBetweenDates.js').done(function () {
-                                        postLoad();
-                                      });
-                                    });
-                                  });
-                                });
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  }).catch(function (err) {
+  try {
+    await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
+    //styling
+    loadCSS("https://reports.bridgetools.dev/style/main.css");
+    loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
+    await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
+    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
+    await loadFirstAvailableScript([
+      "https://d3js.org/d3.v6.min.js",
+      "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
+    ]);
+    /*
+    //libraries
+    await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
+    await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
+    //icons
+    await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
+    await $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js");
+    //components
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
+    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
+    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
+    */
+    postLoad();
+  } catch (err) {
     console.error(err);
-  });
+  }
   function loadCSS(url) {
     var style = document.createElement('link'),
       head = document.head || document.getElementsByTagName('head')[0];
@@ -502,20 +662,5 @@
     style.rel = "stylesheet";
     style.media = "screen,print";
     head.insertBefore(style, head.firstChild);
-  }
-  async function bridgetoolsReq(url) {
-    let reqUrl = "/api/v1/users/" + ENV.current_user_id + "/custom_data/btech-reports?ns=dev.bridgetools.reports";
-    let authCode = '';
-    await $.get(reqUrl, data => {
-      authCode = data.data.auth_code;
-    });
-    //figure out if any params exist then add autho code depending on set up.
-    if (!url.includes("?")) url += "?auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-    else url += "&auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-    let output;
-    await $.get(url, function (data) {
-      output = data;
-    });
-    return output;
   }
 })();

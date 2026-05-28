@@ -1,17 +1,15 @@
 <template>
   <div class="btech-modal btech-canvas-report" style="display:inline-block;">
-    <div class="btech-modal-content" style="overflow:visible;">
-      <div class="btech-modal-content-inner" style="overflow:visible;">
+    <div class="btech-modal-content" style="overflow:hidden; max-height:90vh; display:flex; flex-direction:column;">
+      <div class="btech-modal-content-inner" style="overflow:hidden; display:flex; flex-direction:column; min-height:0;">
         <span class="btech-close" v-on:click="close()">&times;</span>
 
-        <!-- Title -->
         <div class="btech-row" style="align-items:center; margin-bottom:6px;">
           <h3 class="btech-card-title" style="margin:0; width:100%; text-align:center;">
             {{ currentReportMeta.title }}
           </h3>
         </div>
 
-        <!-- Report Mode Tabs (top level) -->
         <div
           role="tablist"
           aria-label="Report type"
@@ -33,19 +31,18 @@
               padding:6px 12px;
               font-weight:600;
               font-size:12px;
-              background: white;
+              background:white;
               cursor:pointer;
-              transition: box-shadow .15s ease, background .15s ease;
+              transition:box-shadow .15s ease, background .15s ease;
             "
             :style="settings.reportType === rt.value
               ? 'background:#111827; color:#fff; border-color:#111827; box-shadow:0 1px 4px rgba(0,0,0,.15);'
-              : 'background:#fff; color:#111827; border-color: #C1C8D7;'"
+              : 'background:#fff; color:#111827; border-color:#C1C8D7;'"
           >
             {{ rt.label }}
           </button>
         </div>
 
-        <!-- Sub-menu Tabs (per report) -->
         <div
           v-if="currentSubMenus && currentSubMenus.length"
           role="tablist"
@@ -59,7 +56,7 @@
             border-radius:999px;
             background:#ffffff;
             margin:0 auto 12px auto;
-            width: 100%;
+            width:100%;
           "
         >
           <button
@@ -82,12 +79,10 @@
               transition:all .15s ease;
               position:relative;
               z-index:${currentSubKey === sm.value ? 2 : 1};
-
               border-top-left-radius:${idx === 0 ? '999px' : '0'};
               border-bottom-left-radius:${idx === 0 ? '999px' : '0'};
               border-top-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
               border-bottom-right-radius:${idx === currentSubMenus.length - 1 ? '999px' : '0'};
-
               ${idx === currentSubMenus.length - 1 ? 'border-right:none;' : ''}
               `
             "
@@ -96,267 +91,20 @@
           </button>
         </div>
 
-        <!-- Filters Row -->
-        <div
-          class="btech-row"
-          style="align-items:flex-start; gap:12px; justify-content:center; margin-bottom:12px; flex-wrap:wrap;"
-        >
-          <!-- Year -->
-          <div style="display:inline-block; min-width:120px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Year</label>
-            <select
-              v-model="settings.filters.year"
-              aria-label="Select year"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option
-                v-for="year in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-                :key="year"
-                :value="year"
-              >{{ year }}</option>
-            </select>
+        <div style="flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px;">
+          <div id="missing-report-explanation">
+            <p><strong>Note:</strong> We are converting reports to a new, more secure system. They will be restored as they get converted to the new system.</p>
+            <p>Planned Next Report(s) to Restore: Surveys, CPL</p>
           </div>
 
-          <!-- Account -->
-          <div v-if="currentSelectors.includes('departments')" style="display:inline-block; min-width:200px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Account</label>
-            <select
-              v-model="settings.account"
-              aria-label="Select account"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
-            </select>
-          </div>
-
-          <div  v-if="currentSelectors.includes('campus')" style="display:inline-block; min-width:120px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Campus</label>
-            <select
-              v-model="settings.filters.campus"
-              aria-label="Select campus"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <!--build-->
-              <option
-                v-for="c in campuses"
-                :key="c.key"
-                :value="c.key"
-              >
-                {{ c.name }}
-              </option>
-            </select>
-          </div>
-         
-          <!-- Program -->
-          <div v-if="currentSelectors.includes('programs')" style="display:inline-block; min-width:260px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-              Program
-            </label>
-            <select
-              v-model="settings.filters.program"
-              aria-label="Select program"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option value="">All</option>
-              <option v-for="p in programOptions" :key="p.key" :value="p.key">
-                {{ p.name }}
-              </option>
-            </select>
-          </div>
-            
-
-
-          <!-- Instructor selector (only when enabled) -->
-          <div v-if="currentSelectors.includes('instructor')" style="display:inline-block; min-width:220px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Instructor</label>
-            <select
-              v-model="settings.filters.instructor"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option value="">All</option>
-              <option
-                v-for="i in instructorsRaw"
-                :key="i.canvas_id"
-                :value="'' + i.canvas_id"
-              >
-                {{ (i.last_name || '') + ', ' + (i.first_name || '') }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Course selector (only when enabled) -->
-          <div v-if="currentSelectors.includes('course')" style="display:inline-block; min-width:240px;">
-            <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">Course</label>
-            <select
-              v-model="settings.filters.course"
-              @change="saveSettings(settings)"
-              style="width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; background:#fff;"
-            >
-              <option value="">All</option>
-              <option
-                v-for="c in sortedCoursesRaw"
-                :key="c.id || c.course_id || c.canvas_course_id"
-                :value="'' + (c.id || c.course_id || c.canvas_course_id)"
-              >
-                {{ (c.course_code + ' - ' + c.name) }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Course Tags (compact dropdown) -->
-           <!-- Course Tags (compact dropdown) -->
-<div
-  v-if="currentSelectors.includes('course_tags')"
-  style="display:inline-block; min-width:240px; position:relative;"
->
-  <label class="btech-muted" style="display:block; font-size:12px; margin-bottom:4px;">
-    Course Tags
-  </label>
-
-  <!-- Trigger -->
-  <button
-    type="button"
-    ref="courseTagsBtn"
-    @click="toggleCourseTags()"
-    style="
-      width:100%;
-      text-align:left;
-      padding:6px 8px;
-      border:1px solid #d1d5db;
-      border-radius:6px;
-      background:#fff;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      height:34px; /* match select height */
-    "
-  >
-    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-      {{ courseTagsLabel }}
-    </span>
-    <span class="btech-pill" style="font-size:11px;">
-      {{ (settings.filters.course_tags || []).length }}
-    </span>
-    <span aria-hidden="true" style="font-size:10px;">▾</span>
-  </button>
-
-  <!-- Popup panel (opens BELOW) -->
-  <div
-    v-if="courseTagsOpen"
-    @click.stop
-    style="
-      position:absolute;
-      left:0;
-      right:0;
-      top:calc(100% + 6px); /* open BELOW so it doesn't clip at top */
-      z-index:9999;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      box-shadow:0 8px 24px rgba(0,0,0,.12);
-      padding:8px;
-    "
-  >
-    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-      <input
-        ref="courseTagsSearchInput"
-        v-model="courseTagsSearch"
-        type="text"
-        placeholder="Search tags…"
-        style="
-          flex:1;
-          padding:6px 8px;
-          border:1px solid #d1d5db;
-          border-radius:6px;
-          font-size:12px;
-        "
-      />
-      <button
-        type="button"
-        @click="clearCourseTags()"
-        style="
-          padding:6px 8px;
-          border:1px solid #d1d5db;
-          border-radius:6px;
-          background:#fff;
-          cursor:pointer;
-          font-size:12px;
-          white-space:nowrap;
-        "
-      >
-        Clear
-      </button>
-    </div>
-
-    <div
-      v-if="!allCourseTags || !allCourseTags.length"
-      class="btech-muted"
-      style="padding:6px 2px;"
-    >
-      No tags available.
-    </div>
-
-    <div
-      v-else
-      ref="courseTagsScroll"
-      style="
-        max-height:180px;
-        overflow:auto;
-        border:1px solid #f1f5f9;
-        border-radius:6px;
-        padding:6px;
-      "
-    >
-      <label
-        v-for="t in filteredCourseTags"
-        :key="t"
-        style="display:flex; gap:8px; align-items:center; font-size:12px; padding:3px 2px;"
-      >
-        <input
-          type="checkbox"
-          :value="t"
-          v-model="settings.filters.course_tags"
-          @change="saveSettings(settings)"
-        />
-        <span style="flex:1;">{{ t }}</span>
-      </label>
-    </div>
-
-    <div style="display:flex; justify-content:flex-start; gap:8px; margin-top:8px;">
-      <button
-        type="button"
-        @click="courseTagsOpen = false"
-        style="
-          padding:6px 10px;
-          border-radius:6px;
-          border:1px solid #111827;
-          background:#111827;
-          color:#fff;
-          cursor:pointer;
-          font-size:12px;
-        "
-      >
-        Done
-      </button>
-    </div>
-  </div>
-</div>
-
+          <keep-alive>
+            <component
+              :is="currentComponent"
+              @drill-report="drillToReport"
+              v-bind="currentReportProps"
+            />
+          </keep-alive>
         </div>
-
-        <!-- Dynamic report body -->
-        <keep-alive>
-          <component 
-            :is="currentReportMeta.component" 
-            @drill-report="drillToReport"
-            v-bind="currentReportProps" />
-        </keep-alive>
       </div>
     </div>
   </div>

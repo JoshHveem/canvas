@@ -16,7 +16,7 @@ Vue.component('course-row-ind', {
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
             class="btech-pill-text" 
-            v-show="course.final_score !== undefined"
+            v-show="score !== undefined"
             :style="{
               'background-color': gradeBGColor,
               'color': colors.white,
@@ -26,24 +26,30 @@ Vue.component('course-row-ind', {
         </div>
         <div style="display: inline-block; width: 4rem; font-size: 1rem;">
           <span 
-            @click="$emit('togglecourseinclude', courseCode)"
-            v-show="(hours || credits)"
             class="btech-pill-text" 
-            :title="(includeHours ? 'Included in ESAP' : ( istransfer ? 'Transfer Course' : 'Course Hours')) + '. Click to toggle whether included in What If Calculations'"
+            :style="{
+              'background-color': extensionsBGColor,
+              'color': extensions > 0 ? colors.white : colors.black,
+            }">
+            {{extensions}} Extn
+          </span>
+        </div>
+        <div style="display: inline-block; width: 4rem; font-size: 1rem;">
+          <span 
+            v-show="credits"
+            class="btech-pill-text" 
+            :title="(istransfer ? 'Transfer Course' : 'Course Credits')"
             :style="{
               'cursor': 'help',
-              'background-color': (progress == 0 && state == 'completed') ? colors.gray : (includeHours ? (istransfer ? colors.orange: colors.blue)),
-              'color': (progress == 0 && state == 'completed') ? colors.black : ((includeHours || istransfer) ? colors.white : colors.black),
+              'background-color': (progress == 0 && state != 'active') ? colors.gray : (istransfer ? colors.orange : colors.blue),
+              'color': (progress == 0 && state != 'completed') ? colors.black : colors.white,
             }">
             {{hours ? hours + ' hrs' : credits + ' crdts'}}
           </span>
         </div>
-        <!--Change the first 90 under width to the course's hours once figure out how to include that-->
         <course-progress-bar-ind
           :progress="progress"
           :colors="colors"
-          :whatif="whatif"
-          @togglecourseprogress="(progress) => {$emit('togglecourseprogress', courseCode, progress);}"
         ></course-progress-bar-ind> 
         <div style="display: inline-block; width: 5rem; font-size: 1rem;">
           <span
@@ -57,7 +63,7 @@ Vue.component('course-row-ind', {
           </span>
         </div>
         <span
-          v-if="course?.is_withdraw"
+          v-if="iswithdraw"
           class="btech-pill-text"
           :style="{
             'background-color': colors.gray,
@@ -73,6 +79,7 @@ Vue.component('course-row-ind', {
           }"
         >{{daysEnrolled}} Day(s) Enrolled</span>
       </div>
+      </div>
   `,
   props: {
     hours: {
@@ -87,11 +94,19 @@ Vue.component('course-row-ind', {
       type: Number,
       default: 0
     },
-    course: {
-      type: Object,
-      default: () => ({type: 'someType'})
+    score: {
+      type: Number,
+      default: undefined 
+    },
+    state: {
+      type: String,
+      default: '' 
     },
     courseName: {
+      type: String,
+      default: ''
+    },
+    courseId: {
       type: String,
       default: ''
     },
@@ -111,32 +126,45 @@ Vue.component('course-row-ind', {
       type: String,
       default: ''
     },
-    whatif: false,
     includeHours: false,
-    istransfer: false
+    extensions: {
+      type: Number,
+      default: 0 
+    },
+    istransfer: {
+      type: Boolean,
+      default: false
+    },
+    iswithdraw: {
+      type: Boolean,
+      default: false
+    }
   },
   computed: {
     checkValidCourseId: function() {
       let vm = this;
-      if (vm.course === undefined) return false;
-      if (vm.course.canvas_id === null || vm.course.canvas_id === undefined) return false;
+      if (vm.courseId === undefined || vm.courseId === '') return false;
       return true;
     },
     courseUrl: function() {
       let vm = this;
-      if (vm.course === undefined) return '';
-      if (vm.course.canvas_id === null || vm.course.canvas_id === undefined) return '';
-      return 'https://btech.instructure.com/courses/' + vm.course.canvas_id + '/grades/' + vm.userCanvasId
+      if (vm.courseId === undefined || vm.courseId === '') return '';
+      return 'https://btech.instructure.com/courses/' + vm.courseId + '/grades/' + vm.userCanvasId
     },
     enrolled: function() {
       let vm = this;
       if (vm.course === undefined) return false;
       return true;
     },
+    extensionsBGColor: function() {
+      let vm = this;
+      if (vm.extensions === 0) return vm.colors.gray;
+      return vm.extensions > 2 ? vm.colors.red : (vm.extensions == 1 ? vm.colors.yellow : vm.colors.green);
+    },
     gradeBGColor: function() {
       let vm = this;
-      if (vm.course.score === undefined) return vm.colors.gray;
-      let score = vm.course.score;
+      if (vm.score === undefined) return vm.colors.gray;
+      let score = vm.score;
       if (isNaN(score)) {
         //handle letter grades
         if (score[0] == 'A') return vm.colors.green;
@@ -157,10 +185,10 @@ Vue.component('course-row-ind', {
     },
     gradeText: function() {
       let vm = this;
-      if (vm.course.score === undefined) return "N/A";
-      if (vm.course.score === null) return "N/A";
-      if (isNaN(vm.course.score)) return vm.course.score;
-      return vm.course.score + "%"
+      if (vm.score === undefined) return "N/A";
+      if (vm.score === null) return "N/A";
+      if (isNaN(vm.score)) return vm.score;
+      return vm.score + "%"
 
     },
     daysEnrolled: function() {

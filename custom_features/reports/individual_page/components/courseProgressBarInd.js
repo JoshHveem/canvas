@@ -1,4 +1,4 @@
-Vue.component('course-progress-bar-ind-2', {
+Vue.component('course-progress-bar-ind', {
   template:` 
    <div 
     class="btech-course-progress-bar" 
@@ -29,7 +29,7 @@ Vue.component('course-progress-bar-ind-2', {
     whatif: undefined,
     barwidth: {
       type: Number,
-      default: 20 
+      default: 14 
     },
   },
   computed: {

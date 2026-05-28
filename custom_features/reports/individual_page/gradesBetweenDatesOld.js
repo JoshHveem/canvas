@@ -1,5 +1,18 @@
 (async function() {
-  Vue.component('grades-between-dates-2', {
+  class Column {
+    constructor(name, description, average, sort_type, percent, hideable = true) {
+      this.name = name;
+      this.description = description;
+      this.average = average;
+      this.sort_type = sort_type; //needs to be a result of typeof, probably mostly going to be string or number
+      this.sort_state = 0; //becomes 1 or -1 depending on asc or desc
+      this.visible = true;
+      this.percent = percent;
+      this.hideable = hideable;
+    }
+  }
+  
+  Vue.component('show-grades-between-dates-old', {
     template: ` 
       <div>
         <div v-if='loadingAssignments'>
@@ -14,118 +27,21 @@
           <div class='btech-report-submission-dates'>
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
-              <option v-for='term in sortedTerms' :value='term._id'>
-                {{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} (x{{term.concurrent_count}})
-              </option>
+              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} ({{term.hours}} hrs)</option>
             </select>
             <span>Start Date:</span>
-            <input type="date" v-model="submissionDatesStart" @change="getIncludedAssignmentsBetweenDates()">
-
+            <input type="date" v-model="submissionDatesStart" @change='getIncludedAssignmentsBetweenDates()'>
             <span>End Date:</span>
-            <input type="date" v-model="submissionDatesEnd" @change="getIncludedAssignmentsBetweenDates()">
-
-            <button
-              v-if="termDatesDirty"
-              :disabled="savingTermDates"
-              :style="btnStyle('primary', savingTermDates)"
-              @click="saveTermDates"
-              @mouseover="$event.target.style.filter='brightness(0.92)'"
-              @mouseout="$event.target.style.filter='none'"
-            >
-              {{ savingTermDates ? "Saving..." : "Save" }}
-            </button>
-
-            <button
-              v-if="termDatesDirty"
-              :disabled="savingTermDates"
-              :style="btnStyle('secondary', savingTermDates)"
-              @click="revertTermDates"
-              @mouseover="$event.target.style.filter='brightness(0.92)'"
-              @mouseout="$event.target.style.filter='none'"
-            >
-              Cancel
-            </button>
-
-
+            <input type="date" v-model="submissionDatesEnd" @change='getIncludedAssignmentsBetweenDates()'>
           </div>
-          <div v-if="showBulkUpdateModal" style="
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-          ">
-            <div style="
-              background: white;
-              padding: 1rem;
-              border-radius: 14px;
-              width: 500px;
-              max-height: 80vh;
-              overflow-y: auto;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            ">
-              <h3 style="margin-top:0;">Update term dates for all students?</h3>
-
-              <div v-if="bulkUpdateStep === 'confirm'">
-                <p style="margin-bottom: 1rem;">
-                  Would you like to update the term dates for <b>all students</b> in section
-                  <b>{{selectedTerm.section_code}}</b> ({{selectedTerm.academic_year}})?
-                </p>
-
-                <button :style="btnStyle('primary')" @click="loadBulkUpdateList">
-                  Yes, choose students
-                </button>
-
-                <button :style="btnStyle('secondary')" @click="confirmSingleUpdate">
-                  No
-                </button>
- 
-              </div>
-
-              <div v-if="bulkUpdateStep === 'select'">
-                <p><b>Select students to update:</b></p>
-
-                <div v-if="bulkLoading">Loading students…</div>
-
-                <div v-else>
-                  <div style="margin-bottom: 0.75rem;">
-                    <button :style="btnStyle('secondary')" @click="selectAllBulk(true)">Select All</button>
-                    <button :style="btnStyle('secondary')" @click="selectAllBulk(false)">Select None</button>
-                  </div>
-
-                  <div v-for="t in bulkTermsToUpdate" :key="t._id" style="margin-bottom: 0.35rem;">
-                    <label style="display:flex; gap:0.5rem; align-items:center;">
-                      <input type="checkbox" :value="t._id" v-model="bulkSelectedTermIds">
-                      <span>
-                        {{t.student?.hs_name || t.student?.sis_id || t.student?.canvas_id || "Unknown Student"}}
-                      </span>
-                    </label>
-                  </div>
-
-                  <div style="margin-top: 1rem;">
-                    <button :style="btnStyle('primary')" :disabled="bulkSaving" @click="confirmBulkUpdate">
-                      {{bulkSaving ? "Saving..." : "Confirm Update"}}
-                    </button>
-                    <button :style="btnStyle('secondary')" :disabled="bulkSaving" @click="closeBulkModal">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <table class='btech-report-table' border='1'>
             <thead border='1'>
               <tr>
                 <th>Course</th>
                 <th>Term Grades</th>
                 <th>Term Completed</th>
-                <th>Course Credits</th>
-                <th>Credits Completed</th>
+                <th>Course Hours</th>
+                <th>Hours Completed</th>
               </tr>
             </thead>
             <tbody border='1'>
@@ -141,23 +57,24 @@
 
                 <td>{{getGradesBetweenDates(course.course_id)}}</td>
                 <td>{{getProgressBetweenDates(course.course_id)}}</td>
-                <td><input style="padding: 0px 4px; margin: 0px; width: 3rem;" v-model="course.credits" type="text">
+                <td><input style="padding: 0px 4px; margin: 0px; width: 3rem;" v-model="course.hours" type="text">
                 </td>
-                <td>{{getCreditsCompleted(course)}}</td>
+                <td>{{getHoursCompleted(course)}}</td>
               </tr>
-              <tr>
+              <tr style="border-top: 2px solid #000;">
                 <td colspan="2"></td>
                 <td colspan="2"><b>Credits Completed</b></td>
-                <td>{{sumCreditsCompleted()}}</td>
+                <td><b>{{ sumHoursCompleted() }}</b></td>
               </tr>
+
               <tr height="10px"></tr>
             </tbody>
             <tfoot border='1'>
               <tr>
-                <td><b>Grade (to Date)</b>
+                <td><b>Weighted Final Grade</b>
                 </td>
                 <td>
-                  {{weightedGradeForTerm}}%
+                  {{weightedFinalGradeForTerm()}}%
                   <div style='float: right;'>
                     <i style='cursor: pointer;' v-if='showGradeDetails' class='icon-minimize'
                       @click='showGradeDetails = false;' title='Hide additional information.'></i>
@@ -166,17 +83,25 @@
                       title='Click here for more details about how this grade was calculated.'></i>
                   </div>
                 </td>
-                <td colspan="2"><b>Credits Required (to Date)</b></td>
-                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedCreditsRequired" type="text">
-                </td>
+              </tr>
+              <tr height="10px"></tr>
+              <tr v-if='showGradeDetails'>
+                <td><b>Weighted Grade To Date</b></td>
+                <td>{{weightedGradeForTerm()}}%</td>
+              </tr>
+              <tr v-if='showGradeDetails'>
+                <td><b>Hours Completed</b></td>
+                <td>{{sumHoursCompleted()}}</td>
+              </tr>
+              <tr v-if='showGradeDetails'>
+                <td><b>Hours Enrolled</b></td>
+                <td>{{estimatedHoursEnrolled}}</td>
               </tr>
               <tr>
-                <td><b>Grade (Term)*</b></td>
-                <td>{{weightedFinalGradeForTerm}}%</td>
-                <td colspan="2"><b>Credits Required (Term)</b></td>
-                <td>{{estimatedCreditsEnrolled}}</td>
+                <td><b>Estimated Hours Required</b></td>
+                <td><input style="padding: 0px 4px; margin: 0px;" v-model="estimatedHoursRequired" type="text">
+                </td>
               </tr>
-              <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
             </tfoot>
           </table>
           <div id = "submissionGraph"></div>
@@ -262,109 +187,9 @@
         })
       }
     },
-    computed: {
-      sortedTerms() {
-        return [...this.terms].sort((a, b) => {
-          return new Date(b.entry_date) - new Date(a.entry_date);
-        });
-      },
-      estimatedCreditsEnrolled() {
-        const start = this.parseDate(this.submissionDatesStart);
-        const end   = this.parseDate(this.submissionDatesEnd);
-
-        if (!start || !end || end <= start) return 0;
-
-        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
-        if (this.selectedTerm.concurrent_count > 1) credits *= this.selectedTerm.concurrent_count;
-        return credits;
-      },
-      weightedGradeForTerm() {
-        const requiredCredits = this.estimatedCreditsRequired;
-        const creditsCompleted = this.sumCreditsCompleted();
-
-        let grade = this.unweightedGrade;
-
-        if (
-          creditsCompleted < requiredCredits &&
-          requiredCredits !== 0 &&
-          creditsCompleted !== 0
-        ) {
-          grade *= creditsCompleted / requiredCredits;
-        }
-
-        const output = Number(grade.toFixed(2));
-        return isNaN(output) ? 0 : output;
-      },
-      unweightedGrade() {
-        let totalWeightedGrade = 0;
-
-        const totalCreditsCompleted = this.sumCreditsCompleted();
-        const totalProgress = this.sumProgressBetweenDates();
-
-        for (let c in this.courses) {
-          const course = this.courses[c];
-          const progress = this.progressBetweenDates[course.course_id];
-          const grade = this.gradesBetweenDates[course.course_id];
-
-          if (progress !== undefined && grade !== undefined && grade !== "N/A") {
-            if (totalCreditsCompleted === 0) {
-              const weightedGrade = grade * (progress / totalProgress);
-              totalWeightedGrade += weightedGrade;
-            } else {
-              const creditsCompleted = this.getCreditsCompleted(course);
-              let weightedGrade = grade;
-              weightedGrade *= (creditsCompleted / totalCreditsCompleted);
-              totalWeightedGrade += weightedGrade;
-            }
-          }
-        }
-
-        const output = parseFloat(totalWeightedGrade.toFixed(2));
-        return isNaN(output) ? 0 : output;
-      },
-
-      //
-      weightedFinalGradeForTerm() {
-        const requiredCredits = this.estimatedCreditsEnrolled;
-        const creditsCompleted = this.sumCreditsCompleted();
-
-        let grade = this.unweightedGrade;
-
-        if (
-          creditsCompleted < requiredCredits &&
-          requiredCredits !== 0 &&
-          creditsCompleted !== 0
-        ) {
-          grade *= creditsCompleted / requiredCredits;
-        }
-
-        const output = Number(grade.toFixed(2));
-        return isNaN(output) ? 0 : output;
-      },
-      termDatesDirty() {
-        return (
-          !!this.selectedTerm?._id &&
-          this.submissionDatesStart !== this.savedSubmissionDatesStart ||
-          this.submissionDatesEnd !== this.savedSubmissionDatesEnd
-        );
-      },
-
-    },
+    computed: {},
     data() {
       return {
-        savedSubmissionDatesStart: undefined,
-        savedSubmissionDatesEnd: undefined,
-        savingTermDates: false,
-
-        showBulkUpdateModal: false,
-        bulkUpdateStep: "confirm", // "confirm" or "select"
-        bulkTermsToUpdate: [],     // list of terms from server
-        bulkSelectedTermIds: [],   // checked terms
-        bulkLoading: false,
-        bulkSaving: false,
-
-
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -376,7 +201,8 @@
         includedAssignments: {},
         courseTotalPoints: {},
         courseAssignmentGroups: {},
-        estimatedCreditsRequired: 0,
+        estimatedHoursEnrolled: 0,
+        estimatedHoursRequired: 0,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
         loadingProgress: 0,
@@ -385,15 +211,25 @@
         courseAssignmentGroups: {},
         submissionDates: [],
         courses: [],
+        columns: [
+          new Column('Name', '', false, 'string', false, false),
+          new Column('State', '', false, 'string', false),
+          new Column('Hours', '', false, 'number', false),
+          new Column('Grade To Date', '', true, 'number', true),
+          new Column('Final Grade', '', true, 'number', true),
+          new Column('Points', '', true, 'number', true),
+          new Column('Submissions', '', true, 'number', true),
+          new Column('Days Since Last Submission', '', true, 'number', false)
+        ],
       }
     },
     created: async function () {
+      // Initialize state variables
       this.loadingProgress = 0;
       this.loadingMessage = "Loading Courses";
-
       this.courses = await this.getCourseData();
 
-      if (!this.courses?.length) {
+      if (!this.courses || this.courses.length === 0) {
         this.loadingMessage = "No courses available.";
         this.loadingProgress = 100;
         return;
@@ -401,198 +237,51 @@
 
       this.submissionData = {};
       this.courseAssignmentGroups = {};
+      let submissions = [];
 
-      const allSubmissions = this.courses.flatMap(course => {
-        const subs = course.additionalData?.submissions || [];
-        subs.forEach(sub => (sub.course_id = course.id));
-        this.submissionData[course.id] = subs;
+      for (let i = 0; i < this.courses.length; i++) {
+        const course = this.courses[i];
+        
+        // Update progress and message
+        this.loadingMessage = `Loading Submissions for Course ${course.course_id}`;
+        this.loadingProgress += (50 / this.courses.length) * 0.5;
+
+        // Collect submission data
+        if (course.additionalData?.submissions) {
+          // pop the course id onto each submission
+          course.additionalData.submissions.map(sub => sub.course_id = course.id);
+          // set up course level submissions data
+          this.submissionData[course.id] = course.additionalData.submissions;
+          //push each submission in the submissions array
+          submissions.push(...course.additionalData.submissions);
+        }
+
+        // Update assignment group data
+        this.loadingMessage = `Loading Assignment Groups for Course ${course.id}`;
+        this.loadingProgress += (50 / this.courses.length) * 0.5;
+
         if (course.additionalData?.assignment_groups) {
           this.courseAssignmentGroups[course.id] = course.additionalData.assignment_groups;
         }
-        return subs;
-      });
+      }
 
-      // Normalize submittedAt
-      allSubmissions.forEach(sub => {
-        sub.submittedAt = sub.submittedAt
-          ? new Date(sub.submittedAt)
-          : sub.gradedAt
-          ? new Date(sub.gradedAt)
-          : null;
+      // Order submissions by submittedAt, oldest to newest
+      submissions.map(sub => {
+        sub.submittedAt = sub.submittedAt ? new Date(sub.submittedAt) : new Date(sub.gradedAt);
       });
-
-      this.submissionDates = allSubmissions
-        .filter(s => s.submittedAt)
+      submissions = submissions
+        .filter(submission => submission.submittedAt) // Ensure submittedAt exists
         .sort((a, b) => a.submittedAt - b.submittedAt);
 
+      this.submissionDates = submissions;
+      // Final updates
       this.loadingProgress = 100;
       this.loadingMessage = "Data loading complete.";
       this.loadingAssignments = false;
     },
 
 
-
     methods: {
-      async confirmSingleUpdate() {
-        const termId = this.selectedTerm?._id;
-        if (!termId) return;
-
-        this.savingTermDates = true;
-
-        try {
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/${termId}/dates`,
-            {
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd,
-            },
-            "POST"
-          );
-
-          // update saved baseline so dirty flag turns off
-          this.savedSubmissionDatesStart = this.submissionDatesStart;
-          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
-
-          // update selectedTerm so dropdown reflects new values
-          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
-          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
-
-          this.closeBulkModal();
-        } catch (err) {
-          console.error("Failed saving term dates:", err);
-          alert("Failed to save term date changes.");
-        } finally {
-          this.savingTermDates = false;
-        }
-      },
-
-      closeBulkModal() {
-        this.showBulkUpdateModal = false;
-        this.bulkUpdateStep = "confirm";
-        this.bulkTermsToUpdate = [];
-        this.bulkSelectedTermIds = [];
-      },
-
-      selectAllBulk(on = true) {
-        this.bulkSelectedTermIds = on
-          ? this.bulkTermsToUpdate.map(t => t._id)
-          : [];
-      },
-
-      async loadBulkUpdateList() {
-        try {
-          this.bulkUpdateStep = "select";
-          this.bulkLoading = true;
-
-          const section = this.selectedTerm.section_code;
-          const year = this.selectedTerm.academic_year;
-
-          const terms = await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/by_section/${section}/${year}`,
-            {},
-            "GET"
-          );
-
-          this.bulkTermsToUpdate = terms || [];
-          const currentTermId = this.selectedTerm?._id;
-
-          this.bulkSelectedTermIds = this.bulkTermsToUpdate.map(t => t._id);
-
-          if (currentTermId && !this.bulkSelectedTermIds.includes(currentTermId)) {
-            this.bulkSelectedTermIds.push(currentTermId);
-          }
-
-        } catch (err) {
-          console.error(err);
-          alert("Failed loading students for bulk update.");
-          this.closeBulkModal();
-        } finally {
-          this.bulkLoading = false;
-        }
-      },
-      async confirmBulkUpdate() {
-        try {
-          this.bulkSaving = true;
-
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
-            {
-              termIds: this.bulkSelectedTermIds,
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd
-            },
-            "POST"
-          );
-
-          // update baseline so dirty flag turns off
-          this.savedSubmissionDatesStart = this.submissionDatesStart;
-          this.savedSubmissionDatesEnd = this.submissionDatesEnd;
-
-          // update selectedTerm so dropdown reflects new values
-          this.selectedTerm.entry_date = new Date(this.submissionDatesStart);
-          this.selectedTerm.exit_date  = new Date(this.submissionDatesEnd);
-
-          this.closeBulkModal();
-          alert("Bulk update complete.");
-        } catch (err) {
-          console.error(err);
-          alert("Failed bulk updating students.");
-        } finally {
-          this.bulkSaving = false;
-        }
-      },
-
-
-      async confirmBulkUpdate() {
-        try {
-          this.bulkSaving = true;
-
-          await bridgetools.req(
-            `https://reports.bridgetools.dev/api/v2/hs_terms/bulk_update_dates`,
-            {
-              termIds: this.bulkSelectedTermIds,
-              entry_date: this.submissionDatesStart,
-              exit_date: this.submissionDatesEnd
-            },
-            "POST"
-          );
-
-          this.closeBulkModal();
-          alert("Bulk update complete.");
-        } catch (err) {
-          console.error(err);
-          alert("Failed bulk updating students.");
-        } finally {
-          this.bulkSaving = false;
-        }
-      },
-
-      btnStyle(kind = "primary", disabled = false) {
-        const blue = this.colors?.blue || "#1a73e8";
-        const darkGray = this.colors?.darkGray || "#333";
-
-        const bg =
-          kind === "primary" ? blue :
-          kind === "secondary" ? darkGray :
-          "#000";
-
-        return {
-          background: bg,
-          color: "#fff",
-          border: "none",
-          borderRadius: "10px",
-          padding: "4px 10px",
-          marginLeft: kind === "primary" ? "0.5rem" : "0.25rem",
-          fontSize: "0.85rem",
-          fontWeight: "600",
-          cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? "0.55" : "1",
-          transition: "filter 0.15s ease, opacity 0.15s ease",
-          lineHeight: "1.2",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.15)"
-        };
-      },
-
       // Example: Drawing a Bar Chart for Submissions
 
       drawSubmissionsGraph: function (startDate, endDate) {
@@ -687,11 +376,77 @@
           });
       },
 
+      extractCourseId(url) {
+        const courseIdMatch = url.match(/\/courses\/(\d+)\//);
+        return courseIdMatch ? courseIdMatch[1] : null;
+      },
+
       extractYear(termName) {
         const yearMatch = termName.match(/\b(20\d{2})\b/);
         return yearMatch ? yearMatch[1] : null;
       },
 
+      async getGraphQLDataOld(course) {
+        let query = `{
+          course(id: "${course.id}") {
+            id
+            submissionsConnection(studentIds: "${this.userId}") {
+              nodes {
+                id
+                assignmentId
+                assignment {
+                  name
+                  published
+                  pointsPossible
+                }
+                submittedAt
+                grade
+                gradedAt
+                score
+                userId
+              }
+            }
+            name
+            assignmentGroupsConnection {
+              nodes {
+                name
+                groupWeight
+                state
+
+                assignmentsConnection {
+                  nodes {
+                    _id
+                    name
+                    published
+                    pointsPossible
+                  }
+                }
+              }
+            }
+          }
+        }`;
+        try {
+          let res = await $.post(`/api/graphql`, {
+            query: query
+          });
+          let data = res.data.course;
+          return {
+            name: data.name,
+            assignment_groups: data.assignmentGroupsConnection.nodes.filter(group => group.state == 'available').map(group => {
+              group.assignments = group.assignmentsConnection.nodes;
+              return group;
+            }),
+            submissions: data.submissionsConnection.nodes
+          }
+        } catch (err) {
+          console.error(err);
+          return {
+            name: course.name,
+            assignment_groups: [],
+            submissions: []
+          }
+        }
+      },
       async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection = '') {
         const pageSize = 50;    // bump up/down as you like
         let allNodes = [];
@@ -803,184 +558,127 @@
 
       async getCourseData() {
         const studentId = String(this.userId || "");
-        let courseId = String(CURRENT_COURSE_ID || "");
-        console.log(studentId);
-        if (courseId === "") {
-          let data = await canvasGet(`/api/v1/users/${studentId}/graded_submissions?include[]=assignment`);
-          if (data.length > 0) courseId = data[0].assignment.course_id;
-        }
-        if (!courseId || !studentId) return [];
+        if (!studentId) return [];
 
-        // --- 1) Fetch the student via current course, then all their enrollments ---
-        const query = `
-          query CoursesForStudent {
-            course(id: "${courseId}") {
-              enrollmentsConnection(filter: {userIds: "${studentId}"}) {
-                nodes {
-                  user {
-                    enrollments {
-                      enrollmentState
-                      type
-                      course { _id name courseCode term { name } }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `;
-
-        let enrollments = [];
-        try {
-          const res = await $.post("/api/graphql", { query });
-          enrollments =
-            res?.data?.course?.enrollmentsConnection?.nodes?.[0]?.user?.enrollments || [];
-        } catch (e) {
-          console.error("Failed fetching course enrollments via GraphQL:", e);
-          return [];
-        }
-
-        // --- 2) Build REST-shaped courses[] (deduped) ---
-        const courses = Array.from(
-          enrollments
-            .filter(e => (e?.type || "").toLowerCase().includes("student"))
-            .reduce((m, e) => {
-              const c = e?.course;
-              if (!c?._id) return m;
-
-              const id = Number(c._id);
-              const key = String(Number.isFinite(id) ? id : c._id);
-
-              const course = m.get(key) || {
-                id: Number.isFinite(id) ? id : c._id,
-                course_id: Number.isFinite(id) ? id : c._id,
-                name: c.name,
-                course_code: c.courseCode,
-                term: { name: c.term?.name || "" },
-                enrollments: [],
-              };
-
-              course.enrollments.push({
-                enrollment_state: String(e.enrollmentState || "").toLowerCase(),
-                type: e.type,
-              });
-
-              m.set(key, course);
-              return m;
-            }, new Map())
-            .values()
-        );
-
-        // Small helper: decorate + fetch assignments/submissions
-        const hydrate = async (course, idx, total) => {
-          this.loadingMessage = `Loading Course Data for Course ${course.course_id}`;
-
-          const year = this.extractYear(course.term?.name || "");
-          if (year) {
-            const states = new Set((course.enrollments || []).map(e => e.enrollment_state));
-            const state = states.has("active") ? "Active" : states.has("completed") ? "Completed" : "N/A";
-            const row = this.newCourse(course.id, state, course.name, year, course.course_code);
-            course.hours = row.hours;
-            course.credits = row.hours / 30;
-          }
-
-          this.loadingProgress += (50 / total) * 0.5;
-
-          this.loadingMessage = `Loading Assignment Data for Course ${course.id}`;
-          const additionalData = await this.getGraphQLData(course);
-          course.additionalData = additionalData;
-          course.assignments = additionalData.submissions;
-
-          this.loadingProgress += (50 / total) * 0.5;
-        };
-
-        for (let i = 0; i < courses.length; i++) {
-          await hydrate(courses[i], i, courses.length);
-        }
-
-        return courses;
+        return window.loadIndividualReportHSGradeCourses(studentId, ({ message, progress }) => {
+          this.loadingMessage = message;
+          this.loadingProgress = progress;
+        });
       },
 
       updateDatesToSelectedTerm() {
-        const term = this.terms.find(t => t._id === this.selectedTermId);
-        if (!term) return;
-
+        let term;
+        for (let i = 0; i < this.terms.length; i++) {
+          if (this.terms[i]._id === this.selectedTermId) {
+            term = this.terms[i];
+          }
+        }
         this.selectedTerm = term;
-        console.log("Selected term:", term);
-
-        const start = this.dateToHTMLDate(term.entry_date);
-        const end   = this.dateToHTMLDate(term.exit_date);
-
-        // working values used by the report
-        this.submissionDatesStart = start;
-        this.submissionDatesEnd   = end;
-
-        // saved baseline used to detect dirty state
-        this.savedSubmissionDatesStart = start;
-        this.savedSubmissionDatesEnd   = end;
-
+        this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
+        this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
+        this.estimatedHoursEnrolled = term.hours;
         this.getIncludedAssignmentsBetweenDates();
         this.drawSubmissionsGraph(new Date(term.entry_date), new Date(term.exit_date));
       },
-      async saveTermDates() {
-        const termId = this.selectedTerm?._id;
-        if (!termId) return;
-
-        // show modal immediately
-        this.showBulkUpdateModal = true;
-        this.bulkUpdateStep = "confirm";
-
-        // ensure the current term is always included in bulk option later
-        this.bulkSelectedTermIds = [termId];
-      },
- 
-
-      revertTermDates() {
-        this.submissionDatesStart = this.savedSubmissionDatesStart;
-        this.submissionDatesEnd = this.savedSubmissionDatesEnd;
-        this.getIncludedAssignmentsBetweenDates();
-      },
-
-
       sumProgressBetweenDates() {
         let sum = 0;
         this.courses.forEach(course => sum += this.progressBetweenDates[course.id]);
         return sum;
       },
-      sumCreditsCompleted() {
+      sumHoursCompleted() {
         let sum = 0;
         this.courses.forEach(course => {
           let progress = this.progressBetweenDates[course.course_id];
-          let credits = course.hours / 30;
-          if (credits == "N/A") hours = 0;
-          if (progress > 0 && credits > 0) {
-            sum += Math.round(progress * credits) * .01;
+          let hours = course.hours;
+          if (hours == "N/A") hours = 0;
+          if (progress > 0 && hours > 0) {
+            sum += Math.round(progress * hours) * .01;
           }
         })
         return parseFloat(sum.toFixed(2)) ?? 0;
       },
 
-      parseDate(dateString) {
-        return dateString ? new Date(dateString) : undefined;
+      weightedGradeForTerm() {
+        let totalWeightedGrade = 0;
+        let totalHoursCompleted = this.sumHoursCompleted();
+        let totalProgress = this.sumProgressBetweenDates();
+        for (let c in this.courses) {
+          let course = this.courses[c];
+          let progress = this.progressBetweenDates[course.course_id];
+          let grade = this.gradesBetweenDates[course.course_id];
+          if (progress !== undefined && grade !== undefined && grade != "N/A") {
+            if (totalHoursCompleted === 0) {
+              let weightedGrade = grade * (progress / totalProgress);
+              totalWeightedGrade += weightedGrade;
+            } else {
+              let hoursCompleted = this.getHoursCompleted(course);
+              let weightedGrade = grade;
+              //have some check to not = 0 if total hours completed is 0
+              weightedGrade *= (hoursCompleted / totalHoursCompleted);
+              totalWeightedGrade += weightedGrade;
+            }
+          }
+        }
+        let output = parseFloat(totalWeightedGrade.toFixed(2));
+        if (isNaN(output)) return 0;
+        return output;
+      },
+
+      getHoursEnrolled(courseId) {
+        let hours = this.hoursBetweenDates[courseId];
+        if (hours !== undefined) return hours;
+        return "N/A";
+      },
+
+      weightedFinalGradeForTerm() {
+        let requiredHours = this.estimatedHoursRequired * .67;
+        let hoursCompleted = this.sumHoursCompleted();
+        let grade = this.weightedGradeForTerm();
+        if ((hoursCompleted < requiredHours) && (requiredHours !== 0 && hoursCompleted !== 0)) {
+          grade *= (hoursCompleted / requiredHours);
+        }
+        let output = grade.toFixed(2);
+        if (isNaN(output)) return 0;
+        return output;
       },
 
       getProgressBetweenDates(courseId) {
-        const v = this.progressBetweenDates[courseId];
-        return v !== undefined ? `${v}%` : "";
+        let progress = this.progressBetweenDates[courseId];
+        if (progress !== undefined) return (progress + "%");
+        return "";
       },
 
       getGradesBetweenDates(courseId) {
-        const v = this.gradesBetweenDates[courseId];
-        return v !== undefined ? `${v}%` : "";
+        let grade = this.gradesBetweenDates[courseId];
+        if (grade !== undefined) return (grade + "%");
+        return "";
       },
 
-      getCreditsCompleted(course) {
+      getHoursCompleted(course) {
         let progress = this.progressBetweenDates[course.course_id];
         let completed = 0;
         if (progress !== undefined) completed = parseFloat((Math.round(progress * course.hours) * .01).toFixed(2));
         if (isNaN(completed)) completed = 0;
-        credits = Math.round((completed / 30) * 100) / 100;
-        return credits;
+        return completed;
+      },
+
+      sortColumn(header) {
+        let app = this;
+        let name = this.columnNameToCode(header);
+        let column = app.columns.find(c => c.name === header);
+        column.sort_state = column.sort_state === 1 ? -1 : 1;
+
+        app.courses.sort((a, b) => {
+          let aVal = a[name] ?? '';
+          let bVal = b[name] ?? '';
+          
+          if (typeof aVal === 'string') aVal = aVal.toUpperCase();
+          if (typeof bVal === 'string') bVal = bVal.toUpperCase();
+
+          if (aVal < bVal) return column.sort_state * -1;
+          if (aVal > bVal) return column.sort_state * 1;
+          return 0;
+        });
       },
 
       async getIncludedAssignmentsBetweenDates() {
@@ -1171,10 +869,12 @@
         }
         this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
         this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
+        //estimate the hours enrolled from the hours between dates data collected
         //this value can be edited by the instructor
-        let estimatedCreditsRequired = Math.round(this.estimatedCreditsEnrolled * midtermPercentCompleted * 100) / 100;
-        if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
-        this.estimatedCreditsRequired = estimatedCreditsRequired;
+        this.estimatedHoursEnrolled = this.selectedTerm.hours;
+        let estimatedHoursRequired = Math.floor(this.estimatedHoursEnrolled * midtermPercentCompleted);
+        if (isNaN(estimatedHoursRequired)) estimatedHoursRequired = 0;
+        this.estimatedHoursRequired = estimatedHoursRequired;
       },
 
       calcCourseGroupPointsPossible(courseId, groupId, sumGroupWeights) {
@@ -1191,6 +891,11 @@
           }
         }
         return totalPoints;
+      },
+
+      parseDate(dateString) {
+        if (dateString == undefined) return undefined;
+        return new Date(dateString);
       },
 
       newCourse(id, state, name, year, courseCode) {
@@ -1223,16 +928,147 @@
         return course;
       },
 
+      
+
+      calcPointsProgress(grade, final_grade) {
+        let points = "N/A";
+        if (!isNaN(parseInt(grade)) && !isNaN(parseInt(final_grade))) {
+          points = Math.round(final_grade / grade * 100);
+          if (isNaN(points)) points = 0;
+        }
+        return points;
+      },
+
+      columnNameToCode(name) {
+        return name.toLowerCase().replace(/ /g, "_");
+      },
+
+      getColumnText(column, course) {
+        let text = course[this.columnNameToCode(column.name)];
+        if (column.name === "Name") {
+          text = course.nameHTML;
+        }
+        if (column.percent && !isNaN(text)) {
+          text += "%";
+        }
+        return text;
+      },
+      async getAssignmentData(assignments) {
+        let course_id = course.course_id;
+        let user_id = this.userId;
+        //I think this one works better, but it apparently doesn't work for all students??? Might be related to status. The one it didn't work on was inactive
+        // let url = "/api/v1/courses/" + course_id + "/analytics/users/" + user_id + "/assignments";
+        let url = "/api/v1/courses/" + course_id + "/students/submissions?student_ids[]=" + user_id + "&include=assignment";
+        try {
+          let submissions = await canvasGet(url);
+          course.assignments = submissions;
+          let total_points_possible = 0;
+          let current_points_possible = 0;
+          let most_recent = {};
+          let submitted = 0;
+          let max_submissions = 0;
+          let progress_per_day = 0;
+          let start_date = Date.parse(course.created_at);
+          let now_date = Date.now();
+          let diff_time = Math.abs(now_date - start_date);
+          let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+          let most_recent_time = diff_time;
+          for (let a = 0; a < submissions.length; a++) {
+            let submission = submissions[a];
+            let assignment = submission.assignment;
+            let points_possible = assignment.points_possible;
+            if (submission != undefined) {
+              let submitted_at = Date.parse(submission.submitted_at);
+              total_points_possible += points_possible;
+              if (assignment.points_possible > 0) {
+                max_submissions += 1;
+                if (submission.score !== null) {
+                  current_points_possible += points_possible;
+                  submitted += 1;
+                }
+              }
+              if (Math.abs(now_date - submitted_at) < most_recent_time) {
+                most_recent_time = Math.abs(now_date - submitted_at);
+                most_recent = assignment;
+              }
+            }
+          }
+          let perc_submitted = Math.round((submitted / max_submissions) * 100);
+          if (isNaN(perc_submitted)) perc_submitted = 0;
+          course.submissions = perc_submitted;
+
+          //calc days since last submission from time since last submission
+          let most_recent_days = Math.ceil(most_recent_time / (1000 * 60 * 60 * 24));
+
+          //Change output depending on status
+          if (course.state === 'Active') {
+            course.days_since_last_submission = most_recent_days;
+          } else if (course.state == 'Completed') {
+            course.days_since_last_submission = "Complete";
+            course.points = 100;
+          } else {
+            course.days_since_last_submission = "N/A";
+            course.points = "N/A";
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      },
+
+      processEnrollment(student, enrollment) {
+        let start_date = Date.parse(enrollment.created_at);
+        let now_date = Date.now();
+        let diff_time = Math.abs(now_date - start_date);
+        let diff_days = Math.ceil(diff_time / (1000 * 60 * 60 * 24));
+        let grades = enrollment.grades;
+        let current_score = grades.current_score;
+        if (current_score === null) current_score = 0;
+        let final_score = grades.final_score;
+        if (final_score === null) final_score = 0;
+
+        //update values
+        student.days_in_course = diff_days;
+        student.grade = current_score;
+        student.final_grade = final_score;
+        //there might need to be a check to see if this is a numbe
+        if (student.grade > 0 && student.grade != null) {
+          student.points = Math.round(student.final_grade / student.grade * 100);
+        }
+      },
+
       checkIncludeCourse(course) {
-        return Object.values(course.groups || {}).some(g => this.checkIncludeGroup(g));
+        for (let g in course.groups) {
+          let group = course.groups[g];
+          if (this.checkIncludeGroup(group)) {
+            return true;
+          }
+        }
+        return false;
       },
 
       checkIncludeGroup(group) {
-        return !! group.include;
+        if (group.include) return true;
+        /*
+        for (let a in group.assignments) {
+          let assignment = group.assignments[a];
+          if (app.checkIncludeAssignment(assignment)) {
+            return true;
+          }
+        }
+        */
+        return false;
       },
 
       checkIncludeAssignment(assignment) {
         return true; //show every assignment for now so people can toggle them on and off
+        if (assignment.include === true) {
+          return true;
+        }
+        return false;
+      },
+
+      close() {
+        $(this.$el).hide();
       },
 
       dateToHTMLDate(date) {

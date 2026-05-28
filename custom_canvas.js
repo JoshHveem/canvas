@@ -285,25 +285,17 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript(SOURCE_URL + "/course_data/course_hours.js");
     //GENERAL FEATURES
     if (!IS_TEACHER) {
-      feature("reports/individual_page/report2", [
+      feature("reports/individual_page/report", [
         /^\/$/,
         /^\/courses\/[0-9]+\/grades$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/
       ]);
-      // delete after march 1
-      if (new Date() < new Date(2026, 2, 1)) {
-        feature("reports/individual_page/report", [
-          /^\/$/,
-          /^\/courses\/[0-9]+\/grades$/,
-          /^\/courses\/[0-9]+\/grades\/[0-9]+$/
-        ]);
-      }
     }
     if (IS_TEACHER) {
       feature("files/restore_images", /^\/courses\/[0-9]+/);
       feature("reports/grades_page/report", /^\/courses\/[0-9]+\/gradebook$/);
       feature("modules/course_readiness", /^\/courses\/[0-9]+(\/modules){0,1}$/);
-      feature("reports/individual_page/report2", [
+      feature("reports/individual_page/report", [
         /^\/courses\/[0-9]+\/users\/[0-9]+$/,
         /^\/accounts\/[0-9]+\/users\/[0-9]+$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/,

@@ -177,14 +177,14 @@
                     let term = termsList[t];
                     terms[term.id] = term;
                   }
-                  let enrollmentData = await app.bridgetoolsReq("https://reports.bridgetools.dev/api/students/canvas_enrollments/" + app.studentId);
+                  let enrollmentData = await bridgetools.req3('reports', { canvas_user_id: app.studentId}, {dataset: 'canvas_enrollments'});
                   for (let e in enrollmentData) {
                     let enrollment = enrollmentData[e];
                     try {
-                      let course = (await canvasGet("/api/v1/courses/" + enrollment.course_id))[0];
+                      let course = (await canvasGet("/api/v1/courses/" + enrollment.canvas_course_id))[0];
                       list.push({
                         name: course.name,
-                        grade: enrollment.grades.current_score,
+                        grade: enrollment?.current_score,
                         term: terms[course.enrollment_term_id].name,
                         course_id: course.id
                       });
@@ -200,20 +200,6 @@
                 },
                 computed: {},
                 methods: {
-                  async bridgetoolsReq(url) {
-
-                    let reqUrl = "/api/v1/users/" + ENV.current_user_id + "/custom_data/btech-reports?ns=dev.bridgetools.reports";
-                    let authCode = '';
-                    await $.get(reqUrl, data => {authCode = data.data.auth_code;});
-                    //figure out if any params exist then add autho code depending on set up.
-                    if (!url.includes("?")) url += "?auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-                    else url += "&auth_code=" + authCode + "&requester_id=" + ENV.current_user_id;
-                    let output;
-                    await $.get(url, function(data) {
-                      output = data;
-                    });
-                    return output;
-                  },
                   removeCourse: async function (course) {
                     for (let c = 0; c < this.courseGrades.length; c++) {
                       if (this.courseGrades[c].course === course.course) {
