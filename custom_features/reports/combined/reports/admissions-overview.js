@@ -351,10 +351,6 @@ Vue.component('reports-admissions-overview', {
         .domain([1, d3.max(visibleNodes, node => node.data.count) || 1])
         .range([5, 18]);
 
-      const strokeScale = d3.scaleLinear()
-        .domain([1, d3.max(visibleNodes, node => node.data.count) || 1])
-        .range([1.5, 10]);
-
       const nodeX = node => {
         const baseX = yScale(Number(node.data.cumulative_median_days) || 0);
         return node.depth === 1 ? baseX + firstStageOffsetPx : baseX;
@@ -426,10 +422,7 @@ Vue.component('reports-admissions-overview', {
           if (link.source.depth === 0) return 0.7;
           return this.pathIsHighlighted(link.target.data.path_so_far) ? 0.95 : 0.55;
         })
-        .attr('stroke-width', link => {
-          const widthValue = strokeScale(link.target.data.count);
-          return link.source.depth === 0 ? Math.max(2, widthValue * 0.45) : widthValue;
-        })
+        .attr('stroke-width', link => link.source.depth === 0 ? 2 : 3)
         .attr('stroke-linecap', 'round');
 
       const nodeGroups = baseLayer.selectAll('.journey-node')
