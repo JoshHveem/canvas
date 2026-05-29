@@ -240,7 +240,16 @@ Vue.component('reports-admissions-overview', {
       });
 
       const finalize = node => {
-        node.children = Array.from(node.childrenByStage.values())
+        const allChildren = Array.from(node.childrenByStage.values());
+        allChildren.forEach(finalize);
+
+        node.enrolled_terminal_count = (
+          !allChildren.length && this.isEnrolledStage(node.stage_name)
+            ? Number(node.terminal_count) || 0
+            : 0
+        ) + allChildren.reduce((sum, child) => sum + (Number(child.enrolled_terminal_count) || 0), 0);
+
+        node.children = allChildren
           .filter(child => child.count >= minCountThreshold)
           .sort((a, b) => {
             if (b.count !== a.count) return b.count - a.count;
@@ -250,7 +259,6 @@ Vue.component('reports-admissions-overview', {
         node.median_days_in_previous_stage = this.median(node.previous_stage_durations);
         node.academic_years = Array.from(node.academic_years).filter(Number.isFinite).sort((a, b) => a - b);
         node.programs = Array.from(node.programs).sort((a, b) => a.localeCompare(b));
-        node.children.forEach(finalize);
         delete node.childrenByStage;
         delete node.previous_stage_durations;
         return node;
@@ -284,11 +292,15 @@ Vue.component('reports-admissions-overview', {
       return `${(num * 100).toFixed(1)}%`;
     },
 
-    nodeStopRate(nodeData) {
+    isEnrolledStage(stageName) {
+      return String(stageName ?? '').toLowerCase().includes('enroll');
+    },
+
+    nodeEventualEnrollmentRate(nodeData) {
       const count = Number(nodeData?.count) || 0;
-      const terminalCount = Number(nodeData?.terminal_count) || 0;
+      const enrolledTerminalCount = Number(nodeData?.enrolled_terminal_count) || 0;
       if (count <= 0) return NaN;
-      return terminalCount / count;
+      return enrolledTerminalCount / count;
     },
 
     nodeFill(nodeData) {
@@ -518,7 +530,7 @@ Vue.component('reports-admissions-overview', {
         .text(node => `${node.data.stage_name} (${node.data.count})`);
 
       nodeGroups
-        .filter(node => !String(node.data.stage_name || '').toLowerCase().includes('enroll'))
+        .filter(node => !this.isEnrolledStage(node.data.stage_name))
         .append('text')
         .attr('x', node => radiusScale(node.data.count) + 8)
         .attr('y', node => 20 + (Number(node.data.label_offset_y) || 0))
@@ -526,8 +538,8 @@ Vue.component('reports-admissions-overview', {
         .style('font-size', '11px')
         .style('font-weight', 500)
         .text(node => {
-          const stopRate = this.nodeStopRate(node.data);
-          return `${this.formatPercent(1 - stopRate)}`;
+          const eventualEnrollmentRate = this.nodeEventualEnrollmentRate(node.data);
+          return `${this.formatPercent(eventualEnrollmentRate)} enroll`;
         });
     },
 
@@ -540,7 +552,7 @@ Vue.component('reports-admissions-overview', {
       this.tooltip.html = [
         `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name)}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
-        `<div>Stop here: <strong>${this.formatPercent(this.nodeStopRate(node.data))}</strong></div>`,
+        `<div>Eventually enrolled: <strong>${this.formatPercent(this.nodeEventualEnrollmentRate(node.data))}</strong></div>`,
         `<div>Median days in prior stage: <strong>${this.formatDays(node.data.median_days_in_previous_stage)}</strong></div>`,
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
         `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`
