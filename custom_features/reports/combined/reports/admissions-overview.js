@@ -385,6 +385,41 @@ Vue.component('reports-admissions-overview', {
         return `M${sx},${sy} C${mx},${sy} ${mx},${ty} ${tx},${ty}`;
       };
 
+      const labelYOffsetPattern = [-14, 0, 14, -24, 24];
+      const labelCollisionX = 72;
+      const labelCollisionY = 58;
+      const sortedForLabels = [...visibleNodes].sort((a, b) => {
+        const xDiff = nodeX(a) - nodeX(b);
+        if (Math.abs(xDiff) > 1) return xDiff;
+        return nodeY(a) - nodeY(b);
+      });
+      let cluster = [];
+      const flushLabelCluster = () => {
+        cluster.forEach((node, index) => {
+          node.data.label_offset_y = labelYOffsetPattern[index % labelYOffsetPattern.length];
+        });
+        cluster = [];
+      };
+
+      sortedForLabels.forEach(node => {
+        if (!cluster.length) {
+          cluster.push(node);
+          return;
+        }
+
+        const prev = cluster[cluster.length - 1];
+        const isClose = Math.abs(nodeX(node) - nodeX(prev)) <= labelCollisionX
+          && Math.abs(nodeY(node) - nodeY(prev)) <= labelCollisionY;
+
+        if (isClose) {
+          cluster.push(node);
+        } else {
+          flushLabelCluster();
+          cluster.push(node);
+        }
+      });
+      flushLabelCluster();
+
       svg
         .attr('viewBox', `0 0 ${svgWidth} ${height}`)
         .attr('width', '100%')
@@ -476,7 +511,7 @@ Vue.component('reports-admissions-overview', {
 
       nodeGroups.append('text')
         .attr('x', node => radiusScale(node.data.count) + 8)
-        .attr('y', 4)
+        .attr('y', node => 4 + (Number(node.data.label_offset_y) || 0))
         .attr('fill', '#111827')
         .style('font-size', '12px')
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
@@ -486,7 +521,7 @@ Vue.component('reports-admissions-overview', {
         .filter(node => !String(node.data.stage_name || '').toLowerCase().includes('enroll'))
         .append('text')
         .attr('x', node => radiusScale(node.data.count) + 8)
-        .attr('y', 20)
+        .attr('y', node => 20 + (Number(node.data.label_offset_y) || 0))
         .attr('fill', '#6b7280')
         .style('font-size', '11px')
         .style('font-weight', 500)
