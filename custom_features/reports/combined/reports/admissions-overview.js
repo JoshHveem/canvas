@@ -317,6 +317,7 @@ Vue.component('reports-admissions-overview', {
       const width = Math.max((container?.clientWidth || 960) - 8, 640);
       const margin = { top: 36, right: 220, bottom: 36, left: 72 };
       const firstStageOffsetPx = 28;
+      const minNodeGapPx = 36;
 
       const root = d3.hierarchy(this.treeData, d => d.children);
       d3.tree().nodeSize([54, 1])(root);
@@ -351,10 +352,22 @@ Vue.component('reports-admissions-overview', {
         .domain([1, d3.max(visibleNodes, node => node.data.count) || 1])
         .range([5, 18]);
 
-      const nodeX = node => {
-        const baseX = yScale(Number(node.data.cumulative_median_days) || 0);
-        return node.depth === 1 ? baseX + firstStageOffsetPx : baseX;
-      };
+      root.each(node => {
+        const actualX = yScale(Number(node.data.cumulative_median_days) || 0);
+        if (!node.parent) {
+          node.data.display_x = actualX;
+          return;
+        }
+
+        const parentDisplayX = Number(node.parent.data.display_x) || margin.left;
+        const baseX = node.depth === 1 ? actualX + firstStageOffsetPx : actualX;
+        node.data.display_x = Math.max(baseX, parentDisplayX + minNodeGapPx);
+      });
+
+      const maxDisplayX = d3.max(allNodes, node => Number(node.data.display_x) || 0) || width - margin.right;
+      const svgWidth = Math.max(width, maxDisplayX + margin.right);
+
+      const nodeX = node => Number(node.data.display_x) || margin.left;
       const nodeY = node => node.x + xOffset;
       const linkPath = link => {
         const sx = nodeX(link.source);
@@ -366,7 +379,7 @@ Vue.component('reports-admissions-overview', {
       };
 
       svg
-        .attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('viewBox', `0 0 ${svgWidth} ${height}`)
         .attr('width', '100%')
         .attr('height', height)
         .style('display', 'block')
