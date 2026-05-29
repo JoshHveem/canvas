@@ -527,7 +527,7 @@ Vue.component('reports-admissions-overview', {
         .style('font-weight', 500)
         .text(node => {
           const stopRate = this.nodeStopRate(node.data);
-          return `${this.formatPercent(stopRate)} stop here`;
+          return `${this.formatPercent(1 - stopRate)}`;
         });
     },
 
