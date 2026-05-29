@@ -316,6 +316,7 @@ Vue.component('reports-admissions-overview', {
       const container = this.$refs.chartWrap;
       const width = Math.max((container?.clientWidth || 960) - 8, 640);
       const margin = { top: 36, right: 220, bottom: 36, left: 72 };
+      const firstStageOffsetPx = 28;
 
       const root = d3.hierarchy(this.treeData, d => d.children);
       d3.tree().nodeSize([54, 1])(root);
@@ -354,7 +355,10 @@ Vue.component('reports-admissions-overview', {
         .domain([1, d3.max(visibleNodes, node => node.data.count) || 1])
         .range([1.5, 10]);
 
-      const nodeX = node => yScale(Number(node.data.cumulative_median_days) || 0);
+      const nodeX = node => {
+        const baseX = yScale(Number(node.data.cumulative_median_days) || 0);
+        return node.depth === 1 ? baseX + firstStageOffsetPx : baseX;
+      };
       const nodeY = node => node.x + xOffset;
       const linkPath = link => {
         const sx = nodeX(link.source);
@@ -383,7 +387,7 @@ Vue.component('reports-admissions-overview', {
           })
       );
 
-      const axisTicks = yScale.ticks(6).filter(value => value >= 0);
+      const axisTicks = yScale.ticks(6).filter(value => value > 0);
       baseLayer.selectAll('.time-grid')
         .data(axisTicks)
         .enter()
@@ -414,9 +418,18 @@ Vue.component('reports-admissions-overview', {
         .attr('class', 'journey-link')
         .attr('d', linkPath)
         .attr('fill', 'none')
-        .attr('stroke', link => this.pathIsHighlighted(link.target.data.path_so_far) ? '#111827' : '#9ca3af')
-        .attr('stroke-opacity', link => this.pathIsHighlighted(link.target.data.path_so_far) ? 0.95 : 0.55)
-        .attr('stroke-width', link => strokeScale(link.target.data.count))
+        .attr('stroke', link => {
+          if (link.source.depth === 0) return '#cbd5e1';
+          return this.pathIsHighlighted(link.target.data.path_so_far) ? '#111827' : '#9ca3af';
+        })
+        .attr('stroke-opacity', link => {
+          if (link.source.depth === 0) return 0.7;
+          return this.pathIsHighlighted(link.target.data.path_so_far) ? 0.95 : 0.55;
+        })
+        .attr('stroke-width', link => {
+          const widthValue = strokeScale(link.target.data.count);
+          return link.source.depth === 0 ? Math.max(2, widthValue * 0.45) : widthValue;
+        })
         .attr('stroke-linecap', 'round');
 
       const nodeGroups = baseLayer.selectAll('.journey-node')
