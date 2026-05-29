@@ -274,7 +274,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
+    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();
   }
