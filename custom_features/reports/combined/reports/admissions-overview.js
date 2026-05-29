@@ -284,6 +284,13 @@ Vue.component('reports-admissions-overview', {
       return `${(num * 100).toFixed(1)}%`;
     },
 
+    nodeStopRate(nodeData) {
+      const count = Number(nodeData?.count) || 0;
+      const terminalCount = Number(nodeData?.terminal_count) || 0;
+      if (count <= 0) return NaN;
+      return terminalCount / count;
+    },
+
     nodeFill(nodeData) {
       const name = String(nodeData?.stage_name ?? '').toLowerCase();
       const isTerminal = !nodeData?.children?.length;
@@ -474,6 +481,19 @@ Vue.component('reports-admissions-overview', {
         .style('font-size', '12px')
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
         .text(node => `${node.data.stage_name} (${node.data.count})`);
+
+      nodeGroups
+        .filter(node => !String(node.data.stage_name || '').toLowerCase().includes('enroll'))
+        .append('text')
+        .attr('x', node => radiusScale(node.data.count) + 8)
+        .attr('y', 20)
+        .attr('fill', '#6b7280')
+        .style('font-size', '11px')
+        .style('font-weight', 500)
+        .text(node => {
+          const stopRate = this.nodeStopRate(node.data);
+          return `${this.formatPercent(stopRate)} stop here`;
+        });
     },
 
     showTooltip(event, node) {
@@ -485,6 +505,7 @@ Vue.component('reports-admissions-overview', {
       this.tooltip.html = [
         `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name)}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
+        `<div>Stop here: <strong>${this.formatPercent(this.nodeStopRate(node.data))}</strong></div>`,
         `<div>Median days in prior stage: <strong>${this.formatDays(node.data.median_days_in_previous_stage)}</strong></div>`,
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
         `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`
