@@ -375,6 +375,7 @@ Vue.component('reports-admissions-overview', {
       const name = String(nodeData?.stage_name ?? '').toLowerCase();
       const isTerminal = !nodeData?.children?.length;
 
+      if (!name.trim()) return '#cbd5e1';
       if (isTerminal && name.includes('enroll')) return '#1f7a4d';
       if (isTerminal && (name.includes('withdraw') || name.includes('declin'))) return '#b2412f';
       if (isTerminal && (name.includes('wait') || name.includes('hold'))) return '#a16207';
@@ -611,7 +612,7 @@ Vue.component('reports-admissions-overview', {
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
         .text(node => node.data.stage_name.trim()
           ? `${node.data.stage_name} (${node.data.count})`
-          : `Prior stages (${node.data.count})`);
+          : '');
 
       nodeGroups
         .filter(node => node.data.stage_name.trim() && !this.isEnrolledStage(node.data.stage_name))
