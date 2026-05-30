@@ -676,13 +676,6 @@ Vue.component('reports-admissions-overview', {
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; min-height:0; height:100%;">
     <div class="btech-row" style="align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
-      <div style="flex:1 1 320px;">
-        <h4 class="btech-card-title" style="margin:0 0 4px 0;">Admissions Journey Overview</h4>
-        <div class="btech-muted" style="font-size:.8rem;">
-          Shared-stage path tree for candidacy progression. Horizontal distance represents cumulative median time.
-        </div>
-      </div>
-
       <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
         <div style="display:flex; align-items:center; gap:.5rem;">
           <label class="btech-muted" style="font-size:.75rem;">Year</label>
