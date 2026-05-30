@@ -220,6 +220,7 @@ Vue.component('reports-admissions-overview', {
         previous_stage_durations: [],
         median_days_in_previous_stage: null,
         synthetic_link_avg_days: null,
+        force_keep: false,
         academic_years: new Set(),
         programs: new Set(),
         childrenByStage: new Map(),
@@ -291,8 +292,10 @@ Vue.component('reports-admissions-overview', {
       if (focusedStage) {
         const syntheticLeadInNode = root.childrenByStage.get(' ');
         if (syntheticLeadInNode) {
+          syntheticLeadInNode.force_keep = true;
           const focusedChild = syntheticLeadInNode.childrenByStage.get(focusedStage);
           if (focusedChild) {
+            focusedChild.force_keep = true;
             focusedChild.synthetic_link_avg_days = this.average(leadInDurations);
           }
         }
@@ -309,7 +312,7 @@ Vue.component('reports-admissions-overview', {
         ) + allChildren.reduce((sum, child) => sum + (Number(child.enrolled_terminal_count) || 0), 0);
 
         node.children = allChildren
-          .filter(child => child.count >= minCountThreshold)
+          .filter(child => child.force_keep || child.count >= minCountThreshold)
           .sort((a, b) => {
             if (b.count !== a.count) return b.count - a.count;
             return a.stage_name.localeCompare(b.stage_name);
@@ -320,6 +323,7 @@ Vue.component('reports-admissions-overview', {
         node.programs = Array.from(node.programs).sort((a, b) => a.localeCompare(b));
         delete node.childrenByStage;
         delete node.previous_stage_durations;
+        delete node.force_keep;
         return node;
       };
 
@@ -428,7 +432,9 @@ Vue.component('reports-admissions-overview', {
       const xExtent = d3.extent(allNodes, node => node.x);
       const minX = Number.isFinite(xExtent[0]) ? xExtent[0] : 0;
       const maxX = Number.isFinite(xExtent[1]) ? xExtent[1] : 0;
-      const height = Math.max(360, (maxX - minX) + margin.top + margin.bottom + 40);
+      const availableHeight = Math.max(container?.clientHeight || 0, 360);
+      const contentHeight = (maxX - minX) + margin.top + margin.bottom + 40;
+      const height = Math.max(availableHeight, Math.min(contentHeight, Math.max(availableHeight, 720)));
       const xOffset = margin.top - minX + 20;
       const maxMedianDays = d3.max(visibleNodes, node => Number(node.data.cumulative_median_days) || 0) || 0;
 
@@ -451,9 +457,6 @@ Vue.component('reports-admissions-overview', {
         const baseX = node.depth === 1 ? actualX + firstStageOffsetPx : actualX;
         node.data.display_x = Math.max(baseX, parentDisplayX + minNodeGapPx);
       });
-
-      const maxDisplayX = d3.max(allNodes, node => Number(node.data.display_x) || 0) || width - margin.right;
-      const svgWidth = Math.max(width, maxDisplayX + margin.right);
 
       const nodeX = node => Number(node.data.display_x) || margin.left;
       const nodeY = node => node.x + xOffset;
@@ -502,9 +505,10 @@ Vue.component('reports-admissions-overview', {
       flushLabelCluster();
 
       svg
-        .attr('viewBox', `0 0 ${svgWidth} ${height}`)
+        .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('width', '100%')
-        .attr('height', height)
+        .attr('height', '100%')
+        .attr('preserveAspectRatio', 'xMinYMin meet')
         .style('display', 'block')
         .style('background', '#fff');
 
@@ -670,7 +674,7 @@ Vue.component('reports-admissions-overview', {
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
+  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; min-height:0; height:100%;">
     <div class="btech-row" style="align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
       <div style="flex:1 1 320px;">
         <h4 class="btech-card-title" style="margin:0 0 4px 0;">Admissions Journey Overview</h4>
@@ -748,7 +752,7 @@ Vue.component('reports-admissions-overview', {
       No candidacies matched the current filters.
     </div>
 
-    <div v-else ref="chartWrap" style="position:relative;">
+    <div v-else ref="chartWrap" style="position:relative; flex:1 1 auto; min-height:420px; overflow:hidden;">
       <svg ref="chartSvg"></svg>
 
       <div
@@ -769,17 +773,6 @@ Vue.component('reports-admissions-overview', {
         "
         :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
       ></div>
-    </div>
-
-    <div v-if="terminalSummary.length" style="margin-top:12px;">
-      <div class="btech-muted" style="font-size:.75rem; margin-bottom:6px;">Terminal outcomes in current view</div>
-      <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <span
-          v-for="item in terminalSummary.slice(0, 8)"
-          :key="item.stage_name"
-          class="btech-pill"
-        >{{ item.stage_name }}: {{ item.count }}</span>
-      </div>
     </div>
   </div>
   `
