@@ -11,6 +11,7 @@ Vue.component('reports-admissions-overview', {
       year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rawRows: [],
       selectedProgram: '',
+      selectedStageFocus: '',
       minCountThreshold: 3,
       selectedPath: '',
       hoveredPath: '',
@@ -59,6 +60,13 @@ Vue.component('reports-admissions-overview', {
       this.renderChart();
     },
 
+    selectedStageFocus() {
+      this.selectedPath = '';
+      this.hoveredPath = '';
+      this.hideTooltip();
+      this.renderChart();
+    },
+
     minCountThreshold() {
       this.selectedPath = '';
       this.hoveredPath = '';
@@ -89,6 +97,16 @@ Vue.component('reports-admissions-overview', {
       ).sort((a, b) => a.localeCompare(b));
     },
 
+    stageOptions() {
+      return Array.from(
+        new Set(
+          this.filteredRows.flatMap(row => Array.isArray(row?.candidacy_stages) ? row.candidacy_stages : [])
+        )
+      )
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+    },
+
     filteredRows() {
       return this.rawRows.filter(row => {
         const matchesYear = Number(row?.academic_year) === Number(this.year);
@@ -98,7 +116,7 @@ Vue.component('reports-admissions-overview', {
     },
 
     treeData() {
-      return this.buildJourneyTree(this.filteredRows, Number(this.minCountThreshold) || 1);
+      return this.buildJourneyTree(this.filteredRows, Number(this.minCountThreshold) || 1, this.selectedStageFocus);
     },
 
     treeNodeCount() {
@@ -180,6 +198,9 @@ Vue.component('reports-admissions-overview', {
         if (this.selectedProgram && !this.programOptions.includes(this.selectedProgram)) {
           this.selectedProgram = '';
         }
+        if (this.selectedStageFocus && !this.stageOptions.includes(this.selectedStageFocus)) {
+          this.selectedStageFocus = '';
+        }
       } catch (e) {
         console.warn('Failed to load admissions overview dataset', e);
         this.rawRows = [];
@@ -198,6 +219,7 @@ Vue.component('reports-admissions-overview', {
         terminal_count: 0,
         previous_stage_durations: [],
         median_days_in_previous_stage: null,
+        synthetic_link_avg_days: null,
         academic_years: new Set(),
         programs: new Set(),
         childrenByStage: new Map(),
@@ -205,18 +227,44 @@ Vue.component('reports-admissions-overview', {
       };
     },
 
-    buildJourneyTree(rows, minCountThreshold) {
+    buildJourneyTree(rows, minCountThreshold, focusedStageName) {
       const root = this.createTreeNode('Start', '');
-      root.count = Array.isArray(rows) ? rows.length : 0;
+      const focusedStage = String(focusedStageName ?? '').trim();
+      const leadInDurations = [];
+      let rootCount = 0;
 
       (Array.isArray(rows) ? rows : []).forEach(row => {
         const stages = Array.isArray(row?.candidacy_stages) ? row.candidacy_stages.filter(Boolean) : [];
         if (!stages.length) return;
 
+        let relevantStages = stages.slice();
+        let relevantDays = Array.isArray(row?.days_in_stage) ? row.days_in_stage.slice() : [];
+
+        if (focusedStage) {
+          const focusIndex = relevantStages.indexOf(focusedStage);
+          if (focusIndex < 0) return;
+
+          const leadInDuration = relevantDays
+            .slice(0, focusIndex)
+            .map(value => Number(value))
+            .filter(Number.isFinite)
+            .reduce((sum, value) => sum + value, 0);
+          leadInDurations.push(leadInDuration);
+
+          relevantStages = [' '].concat(relevantStages.slice(focusIndex));
+          relevantDays = [leadInDuration].concat(relevantDays.slice(focusIndex));
+        }
+
+        rootCount += 1;
+
         let current = root;
 
-        stages.forEach((stageName, index) => {
-          const pathSoFar = current.path_so_far ? `${current.path_so_far} > ${stageName}` : stageName;
+        relevantStages.forEach((stageName, index) => {
+          const cleanStageName = String(stageName ?? '').trim();
+          const cleanParentPath = String(current.path_so_far ?? '').trim();
+          const pathSoFar = cleanStageName
+            ? (cleanParentPath ? `${cleanParentPath} > ${cleanStageName}` : cleanStageName)
+            : current.path_so_far;
           let child = current.childrenByStage.get(stageName);
 
           if (!child) {
@@ -228,7 +276,7 @@ Vue.component('reports-admissions-overview', {
           child.academic_years.add(Number(row?.academic_year));
           if (row?.program_name) child.programs.add(String(row.program_name));
 
-          const previousStageDays = index > 0 ? Number(row?.days_in_stage?.[index - 1]) : NaN;
+          const previousStageDays = index > 0 ? Number(relevantDays[index - 1]) : NaN;
           if (index > 0 && Number.isFinite(previousStageDays)) {
             child.previous_stage_durations.push(previousStageDays);
           }
@@ -238,6 +286,17 @@ Vue.component('reports-admissions-overview', {
 
         current.terminal_count += 1;
       });
+      root.count = rootCount;
+
+      if (focusedStage) {
+        const syntheticLeadInNode = root.childrenByStage.get(' ');
+        if (syntheticLeadInNode) {
+          const focusedChild = syntheticLeadInNode.childrenByStage.get(focusedStage);
+          if (focusedChild) {
+            focusedChild.synthetic_link_avg_days = this.average(leadInDurations);
+          }
+        }
+      }
 
       const finalize = node => {
         const allChildren = Array.from(node.childrenByStage.values());
@@ -265,6 +324,15 @@ Vue.component('reports-admissions-overview', {
       };
 
       return finalize(root);
+    },
+
+    average(values) {
+      const nums = (Array.isArray(values) ? values : [])
+        .map(value => Number(value))
+        .filter(Number.isFinite);
+
+      if (!nums.length) return null;
+      return nums.reduce((sum, value) => sum + value, 0) / nums.length;
     },
 
     median(values) {
@@ -492,6 +560,20 @@ Vue.component('reports-admissions-overview', {
         .attr('stroke-width', link => link.source.depth === 0 ? 2 : 3)
         .attr('stroke-linecap', 'round');
 
+      const focusedLeadInLinks = links.filter(link => Number.isFinite(link.target.data.synthetic_link_avg_days));
+      baseLayer.selectAll('.journey-link-label')
+        .data(focusedLeadInLinks)
+        .enter()
+        .append('text')
+        .attr('class', 'journey-link-label')
+        .attr('x', link => (nodeX(link.source) + nodeX(link.target)) / 2)
+        .attr('y', link => ((nodeY(link.source) + nodeY(link.target)) / 2) - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#6b7280')
+        .style('font-size', '11px')
+        .style('font-weight', 600)
+        .text(link => `Avg from first stage: ${this.formatDays(link.target.data.synthetic_link_avg_days)}`);
+
       const nodeGroups = baseLayer.selectAll('.journey-node')
         .data(visibleNodes)
         .enter()
@@ -527,10 +609,12 @@ Vue.component('reports-admissions-overview', {
         .attr('fill', '#111827')
         .style('font-size', '12px')
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
-        .text(node => `${node.data.stage_name} (${node.data.count})`);
+        .text(node => node.data.stage_name.trim()
+          ? `${node.data.stage_name} (${node.data.count})`
+          : `Prior stages (${node.data.count})`);
 
       nodeGroups
-        .filter(node => !this.isEnrolledStage(node.data.stage_name))
+        .filter(node => node.data.stage_name.trim() && !this.isEnrolledStage(node.data.stage_name))
         .append('text')
         .attr('x', node => radiusScale(node.data.count) + 8)
         .attr('y', node => 20 + (Number(node.data.label_offset_y) || 0))
@@ -550,10 +634,13 @@ Vue.component('reports-admissions-overview', {
 
       this.tooltip.visible = true;
       this.tooltip.html = [
-        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name)}</div>`,
+        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name.trim() || 'Prior stages')}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
         `<div>Eventually enrolled: <strong>${this.formatPercent(this.nodeEventualEnrollmentRate(node.data))}</strong></div>`,
         `<div>Median days in prior stage: <strong>${this.formatDays(node.data.median_days_in_previous_stage)}</strong></div>`,
+        ...(Number.isFinite(node.data.synthetic_link_avg_days)
+          ? [`<div>Avg days from first stage: <strong>${this.formatDays(node.data.synthetic_link_avg_days)}</strong></div>`]
+          : []),
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
         `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`
       ].join('');
@@ -616,6 +703,18 @@ Vue.component('reports-admissions-overview', {
         </div>
 
         <div style="display:flex; align-items:center; gap:.5rem;">
+          <label class="btech-muted" style="font-size:.75rem;">Focus Stage</label>
+          <select v-model="selectedStageFocus" style="font-size:.75rem; min-width:220px; max-width:320px;">
+            <option value="">All</option>
+            <option
+              v-for="stage in stageOptions"
+              :key="stage"
+              :value="stage"
+            >{{ stage }}</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:.5rem;">
           <label class="btech-muted" style="font-size:.75rem;">Min Path Count</label>
           <input
             v-model.number="minCountThreshold"
@@ -632,6 +731,7 @@ Vue.component('reports-admissions-overview', {
       <span class="btech-pill">Candidacies: {{ filteredRows.length }}</span>
       <span class="btech-pill">Visible Nodes: {{ treeNodeCount }}</span>
       <span class="btech-pill">Terminal Paths: {{ terminalSummary.length }}</span>
+      <span v-if="selectedStageFocus" class="btech-pill">Focus: {{ selectedStageFocus }}</span>
       <span v-if="selectedPath" class="btech-pill">Selected: {{ selectedPath }}</span>
     </div>
 
