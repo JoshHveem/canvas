@@ -26,12 +26,6 @@ Vue.component('reports-evaluations-course-instructor-summary', {
         row => this.courseLabel(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Program', 'Program name.', '16rem', false, 'string',
-        row => this.anonymous ? 'PROGRAM' : this.escapeHtml(this.programName(row)),
-        null,
-        row => this.programName(row).toLowerCase()
-      ),
-      new window.ReportColumn(
         'Subs', 'Number of instructor evaluation submissions.', '5rem', false, 'number',
         row => this.intText(row?.num_submissions),
         null,
@@ -123,9 +117,10 @@ Vue.component('reports-evaluations-course-instructor-summary', {
     rows: {
       immediate: true,
       handler() {
-        if (this.selectedProgramCode && !this.programOptions.some(option => option.value === this.selectedProgramCode)) {
-          this.selectedProgramCode = '';
+        if (this.selectedProgramCode && this.programOptions.some(option => option.value === this.selectedProgramCode)) {
+          return;
         }
+        this.selectedProgramCode = this.programOptions[0]?.value || '';
       }
     }
   },
@@ -147,9 +142,7 @@ Vue.component('reports-evaluations-course-instructor-summary', {
 
     visibleRows() {
       const selected = String(this.selectedProgramCode || '').trim();
-      const filtered = !selected
-        ? this.rows
-        : this.rows.filter(row => String(row?.program_code ?? '').trim() === selected);
+      const filtered = this.rows.filter(row => String(row?.program_code ?? '').trim() === selected);
 
       this.table.setRows(filtered);
       return this.table.getSortedRows();
@@ -308,7 +301,6 @@ Vue.component('reports-evaluations-course-instructor-summary', {
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
         <select v-model="selectedProgramCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
-          <option value="">All</option>
           <option
             v-for="option in programOptions"
             :key="option.value"
