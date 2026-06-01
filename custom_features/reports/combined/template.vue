@@ -92,11 +92,6 @@
         </div>
 
         <div style="flex:1 1 auto; min-height:0; overflow:hidden; padding-right:4px; display:flex; flex-direction:column;">
-          <div id="missing-report-explanation" style="flex:0 0 auto;">
-            <p><strong>Note:</strong> We are converting reports to a new, more secure system. They will be restored as they get converted to the new system.</p>
-            <p>Planned Next Report(s) to Restore: Surveys</p>
-          </div>
-
           <div style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden;">
             <keep-alive>
               <component
