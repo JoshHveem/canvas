@@ -37,12 +37,6 @@ Vue.component('reports-evaluations-instructor-detail', {
         row => this.courseLabel(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Submission', 'Evaluation submission id.', '10rem', false, 'string',
-        row => this.escapeHtml(String(row?.evaluation_submission_id ?? '')),
-        null,
-        row => String(row?.evaluation_submission_id ?? '')
-      ),
-      new window.ReportColumn(
         'Support', 'Available support score.', '6rem', false, 'number',
         row => this.numText(row?.likert_available_support, 0),
         row => this.responseLikertPillStyle(row?.likert_available_support),
