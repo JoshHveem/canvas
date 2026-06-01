@@ -37,37 +37,37 @@ Vue.component('reports-departments-course-readiness', {
         d => this.syllabiApprovedPct(d)
       ),
       new window.ReportColumn(
-        'Course Eval Published', 'Courses with published course evaluations.', '9rem', false, 'number',
+        'Course Eval', 'Courses with published course evaluations.', '5rem', false, 'number',
         d => this.countPctText(this.courseEvalPublishedCount(d), this.courseEvalPublishedPct(d)),
         d => this.pctPillStyle(this.courseEvalPublishedPct(d)),
         d => this.courseEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Instructor Eval Published', 'Courses with published instructor evaluations.', '10rem', false, 'number',
+        'Instructor Eval', 'Courses with published instructor evaluations.', '5rem', false, 'number',
         d => this.countPctText(this.instructorEvalPublishedCount(d), this.instructorEvalPublishedPct(d)),
         d => this.pctPillStyle(this.instructorEvalPublishedPct(d)),
         d => this.instructorEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Employment Skills Published', 'Courses with published employment skills evaluations.', '11rem', false, 'number',
+        'Employment Skills', 'Courses with published employment skills evaluations.', '5rem', false, 'number',
         d => this.countPctText(this.employmentSkillsPublishedCount(d), this.employmentSkillsPublishedPct(d)),
         d => this.pctPillStyle(this.employmentSkillsPublishedPct(d)),
         d => this.employmentSkillsPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Content Published', 'Courses with published Canvas content.', '8rem', false, 'number',
+        'Content', 'Courses with published Canvas content.', '4rem', false, 'number',
         d => this.countPctText(this.contentPublishedCount(d), this.contentPublishedPct(d)),
         d => this.pctPillStyle(this.contentPublishedPct(d)),
         d => this.contentPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Ready', 'Courses that meet readiness requirements.', '6rem', false, 'number',
+        'Ready', 'Courses that meet readiness requirements.', '4rem', false, 'number',
         d => this.countPctText(this.readyCount(d), this.readyPct(d)),
         d => this.pctPillStyle(this.readyPct(d)),
         d => this.readyPct(d)
       ),
       new window.ReportColumn(
-        'Ready + Published', 'Ready courses that are also published.', '8rem', false, 'number',
+        'Published', 'Ready courses that are also published.', '5rem', false, 'number',
         d => this.countPctText(this.readyPublishedCount(d), this.readyPublishedPct(d)),
         d => this.pctPillStyle(this.readyPublishedPct(d)),
         d => this.readyPublishedPct(d)
