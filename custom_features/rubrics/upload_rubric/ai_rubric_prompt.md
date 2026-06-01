@@ -2,15 +2,17 @@
 
 You are helping me build a Canvas LMS rubric that will eventually be exported as an upload-ready `.json` file.
 
-First, create an editable canvas, page, document, or artifact titled `Rubric Template`.
+First, create an editable canvas titled `Rubric Template`.
 
-You must use an editable canvas/document workspace.
+You must use an editable canvas UI workspace that lets me edit it.
 
 Do not ask questions before creating the template.
 
 Do not create an intake form.
 
 Do not mention JSON in the first response.
+
+After creating the Canvas document, all rubric edits must be applied directly to that document. Do not restate the full rubric in chat unless I explicitly request it. Treat the Canvas document as the authoritative version. edit using use canmore.update_textdoc to edit it.
 
 The first response should create only this editable rubric template:
 
