@@ -43,19 +43,19 @@ Vue.component('reports-departments-course-readiness', {
         d => this.courseEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Instructor Eval', 'Courses with published instructor evaluations.', '5rem', false, 'number',
+        'Instructor Eval', 'Courses with published instructor evaluations.', '6rem', false, 'number',
         d => this.countPctText(this.instructorEvalPublishedCount(d), this.instructorEvalPublishedPct(d)),
         d => this.pctPillStyle(this.instructorEvalPublishedPct(d)),
         d => this.instructorEvalPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Employment Skills', 'Courses with published employment skills evaluations.', '5rem', false, 'number',
+        'Empl. Skills', 'Courses with published employment skills evaluations.', '5rem', false, 'number',
         d => this.countPctText(this.employmentSkillsPublishedCount(d), this.employmentSkillsPublishedPct(d)),
         d => this.pctPillStyle(this.employmentSkillsPublishedPct(d)),
         d => this.employmentSkillsPublishedPct(d)
       ),
       new window.ReportColumn(
-        'Content', 'Courses with published Canvas content.', '4rem', false, 'number',
+        'Content', 'Courses with published Canvas content.', '5rem', false, 'number',
         d => this.countPctText(this.contentPublishedCount(d), this.contentPublishedPct(d)),
         d => this.pctPillStyle(this.contentPublishedPct(d)),
         d => this.contentPublishedPct(d)
