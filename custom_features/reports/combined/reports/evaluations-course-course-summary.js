@@ -1,25 +1,32 @@
-Vue.component('reports-evaluations-course-summary', {
+Vue.component('reports-evaluations-course-course-summary', {
   mixins: [
     window.ReportMixins.formatting,
     window.ReportMixins.yearSummary({
-      loadErrorMessage: 'Unable to load course evaluations summary.'
+      loadErrorMessage: 'Unable to load course course evaluations summary.'
     })
   ],
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('Program', colors);
+    const table = window.ReportUtils.createTable('Course', colors);
 
     return {
       colors,
-      table
+      table,
+      selectedProgramCode: ''
     };
   },
 
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Program', 'Program name.', '18rem', false, 'string',
+        'Course', 'Course code and name.', '20rem', false, 'string',
+        row => this.anonymous ? 'COURSE' : this.escapeHtml(this.courseLabel(row)),
+        null,
+        row => this.courseLabel(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Program', 'Program name.', '16rem', false, 'string',
         row => this.anonymous ? 'PROGRAM' : this.escapeHtml(this.programName(row)),
         null,
         row => this.programName(row).toLowerCase()
@@ -81,14 +88,58 @@ Vue.component('reports-evaluations-course-summary', {
     ]);
   },
 
+  watch: {
+    reportContext: {
+      deep: true,
+      immediate: true,
+      handler() {
+        this.syncSelectedProgram();
+      }
+    },
+    rows: {
+      immediate: true,
+      handler() {
+        if (this.selectedProgramCode && !this.programOptions.some(option => option.value === this.selectedProgramCode)) {
+          this.selectedProgramCode = '';
+        }
+      }
+    }
+  },
+
   computed: {
+    programOptions() {
+      return Array.from(
+        new Map(
+          this.rows
+            .map(row => ({
+              value: String(row?.program_code ?? '').trim(),
+              label: this.programName(row)
+            }))
+            .filter(option => option.value && option.label)
+            .map(option => [option.value, option])
+        ).values()
+      ).sort((a, b) => a.label.localeCompare(b.label));
+    },
+
     visibleRows() {
-      this.table.setRows(this.rows);
+      const selected = String(this.selectedProgramCode || '').trim();
+      const filtered = !selected
+        ? this.rows
+        : this.rows.filter(row => String(row?.program_code ?? '').trim() === selected);
+
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
     }
   },
 
   methods: {
+    syncSelectedProgram() {
+      const routedProgramCode = String(this.reportContext?.routeFilters?.programCode ?? '').trim();
+      if (routedProgramCode && routedProgramCode !== this.selectedProgramCode) {
+        this.selectedProgramCode = routedProgramCode;
+      }
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => {
         const numSubmissions = Number(row?.num_submissions) || 0;
@@ -97,6 +148,8 @@ Vue.component('reports-evaluations-course-summary', {
         return {
           ...row,
           academic_year: Number(row?.academic_year),
+          course_code: String(row?.course_code ?? '').trim(),
+          course_name: String(row?.course_name ?? '').trim(),
           program_code: String(row?.program_code ?? '').trim(),
           program_name: String(row?.program_name ?? '').trim(),
           num_submissions: numSubmissions,
@@ -127,6 +180,13 @@ Vue.component('reports-evaluations-course-summary', {
         }));
 
       return entries.slice(0, 3);
+    },
+
+    courseLabel(row) {
+      const code = String(row?.course_code ?? '').trim();
+      const name = String(row?.course_name ?? '').trim();
+      if (code && name) return `${code} - ${name}`;
+      return code || name || '(no course)';
     },
 
     programName(row) {
@@ -192,29 +252,18 @@ Vue.component('reports-evaluations-course-summary', {
       const tag = this.getTopTag(row, index);
       if (!tag) return -1;
       return Number(tag.count) || -1;
-    },
-
-    emitDrill(row) {
-      this.$emit('drill-report', {
-        report: 'evaluations',
-        subMenu: 'course-course-evals-summary',
-        program_code: String(row?.program_code ?? '').trim(),
-        program_name: String(row?.program_name ?? '').trim()
-      });
     }
   },
 
   template: `
   <report-table-shell
-    title-html="Programs - Course Evals Summary"
+    title-html="Courses - Course Evals Summary"
     :table="table"
     :rows="visibleRows"
     :loading="loading"
     :load-error="loadError"
     loading-text="Loading course evaluations..."
-    :row-key-fn="(row, index) => row.program_code || row.program_name || index"
-    :row-clickable="true"
-    @row-click="emitDrill"
+    :row-key-fn="(row, index) => row.course_code || row.course_name || index"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
@@ -225,6 +274,18 @@ Vue.component('reports-evaluations-course-summary', {
             :key="optionYear"
             :value="optionYear"
           >{{ optionYear }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Program</label>
+        <select v-model="selectedProgramCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option value="">All</option>
+          <option
+            v-for="option in programOptions"
+            :key="option.value"
+            :value="option.value"
+          >{{ option.label }}</option>
         </select>
       </div>
     </template>

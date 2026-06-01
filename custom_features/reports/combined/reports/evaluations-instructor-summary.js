@@ -220,6 +220,15 @@ Vue.component('reports-evaluations-instructor-summary', {
       const tag = this.getTopTag(row, index);
       if (!tag) return -1;
       return Number(tag.count) || -1;
+    },
+
+    emitDrill(row) {
+      this.$emit('drill-report', {
+        report: 'evaluations',
+        subMenu: 'course-instructor-evals-summary',
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: String(row?.program_name ?? '').trim()
+      });
     }
   },
 
@@ -232,6 +241,8 @@ Vue.component('reports-evaluations-instructor-summary', {
     :load-error="loadError"
     loading-text="Loading instructor evaluations..."
     :row-key-fn="(row, index) => row.program_code || row.program_name || index"
+    :row-clickable="true"
+    @row-click="emitDrill"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
