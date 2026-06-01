@@ -47,7 +47,7 @@ Vue.component('report-table-shell', {
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; min-height:0; max-height:calc(90vh - 220px);">
+  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; flex:1 1 auto; min-height:0; height:100%; overflow:hidden;">
     <div style="flex:0 0 auto; background:#fff; padding-bottom:8px;">
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
         <h4 class="btech-card-title" style="margin:0;" v-html="titleHtml"></h4>
