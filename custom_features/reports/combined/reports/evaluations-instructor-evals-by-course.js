@@ -1,8 +1,8 @@
-Vue.component('reports-evaluations-course-course-summary', {
+Vue.component('reports-evaluations-instructor-evals-by-course', {
   mixins: [
     window.ReportMixins.formatting,
     window.ReportMixins.yearSummary({
-      loadErrorMessage: 'Unable to load course course evaluations summary.'
+      loadErrorMessage: 'Unable to load course instructor evaluations summary.'
     })
   ],
 
@@ -26,7 +26,7 @@ Vue.component('reports-evaluations-course-course-summary', {
         row => this.courseLabel(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Subs', 'Number of course evaluation submissions.', '5rem', false, 'number',
+        'Subs', 'Number of instructor evaluation submissions.', '5rem', false, 'number',
         row => this.intText(row?.num_submissions),
         null,
         row => Number(row?.num_submissions ?? -1)
@@ -38,28 +38,52 @@ Vue.component('reports-evaluations-course-course-summary', {
         row => Number(row?.perc_submissions__feedback_recommendations ?? -1)
       ),
       new window.ReportColumn(
-        'Instr Clear', 'Assignment instructions are clear.', '7rem', false, 'number',
-        row => this.pctText(row?.likert_assignment_instructions_clear),
-        row => this.likertPillStyle(row?.likert_assignment_instructions_clear),
-        row => Number(row?.likert_assignment_instructions_clear ?? -1)
+        'Support', 'Instructor was available for support.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_available_support),
+        row => this.likertPillStyle(row?.likert_available_support),
+        row => Number(row?.likert_available_support ?? -1)
       ),
       new window.ReportColumn(
-        'Content', 'Course content is relevant.', '7rem', false, 'number',
-        row => this.pctText(row?.likert_course_content_relevant),
-        row => this.likertPillStyle(row?.likert_course_content_relevant),
-        row => Number(row?.likert_course_content_relevant ?? -1)
+        'Instruction', 'Instructor provided clear instruction.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_clear_instruction),
+        row => this.likertPillStyle(row?.likert_clear_instruction),
+        row => Number(row?.likert_clear_instruction ?? -1)
       ),
       new window.ReportColumn(
-        'Objectives', 'Course objectives are clear.', '7rem', false, 'number',
-        row => this.pctText(row?.likert_course_objectives_clear),
-        row => this.likertPillStyle(row?.likert_course_objectives_clear),
-        row => Number(row?.likert_course_objectives_clear ?? -1)
+        'Career Prep', 'Instructor prepared students for career success.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_career_preparation),
+        row => this.likertPillStyle(row?.likert_career_preparation),
+        row => Number(row?.likert_career_preparation ?? -1)
       ),
       new window.ReportColumn(
-        'Recommend', 'Would recommend the course.', '7rem', false, 'number',
-        row => this.pctText(row?.likert_would_recommend_course),
-        row => this.likertPillStyle(row?.likert_would_recommend_course),
-        row => Number(row?.likert_would_recommend_course ?? -1)
+        'Respect', 'Instructor treated students with respect.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_respect),
+        row => this.likertPillStyle(row?.likert_respect),
+        row => Number(row?.likert_respect ?? -1)
+      ),
+      new window.ReportColumn(
+        'Progress', 'Instructor regularly reviewed progress.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_regular_progress_reviews),
+        row => this.likertPillStyle(row?.likert_regular_progress_reviews),
+        row => Number(row?.likert_regular_progress_reviews ?? -1)
+      ),
+      new window.ReportColumn(
+        'Grading', 'Instructor graded in a timely way.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_timely_grading),
+        row => this.likertPillStyle(row?.likert_timely_grading),
+        row => Number(row?.likert_timely_grading ?? -1)
+      ),
+      new window.ReportColumn(
+        'Feedback', 'Instructor feedback was helpful.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_helpful_feedback),
+        row => this.likertPillStyle(row?.likert_helpful_feedback),
+        row => Number(row?.likert_helpful_feedback ?? -1)
+      ),
+      new window.ReportColumn(
+        'Prepared', 'Instructor was prepared for class.', '7rem', false, 'number',
+        row => this.pctText(row?.likert_prepared_for_class),
+        row => this.likertPillStyle(row?.likert_prepared_for_class),
+        row => Number(row?.likert_prepared_for_class ?? -1)
       ),
       new window.ReportColumn(
         'Top 1 Tag', 'Most frequent recommendation tag.', '12rem', false, 'string',
@@ -126,6 +150,17 @@ Vue.component('reports-evaluations-course-course-summary', {
   },
 
   methods: {
+    emitDrill(row) {
+      this.$emit('drill-report', {
+        report: 'evaluations',
+        subMenu: 'instructor-eval-detail',
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: String(row?.program_name ?? '').trim(),
+        course_code: String(row?.course_code ?? '').trim(),
+        course_name: String(row?.course_name ?? '').trim()
+      });
+    },
+
     syncSelectedProgram() {
       const routedProgramCode = String(this.reportContext?.routeFilters?.programCode ?? '').trim();
       if (routedProgramCode && routedProgramCode !== this.selectedProgramCode) {
@@ -147,10 +182,14 @@ Vue.component('reports-evaluations-course-course-summary', {
           program_name: String(row?.program_name ?? '').trim(),
           num_submissions: numSubmissions,
           perc_submissions__feedback_recommendations: Number(row?.perc_submissions__feedback_recommendations),
-          likert_assignment_instructions_clear: Number(row?.likert_assignment_instructions_clear),
-          likert_course_content_relevant: Number(row?.likert_course_content_relevant),
-          likert_course_objectives_clear: Number(row?.likert_course_objectives_clear),
-          likert_would_recommend_course: Number(row?.likert_would_recommend_course),
+          likert_available_support: Number(row?.likert_available_support),
+          likert_clear_instruction: Number(row?.likert_clear_instruction),
+          likert_career_preparation: Number(row?.likert_career_preparation),
+          likert_respect: Number(row?.likert_respect),
+          likert_regular_progress_reviews: Number(row?.likert_regular_progress_reviews),
+          likert_timely_grading: Number(row?.likert_timely_grading),
+          likert_helpful_feedback: Number(row?.likert_helpful_feedback),
+          likert_prepared_for_class: Number(row?.likert_prepared_for_class),
           top_tags: tags
         };
       });
@@ -250,13 +289,15 @@ Vue.component('reports-evaluations-course-course-summary', {
 
   template: `
   <report-table-shell
-    title-html="Courses - Course Evals Summary"
+    title-html="Courses - Instructor Eval Summary"
     :table="table"
     :rows="visibleRows"
     :loading="loading"
     :load-error="loadError"
-    loading-text="Loading course evaluations..."
+    loading-text="Loading instructor evaluations..."
     :row-key-fn="(row, index) => row.course_code || row.course_name || index"
+    :row-clickable="true"
+    @row-click="emitDrill"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
