@@ -94,7 +94,7 @@ Vue.component('reports-evaluations-course-detail', {
     selectedProgramCode() {
       const courseOptions = this.courseOptions;
       if (!courseOptions.some(option => option.value === this.selectedCourseCode)) {
-        this.selectedCourseCode = courseOptions[0]?.value || '';
+        this.selectedCourseCode = '';
         return;
       }
       this.loadData();
@@ -121,7 +121,7 @@ Vue.component('reports-evaluations-course-detail', {
 
     courseOptions() {
       const selectedProgramCode = String(this.selectedProgramCode || '').trim();
-      return Array.from(
+      const options = Array.from(
         new Map(
           this.optionRows
             .filter(row => String(row?.program_code ?? '').trim() === selectedProgramCode)
@@ -133,6 +133,11 @@ Vue.component('reports-evaluations-course-detail', {
             .map(option => [option.value, option])
         ).values()
       ).sort((a, b) => a.label.localeCompare(b.label));
+
+      return [
+        { value: '', label: 'All' },
+        ...options
+      ];
     },
 
     positiveTagOptions() {
@@ -157,6 +162,7 @@ Vue.component('reports-evaluations-course-detail', {
 
     titleText() {
       const course = this.courseOptions.find(option => option.value === this.selectedCourseCode)?.label
+        || (this.selectedCourseCode === '' ? 'All Courses' : '')
         || String(this.reportContext?.routeFilters?.courseName ?? '').trim()
         || 'Course';
       return `${this.escapeHtml(course)} - Course Eval Detail`;
@@ -205,7 +211,7 @@ Vue.component('reports-evaluations-course-detail', {
         }
 
         if (!this.courseOptions.some(option => option.value === this.selectedCourseCode)) {
-          this.selectedCourseCode = this.courseOptions[0]?.value || '';
+          this.selectedCourseCode = '';
           return;
         }
 
@@ -223,9 +229,9 @@ Vue.component('reports-evaluations-course-detail', {
     async loadData() {
       const programCode = String(this.selectedProgramCode || '').trim();
       const courseCode = String(this.selectedCourseCode || '').trim();
-      if (!programCode || !courseCode) {
+      if (!programCode) {
         this.rows = [];
-        this.loadError = 'Select a program and course.';
+        this.loadError = 'Select a program.';
         return;
       }
 
@@ -233,13 +239,15 @@ Vue.component('reports-evaluations-course-detail', {
         this.loading = true;
         this.loadError = '';
 
+        const filters = {
+          academic_year: Number(this.year),
+          program_code: programCode
+        };
+        if (courseCode) filters.course_code = courseCode;
+
         const rows = await bridgetools.req3(
           'reports',
-          {
-            academic_year: Number(this.year),
-            program_code: programCode,
-            course_code: courseCode
-          },
+          filters,
           { dataset: this.getDataset() }
         );
 
