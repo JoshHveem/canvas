@@ -243,18 +243,26 @@ Vue.component('reports-admissions-overview', {
         const allChildren = Array.from(node.childrenByStage.values());
         allChildren.forEach(finalize);
 
-        node.enrolled_terminal_count = (
+        node.eventual_enrolled_terminal_count = (
           !allChildren.length && this.isEnrolledStage(node.stage_name)
             ? Number(node.terminal_count) || 0
             : 0
-        ) + allChildren.reduce((sum, child) => sum + (Number(child.enrolled_terminal_count) || 0), 0);
+        ) + allChildren.reduce((sum, child) => sum + (Number(child.eventual_enrolled_terminal_count) || 0), 0);
 
         node.children = allChildren
-          .filter(child => child.count >= minCountThreshold)
+          .filter(child => child.count >= minCountThreshold || (Number(child.eventual_enrolled_terminal_count) || 0) > 0)
           .sort((a, b) => {
             if (b.count !== a.count) return b.count - a.count;
             return a.stage_name.localeCompare(b.stage_name);
           });
+
+        node.visible_enrolled_terminal_count = (
+          !node.children.length && this.isEnrolledStage(node.stage_name)
+            ? Number(node.terminal_count) || 0
+            : 0
+        ) + node.children.reduce((sum, child) => sum + (Number(child.visible_enrolled_terminal_count) || 0), 0);
+
+        node.hidden_child_count = allChildren.length - node.children.length;
 
         node.median_days_in_previous_stage = this.median(node.previous_stage_durations);
         node.academic_years = Array.from(node.academic_years).filter(Number.isFinite).sort((a, b) => a - b);
@@ -298,7 +306,7 @@ Vue.component('reports-admissions-overview', {
 
     nodeEventualEnrollmentRate(nodeData) {
       const count = Number(nodeData?.count) || 0;
-      const enrolledTerminalCount = Number(nodeData?.enrolled_terminal_count) || 0;
+      const enrolledTerminalCount = Number(nodeData?.eventual_enrolled_terminal_count) || 0;
       if (count <= 0) return NaN;
       return enrolledTerminalCount / count;
     },
@@ -553,6 +561,7 @@ Vue.component('reports-admissions-overview', {
         `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name)}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
         `<div>Eventually enrolled: <strong>${this.formatPercent(this.nodeEventualEnrollmentRate(node.data))}</strong></div>`,
+        `<div>Hidden downstream branches: <strong>${Number(node.data.hidden_child_count) || 0}</strong></div>`,
         `<div>Median days in prior stage: <strong>${this.formatDays(node.data.median_days_in_previous_stage)}</strong></div>`,
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
         `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`

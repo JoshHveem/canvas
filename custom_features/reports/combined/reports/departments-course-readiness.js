@@ -166,8 +166,8 @@ Vue.component('reports-departments-course-readiness', {
     countPctText(count, pct) {
       const n = Number(count);
       const pctText = this.pctText(pct);
-      if (!Number.isFinite(n)) return pctText;
-      return `${n} (${pctText})`;
+      if (Number.isFinite(n)) return String(n);
+      return pctText;
     }
   },
 
