@@ -312,11 +312,11 @@ Vue.component('reports-admissions-overview', {
         ) + allChildren.reduce((sum, child) => sum + (Number(child.eventual_enrolled_terminal_count) || 0), 0);
 
         node.children = allChildren
-<<<<<<< HEAD
-          .filter(child => child.count >= minCountThreshold || (Number(child.eventual_enrolled_terminal_count) || 0) > 0)
-=======
-          .filter(child => child.force_keep || child.count >= minCountThreshold)
->>>>>>> 2c727cde078c1154842f8c5135b46aab3e64f90f
+          .filter(child =>
+            child.force_keep ||
+            child.count >= minCountThreshold ||
+            (Number(child.eventual_enrolled_terminal_count) || 0) > 0
+          )
           .sort((a, b) => {
             if (b.count !== a.count) return b.count - a.count;
             return a.stage_name.localeCompare(b.stage_name);
