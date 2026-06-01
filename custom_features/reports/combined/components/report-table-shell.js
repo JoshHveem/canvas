@@ -47,8 +47,8 @@ Vue.component('report-table-shell', {
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px;">
-    <div style="position:sticky; top:0; z-index:4; background:#fff; padding-bottom:8px;">
+  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; min-height:0; max-height:calc(90vh - 220px);">
+    <div style="flex:0 0 auto; background:#fff; padding-bottom:8px;">
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
         <h4 class="btech-card-title" style="margin:0;" v-html="titleHtml"></h4>
         <div style="flex:1;"></div>
@@ -60,18 +60,18 @@ Vue.component('report-table-shell', {
       </div>
     </div>
 
-    <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px;">
+    <div v-if="loading" class="btech-muted" style="text-align:center; padding:10px; flex:1 1 auto; overflow:auto;">
       {{ loadingText }}
     </div>
 
-    <div v-else-if="loadError" class="btech-muted" style="text-align:center; padding:10px;">
+    <div v-else-if="loadError" class="btech-muted" style="text-align:center; padding:10px; flex:1 1 auto; overflow:auto;">
       {{ loadError }}
     </div>
 
-    <div v-else style="overflow-x:auto; overflow-y:hidden; max-width:100%;">
+    <div v-else style="flex:1 1 auto; min-height:0; overflow:auto; max-width:100%;">
       <div style="min-width:100%; width:max-content;">
         <div
-          style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none;"
+          style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; user-select:none; position:sticky; top:0; z-index:2; background:#fff;"
           :style="{ 'grid-template-columns': columnsWidthString }"
         >
           <div
