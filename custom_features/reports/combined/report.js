@@ -123,6 +123,22 @@
                 }
               }
             ]
+          },
+          {
+            value: 'admissions',
+            label: 'Admissions',
+            title: 'Admissions Report',
+            subMenus: [
+              {
+                value: 'overview',
+                label: 'Overview',
+                component: 'reports-admissions-overview',
+                dataset: 'candidacies_stage_map',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              }
+            ]
           }
         ];
 
@@ -133,7 +149,8 @@
             subMenuByType: {
               syllabi: 'summary',
               'course-readiness': 'department-summary',
-              instructors: 'department-summary'
+              instructors: 'department-summary',
+              admissions: 'overview'
             }
           },
           selectedDepartmentCode: '',
@@ -257,6 +274,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
+    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();
   }
