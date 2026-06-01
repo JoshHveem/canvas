@@ -169,6 +169,15 @@
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
+              },
+              {
+                value: 'instructor-evals-summary',
+                label: 'Instructor Eval Summary',
+                component: 'reports-evaluations-instructor-summary',
+                dataset: 'program_instructor_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
               }
             ]
           }
@@ -310,6 +319,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-summary.js");
     if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();
