@@ -22,12 +22,20 @@ Vue.component('reports-evaluations-instructor-detail', {
       rows: [],
       optionRows: [],
       selectedProgramCode: '',
-      selectedCourseCode: ''
+      selectedCourseCode: '',
+      selectedPositiveTag: '',
+      selectedRecommendationTag: ''
     };
   },
 
   created() {
     this.table.setColumns([
+      new window.ReportColumn(
+        'Course', 'Course code and name.', '20rem', false, 'string',
+        row => this.anonymous ? 'COURSE' : this.escapeHtml(this.courseLabel(row)),
+        null,
+        row => this.courseLabel(row).toLowerCase()
+      ),
       new window.ReportColumn(
         'Submission', 'Evaluation submission id.', '10rem', false, 'string',
         row => this.escapeHtml(String(row?.evaluation_submission_id ?? '')),
@@ -37,49 +45,49 @@ Vue.component('reports-evaluations-instructor-detail', {
       new window.ReportColumn(
         'Support', 'Available support score.', '6rem', false, 'number',
         row => this.numText(row?.likert_available_support, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_available_support),
         row => Number(row?.likert_available_support ?? -1)
       ),
       new window.ReportColumn(
         'Instruction', 'Clear instruction score.', '6rem', false, 'number',
         row => this.numText(row?.likert_clear_instruction, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_clear_instruction),
         row => Number(row?.likert_clear_instruction ?? -1)
       ),
       new window.ReportColumn(
         'Career Prep', 'Career preparation score.', '6rem', false, 'number',
         row => this.numText(row?.likert_career_preparation, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_career_preparation),
         row => Number(row?.likert_career_preparation ?? -1)
       ),
       new window.ReportColumn(
         'Respect', 'Respect score.', '6rem', false, 'number',
         row => this.numText(row?.likert_respect, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_respect),
         row => Number(row?.likert_respect ?? -1)
       ),
       new window.ReportColumn(
         'Progress', 'Progress review score.', '6rem', false, 'number',
         row => this.numText(row?.likert_regular_progress_reviews, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_regular_progress_reviews),
         row => Number(row?.likert_regular_progress_reviews ?? -1)
       ),
       new window.ReportColumn(
         'Grading', 'Timely grading score.', '6rem', false, 'number',
         row => this.numText(row?.likert_timely_grading, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_timely_grading),
         row => Number(row?.likert_timely_grading ?? -1)
       ),
       new window.ReportColumn(
         'Feedback', 'Helpful feedback score.', '6rem', false, 'number',
         row => this.numText(row?.likert_helpful_feedback, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_helpful_feedback),
         row => Number(row?.likert_helpful_feedback ?? -1)
       ),
       new window.ReportColumn(
         'Prepared', 'Prepared for class score.', '6rem', false, 'number',
         row => this.numText(row?.likert_prepared_for_class, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_prepared_for_class),
         row => Number(row?.likert_prepared_for_class ?? -1)
       ),
       new window.ReportColumn(
@@ -89,22 +97,10 @@ Vue.component('reports-evaluations-instructor-detail', {
         row => String(row?.free_response_positives ?? '')
       ),
       new window.ReportColumn(
-        'Positive Tags', 'Tags extracted from positives.', '14rem', false, 'string',
-        row => this.tagSummaryHtml(row?.free_response_positives__tags),
-        null,
-        row => this.tagSummarySort(row?.free_response_positives__tags)
-      ),
-      new window.ReportColumn(
         'Recommendations', 'Recommendation free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_recommendations),
         null,
         row => String(row?.free_response_recommendations ?? '')
-      ),
-      new window.ReportColumn(
-        'Recommendation Tags', 'Tags extracted from recommendations.', '14rem', false, 'string',
-        row => this.tagSummaryHtml(row?.free_response_recommendations__tags),
-        null,
-        row => this.tagSummarySort(row?.free_response_recommendations__tags)
       )
     ]);
   },
@@ -169,8 +165,23 @@ Vue.component('reports-evaluations-instructor-detail', {
       ).sort((a, b) => a.label.localeCompare(b.label));
     },
 
+    positiveTagOptions() {
+      return this.uniqueSorted(this.rows.flatMap(row => this.tagNames(row?.free_response_positives__tags)));
+    },
+
+    recommendationTagOptions() {
+      return this.uniqueSorted(this.rows.flatMap(row => this.tagNames(row?.free_response_recommendations__tags)));
+    },
+
     visibleRows() {
-      this.table.setRows(this.rows);
+      const positiveTag = String(this.selectedPositiveTag || '').trim();
+      const recommendationTag = String(this.selectedRecommendationTag || '').trim();
+      const filtered = this.rows.filter(row => {
+        if (positiveTag && !this.hasTag(row?.free_response_positives__tags, positiveTag)) return false;
+        if (recommendationTag && !this.hasTag(row?.free_response_recommendations__tags, recommendationTag)) return false;
+        return true;
+      });
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
     },
 
@@ -264,6 +275,8 @@ Vue.component('reports-evaluations-instructor-detail', {
 
         this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
           ...row,
+          course_code: String(row?.course_code ?? '').trim(),
+          course_name: String(row?.course_name ?? '').trim(),
           evaluation_submission_id: String(row?.evaluation_submission_id ?? '').trim(),
           likert_available_support: Number(row?.likert_available_support),
           likert_clear_instruction: Number(row?.likert_clear_instruction),
@@ -291,6 +304,17 @@ Vue.component('reports-evaluations-instructor-detail', {
       return String(row?.program_name ?? row?.program_code ?? '').trim() || '(no program)';
     },
 
+    responseLikertPillStyle(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) {
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
+      }
+      return {
+        backgroundColor: n >= 2 ? this.colors.green : (n >= 1 ? this.colors.yellow : this.colors.red),
+        color: this.colors.white
+      };
+    },
+
     courseLabel(row) {
       const code = String(row?.course_code ?? '').trim();
       const name = String(row?.course_name ?? '').trim();
@@ -316,16 +340,12 @@ Vue.component('reports-evaluations-instructor-detail', {
         });
     },
 
-    tagSummaryHtml(rawTags) {
-      const tags = this.tagSummaryParts(rawTags);
-      if (!tags.length) return '-';
-      const title = tags.map(tag => `${tag.name}: ${tag.count}`).join(', ');
-      const text = this.escapeHtml(tags.map(tag => tag.name).join(', '));
-      return `<span title="${this.escapeHtml(title)}">${text}</span>`;
+    tagNames(rawTags) {
+      return this.tagSummaryParts(rawTags).map(tag => tag.name);
     },
 
-    tagSummarySort(rawTags) {
-      return this.tagSummaryParts(rawTags).map(tag => `${tag.name}:${tag.count}`).join('|');
+    hasTag(rawTags, targetTag) {
+      return this.tagNames(rawTags).includes(String(targetTag || '').trim());
     }
   },
 
@@ -370,6 +390,30 @@ Vue.component('reports-evaluations-instructor-detail', {
             :key="option.value"
             :value="option.value"
           >{{ option.label }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Positive Tag</label>
+        <select v-model="selectedPositiveTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+          <option value="">All</option>
+          <option
+            v-for="tag in positiveTagOptions"
+            :key="tag"
+            :value="tag"
+          >{{ tag }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Recommendation Tag</label>
+        <select v-model="selectedRecommendationTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+          <option value="">All</option>
+          <option
+            v-for="tag in recommendationTagOptions"
+            :key="tag"
+            :value="tag"
+          >{{ tag }}</option>
         </select>
       </div>
     </template>

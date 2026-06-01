@@ -22,12 +22,20 @@ Vue.component('reports-evaluations-course-detail', {
       rows: [],
       optionRows: [],
       selectedProgramCode: '',
-      selectedCourseCode: ''
+      selectedCourseCode: '',
+      selectedPositiveTag: '',
+      selectedRecommendationTag: ''
     };
   },
 
   created() {
     this.table.setColumns([
+      new window.ReportColumn(
+        'Course', 'Course code and name.', '20rem', false, 'string',
+        row => this.anonymous ? 'COURSE' : this.escapeHtml(this.courseLabel(row)),
+        null,
+        row => this.courseLabel(row).toLowerCase()
+      ),
       new window.ReportColumn(
         'Submission', 'Evaluation submission id.', '10rem', false, 'string',
         row => this.escapeHtml(String(row?.evaluation_submission_id ?? '')),
@@ -37,25 +45,25 @@ Vue.component('reports-evaluations-course-detail', {
       new window.ReportColumn(
         'Content', 'Course content relevant score.', '6rem', false, 'number',
         row => this.numText(row?.likert_course_content_relevant, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_course_content_relevant),
         row => Number(row?.likert_course_content_relevant ?? -1)
       ),
       new window.ReportColumn(
         'Objectives', 'Course objectives clear score.', '6rem', false, 'number',
         row => this.numText(row?.likert_course_objectives_clear, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_course_objectives_clear),
         row => Number(row?.likert_course_objectives_clear ?? -1)
       ),
       new window.ReportColumn(
         'Instructions', 'Assignment instructions clear score.', '7rem', false, 'number',
         row => this.numText(row?.likert_assignment_instructions_clear, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_assignment_instructions_clear),
         row => Number(row?.likert_assignment_instructions_clear ?? -1)
       ),
       new window.ReportColumn(
         'Recommend', 'Would recommend course score.', '6rem', false, 'number',
         row => this.numText(row?.likert_would_recommend_course, 0),
-        null,
+        row => this.responseLikertPillStyle(row?.likert_would_recommend_course),
         row => Number(row?.likert_would_recommend_course ?? -1)
       ),
       new window.ReportColumn(
@@ -65,22 +73,10 @@ Vue.component('reports-evaluations-course-detail', {
         row => String(row?.free_response_positives ?? '')
       ),
       new window.ReportColumn(
-        'Positive Tags', 'Tags extracted from positives.', '14rem', false, 'string',
-        row => this.tagSummaryHtml(row?.free_response_positives__tags),
-        null,
-        row => this.tagSummarySort(row?.free_response_positives__tags)
-      ),
-      new window.ReportColumn(
         'Recommendations', 'Recommendation free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_recommendations),
         null,
         row => String(row?.free_response_recommendations ?? '')
-      ),
-      new window.ReportColumn(
-        'Recommendation Tags', 'Tags extracted from recommendations.', '14rem', false, 'string',
-        row => this.tagSummaryHtml(row?.free_response_recommendations__tags),
-        null,
-        row => this.tagSummarySort(row?.free_response_recommendations__tags)
       )
     ]);
   },
@@ -145,8 +141,23 @@ Vue.component('reports-evaluations-course-detail', {
       ).sort((a, b) => a.label.localeCompare(b.label));
     },
 
+    positiveTagOptions() {
+      return this.uniqueSorted(this.rows.flatMap(row => this.tagNames(row?.free_response_positives__tags)));
+    },
+
+    recommendationTagOptions() {
+      return this.uniqueSorted(this.rows.flatMap(row => this.tagNames(row?.free_response_recommendations__tags)));
+    },
+
     visibleRows() {
-      this.table.setRows(this.rows);
+      const positiveTag = String(this.selectedPositiveTag || '').trim();
+      const recommendationTag = String(this.selectedRecommendationTag || '').trim();
+      const filtered = this.rows.filter(row => {
+        if (positiveTag && !this.hasTag(row?.free_response_positives__tags, positiveTag)) return false;
+        if (recommendationTag && !this.hasTag(row?.free_response_recommendations__tags, recommendationTag)) return false;
+        return true;
+      });
+      this.table.setRows(filtered);
       return this.table.getSortedRows();
     },
 
@@ -240,6 +251,8 @@ Vue.component('reports-evaluations-course-detail', {
 
         this.rows = (Array.isArray(rows) ? rows : []).map(row => ({
           ...row,
+          course_code: String(row?.course_code ?? '').trim(),
+          course_name: String(row?.course_name ?? '').trim(),
           evaluation_submission_id: String(row?.evaluation_submission_id ?? '').trim(),
           likert_course_content_relevant: Number(row?.likert_course_content_relevant),
           likert_course_objectives_clear: Number(row?.likert_course_objectives_clear),
@@ -261,6 +274,17 @@ Vue.component('reports-evaluations-course-detail', {
 
     programName(row) {
       return String(row?.program_name ?? row?.program_code ?? '').trim() || '(no program)';
+    },
+
+    responseLikertPillStyle(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) {
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
+      }
+      return {
+        backgroundColor: n >= 2 ? this.colors.green : (n >= 1 ? this.colors.yellow : this.colors.red),
+        color: this.colors.white
+      };
     },
 
     courseLabel(row) {
@@ -288,16 +312,12 @@ Vue.component('reports-evaluations-course-detail', {
         });
     },
 
-    tagSummaryHtml(rawTags) {
-      const tags = this.tagSummaryParts(rawTags);
-      if (!tags.length) return '-';
-      const title = tags.map(tag => `${tag.name}: ${tag.count}`).join(', ');
-      const text = this.escapeHtml(tags.map(tag => tag.name).join(', '));
-      return `<span title="${this.escapeHtml(title)}">${text}</span>`;
+    tagNames(rawTags) {
+      return this.tagSummaryParts(rawTags).map(tag => tag.name);
     },
 
-    tagSummarySort(rawTags) {
-      return this.tagSummaryParts(rawTags).map(tag => `${tag.name}:${tag.count}`).join('|');
+    hasTag(rawTags, targetTag) {
+      return this.tagNames(rawTags).includes(String(targetTag || '').trim());
     }
   },
 
@@ -342,6 +362,30 @@ Vue.component('reports-evaluations-course-detail', {
             :key="option.value"
             :value="option.value"
           >{{ option.label }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Positive Tag</label>
+        <select v-model="selectedPositiveTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+          <option value="">All</option>
+          <option
+            v-for="tag in positiveTagOptions"
+            :key="tag"
+            :value="tag"
+          >{{ tag }}</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Recommendation Tag</label>
+        <select v-model="selectedRecommendationTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+          <option value="">All</option>
+          <option
+            v-for="tag in recommendationTagOptions"
+            :key="tag"
+            :value="tag"
+          >{{ tag }}</option>
         </select>
       </div>
     </template>
