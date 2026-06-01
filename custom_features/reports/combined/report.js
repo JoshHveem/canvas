@@ -155,6 +155,22 @@
                 }
               }
             ]
+          },
+          {
+            value: 'evaluations',
+            label: 'Evaluations',
+            title: 'Evaluations Report',
+            subMenus: [
+              {
+                value: 'course-evals-summary',
+                label: 'Course Evals Summary',
+                component: 'reports-evaluations-course-summary',
+                dataset: 'program_course_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              }
+            ]
           }
         ];
 
@@ -167,7 +183,8 @@
               'course-readiness': 'department-summary',
               instructors: 'department-summary',
               admissions: 'overview',
-              outcomes: 'cpl'
+              outcomes: 'cpl',
+              evaluations: 'course-evals-summary'
             }
           },
           selectedDepartmentCode: '',
@@ -292,6 +309,7 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
     if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();
