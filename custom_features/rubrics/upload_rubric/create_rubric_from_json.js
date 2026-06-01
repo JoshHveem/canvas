@@ -36,12 +36,14 @@
 
     testBtn.id = buttonId;
     testBtn.type = 'button';
-    testBtn.textContent = 'Import Rubric JSON';
+    testBtn.textContent = 'Import Rubric';
     testBtn.style.padding = '8px 12px';
-    testBtn.style.border = '1px solid #aaa';
+    testBtn.style.border = '1px solid #b20b0f';
     testBtn.style.borderRadius = '4px';
-    testBtn.style.background = '#fff';
+    testBtn.style.background = '#b20b0f';
+    testBtn.style.color = '#fff';
     testBtn.style.cursor = 'pointer';
+    testBtn.style.fontWeight = '700';
     testBtn.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
