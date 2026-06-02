@@ -22,38 +22,163 @@
 
   function add_button() {
 
-    var importBtn = document.querySelector('button[data-testid="import-rubric-button"]');
-    if (!importBtn) {
+    var createBtn = document.querySelector('button[data-testid="create-new-rubric-button"]');
+    if (!createBtn || !createBtn.parentElement || !createBtn.parentElement.parentElement) {
       return false;
     }
 
     if (document.getElementById(buttonId)) {
+      hideLegacyImportButton();
       return true;
     }
 
-    var wrapper = importBtn.parentElement.cloneNode(false);
-    var testBtn = document.createElement('button');
+    var createWrapper = createBtn.parentElement;
+    var wrapper = createWrapper.cloneNode(true);
+    var testBtn = wrapper.querySelector('button');
 
+    if (!testBtn) {
+      return false;
+    }
+
+    clearClonedIds(wrapper);
     testBtn.id = buttonId;
     testBtn.type = 'button';
-    testBtn.textContent = 'Import Rubric';
-    testBtn.style.padding = '8px 12px';
-    testBtn.style.border = '1px solid #b20b0f';
-    testBtn.style.borderRadius = '4px';
-    testBtn.style.background = '#b20b0f';
-    testBtn.style.color = '#fff';
-    testBtn.style.cursor = 'pointer';
-    testBtn.style.fontWeight = '700';
+    testBtn.removeAttribute('data-testid');
+    testBtn.removeAttribute('data-cid');
+    testBtn.setAttribute('aria-label', 'Import Rubric');
+    setClonedButtonText(testBtn, 'Import Rubric');
+    setRobotIcon(testBtn);
+    styleImportButton(testBtn);
     testBtn.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       openDialog();
     }, true);
 
-    wrapper.appendChild(testBtn);
-    importBtn.parentElement.insertAdjacentElement('afterend', wrapper);
+    createWrapper.parentElement.insertBefore(wrapper, createWrapper);
+    hideLegacyImportButton();
 
     return true;
+  }
+
+  function clearClonedIds(wrapper) {
+    var idEls = wrapper.querySelectorAll('[id]');
+    for (var i = 0; i < idEls.length; i++) {
+      idEls[i].removeAttribute('id');
+    }
+  }
+
+  function setClonedButtonText(button, text) {
+    var spans = button.querySelectorAll('span');
+    var target = null;
+
+    for (var i = 0; i < spans.length; i++) {
+      if (normalizeText(spans[i].textContent) === 'Create New Rubric') {
+        target = spans[i];
+        break;
+      }
+    }
+
+    if (target) {
+      target.textContent = text;
+    } else {
+      button.textContent = text;
+    }
+  }
+
+  function setRobotIcon(targetButton) {
+    var robotIcon = createRobotIcon();
+    var targetIcon = targetButton.querySelector('svg');
+
+    if (targetIcon && targetIcon.parentElement) {
+      targetIcon.parentElement.replaceChild(robotIcon, targetIcon);
+      return;
+    }
+
+    targetButton.insertBefore(robotIcon, targetButton.firstChild);
+  }
+
+  function createRobotIcon() {
+    var svgNs = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNs, 'svg');
+    var antenna = document.createElementNS(svgNs, 'path');
+    var head = document.createElementNS(svgNs, 'rect');
+    var leftEye = document.createElementNS(svgNs, 'circle');
+    var rightEye = document.createElementNS(svgNs, 'circle');
+    var mouth = document.createElementNS(svgNs, 'path');
+
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.style.color = '#fff';
+    svg.style.fill = 'none';
+    svg.style.stroke = 'currentColor';
+    svg.style.strokeLinecap = 'round';
+    svg.style.strokeLinejoin = 'round';
+    svg.style.strokeWidth = '2';
+    svg.style.marginRight = '6px';
+    svg.style.verticalAlign = 'text-bottom';
+
+    antenna.setAttribute('d', 'M12 6V3m0 0h.01');
+    head.setAttribute('x', '5');
+    head.setAttribute('y', '7');
+    head.setAttribute('width', '14');
+    head.setAttribute('height', '12');
+    head.setAttribute('rx', '3');
+    leftEye.setAttribute('cx', '9');
+    leftEye.setAttribute('cy', '12');
+    leftEye.setAttribute('r', '1');
+    leftEye.style.fill = 'currentColor';
+    rightEye.setAttribute('cx', '15');
+    rightEye.setAttribute('cy', '12');
+    rightEye.setAttribute('r', '1');
+    rightEye.style.fill = 'currentColor';
+    mouth.setAttribute('d', 'M9 16h6');
+
+    svg.appendChild(antenna);
+    svg.appendChild(head);
+    svg.appendChild(leftEye);
+    svg.appendChild(rightEye);
+    svg.appendChild(mouth);
+
+    return svg;
+  }
+
+  function styleImportButton(button) {
+    var red = '#b20b0f';
+    var textEls;
+    var iconEls;
+    var i;
+
+    button.style.background = red;
+    button.style.borderColor = red;
+    button.style.borderStyle = 'solid';
+    button.style.borderWidth = '1px';
+    button.style.color = '#fff';
+    button.style.fontWeight = '700';
+
+    textEls = button.querySelectorAll('span');
+    for (i = 0; i < textEls.length; i++) {
+      textEls[i].style.color = '#fff';
+      textEls[i].style.fontWeight = '700';
+    }
+
+    iconEls = button.querySelectorAll('svg, path');
+    for (i = 0; i < iconEls.length; i++) {
+      iconEls[i].style.color = '#fff';
+      iconEls[i].style.fill = '#fff';
+    }
+  }
+
+  function hideLegacyImportButton() {
+    var legacyImportBtn = document.querySelector('button[data-testid="import-rubric-button"]');
+    if (legacyImportBtn && legacyImportBtn.parentElement) {
+      legacyImportBtn.parentElement.style.display = 'none';
+      legacyImportBtn.setAttribute('aria-hidden', 'true');
+      legacyImportBtn.setAttribute('tabindex', '-1');
+    }
   }
 
   function ensurePanelStyles() {
@@ -611,9 +736,9 @@
     var criteria = buildCriteria(options.criteria || []);
     var association = options.association || getAssociationFromPath();
     var freeFormComments = options.freeFormComments ? 1 : 0;
-    var useForGrading = options.useForGrading ? 1 : 0;
-    var hideScoreTotal = useForGrading ? 0 : (options.hideScoreTotal ? 1 : 0);
-    var purpose = options.purpose || (useForGrading ? 'grading' : 'bookmark');
+    var useForGrading = 0;
+    var hideScoreTotal = options.hideScoreTotal ? 1 : 0;
+    var purpose = 'bookmark';
     var pointsPossible = getPointsPossible(criteria);
 
     var payload = {
