@@ -46,8 +46,7 @@
     testBtn.removeAttribute('data-testid');
     testBtn.removeAttribute('data-cid');
     testBtn.setAttribute('aria-label', 'Import Rubric');
-    setClonedButtonText(testBtn, 'Import Rubric');
-    setRobotIcon(testBtn);
+    setUploadButtonContent(testBtn, 'Import Rubric');
     styleImportButton(testBtn);
     testBtn.addEventListener('click', function (event) {
       event.preventDefault();
@@ -68,48 +67,34 @@
     }
   }
 
-  function setClonedButtonText(button, text) {
-    var spans = button.querySelectorAll('span');
-    var target = null;
+  function setUploadButtonContent(button, text) {
+    var label = document.createElement('span');
 
-    for (var i = 0; i < spans.length; i++) {
-      if (normalizeText(spans[i].textContent) === 'Create New Rubric') {
-        target = spans[i];
-        break;
-      }
+    while (button.firstChild) {
+      button.removeChild(button.firstChild);
     }
 
-    if (target) {
-      target.textContent = text;
-    } else {
-      button.textContent = text;
-    }
+    label.textContent = text;
+    label.style.background = 'transparent';
+    label.style.boxShadow = 'none';
+    label.style.color = '#fff';
+    label.style.fontWeight = '700';
+    label.style.lineHeight = '1';
+
+    button.appendChild(createUploadIcon());
+    button.appendChild(label);
   }
 
-  function setRobotIcon(targetButton) {
-    var robotIcon = createRobotIcon();
-    var targetIcon = targetButton.querySelector('svg');
-
-    if (targetIcon && targetIcon.parentElement) {
-      targetIcon.parentElement.replaceChild(robotIcon, targetIcon);
-      return;
-    }
-
-    targetButton.insertBefore(robotIcon, targetButton.firstChild);
-  }
-
-  function createRobotIcon() {
+  function createUploadIcon() {
     var svgNs = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(svgNs, 'svg');
-    var antenna = document.createElementNS(svgNs, 'path');
-    var head = document.createElementNS(svgNs, 'rect');
-    var leftEye = document.createElementNS(svgNs, 'circle');
-    var rightEye = document.createElementNS(svgNs, 'circle');
-    var mouth = document.createElementNS(svgNs, 'path');
+    var tray = document.createElementNS(svgNs, 'path');
+    var arrowHead = document.createElementNS(svgNs, 'polyline');
+    var arrowStem = document.createElementNS(svgNs, 'line');
 
     svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('width', '18');
-    svg.setAttribute('height', '18');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
     svg.style.color = '#fff';
@@ -118,30 +103,18 @@
     svg.style.strokeLinecap = 'round';
     svg.style.strokeLinejoin = 'round';
     svg.style.strokeWidth = '2';
-    svg.style.marginRight = '6px';
-    svg.style.verticalAlign = 'text-bottom';
+    svg.style.flex = '0 0 auto';
 
-    antenna.setAttribute('d', 'M12 6V3m0 0h.01');
-    head.setAttribute('x', '5');
-    head.setAttribute('y', '7');
-    head.setAttribute('width', '14');
-    head.setAttribute('height', '12');
-    head.setAttribute('rx', '3');
-    leftEye.setAttribute('cx', '9');
-    leftEye.setAttribute('cy', '12');
-    leftEye.setAttribute('r', '1');
-    leftEye.style.fill = 'currentColor';
-    rightEye.setAttribute('cx', '15');
-    rightEye.setAttribute('cy', '12');
-    rightEye.setAttribute('r', '1');
-    rightEye.style.fill = 'currentColor';
-    mouth.setAttribute('d', 'M9 16h6');
+    tray.setAttribute('d', 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4');
+    arrowHead.setAttribute('points', '17 8 12 3 7 8');
+    arrowStem.setAttribute('x1', '12');
+    arrowStem.setAttribute('y1', '3');
+    arrowStem.setAttribute('x2', '12');
+    arrowStem.setAttribute('y2', '15');
 
-    svg.appendChild(antenna);
-    svg.appendChild(head);
-    svg.appendChild(leftEye);
-    svg.appendChild(rightEye);
-    svg.appendChild(mouth);
+    svg.appendChild(tray);
+    svg.appendChild(arrowHead);
+    svg.appendChild(arrowStem);
 
     return svg;
   }
@@ -157,18 +130,25 @@
     button.style.borderStyle = 'solid';
     button.style.borderWidth = '1px';
     button.style.color = '#fff';
+    button.style.display = 'inline-flex';
+    button.style.alignItems = 'center';
+    button.style.gap = '6px';
+    button.style.justifyContent = 'center';
     button.style.fontWeight = '700';
 
     textEls = button.querySelectorAll('span');
     for (i = 0; i < textEls.length; i++) {
+      textEls[i].style.background = 'transparent';
+      textEls[i].style.boxShadow = 'none';
       textEls[i].style.color = '#fff';
       textEls[i].style.fontWeight = '700';
     }
 
-    iconEls = button.querySelectorAll('svg, path');
+    iconEls = button.querySelectorAll('svg, path, polyline, line');
     for (i = 0; i < iconEls.length; i++) {
       iconEls[i].style.color = '#fff';
-      iconEls[i].style.fill = '#fff';
+      iconEls[i].style.fill = 'none';
+      iconEls[i].style.stroke = 'currentColor';
     }
   }
 
