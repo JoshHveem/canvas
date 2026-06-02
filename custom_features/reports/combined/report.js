@@ -139,6 +139,83 @@
                 }
               }
             ]
+          },
+          {
+            value: 'outcomes',
+            label: 'Outcomes',
+            title: 'Outcomes Report',
+            subMenus: [
+              {
+                value: 'cpl',
+                label: 'CPL',
+                component: 'reports-outcomes-cpl',
+                dataset: 'program_cpl',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              }
+            ]
+          },
+          {
+            value: 'evaluations',
+            label: 'Evaluations',
+            title: 'Evaluations Report',
+            subMenus: [
+              {
+                value: 'course-evals-summary',
+                label: 'Course Evals Summary',
+                component: 'reports-evaluations-course-summary',
+                dataset: 'program_course_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'course-course-evals-summary',
+                label: 'Course Evals by Course',
+                component: 'reports-evaluations-course-evals-by-course',
+                dataset: 'course_course_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'course-eval-detail',
+                label: 'Course Eval Detail',
+                component: 'reports-evaluations-course-detail',
+                dataset: 'course_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'instructor-evals-summary',
+                label: 'Instructor Eval Summary',
+                component: 'reports-evaluations-instructor-summary',
+                dataset: 'program_instructor_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'course-instructor-evals-summary',
+                label: 'Instructor Evals by Course',
+                component: 'reports-evaluations-instructor-evals-by-course',
+                dataset: 'course_instructor_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'instructor-eval-detail',
+                label: 'Instructor Eval Detail',
+                component: 'reports-evaluations-instructor-detail',
+                dataset: 'instructor_evaluations',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              }
+            ]
           }
         ];
 
@@ -150,11 +227,17 @@
               syllabi: 'summary',
               'course-readiness': 'department-summary',
               instructors: 'department-summary',
-              admissions: 'overview'
+              admissions: 'overview',
+              outcomes: 'cpl',
+              evaluations: 'course-evals-summary'
             }
           },
           selectedDepartmentCode: '',
-          selectedDepartmentName: ''
+          selectedDepartmentName: '',
+          selectedProgramCode: '',
+          selectedProgramName: '',
+          selectedCourseCode: '',
+          selectedCourseName: ''
         };
       },
 
@@ -194,7 +277,11 @@
               filters: this.resolveFilters(subMeta.filters || {}),
               routeFilters: {
                 departmentCode: this.selectedDepartmentCode,
-                departmentName: this.selectedDepartmentName
+                departmentName: this.selectedDepartmentName,
+                programCode: this.selectedProgramCode,
+                programName: this.selectedProgramName,
+                courseCode: this.selectedCourseCode,
+                courseName: this.selectedCourseName
               }
             }
           };
@@ -207,9 +294,17 @@
           const subMenu = String(payload?.subMenu ?? 'summary').trim() || 'summary';
           const account = String(payload?.account ?? payload?.department_code ?? '').trim();
           const departmentName = String(payload?.department_name ?? payload?.name ?? '').trim();
+          const programCode = String(payload?.program_code ?? '').trim();
+          const programName = String(payload?.program_name ?? '').trim();
+          const courseCode = String(payload?.course_code ?? '').trim();
+          const courseName = String(payload?.course_name ?? '').trim();
 
           if (account) this.selectedDepartmentCode = account;
           if (departmentName) this.selectedDepartmentName = departmentName;
+          if (programCode) this.selectedProgramCode = programCode;
+          if (programName) this.selectedProgramName = programName;
+          if (courseCode) this.selectedCourseCode = courseCode;
+          if (courseName) this.selectedCourseName = courseName;
 
           this.settings.reportType = report || 'syllabi';
           if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
@@ -274,6 +369,13 @@
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-summary.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-evals-by-course.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-detail.js");
     if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();

@@ -32,7 +32,7 @@ Vue.component('reports-departments-syllabi', {
         d => this.totalCourses(d)
       ),
       new window.ReportColumn(
-        'Needs Submission', 'Count: not yet submitted.', '7rem', false, 'number',
+        'Unsubmitted', 'Count: not yet submitted.', '7rem', false, 'number',
         d => String(this.needsSubmission(d)),
         d => this.countPillStyle(this.needsSubmission(d)),
         d => this.needsSubmission(d)

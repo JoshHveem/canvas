@@ -7,7 +7,9 @@
   const refreshMs = 60000;
   const instructorEvalId = "243044643269963";
   const courseEvalId = "241976981675072";
+  const employmentSkillsEvalUrl = "https://surveys.bridgetools.dev/init?jotform_id=261403741698967&response_jotform_id=261436460329962";
   const courseEvalBaseUrl = "https://surveys.bridgetools.dev/init";
+  const employmentSkillsNameFragment = "employment skills";
   const simpleSyllabusToolId = "106228";
   const manualConfirmationItems = [
     {
@@ -592,10 +594,20 @@
       })()
     );
 
+    const employmentSkillsAssignments = assignmentList.filter(assignment =>
+      String(assignment?.name ?? "").toLowerCase().includes(employmentSkillsNameFragment)
+    );
+
+    const employmentSkillsAssignmentsWithResponseLinks = employmentSkillsAssignments.filter(assignment =>
+      hasJotformAndResponseJotformIds(assignment?.external_tool_tag_attributes?.url)
+    );
+
     return {
       termName,
       termYear,
       isCoursePublished: Boolean(course?.published) || ["available", "completed"].includes(String(course?.workflow_state ?? "").toLowerCase()),
+      employmentSkillsAssignments,
+      employmentSkillsAssignmentsWithResponseLinks,
       instructorEvalAssignments,
       courseEvalAssignments,
       instructorEnrollments,
@@ -611,7 +623,9 @@
   }
 
   function getIsReady(data) {
-    return getChecks(data).every(check => check.state === "pass");
+    return getChecks(data)
+      .filter(check => check.isScored !== false)
+      .every(check => check.state === "pass");
   }
 
   function getLoadingCheck(title, detail = "Loading...") {
@@ -624,6 +638,7 @@
       "Assignments in Modules": "assignmentsInModules",
       "Course Content": "courseContent",
       "Course Evaluation": "courseEvaluation",
+      "Employment Skills Evaluation": "employmentSkillsEvaluation",
       "Group Weights = 100%": "groupWeights",
       "Instructor Evaluation": "instructorEvaluation",
       "Instructors Added": "instructorsAdded",
@@ -642,6 +657,20 @@
       detail,
       ...options
     };
+  }
+
+  function hasJotformAndResponseJotformIds(urlValue) {
+    const url = String(urlValue ?? "").trim();
+    if (!url) return false;
+
+    try {
+      const parsedUrl = new URL(url, window.location.origin);
+      const jotformId = parsedUrl.searchParams.get("jotform_id");
+      const responseJotformId = parsedUrl.searchParams.get("response_jotform_id");
+      return Boolean(jotformId && responseJotformId);
+    } catch (error) {
+      return false;
+    }
   }
 
   function getEvaluationCheck(assignments, title) {
@@ -663,6 +692,54 @@
     }
 
     return createCheck(title, "warn", `${title} assignment exists but is not published.`);
+  }
+
+  function getEmploymentSkillsEvaluationCheck(data) {
+    const matchingAssignments = data.employmentSkillsAssignments ?? [];
+
+    if (!matchingAssignments.length) {
+      return createCheck(
+        "Employment Skills Evaluation",
+        "info",
+        "No assignment or quiz with 'employment skills' in the name was found.",
+        {
+          action: {
+            type: "addEmploymentSkillsEvaluation",
+            label: "Add Eval"
+          },
+          isScored: false
+        }
+      );
+    }
+
+    if ((data.employmentSkillsAssignmentsWithResponseLinks ?? []).length > 0) {
+      return createCheck(
+        "Employment Skills Evaluation",
+        "pass",
+        "Employment Skills evaluation includes both jotform_id and response_jotform_id.",
+        {
+          action: {
+            type: "addEmploymentSkillsEvaluation",
+            label: "Add Eval"
+          }
+        }
+      );
+    }
+
+    return createCheck(
+      "Employment Skills Evaluation",
+      "fail",
+      "An Employment Skills assignment or quiz exists, but its link is missing jotform_id and/or response_jotform_id.",
+      {
+        action: {
+          type: "addEmploymentSkillsEvaluation",
+          label: "Add Eval"
+        },
+        items: matchingAssignments,
+        itemFormatter: item => escapeHtml(item.name),
+        itemSummary: `${matchingAssignments.length} matching item(s)`
+      }
+    );
   }
 
   function getSyllabusCheck(data) {
@@ -857,6 +934,7 @@
         getLoadingCheck("Instructors Added"),
         getLoadingCheck("Instructor Evaluation"),
         getLoadingCheck("Course Evaluation"),
+        getLoadingCheck("Employment Skills Evaluation"),
         getLoadingCheck("Course Content"),
         getLoadingCheck("Group Weights = 100%"),
         getLoadingCheck("Assignments in Modules"),
@@ -872,6 +950,7 @@
       getInstructorsCheck(data),
       getEvaluationCheck(data.instructorEvalAssignments, "Instructor Evaluation"),
       getEvaluationCheck(data.courseEvalAssignments, "Course Evaluation"),
+      getEmploymentSkillsEvaluationCheck(data),
       getContentCheck(data),
       getWeightsCheck(data),
       getAssignmentsInModulesCheck(data),
@@ -1161,6 +1240,24 @@
           console.error("Unable to add Course Evaluation.", error);
           button.prop("disabled", false).text("Add Eval");
           alert("Unable to add the Course Evaluation right now.");
+        }
+
+        return;
+      }
+
+      if (actionType === "addEmploymentSkillsEvaluation") {
+        button.prop("disabled", true).text("Adding...");
+
+        try {
+          await createEvaluationAssignment({
+            title: "Employment Skills Evaluation",
+            url: employmentSkillsEvalUrl
+          });
+          markActionResolved(button);
+        } catch (error) {
+          console.error("Unable to add Employment Skills Evaluation.", error);
+          button.prop("disabled", false).text("Add Eval");
+          alert("Unable to add the Employment Skills Evaluation right now.");
         }
       }
     });
