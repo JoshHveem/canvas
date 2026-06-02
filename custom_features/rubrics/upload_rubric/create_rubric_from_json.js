@@ -47,7 +47,7 @@
     testBtn.removeAttribute('data-cid');
     testBtn.setAttribute('aria-label', 'Import Rubric');
     setUploadButtonContent(testBtn, 'Import Rubric');
-    styleImportButton(testBtn);
+    styleImportButton(testBtn, createBtn);
     testBtn.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -119,8 +119,10 @@
     return svg;
   }
 
-  function styleImportButton(button) {
+  function styleImportButton(button, sourceButton) {
     var red = '#b20b0f';
+    var sourceStyles = sourceButton ? window.getComputedStyle(sourceButton) : null;
+    var sourceRect = sourceButton ? sourceButton.getBoundingClientRect() : null;
     var textEls;
     var iconEls;
     var i;
@@ -135,6 +137,17 @@
     button.style.gap = '6px';
     button.style.justifyContent = 'center';
     button.style.fontWeight = '700';
+    if (sourceStyles) {
+      button.style.fontSize = sourceStyles.fontSize;
+      button.style.lineHeight = sourceStyles.lineHeight;
+      button.style.padding = sourceStyles.padding;
+    }
+    if (sourceRect && sourceRect.width > 0) {
+      button.style.minWidth = Math.ceil(sourceRect.width) + 'px';
+    }
+    if (sourceRect && sourceRect.height > 0) {
+      button.style.minHeight = Math.ceil(sourceRect.height) + 'px';
+    }
 
     textEls = button.querySelectorAll('span');
     for (i = 0; i < textEls.length; i++) {
