@@ -263,7 +263,6 @@
     }, 'text');
     let canvasbody = $("#application");
     canvasbody.after('<div id="canvas-individual-report-vue"></div>');
-    $("#canvas-individual-report-vue").append(vueString);
     let gen_report_button;
     let menu_bar;
     if (/^\/$/.test(window.location.pathname)) {
@@ -288,6 +287,7 @@
 
     APP = new Vue({
       el: '#canvas-individual-report-vue',
+      template: vueString,
       mounted: async function () {
         this.loadingProgress = 0;
         this.IS_TEACHER = IS_TEACHER;

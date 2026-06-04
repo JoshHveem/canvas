@@ -37,7 +37,6 @@
 
     const canvasbody = $("#application");
     canvasbody.after('<div id="canvas-instructor-report-vue"></div>');
-    $("#canvas-instructor-report-vue").append(vueString);
     $("#canvas-instructor-report-vue").hide();
 
     const container = $('#right-side');
@@ -52,6 +51,7 @@
 
     new Vue({
       el: '#canvas-instructor-report-vue',
+      template: vueString,
 
       data: function () {
         const reports = [
