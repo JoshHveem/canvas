@@ -338,7 +338,7 @@
         },
 
         close() {
-          $(this.$el).hide();
+          $('#canvas-instructor-report-vue').hide();
         }
       }
     });

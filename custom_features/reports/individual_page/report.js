@@ -438,7 +438,7 @@
           });
         },
 
-        close() { $(this.$el).hide(); },
+        close() { $('#canvas-individual-report-vue').hide(); },
 
         formatDate(date) {
           date = new Date(date);
