@@ -2,7 +2,7 @@
   const WIDTH = 200;
   async function postLoad() {
     let vueString = '';
-    await $.get(SOURCE_URL + '/custom_features/editor_toolbar/sidebar.vue', null, function (html) {
+    await $.get((window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/sidebar.vue') : SOURCE_URL + '/custom_features/editor_toolbar/sidebar.vue'), null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     $('body').append(vueString);
@@ -70,21 +70,21 @@
     $('span[title="Editor Statusbar"]').prepend(toggleMenuButton);
   }
 
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/editor_icon.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/sidebar_comment.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/hex_image.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/callout.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/callout_header.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/citation.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/information_box.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/recolor.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_left.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_right.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_banner.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_left.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_right.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_hex.js').done(function () {});
-  await $.getScript(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/banner.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/editor_icon.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/editor_icon.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/sidebar_comment.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/sidebar_comment.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/hex_image.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/hex_image.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/callout.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/callout.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/callout_header.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/callout_header.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/citation.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/citation.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/information_box.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/information_box.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/recolor.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/recolor.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_left.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_left.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_right.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/image_right.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_banner.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_banner.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_left.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_left.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_right.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/modal_header_right.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_hex.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/header_hex.js').done(function () {});
+  await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/editor_toolbar/components/modals/banner.js') : SOURCE_URL + '/custom_features/editor_toolbar/components/modals/banner.js').done(function () {});
   postLoad();
 
 })();

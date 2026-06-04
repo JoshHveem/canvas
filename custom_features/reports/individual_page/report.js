@@ -258,7 +258,7 @@
   async function postLoad() {
     let vueString = '';
     //gen an initial uuid
-    await $.get(SOURCE_URL + '/custom_features/reports/individual_page/template.vue', null, function (html) {
+    await $.get((window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/template.vue') : SOURCE_URL + '/custom_features/reports/individual_page/template.vue'), null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
@@ -625,12 +625,12 @@
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-    await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
-    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js') : SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js") : SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
     await loadFirstAvailableScript([
       "https://d3js.org/d3.v6.min.js",
       "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
@@ -647,8 +647,8 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
     */
     postLoad();
   } catch (err) {

@@ -24,10 +24,9 @@
   }
 
   async function postLoad() {
-    const todayStr = new Date().toISOString();
     let vueString = '';
     await $.get(
-      SOURCE_URL + `/custom_features/reports/combined/template.vue?v=${todayStr}`,
+      (window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/combined/template.vue`) : SOURCE_URL + `/custom_features/reports/combined/template.vue`),
       null,
       function (html) {
         vueString = html.replace("<template>", "").replace("</template>", "");
@@ -359,24 +358,24 @@
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     loadCSS("https://reports.bridgetools.dev/style/main.css");
 
-    await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
-    await $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js") : "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/d3.v7.js") : "https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-mixins.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-table-shell.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-summary.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-evals-by-course.js");
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-detail.js");
-    if (IS_ISD) await $.getScript("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-mixins.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-mixins.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-table-shell.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-table-shell.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-instructors.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-summary.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-evals-by-course.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-evals-by-course.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-detail.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-instructor-detail.js");
+    if (IS_ISD) await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/admissions-overview.js");
 
     postLoad();
   }
