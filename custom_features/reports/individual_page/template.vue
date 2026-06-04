@@ -21,12 +21,12 @@
           "
         >
           <button
-            v-for="rt in reportTypes"
-            :key="rt.value"
+            v-for="reportType in reportTypes"
+            :key="reportType.value"
             role="tab"
-            :aria-selected="settings.reportType === rt.value ? 'true' : 'false'"
-            :tabindex="settings.reportType === rt.value ? 0 : -1"
-            @click="settings.reportType = rt.value; onReportChange()"
+            :aria-selected="settings.reportType === reportType.value ? 'true' : 'false'"
+            :tabindex="settings.reportType === reportType.value ? 0 : -1"
+            @click="settings.reportType = reportType.value; onReportChange()"
             style="
               border:1px solid #e5e7eb;
               border-radius:12px;
@@ -37,11 +37,11 @@
               cursor:pointer;
               transition: box-shadow .15s ease, background .15s ease;
             "
-            :style="settings.reportType === rt.value
+            :style="settings.reportType === reportType.value
               ? 'background:#111827; color:#fff; border-color:#111827; box-shadow:0 1px 4px rgba(0,0,0,.15);'
               : 'background:#fff; color:#111827;'"
           >
-            {{ rt.label }}
+            {{ reportType.label }}
           </button>
         </div>
 
