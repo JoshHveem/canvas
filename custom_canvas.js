@@ -248,7 +248,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
     if (IS_ISD) feature("reports/reporting_v3/main", /external_tools\/110980/);
-    if (IS_ME) feature("reports/logan_test", /^\/$/); // test for logan to build out a dashboard
     if (rCheckInCourse.test(window.location.pathname)) {
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
       feature("kaltura/showInfo", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
