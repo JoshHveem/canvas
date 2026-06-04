@@ -54,7 +54,15 @@ async function feature(f, regex = "") {
     }
   }
   if (check) {
-    await $.getScript((window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/" + f + ".js") : SOURCE_URL + "/custom_features/" + f + ".js"));
+    const url = window.btechAssetUrl
+      ? window.btechAssetUrl(SOURCE_URL + "/custom_features/" + f + ".js")
+      : SOURCE_URL + "/custom_features/" + f + ".js";
+    try {
+      await $.getScript(url);
+    } catch (err) {
+      console.error("Feature load failed:", f, url, err);
+      throw err;
+    }
   }
 }
 
