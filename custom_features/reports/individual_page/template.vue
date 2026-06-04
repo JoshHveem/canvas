@@ -85,9 +85,47 @@
           </button>
         </div>
 
+        <div
+          v-if="loading"
+          style="
+            margin:12px 0 10px 0;
+            padding:14px;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            background:#f9fafb;
+          "
+        >
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:13px;">Loading Courses</strong>
+            <span style="font-size:12px; color:#6b7280;">{{ Math.round(loadingProgress) }}%</span>
+          </div>
+          <div
+            style="
+              width:100%;
+              height:10px;
+              border-radius:999px;
+              background:#e5e7eb;
+              overflow:hidden;
+              margin-bottom:8px;
+            "
+          >
+            <div
+              :style="`
+                width:${loadingProgress}%;
+                height:100%;
+                background:linear-gradient(90deg, #b20b0f 0%, #d97706 100%);
+                transition:width .2s ease;
+              `"
+            ></div>
+          </div>
+          <div style="font-size:12px; color:#4b5563;">
+            {{ loadingMessage }}
+          </div>
+        </div>
+
         <!-- Degree selector sub-menu -->
         <div
-          v-if="user.majors.length"
+          v-if="!loading && user.majors.length"
           class="btech-major-switcher"
         >
           <label
@@ -113,7 +151,7 @@
           </select>
         </div>
 
-        <div>
+        <div v-if="!loading">
           <ind-header-credits
             :colors="colors"
             :user="user"
@@ -125,7 +163,7 @@
 
 
         
-        <div v-if="settings.reportType === 'student-courses'">
+        <div v-if="!loading && settings.reportType === 'student-courses'">
           <student-courses-report
             :user="user"
             :major="currentMajor"
@@ -137,12 +175,12 @@
             :key="selectedMajorIndex"
           ></student-courses-report>
         </div>
-        <div v-if="settings.reportType === 'student-grades'">
+        <div v-if="!loading && settings.reportType === 'student-grades'">
           <show-student-grades
             :user="user"
           ></show-student-grades>
         </div>
-        <div v-if="settings.reportType === 'hs-grades'">
+        <div v-if="!loading && settings.reportType === 'hs-grades'">
           <grades-between-dates
             v-if="userId"
             :user="user"
@@ -151,7 +189,7 @@
             :IS-TEACHER="IS_TEACHER"
           ></grades-between-dates>
         </div>
-        <div v-if="settings.reportType === 'hs-grades-old'">
+        <div v-if="!loading && settings.reportType === 'hs-grades-old'">
           <show-grades-between-dates-old
             v-if="userId"
             :user="user"

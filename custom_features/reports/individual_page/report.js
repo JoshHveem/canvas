@@ -289,7 +289,7 @@
       el: '#canvas-individual-report-vue-app',
       template: vueString,
       mounted: async function () {
-        this.loadingProgress = 0;
+        this.setLoadingState("Starting report", 5);
         this.IS_TEACHER = IS_TEACHER;
         // if (!IS_TEACHER) this.menu = 'period';
         if (IS_TEACHER) { //also change this to ref the url and not whether or not is teacher
@@ -303,12 +303,10 @@
           console.error("Failed preloading HS grade courses:", err);
         });
 
-        this.loadingMessage = "Loading Settings";
+        this.setLoadingState("Loading saved settings", 15);
         let settings = await this.loadSettings(this.settings);
         this.settings = settings;
-        this.loadingProgress += 10;
-
-        this.loadingMessage = "Loading User Data";
+        this.setLoadingState("Loading student profile and course records", 30);
 
         try {
           let user = await this.loadUser(this.userId);
@@ -317,7 +315,7 @@
           console.error(err);
           this.user = emptyUser();
         }
-        this.loadingProgress += 10;
+        this.setLoadingState("Report ready", 100);
         this.loading = false;
       },
       data: function () {
@@ -395,6 +393,11 @@
       },
 
       methods: {
+        setLoadingState(message, progress) {
+          this.loadingMessage = message;
+          this.loadingProgress = progress;
+        },
+
         onMajorChange(event) {
           this.selectedMajorIndex = Number(event.target.value);
         },
@@ -574,6 +577,7 @@
 
         async loadUser(userId) {
           try {
+            this.setLoadingState("Loading student profile and course records", 30);
             const [
               studentHeader,
               studentCourses,
@@ -591,7 +595,9 @@
             ]);
 
             this.canvasUser = canvasUser;
+            this.setLoadingState("Loading major requirements", 60);
             const majors = await this.normalizeMajors(studentMajors);
+            this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
               studentHeader: studentHeader[0],
