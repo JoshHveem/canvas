@@ -78,8 +78,7 @@
     );
 
     let canvasbody = $('#application');
-    canvasbody.after('<div id="canvas-grades-report-vue"></div>');
-    $('#canvas-grades-report-vue').append(vueString);
+    canvasbody.after('<div id="canvas-grades-report-vue"><div id="canvas-grades-report-vue-app"></div></div>');
     $('#canvas-grades-report-vue').hide();
 
     let container = $('div#gradebook-actions');
@@ -103,7 +102,8 @@
     });
 
     new Vue({
-      el: '#canvas-grades-report-vue',
+      el: '#canvas-grades-report-vue-app',
+      template: vueString,
       created: function () {},
       mounted: async function () {
         this.loading = true;
@@ -714,7 +714,7 @@
         },
 
         close() {
-          $(this.$el).hide();
+          $('#canvas-grades-report-vue').hide();
         },
       },
     });

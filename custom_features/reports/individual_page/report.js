@@ -548,26 +548,31 @@
         },
 
         normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors }) {
+          studentHeader = studentHeader || {};
           const sortedMajors = this.sortMajors(majors);
-          const defaultMajor = sortedMajors[0];
+          const defaultMajor = sortedMajors[0] || emptyMajor();
 
           const user = {
             majors: sortedMajors,
-            courses,
+            courses: courses || [],
             canvas_user_id: canvasUser.id,
-            name: canvasUser.name,
+            name: studentHeader.name || canvasUser.name || '',
             academic_probation: null,
-            academic_standing_code: studentHeader.academic_standing_code,
-            academic_standing_name: studentHeader.academic_standing_name,
-            last_update: bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at),
-            last_login: bridgetools.psqlTimestampToDate(studentHeader.last_login_at),
+            academic_standing_code: studentHeader.academic_standing_code || null,
+            academic_standing_name: studentHeader.academic_standing_name || null,
+            last_update: studentHeader.bridgetools_updated_at
+              ? bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at)
+              : null,
+            last_login: studentHeader.last_login_at
+              ? bridgetools.psqlTimestampToDate(studentHeader.last_login_at)
+              : null,
             avatar_url: studentHeader.avatar_image_url || canvasUser.avatar_url,
-            sis_user_id: studentHeader.sis_user_id,
-            hs_terms: hsTerms,
-            contracted_hours: studentHeader.contracted_hours,
-            contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours),
+            sis_user_id: studentHeader.sis_user_id || canvasUser.sis_user_id || null,
+            hs_terms: hsTerms || [],
+            contracted_hours: studentHeader.contracted_hours || {},
+            contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours || {}),
             transfer_courses: [],
-            distance_approved: defaultMajor.is_distance_approved,
+            distance_approved: Boolean(defaultMajor.is_distance_approved),
           };
 
           this.selectedMajorIndex = 0;
@@ -600,7 +605,7 @@
             this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
-              studentHeader: studentHeader[0],
+              studentHeader: studentHeader?.[0],
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
               majors
