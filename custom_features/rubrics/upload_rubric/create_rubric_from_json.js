@@ -22,38 +22,156 @@
 
   function add_button() {
 
-    var importBtn = document.querySelector('button[data-testid="import-rubric-button"]');
-    if (!importBtn) {
+    var createBtn = document.querySelector('button[data-testid="create-new-rubric-button"]');
+    if (!createBtn || !createBtn.parentElement || !createBtn.parentElement.parentElement) {
       return false;
     }
 
     if (document.getElementById(buttonId)) {
+      hideLegacyImportButton();
       return true;
     }
 
-    var wrapper = importBtn.parentElement.cloneNode(false);
-    var testBtn = document.createElement('button');
+    var createWrapper = createBtn.parentElement;
+    var wrapper = createWrapper.cloneNode(true);
+    var testBtn = wrapper.querySelector('button');
 
+    if (!testBtn) {
+      return false;
+    }
+
+    clearClonedIds(wrapper);
     testBtn.id = buttonId;
     testBtn.type = 'button';
-    testBtn.textContent = 'Import Rubric';
-    testBtn.style.padding = '8px 12px';
-    testBtn.style.border = '1px solid #b20b0f';
-    testBtn.style.borderRadius = '4px';
-    testBtn.style.background = '#b20b0f';
-    testBtn.style.color = '#fff';
-    testBtn.style.cursor = 'pointer';
-    testBtn.style.fontWeight = '700';
+    testBtn.removeAttribute('data-testid');
+    testBtn.removeAttribute('data-cid');
+    testBtn.setAttribute('aria-label', 'Import Rubric');
+    setUploadButtonContent(testBtn, 'Import Rubric');
+    styleImportButton(testBtn, createBtn);
     testBtn.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       openDialog();
     }, true);
 
-    wrapper.appendChild(testBtn);
-    importBtn.parentElement.insertAdjacentElement('afterend', wrapper);
+    createWrapper.parentElement.insertBefore(wrapper, createWrapper);
+    hideLegacyImportButton();
 
     return true;
+  }
+
+  function clearClonedIds(wrapper) {
+    var idEls = wrapper.querySelectorAll('[id]');
+    for (var i = 0; i < idEls.length; i++) {
+      idEls[i].removeAttribute('id');
+    }
+  }
+
+  function setUploadButtonContent(button, text) {
+    var label = document.createElement('span');
+
+    while (button.firstChild) {
+      button.removeChild(button.firstChild);
+    }
+
+    label.textContent = text;
+    label.style.background = 'transparent';
+    label.style.boxShadow = 'none';
+    label.style.color = '#fff';
+    label.style.fontWeight = '700';
+    label.style.lineHeight = '1';
+
+    button.appendChild(createUploadIcon());
+    button.appendChild(label);
+  }
+
+  function createUploadIcon() {
+    var svgNs = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNs, 'svg');
+    var tray = document.createElementNS(svgNs, 'path');
+    var arrowHead = document.createElementNS(svgNs, 'polyline');
+    var arrowStem = document.createElementNS(svgNs, 'line');
+
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.style.color = '#fff';
+    svg.style.fill = 'none';
+    svg.style.stroke = 'currentColor';
+    svg.style.strokeLinecap = 'round';
+    svg.style.strokeLinejoin = 'round';
+    svg.style.strokeWidth = '2';
+    svg.style.flex = '0 0 auto';
+
+    tray.setAttribute('d', 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4');
+    arrowHead.setAttribute('points', '17 8 12 3 7 8');
+    arrowStem.setAttribute('x1', '12');
+    arrowStem.setAttribute('y1', '3');
+    arrowStem.setAttribute('x2', '12');
+    arrowStem.setAttribute('y2', '15');
+
+    svg.appendChild(tray);
+    svg.appendChild(arrowHead);
+    svg.appendChild(arrowStem);
+
+    return svg;
+  }
+
+  function styleImportButton(button, sourceButton) {
+    var red = '#b20b0f';
+    var sourceStyles = sourceButton ? window.getComputedStyle(sourceButton) : null;
+    var sourceRect = sourceButton ? sourceButton.getBoundingClientRect() : null;
+    var textEls;
+    var iconEls;
+    var i;
+
+    button.style.background = red;
+    button.style.borderColor = red;
+    button.style.borderStyle = 'solid';
+    button.style.borderWidth = '1px';
+    button.style.color = '#fff';
+    button.style.display = 'inline-flex';
+    button.style.alignItems = 'center';
+    button.style.gap = '6px';
+    button.style.justifyContent = 'center';
+    button.style.fontWeight = '700';
+    if (sourceStyles) {
+      button.style.fontSize = sourceStyles.fontSize;
+      button.style.lineHeight = sourceStyles.lineHeight;
+      button.style.padding = sourceStyles.padding;
+    }
+    if (sourceRect && sourceRect.width > 0) {
+      button.style.minWidth = Math.ceil(sourceRect.width) + 'px';
+    }
+    if (sourceRect && sourceRect.height > 0) {
+      button.style.minHeight = Math.ceil(sourceRect.height) + 'px';
+    }
+
+    textEls = button.querySelectorAll('span');
+    for (i = 0; i < textEls.length; i++) {
+      textEls[i].style.background = 'transparent';
+      textEls[i].style.boxShadow = 'none';
+      textEls[i].style.color = '#fff';
+      textEls[i].style.fontWeight = '700';
+    }
+
+    iconEls = button.querySelectorAll('svg, path, polyline, line');
+    for (i = 0; i < iconEls.length; i++) {
+      iconEls[i].style.color = '#fff';
+      iconEls[i].style.fill = 'none';
+      iconEls[i].style.stroke = 'currentColor';
+    }
+  }
+
+  function hideLegacyImportButton() {
+    var legacyImportBtn = document.querySelector('button[data-testid="import-rubric-button"]');
+    if (legacyImportBtn && legacyImportBtn.parentElement) {
+      legacyImportBtn.parentElement.style.display = 'none';
+      legacyImportBtn.setAttribute('aria-hidden', 'true');
+      legacyImportBtn.setAttribute('tabindex', '-1');
+    }
   }
 
   function ensurePanelStyles() {
@@ -611,9 +729,9 @@
     var criteria = buildCriteria(options.criteria || []);
     var association = options.association || getAssociationFromPath();
     var freeFormComments = options.freeFormComments ? 1 : 0;
-    var useForGrading = options.useForGrading ? 1 : 0;
-    var hideScoreTotal = useForGrading ? 0 : (options.hideScoreTotal ? 1 : 0);
-    var purpose = options.purpose || (useForGrading ? 'grading' : 'bookmark');
+    var useForGrading = 0;
+    var hideScoreTotal = options.hideScoreTotal ? 1 : 0;
+    var purpose = 'bookmark';
     var pointsPossible = getPointsPossible(criteria);
 
     var payload = {

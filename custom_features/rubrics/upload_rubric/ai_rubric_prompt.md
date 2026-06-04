@@ -50,7 +50,6 @@ Use this exact JSON structure:
 
 {
   "title": "Rubric Title",
-  "useForGrading": true,
   "freeFormComments": false,
   "hideScoreTotal": false,
   "criteria": [
@@ -89,4 +88,3 @@ Final JSON rules:
 - Use numeric point values, not strings.
 - Do not include trailing commas.
 - If a downloadable `.json` file cannot be created, return only the raw JSON object in chat as a fallback.
-
