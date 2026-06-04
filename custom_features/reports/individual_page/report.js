@@ -262,7 +262,7 @@
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-individual-report-vue"></div>');
+    canvasbody.after('<div id="canvas-individual-report-vue"><div id="canvas-individual-report-vue-app"></div></div>');
     let gen_report_button;
     let menu_bar;
     if (/^\/$/.test(window.location.pathname)) {
@@ -286,7 +286,7 @@
     modal.hide();
 
     APP = new Vue({
-      el: '#canvas-individual-report-vue',
+      el: '#canvas-individual-report-vue-app',
       template: vueString,
       mounted: async function () {
         this.loadingProgress = 0;

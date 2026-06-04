@@ -36,7 +36,7 @@
     );
 
     const canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-instructor-report-vue"></div>');
+    canvasbody.after('<div id="canvas-instructor-report-vue"><div id="canvas-instructor-report-vue-app"></div></div>');
     $("#canvas-instructor-report-vue").hide();
 
     const container = $('#right-side');
@@ -50,7 +50,7 @@
     observer.observe(container[0], { childList: true, subtree: false });
 
     new Vue({
-      el: '#canvas-instructor-report-vue',
+      el: '#canvas-instructor-report-vue-app',
       template: vueString,
 
       data: function () {
