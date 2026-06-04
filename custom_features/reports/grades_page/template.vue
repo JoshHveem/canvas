@@ -1,6 +1,5 @@
 <template>
   <div class='btech-modal btech-canvas-report' style='display: inline-block;'>
-    <!-- ERASE THE DISPLAY PIECE BEFORE GOING LIVE -->
     <div class='btech-modal-content'>
       <div class='btech-modal-content-inner'>
         <span class='btech-close' v-on:click='close()'>&times;</span>
@@ -10,12 +9,17 @@
           v-if="!courseId"
         >
           <label>Course Source</label>
-          <select 
-            v-model="settings.account" 
-            @change="saveSettings(settings); 
-            loadCourseEnrollments();"
+          <select
+            v-model="settings.account"
+            @change="saveSettings(settings); loadCourseEnrollments();"
+          >
+            <option
+              v-for="index in accounts.length"
+              :key="'account-' + index"
+              :value="accounts[index - 1].id"
             >
-            <option v-for="account in accounts" :value="account.id">{{ (settings.anonymous && account.id != 0) ? ('ACCOUNT ' + account.id) : account.name }}</option>
+              {{ accountOptionLabel(index - 1) }}
+            </option>
           </select>
         </div>
         <div
@@ -23,7 +27,13 @@
         >
           <label>Filter by Section</label>
           <select v-model="settings.filters.section" @change="saveSettings(settings)">
-            <option v-for="section_name in section_names" :value="section_name">{{section_name}}</option>
+            <option
+              v-for="index in section_names.length"
+              :key="'section-' + index"
+              :value="section_names[index - 1]"
+            >
+              {{ section_names[index - 1] }}
+            </option>
           </select>
         </div>
         <div
@@ -38,8 +48,8 @@
             <input type="checkbox" v-model="settings.filters.hide_past_end_date" @change="saveSettings(settings)">
           </span>
           <span>
-              <label>anonymous</label>
-              <input type="checkbox" v-model="settings.anonymous" @change="saveSettings(settings)">
+            <label>anonymous</label>
+            <input type="checkbox" v-model="settings.anonymous" @change="saveSettings(settings)">
           </span>
         </div>
         <div>
@@ -56,12 +66,12 @@
               'grid-template-columns': getColumnsWidthsString()
             }"
           >
-            <div 
-              v-for='column in visibleColumns' 
-              style="display:flex; align-items:center; gap:0.35rem; min-width:0;"
-              :key='column.name' 
+            <div
+              v-for='column in visibleColumns'
+              :key='column.name'
               :title='column.description'
               @click="sortColumn(column.name)"
+              style="display:flex; align-items:center; gap:0.35rem; min-width:0;"
             >
               <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                 <b>{{column.name}}</b>
@@ -79,16 +89,17 @@
                   flex:0 0 auto;
                 "
               >
-                <span :style="{ color: column.sort_state < 0 ? '#111827' : '#d1d5db' }">▲</span>
-                <span :style="{ color: column.sort_state > 0 ? '#111827' : '#d1d5db' }">▼</span>
+                <span :style="{ color: column.sort_state < 0 ? '#111827' : '#d1d5db' }">&#9650;</span>
+                <span :style="{ color: column.sort_state > 0 ? '#111827' : '#d1d5db' }">&#9660;</span>
               </span>
             </div>
           </div>
           <div v-if="loading" style="text-align: center;">Loading Data...</div>
           <div
-            v-for='(student, i) in visibleRows' 
+            v-for='(student, i) in visibleRows'
+            :key="student.enrollment_id || (student.user_id + '-' + student.course_id)"
           >
-            <div 
+            <div
               style="
                 padding: .25rem .5rem;
                 display: grid;
@@ -97,14 +108,13 @@
                 line-height: 1.5rem;
               "
               :style="{
-              'grid-template-columns': getColumnsWidthsString(),
+                'grid-template-columns': getColumnsWidthsString(),
                 'background-color': (i % 2) ? 'white' : '#F8F8F8'
               }"
             >
-              <!--Name-->
               <div
-                v-for='column in visibleColumns' 
-                :key='column.name' 
+                v-for='column in visibleColumns'
+                :key='column.name'
                 style="display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
               >
                 <course-progress-bar-ind
@@ -117,13 +127,12 @@
                 (<a :href="`/courses/${student.course_id}/grades/${student.user_id}`" target="_blank">grades</a>)</span>
                 <span
                   v-else
-                  :class="column.style_formula ? 'btech-pill-text' : ''" 
+                  :class="column.style_formula ? 'btech-pill-text' : ''"
                   :style="column.get_style(student)"
                 >
                   {{ column.getContent(student) }}
                 </span>
               </div>
-             
             </div>
           </div>
         </div>

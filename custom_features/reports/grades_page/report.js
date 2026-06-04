@@ -375,6 +375,14 @@
       },
 
       methods: {
+        accountOptionLabel(index) {
+          const account = this.accounts[index];
+          if (!account) return '';
+          return this.settings.anonymous && account.id != 0
+            ? 'ACCOUNT ' + account.id
+            : account.name;
+        },
+
         calcProgress(student) {
           if (this.settings?.progress_method == 'points_weighted') return student.progress;
           if (this.settigns?.progress_method == 'points_raw') return student.final_score;
