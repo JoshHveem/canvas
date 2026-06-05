@@ -29,8 +29,8 @@
             }
         });
       //add in a selector for all students with their grade then only show assignments they've submitted so far???
-      $("#content").html(`
-      <div id='accreditation'>
+      const accreditationTemplate = `
+      <div>
         <div>
           If the pdf cuts off part of your evidence and you're using Chrome, try changing the layout to Landscape and/or adjusting the Scale (under More Settings) until everything fits.
         </div>
@@ -167,10 +167,12 @@
               </div>
           </div>
         </div>
-      </div>`);
+      </div>`;
+      $("#content").html("<div id='accreditation'><div id='accreditation-app'></div></div>");
       await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
       new Vue({
-        el: "#accreditation",
+        el: "#accreditation-app",
+        template: accreditationTemplate,
         mounted: async function () {
           this.courseId = CURRENT_COURSE_ID;
           let data = await this.getGraphQLData(this.courseId);
