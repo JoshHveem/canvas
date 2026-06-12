@@ -30,6 +30,9 @@ let VUE_APP = {
   mounted: async function () {
     console.log("upload_questions: modal initialized; initial show=", this.show, "state=", this.state);
     initUploadModalEvents();
+    Object.keys(this.methods || {}).forEach(key => {
+      this[key] = this.methods[key].bind(this);
+    });
   },
   data: function () {
     return {
@@ -56,6 +59,7 @@ let VUE_APP = {
       console.log("upload_questions: storing selected files", this.files);
       this.state = 'uploading';
       console.log("upload_questions: state changed to upload", this.state, "show=", this.show);
+      setUploadModalState(true, 'uploading');
       
       let filesProcessed = 0;
       for (let i = 0; i < this.files.length; i++) {
@@ -201,7 +205,7 @@ let VUE_APP = {
           }
           filesProcessed += 1;
           if (filesProcessed == this.files.length) {
-            this.show = false;;
+            setUploadModalState(false, 'upload');
           }
         };
       }
