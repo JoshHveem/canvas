@@ -11,17 +11,17 @@ $("body").append(`
       <div style='padding:20px 24px 12px 24px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:#f5f8ff; border-bottom:1px solid #e7edf7;'>
         <div>
           <div style='font-size:20px; font-weight:700; color:#14213d; margin-bottom:6px;'>Upload Question Bank</div>
-          <div style='font-size:14px; color:#4a5568; line-height:1.5;'>Select one or more quiz text files to create Canvas question banks. Copy the Canvas prompt so you can format raw quiz text quickly.</div>
+          <div style='font-size:14px; color:#4a5568; line-height:1.5;'>Turn your quiz document into a Canvas-readable question bank with AI. Copy the prompt to get started.</div>
         </div>
         <button id='canvas-question-bank-uploader-close' style='border:none; background:transparent; color:#334155; font-size:26px; line-height:1; cursor:pointer;'>×</button>
       </div>
       <div class='btech-modal-body' style='padding:24px;'>
         <div class='btech-modal-content-inner upload-state'>
+          <button id='canvas-question-bank-copy-prompt' style='padding:12px 18px; background:#0f172a; color:#fff; border:none; border-radius:12px; cursor:pointer; margin-bottom:18px;'>Copy Canvas Format Prompt</button>
           <div style='display:flex; flex-wrap:wrap; gap:12px; margin-bottom:18px;'>
             <input type="file" id="fileInput" multiple style='flex:1 1 240px; min-width:200px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:#0f172a;' />
             <button id='canvas-question-bank-uploader-upload' style='padding:12px 18px; background:#2563eb; color:#fff; border:none; border-radius:12px; cursor:pointer; transition: transform .15s ease; box-shadow:0 12px 28px rgba(37,99,235,0.18);'>Upload</button>
           </div>
-          <button id='canvas-question-bank-copy-prompt' style='padding:12px 18px; background:#0f172a; color:#fff; border:none; border-radius:12px; cursor:pointer; margin-bottom:10px;'>Copy Canvas Format Prompt</button>
           <div id='canvas-question-bank-copy-status' style='font-size:13px; min-height:18px; color:#334155;'></div>
         </div>
         <div class='btech-modal-content-inner uploading-state' style='display:none;'>
