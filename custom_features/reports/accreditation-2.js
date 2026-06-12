@@ -29,8 +29,8 @@
             }
         });
       //add in a selector for all students with their grade then only show assignments they've submitted so far???
-      $("#content").html(`
-      <div id='accreditation'>
+      const accreditationTemplate = `
+      <div>
         <div>
           If the pdf cuts off part of your evidence and you're using Chrome, try changing the layout to Landscape and/or adjusting the Scale (under More Settings) until everything fits.
         </div>
@@ -45,8 +45,12 @@
         <div class='section-input'>
           <select v-model='section'>
             <option value='' selected>All Sections</option>
-            <option v-for='section in sections' :value='section.id'>
-              {{section.name}}
+            <option
+              v-for='sectionIndex in sections.length'
+              :key="'section-' + sectionIndex"
+              :value='sections[sectionIndex - 1].id'
+            >
+              {{sections[sectionIndex - 1].name}}
             </option>
           </select>
         </div>
@@ -57,10 +61,11 @@
           Failed to load submissions
         </div>
         <div v-if="!loadingCourse && assignmentGroups.length > 0">
-          <div v-for='group in assignmentGroups'>
-            <h2>{{group.name}}</h2>
+          <div v-for='groupIndex in assignmentGroups.length' :key="'group-' + groupIndex">
+            <h2>{{assignmentGroups[groupIndex - 1].name}}</h2>
             <div 
-              v-for='assignment in group.assignments'
+              v-for='assignment in assignmentGroups[groupIndex - 1].assignments'
+              :key='assignment.id'
               :style="{
                 'color': getFilteredSubmissions(assignment?.submissions ?? []).length > 0 ? '#000000' : '#888888'
               }"
@@ -70,7 +75,7 @@
                   :style="{
                     'color': getFilteredSubmissions(assignment?.submissions ?? []).length > 0 ? '#000000' : '#888888'
                   }"
-                  style='cursor: pointer;' @click='currentGroup = group; openModal(assignment)'>{{assignment.name}}</a> (<span>{{getFilteredSubmissions(assignment.submissions).length}}</span><span v-else>...</span>)
+                  style='cursor: pointer;' @click='currentGroup = assignmentGroups[groupIndex - 1]; openModal(assignment)'>{{assignment.name}}</a> (<span>{{getFilteredSubmissions(assignment.submissions).length}}</span><span v-else>...</span>)
               </div>
             </div>
           </div>
@@ -162,10 +167,12 @@
               </div>
           </div>
         </div>
-      </div>`);
+      </div>`;
+      $("#content").html("<div id='accreditation'><div id='accreditation-app'></div></div>");
       await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
       new Vue({
-        el: "#accreditation",
+        el: "#accreditation-app",
+        template: accreditationTemplate,
         mounted: async function () {
           this.courseId = CURRENT_COURSE_ID;
           let data = await this.getGraphQLData(this.courseId);

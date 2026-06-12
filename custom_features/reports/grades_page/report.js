@@ -69,7 +69,7 @@
   async function postLoad() {
     let vueString = '';
     await $.get(
-      SOURCE_URL + '/custom_features/reports/grades_page/template.vue',
+      (window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/grades_page/template.vue') : SOURCE_URL + '/custom_features/reports/grades_page/template.vue'),
       null,
       function (html) {
         vueString = html.replace('<template>', '').replace('</template>', '');
@@ -78,8 +78,7 @@
     );
 
     let canvasbody = $('#application');
-    canvasbody.after('<div id="canvas-grades-report-vue"></div>');
-    $('#canvas-grades-report-vue').append(vueString);
+    canvasbody.after('<div id="canvas-grades-report-vue"><div id="canvas-grades-report-vue-app"></div></div>');
     $('#canvas-grades-report-vue').hide();
 
     let container = $('div#gradebook-actions');
@@ -103,7 +102,8 @@
     });
 
     new Vue({
-      el: '#canvas-grades-report-vue',
+      el: '#canvas-grades-report-vue-app',
+      template: vueString,
       created: function () {},
       mounted: async function () {
         this.loading = true;
@@ -375,6 +375,14 @@
       },
 
       methods: {
+        accountOptionLabel(index) {
+          const account = this.accounts[index];
+          if (!account) return '';
+          return this.settings.anonymous && account.id != 0
+            ? 'ACCOUNT ' + account.id
+            : account.name;
+        },
+
         calcProgress(student) {
           if (this.settings?.progress_method == 'points_weighted') return student.progress;
           if (this.settigns?.progress_method == 'points_raw') return student.final_score;
@@ -714,7 +722,7 @@
         },
 
         close() {
-          $(this.$el).hide();
+          $('#canvas-grades-report-vue').hide();
         },
       },
     });

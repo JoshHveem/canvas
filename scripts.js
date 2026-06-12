@@ -25,14 +25,14 @@ function genId() {
 function add_javascript_library(url) {
   var s = document.createElement("script");
   s.setAttribute('type', 'text/javascript');
-  s.setAttribute('src', url);
+  s.setAttribute('src', window.btechAssetUrl ? window.btechAssetUrl(url) : url);
   document.getElementsByTagName('head')[0].appendChild(s);
 }
 
 function add_css_library(url) {
   var s = document.createElement("link");
   s.setAttribute('rel', 'stylesheet');
-  s.setAttribute('href', url);
+  s.setAttribute('href', window.btechAssetUrl ? window.btechAssetUrl(url) : url);
   document.getElementsByTagName('head')[0].appendChild(s);
 }
 
@@ -54,7 +54,15 @@ async function feature(f, regex = "") {
     }
   }
   if (check) {
-    await $.getScript(SOURCE_URL + "/custom_features/" + f + ".js");
+    const url = window.btechAssetUrl
+      ? window.btechAssetUrl(SOURCE_URL + "/custom_features/" + f + ".js")
+      : SOURCE_URL + "/custom_features/" + f + ".js";
+    try {
+      await $.getScript(url);
+    } catch (err) {
+      console.error("Feature load failed:", f, url, err);
+      throw err;
+    }
   }
 }
 

@@ -258,12 +258,11 @@
   async function postLoad() {
     let vueString = '';
     //gen an initial uuid
-    await $.get(SOURCE_URL + '/custom_features/reports/individual_page/template.vue', null, function (html) {
+    await $.get((window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/template.vue') : SOURCE_URL + '/custom_features/reports/individual_page/template.vue'), null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");
-    canvasbody.after('<div id="canvas-individual-report-vue"></div>');
-    $("#canvas-individual-report-vue").append(vueString);
+    canvasbody.after('<div id="canvas-individual-report-vue"><div id="canvas-individual-report-vue-app"></div></div>');
     let gen_report_button;
     let menu_bar;
     if (/^\/$/.test(window.location.pathname)) {
@@ -287,9 +286,10 @@
     modal.hide();
 
     APP = new Vue({
-      el: '#canvas-individual-report-vue',
+      el: '#canvas-individual-report-vue-app',
+      template: vueString,
       mounted: async function () {
-        this.loadingProgress = 0;
+        this.setLoadingState("Starting report", 5);
         this.IS_TEACHER = IS_TEACHER;
         // if (!IS_TEACHER) this.menu = 'period';
         if (IS_TEACHER) { //also change this to ref the url and not whether or not is teacher
@@ -303,12 +303,10 @@
           console.error("Failed preloading HS grade courses:", err);
         });
 
-        this.loadingMessage = "Loading Settings";
+        this.setLoadingState("Loading saved settings", 15);
         let settings = await this.loadSettings(this.settings);
         this.settings = settings;
-        this.loadingProgress += 10;
-
-        this.loadingMessage = "Loading User Data";
+        this.setLoadingState("Loading student profile and course records", 30);
 
         try {
           let user = await this.loadUser(this.userId);
@@ -317,7 +315,7 @@
           console.error(err);
           this.user = emptyUser();
         }
-        this.loadingProgress += 10;
+        this.setLoadingState("Report ready", 100);
         this.loading = false;
       },
       data: function () {
@@ -395,6 +393,11 @@
       },
 
       methods: {
+        setLoadingState(message, progress) {
+          this.loadingMessage = message;
+          this.loadingProgress = progress;
+        },
+
         onMajorChange(event) {
           this.selectedMajorIndex = Number(event.target.value);
         },
@@ -438,7 +441,7 @@
           });
         },
 
-        close() { $(this.$el).hide(); },
+        close() { $('#canvas-individual-report-vue').hide(); },
 
         formatDate(date) {
           date = new Date(date);
@@ -545,26 +548,31 @@
         },
 
         normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors }) {
+          studentHeader = studentHeader || {};
           const sortedMajors = this.sortMajors(majors);
-          const defaultMajor = sortedMajors[0];
+          const defaultMajor = sortedMajors[0] || emptyMajor();
 
           const user = {
             majors: sortedMajors,
-            courses,
+            courses: courses || [],
             canvas_user_id: canvasUser.id,
-            name: canvasUser.name,
+            name: studentHeader.name || canvasUser.name || '',
             academic_probation: null,
-            academic_standing_code: studentHeader.academic_standing_code,
-            academic_standing_name: studentHeader.academic_standing_name,
-            last_update: bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at),
-            last_login: bridgetools.psqlTimestampToDate(studentHeader.last_login_at),
+            academic_standing_code: studentHeader.academic_standing_code || null,
+            academic_standing_name: studentHeader.academic_standing_name || null,
+            last_update: studentHeader.bridgetools_updated_at
+              ? bridgetools.psqlTimestampToDate(studentHeader.bridgetools_updated_at)
+              : null,
+            last_login: studentHeader.last_login_at
+              ? bridgetools.psqlTimestampToDate(studentHeader.last_login_at)
+              : null,
             avatar_url: studentHeader.avatar_image_url || canvasUser.avatar_url,
-            sis_user_id: studentHeader.sis_user_id,
-            hs_terms: hsTerms,
-            contracted_hours: studentHeader.contracted_hours,
-            contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours),
+            sis_user_id: studentHeader.sis_user_id || canvasUser.sis_user_id || null,
+            hs_terms: hsTerms || [],
+            contracted_hours: studentHeader.contracted_hours || {},
+            contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours || {}),
             transfer_courses: [],
-            distance_approved: defaultMajor.is_distance_approved,
+            distance_approved: Boolean(defaultMajor.is_distance_approved),
           };
 
           this.selectedMajorIndex = 0;
@@ -574,6 +582,7 @@
 
         async loadUser(userId) {
           try {
+            this.setLoadingState("Loading student profile and course records", 30);
             const [
               studentHeader,
               studentCourses,
@@ -591,10 +600,12 @@
             ]);
 
             this.canvasUser = canvasUser;
+            this.setLoadingState("Loading major requirements", 60);
             const majors = await this.normalizeMajors(studentMajors);
+            this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
-              studentHeader: studentHeader[0],
+              studentHeader: studentHeader?.[0],
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
               majors
@@ -625,12 +636,12 @@
     //styling
     loadCSS("https://reports.bridgetools.dev/style/main.css");
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-    await $.getScript(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
-    await $.getScript(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js') : SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js") : SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
     await loadFirstAvailableScript([
       "https://d3js.org/d3.v6.min.js",
       "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
@@ -647,8 +658,8 @@
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
-    await $.getScript(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
     */
     postLoad();
   } catch (err) {

@@ -75,6 +75,12 @@ var COURSE_HOURS;
 
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
+window.BTECH_CANVAS_ASSET_VERSION = '2026-06-04-1';
+window.btechAssetUrl = function(url) {
+  if (!window.BTECH_CANVAS_ASSET_VERSION) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(window.BTECH_CANVAS_ASSET_VERSION)}`;
+};
 
 function getCourseCodeFromEnv() {
   let courseCode = '';
@@ -222,7 +228,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     }
  
 
-    await $.getScript("https://bridgetools.dev/canvas/scripts.js");
+    await $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/scripts.js"));
     await $.getScript("https://reports.bridgetools.dev/scripts.js");
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     feature("welcome_banner", /^\/$/);
@@ -236,13 +242,12 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     //FEATURES THAT DON'T NEED ALL THE EXTRA STUFF LIKE HOURS AND DEPT DATA AND VUE
     featureISD('copy_to_next_year', /^\/accounts\/[0-9]+$/);
     // dashboard level reports that need vue
-    await $.getScript("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
+    await $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"));
     feature('reports/automations/report', /^\/automations$/);
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
     if (IS_ISD) feature("reports/reporting_v3/main", /external_tools\/110980/);
-    if (IS_ME) feature("reports/logan_test", /^\/$/); // test for logan to build out a dashboard
     if (rCheckInCourse.test(window.location.pathname)) {
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
       feature("kaltura/showInfo", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
@@ -282,7 +287,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // featureISD("course_reviewer/page_score", /^\/courses\/[0-9]+\/pages\/.+/);
     
     // need to load course hours before continuing
-    await $.getScript(SOURCE_URL + "/course_data/course_hours.js");
+    await $.getScript(btechAssetUrl(SOURCE_URL + "/course_data/course_hours.js"));
     //GENERAL FEATURES
     if (!IS_TEACHER) {
       feature("reports/individual_page/report", [
@@ -314,7 +319,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
 
     //only run if in a course
     if (rCheckInCourse.test(window.location.pathname)) {
-      try { $.getScript("https://bridgetools.dev/canvas/external-libraries/d3.v7.js"); } catch (e) { console.error("Failed to load d3.v7.js", e); }
+      try { $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/d3.v7.js")); } catch (e) { console.error("Failed to load d3.v7.js", e); }
       feature("distance/approved-button", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       // featureISD("course_reviewer/course_score", /^\/courses\/[0-9]+(\/modules){0,1}$/);
       IS_BLUEPRINT = !(ENV.BLUEPRINT_COURSES_DATA === undefined)
