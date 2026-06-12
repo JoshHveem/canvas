@@ -3,38 +3,33 @@ let upload = $(`
 `);
 $("body").append(`
   <div 
-    v-if="show"
     class='btech-modal'
-    style="display: inline-block;"
     id='canvas-question-bank-uploader-vue'
+    style='display:none; position: fixed; inset: 0; justify-content: center; align-items: center; z-index: 9999;'
   >
     <div class='btech-modal-content'>
-      <div 
-        v-if="state === 'upload'"
-        class='btech-modal-content-inner'
-      >
-        <button style='float: right;' @click='show=false;'>X</button>
+      <div class='btech-modal-content-inner upload-state'>
+        <button id='canvas-question-bank-uploader-close' style='float: right;'>X</button>
         <div class='btech-modal-content-inner'>
-        <input type="file" id="fileInput" multiple>
-        <button @click="processUploadedQuizBank()">Upload</button>
-      </div>
-      </div>
-      <div 
-        v-if="state === 'uploading'"
-        class='btech-modal-content-inner'
-      >
-        <div v-for="file in files">
-          <span>{{file.name}}</span><span>{{Math.round(uploadProgress[file.name] * 100)}}%</span>
+          <input type="file" id="fileInput" multiple>
+          <button id='canvas-question-bank-uploader-upload'>Upload</button>
         </div>
+      </div>
+      <div class='btech-modal-content-inner uploading-state' style='display:none;'>
+        <div id='canvas-question-bank-progress-list'></div>
       </div>
     </div>
   </div>
 `);
 console.log("upload_questions: modal HTML appended, binding Vue root id #canvas-question-bank-uploader-vue");
-let VUE_APP = new Vue({
-  el: '#canvas-question-bank-uploader-vue',
+let VUE_APP = {
+  show: false,
+  state: 'upload',
+  files: [],
+  uploadProgress: {},
   mounted: async function () {
-    console.log("upload_questions: Vue mounted; initial show=", this.show, "state=", this.state);
+    console.log("upload_questions: modal initialized; initial show=", this.show, "state=", this.state);
+    initUploadModalEvents();
   },
   data: function () {
     return {
@@ -60,6 +55,7 @@ let VUE_APP = new Vue({
       this.files = fileInput.files;
       console.log("upload_questions: storing selected files", this.files);
       this.state = 'uploading';
+      console.log("upload_questions: state changed to upload", this.state, "show=", this.show);
       
       let filesProcessed = 0;
       for (let i = 0; i < this.files.length; i++) {
@@ -485,7 +481,44 @@ let VUE_APP = new Vue({
       }
     }
   }
-});
+};
+
+function setUploadModalState(show, state) {
+  VUE_APP.show = show;
+  VUE_APP.state = state;
+  const modal = document.getElementById('canvas-question-bank-uploader-vue');
+  if (!modal) return;
+  modal.style.display = show ? 'flex' : 'none';
+  const uploadSection = modal.querySelector('.upload-state');
+  const uploadingSection = modal.querySelector('.uploading-state');
+  if (uploadSection) uploadSection.style.display = state === 'upload' ? 'block' : 'none';
+  if (uploadingSection) uploadingSection.style.display = state === 'uploading' ? 'block' : 'none';
+  if (state === 'uploading') renderUploadProgress();
+}
+
+function renderUploadProgress() {
+  const list = document.getElementById('canvas-question-bank-progress-list');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.keys(VUE_APP.uploadProgress).forEach(name => {
+    const percent = Math.round((VUE_APP.uploadProgress[name] || 0) * 100);
+    const item = document.createElement('div');
+    item.textContent = `${name}: ${percent}%`;
+    list.appendChild(item);
+  });
+}
+
+function initUploadModalEvents() {
+  const modal = document.getElementById('canvas-question-bank-uploader-vue');
+  if (!modal) return;
+  const closeBtn = modal.querySelector('#canvas-question-bank-uploader-close');
+  const uploadBtn = modal.querySelector('#canvas-question-bank-uploader-upload');
+  if (closeBtn) closeBtn.addEventListener('click', () => setUploadModalState(false, 'upload'));
+  if (uploadBtn) uploadBtn.addEventListener('click', () => VUE_APP.processUploadedQuizBank());
+}
+
+VUE_APP.mounted();
+
 function pad(num, size) {
     num = num.toString();
     while (num.length < size) num = "0" + num;
@@ -496,8 +529,7 @@ function pad(num, size) {
 //handling multiple isn't currently working, but add multiple after input 
 upload.click(() => {
   console.log("upload_questions: upload button clicked");
-  VUE_APP.show = true;
-  VUE_APP.state = 'upload';
+  setUploadModalState(true, 'upload');
 });
 $(".see_bookmarked_banks").after(upload);
 console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
