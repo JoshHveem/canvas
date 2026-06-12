@@ -30,10 +30,11 @@ $("body").append(`
     </div>
   </div>
 `);
+console.log("upload_questions: modal HTML appended, binding Vue root id #canvas-question-bank-uploader-vue");
 let VUE_APP = new Vue({
   el: '#canvas-question-bank-uploader-vue',
   mounted: async function () {
-
+    console.log("upload_questions: Vue mounted; initial show=", this.show, "state=", this.state);
   },
   data: function () {
     return {
@@ -45,17 +46,30 @@ let VUE_APP = new Vue({
   },
   methods: {
     processUploadedQuizBank: function () {
+      console.log("upload_questions: processUploadedQuizBank called");
       const fileInput = document.getElementById('fileInput');
+      if (!fileInput) {
+        console.error("upload_questions: fileInput element not found");
+        return;
+      }
+      if (!fileInput.files || fileInput.files.length === 0) {
+        console.warn("upload_questions: no files selected in fileInput");
+        return;
+      }
+      console.log("upload_questions: fileInput found, selected files count=", fileInput.files.length);
       this.files = fileInput.files;
+      console.log("upload_questions: storing selected files", this.files);
       this.state = 'uploading';
       
       let filesProcessed = 0;
       for (let i = 0; i < this.files.length; i++) {
         let file = this.files[i];
+        console.log("upload_questions: starting FileReader for file", file.name, "index", i);
         this.uploadProgress[file.name] = 0;
         let reader = new FileReader();
         reader.readAsText(file);
         reader.onload = async () => {
+          console.log("upload_questions: FileReader loaded file", file.name, "size", file.size);
           let lines = reader.result.split("\n");
           let name = undefined;
           let bankTitle = file.name.replace(/\.txt$/i, '');
@@ -157,7 +171,9 @@ let VUE_APP = new Vue({
 
           }
 
+          console.log("upload_questions: parsed quiz", quiz.length, "questions for file", file.name, "bankTitle", bankTitle);
           let bank = await this.createBank(bankTitle);
+          console.log("upload_questions: createBank returned", bank);
           for (let q in quiz) {
             let question = quiz[q];
             
@@ -195,6 +211,7 @@ let VUE_APP = new Vue({
       }
     },
     createBank: async function(title) {
+      console.log("upload_questions: createBank called with title", title);
       $.ajaxSetup({
           headers:{
               'Accept': 'application/json'
@@ -478,10 +495,12 @@ function pad(num, size) {
 
 //handling multiple isn't currently working, but add multiple after input 
 upload.click(() => {
+  console.log("upload_questions: upload button clicked");
   VUE_APP.show = true;
   VUE_APP.state = 'upload';
 });
 $(".see_bookmarked_banks").after(upload);
+console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
 
 
 
