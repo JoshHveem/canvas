@@ -1138,7 +1138,7 @@
         ? "ready"
         : "fail";
     const readinessLabel = readinessStatus.state === "loading"
-      ? "Checking readiness to publish..."
+      ? "Checking Readiness..."
       : data?.isCoursePublished === true && readinessStatus.state === "pass"
         ? "Published!"
       : readinessStatus.state === "pass"
