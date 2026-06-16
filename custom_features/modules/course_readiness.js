@@ -307,7 +307,7 @@
         }
 
         #${cardId} .btech-course-readiness__readiness-banner {
-          padding: 0.7rem 0.9rem;
+          padding: 0.42rem 0.9rem;
           border-top: 1px solid #c7cdd1;
           border-bottom: 1px solid #c7cdd1;
           font-size: 0.82rem;
@@ -1149,9 +1149,10 @@
     const overallStatus = getOverallStatus(data);
     const readinessStatus = getReadinessStatus(data);
     const progress = getProgressData(overallStatus.checks);
-    const showReadinessBanner = !(readinessStatus.state === "pass" && data?.isCoursePublished === true);
     const readinessLabel = readinessStatus.state === "loading"
       ? "Checking readiness to publish..."
+      : data?.isCoursePublished === true && readinessStatus.state === "pass"
+        ? "Published!"
       : readinessStatus.state === "pass"
         ? "Ready to Publish"
         : "Not Ready to Publish";
@@ -1171,11 +1172,9 @@
         </div>
         <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
       </div>
-      ${showReadinessBanner ? `
-        <div class="btech-course-readiness__readiness">
-          <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
-        </div>
-      ` : ""}
+      <div class="btech-course-readiness__readiness">
+        <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
+      </div>
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
           ${overallStatus.checks.map(check => renderCheck(check)).join("")}
