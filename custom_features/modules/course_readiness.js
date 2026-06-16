@@ -1142,8 +1142,8 @@
       : data?.isCoursePublished === true && readinessStatus.state === "pass"
         ? "Published!"
       : readinessStatus.state === "pass"
-        ? "Ready to Publish"
-        : "Not Ready";
+        ? "Course Ready to Publish"
+        : "Course Not Ready";
 
     card.html(`
       <div class="btech-course-readiness__readiness">
