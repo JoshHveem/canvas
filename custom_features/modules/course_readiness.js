@@ -107,6 +107,24 @@
     });
   }
 
+  function findSyllabusByCode(code, options = {}) {
+    const baseUrl = options.baseUrl || "https://btech.simplesyllabus.com/api2/doc";
+
+    return $.get(baseUrl, {
+      code: String(code ?? "").trim(),
+      page: 0,
+      page_size: 50
+    }).then(function (data) {
+      const sys = data.sys || {};
+      if (sys.success === false) {
+        throw new Error("Simple Syllabus API returned success=false");
+      }
+
+      const items = data.items || [];
+      return items[0] || null;
+    });
+  }
+
   async function findSyllabusEntityIdFromReports(courseId) {
     const rows = await bridgetools.req3("reports", {
       canvas_course_id: Number(courseId)
@@ -117,8 +135,13 @@
     const row = Array.isArray(rows)
       ? rows.find(item => String(item?.simple_syllabus_doc_id ?? "").trim())
       : null;
+    const simpleSyllabusDocId = String(row?.simple_syllabus_doc_id ?? "").trim();
 
-    return String(row?.simple_syllabus_doc_id ?? "").trim() || null;
+    if (!simpleSyllabusDocId) return null;
+
+    const syllabusDoc = await findSyllabusByCode(simpleSyllabusDocId);
+
+    return String(syllabusDoc?.entity_id ?? "").trim() || null;
   }
 
   let syllabusEntityId = null;
