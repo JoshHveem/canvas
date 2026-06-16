@@ -236,143 +236,91 @@
           overflow: hidden;
         }
 
-        #${cardId} .btech-course-readiness__header {
-          padding: 0.9rem 1rem;
-          background: #f7f9fa;
-          border-bottom: 1px solid #c7cdd1;
-        }
-
-        #${cardId} .btech-course-readiness__title-row {
-          margin-bottom: 0.6rem;
-        }
-
-        #${cardId} .btech-course-readiness__title {
-          margin: 0;
-          font-size: 1rem;
-          line-height: 1.3;
-          color: #2d3b45;
-        }
-
-        #${cardId} .btech-course-readiness__status {
-          position: relative;
-          height: 1.15rem;
-          border-radius: 999px;
-          overflow: hidden;
-          background: #e5e8ea;
-        }
-
-        #${cardId} .btech-course-readiness__status-bar {
-          display: flex;
-          width: 100%;
-          height: 100%;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment {
-          height: 100%;
-          box-sizing: border-box;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-pass {
-          background: #dff3e4;
-          border-top: 1px solid #0b6b2f;
-          border-bottom: 1px solid #0b6b2f;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-warn {
-          background: #fff3cd;
-          border-top: 1px solid #8a5b00;
-          border-bottom: 1px solid #8a5b00;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-fail {
-          background: #fde8e8;
-          border-top: 1px solid #a61b1b;
-          border-bottom: 1px solid #a61b1b;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-pass:first-child {
-          border-left: 1px solid #0b6b2f;
-          border-top-left-radius: 999px;
-          border-bottom-left-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-warn:first-child {
-          border-left: 1px solid #8a5b00;
-          border-top-left-radius: 999px;
-          border-bottom-left-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-fail:first-child {
-          border-left: 1px solid #a61b1b;
-          border-top-left-radius: 999px;
-          border-bottom-left-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-pass:last-child {
-          border-right: 1px solid #0b6b2f;
-          border-top-right-radius: 999px;
-          border-bottom-right-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-warn:last-child {
-          border-right: 1px solid #8a5b00;
-          border-top-right-radius: 999px;
-          border-bottom-right-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-segment.is-fail:last-child {
-          border-right: 1px solid #a61b1b;
-          border-top-right-radius: 999px;
-          border-bottom-right-radius: 999px;
-        }
-
-        #${cardId} .btech-course-readiness__status-label {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.72rem;
-          font-weight: 700;
-          color: #000000;
-          letter-spacing: 0.02em;
-        }
-
-        #${cardId} .btech-course-readiness__meta {
-          margin: 0;
-          font-size: 0.75rem;
-          color: #5b6d79;
-        }
-
         #${cardId} .btech-course-readiness__readiness {
           padding: 0;
         }
 
         #${cardId} .btech-course-readiness__readiness-banner {
-          padding: 0.42rem 0.9rem;
-          border-top: 1px solid #c7cdd1;
+          position: relative;
+          min-height: 2rem;
+          overflow: hidden;
+          background: #e5e8ea;
           border-bottom: 1px solid #c7cdd1;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-bar {
+          display: flex;
+          width: 100%;
+          height: 100%;
+          min-height: 2rem;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment {
+          min-height: 2rem;
+          box-sizing: border-box;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-pass {
+          background: #dff3e4;
+          border-top: 1px solid #0b6b2f;
+          border-bottom: 1px solid #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-warn {
+          background: #fff3cd;
+          border-top: 1px solid #8a5b00;
+          border-bottom: 1px solid #8a5b00;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-fail {
+          background: #fde8e8;
+          border-top: 1px solid #a61b1b;
+          border-bottom: 1px solid #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-pass:first-child {
+          border-left: 1px solid #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-warn:first-child {
+          border-left: 1px solid #8a5b00;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-fail:first-child {
+          border-left: 1px solid #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-pass:last-child {
+          border-right: 1px solid #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-warn:last-child {
+          border-right: 1px solid #8a5b00;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-segment.is-fail:last-child {
+          border-right: 1px solid #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-label {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 0.75rem;
           font-size: 0.82rem;
           font-weight: 700;
+          color: #000000;
+          letter-spacing: 0.02em;
           text-align: center;
         }
 
-        #${cardId} .btech-course-readiness__readiness-banner.is-pass {
-          background: #dff3e4;
-          border-color: #0b6b2f;
-          color: #0b6b2f;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-banner.is-fail {
-          background: #fde8e8;
-          border-color: #a61b1b;
-          color: #a61b1b;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-banner.is-loading {
-          background: #eef2f4;
-          border-color: #5b6d79;
-          color: #394b58;
+        #${cardId} .btech-course-readiness__meta {
+          margin: 0;
+          padding: 0.45rem 1rem 0;
+          font-size: 0.75rem;
+          color: #5b6d79;
         }
 
         #${cardId} .btech-course-readiness__body {
@@ -1202,9 +1150,12 @@
 
     if (errorMessage) {
       card.html(`
-        <div class="btech-course-readiness__header">
-          <div class="btech-course-readiness__title-row">
-            <h2 class="btech-course-readiness__title">Course Readiness</h2>
+        <div class="btech-course-readiness__readiness">
+          <div class="btech-course-readiness__readiness-banner">
+            <div class="btech-course-readiness__readiness-bar">
+              <span class="btech-course-readiness__readiness-segment is-fail" style="width: 100%;"></span>
+            </div>
+            <span class="btech-course-readiness__readiness-label">Course Readiness</span>
           </div>
           <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
         </div>
@@ -1227,22 +1178,16 @@
         : "Not Ready to Publish";
 
     card.html(`
-      <div class="btech-course-readiness__header">
-        <div class="btech-course-readiness__title-row">
-          <h2 class="btech-course-readiness__title">Course Readiness</h2>
-        </div>
-        <div class="btech-course-readiness__status" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed, ${progress.loadingCount} loading`)}">
-          <div class="btech-course-readiness__status-bar">
-            <span class="btech-course-readiness__status-segment is-pass" style="width: ${(progress.passCount / progress.total) * 100}%;"></span>
-            <span class="btech-course-readiness__status-segment is-warn" style="width: ${(progress.warnCount / progress.total) * 100}%;"></span>
-            <span class="btech-course-readiness__status-segment is-fail" style="width: ${(progress.failCount / progress.total) * 100}%;"></span>
-          </div>
-          <span class="btech-course-readiness__status-label">${progress.percentComplete}% Done</span>
-        </div>
-        <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
-      </div>
       <div class="btech-course-readiness__readiness">
-        <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
+        <div class="btech-course-readiness__readiness-banner" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed, ${progress.loadingCount} loading`)}">
+          <div class="btech-course-readiness__readiness-bar">
+            <span class="btech-course-readiness__readiness-segment is-pass" style="width: ${(progress.passCount / progress.total) * 100}%;"></span>
+            <span class="btech-course-readiness__readiness-segment is-warn" style="width: ${(progress.warnCount / progress.total) * 100}%;"></span>
+            <span class="btech-course-readiness__readiness-segment is-fail" style="width: ${(progress.failCount / progress.total) * 100}%;"></span>
+          </div>
+          <span class="btech-course-readiness__readiness-label">${escapeHtml(readinessLabel)}</span>
+        </div>
+        <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
       </div>
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
