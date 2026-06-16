@@ -244,71 +244,36 @@
           position: relative;
           min-height: 2rem;
           overflow: hidden;
-          background: #e5e8ea;
+          border-top: 1px solid #c7cdd1;
           border-bottom: 1px solid #c7cdd1;
         }
 
-        #${cardId} .btech-course-readiness__readiness-bar {
-          display: flex;
-          width: 100%;
-          height: 100%;
-          min-height: 2rem;
+        #${cardId} .btech-course-readiness__readiness-banner.is-loading {
+          background: #eef2f4;
+          border-color: #5b6d79;
         }
 
-        #${cardId} .btech-course-readiness__readiness-segment {
-          min-height: 2rem;
-          box-sizing: border-box;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-pass {
-          background: #dff3e4;
-          border-top: 1px solid #0b6b2f;
-          border-bottom: 1px solid #0b6b2f;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-warn {
-          background: #fff3cd;
-          border-top: 1px solid #8a5b00;
-          border-bottom: 1px solid #8a5b00;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-fail {
+        #${cardId} .btech-course-readiness__readiness-banner.is-fail {
           background: #fde8e8;
-          border-top: 1px solid #a61b1b;
-          border-bottom: 1px solid #a61b1b;
+          border-color: #a61b1b;
         }
 
-        #${cardId} .btech-course-readiness__readiness-segment.is-pass:first-child {
-          border-left: 1px solid #0b6b2f;
+        #${cardId} .btech-course-readiness__readiness-banner.is-ready {
+          background: #fff3cd;
+          border-color: #8a5b00;
         }
 
-        #${cardId} .btech-course-readiness__readiness-segment.is-warn:first-child {
-          border-left: 1px solid #8a5b00;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-fail:first-child {
-          border-left: 1px solid #a61b1b;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-pass:last-child {
-          border-right: 1px solid #0b6b2f;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-warn:last-child {
-          border-right: 1px solid #8a5b00;
-        }
-
-        #${cardId} .btech-course-readiness__readiness-segment.is-fail:last-child {
-          border-right: 1px solid #a61b1b;
+        #${cardId} .btech-course-readiness__readiness-banner.is-published {
+          background: #dff3e4;
+          border-color: #0b6b2f;
         }
 
         #${cardId} .btech-course-readiness__readiness-label {
-          position: absolute;
-          inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 0 0.75rem;
+          min-height: 2rem;
           font-size: 0.82rem;
           font-weight: 700;
           color: #000000;
@@ -1151,10 +1116,7 @@
     if (errorMessage) {
       card.html(`
         <div class="btech-course-readiness__readiness">
-          <div class="btech-course-readiness__readiness-banner">
-            <div class="btech-course-readiness__readiness-bar">
-              <span class="btech-course-readiness__readiness-segment is-fail" style="width: 100%;"></span>
-            </div>
+          <div class="btech-course-readiness__readiness-banner is-fail">
             <span class="btech-course-readiness__readiness-label">Course Readiness</span>
           </div>
           <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
@@ -1168,7 +1130,13 @@
 
     const overallStatus = getOverallStatus(data);
     const readinessStatus = getReadinessStatus(data);
-    const progress = getProgressData(overallStatus.checks);
+    const bannerState = readinessStatus.state === "loading"
+      ? "loading"
+      : data?.isCoursePublished === true && readinessStatus.state === "pass"
+        ? "published"
+      : readinessStatus.state === "pass"
+        ? "ready"
+        : "fail";
     const readinessLabel = readinessStatus.state === "loading"
       ? "Checking readiness to publish..."
       : data?.isCoursePublished === true && readinessStatus.state === "pass"
@@ -1179,12 +1147,7 @@
 
     card.html(`
       <div class="btech-course-readiness__readiness">
-        <div class="btech-course-readiness__readiness-banner" aria-label="${escapeHtml(`${progress.percentComplete}% complete: ${progress.passCount} passed, ${progress.warnCount} unpublished, ${progress.failCount} failed, ${progress.loadingCount} loading`)}">
-          <div class="btech-course-readiness__readiness-bar">
-            <span class="btech-course-readiness__readiness-segment is-pass" style="width: ${(progress.passCount / progress.total) * 100}%;"></span>
-            <span class="btech-course-readiness__readiness-segment is-warn" style="width: ${(progress.warnCount / progress.total) * 100}%;"></span>
-            <span class="btech-course-readiness__readiness-segment is-fail" style="width: ${(progress.failCount / progress.total) * 100}%;"></span>
-          </div>
+        <div class="btech-course-readiness__readiness-banner is-${bannerState}">
           <span class="btech-course-readiness__readiness-label">${escapeHtml(readinessLabel)}</span>
         </div>
         <p class="btech-course-readiness__meta">Last checked ${escapeHtml(updatedAt)}</p>
