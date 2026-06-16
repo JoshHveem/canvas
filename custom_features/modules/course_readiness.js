@@ -483,6 +483,21 @@
     return ids.filter(id => Number.isFinite(id) && id > 0);
   }
 
+  function getModuleItemContentIds(item, discussionAssignmentIdsByTopicId = {}) {
+    const ids = [Number(item.content_id)];
+    const discussionAssignmentId = Number(
+      discussionAssignmentIdsByTopicId?.[item.content_id]
+      ?? item.content_details?.assignment_id
+      ?? item.assignment_id
+    );
+
+    if (String(item.type ?? "").toLowerCase() === "discussion" && Number.isFinite(discussionAssignmentId) && discussionAssignmentId > 0) {
+      ids.push(discussionAssignmentId);
+    }
+
+    return ids.filter(id => Number.isFinite(id) && id > 0);
+  }
+
   function getSyllabusCourseIdFromUrl(value) {
     const match = String(value ?? "").match(new RegExp(`/courses/(\\d+)/external_tools/${simpleSyllabusToolId}(?:\\b|[/?#])`));
     return match ? match[1] : "";
@@ -496,11 +511,12 @@
   }
 
   async function getCourseData() {
-    const [course, assignmentGroups, modules, assignmentList, instructorEnrollments, tabs] = await Promise.all([
+    const [course, assignmentGroups, modules, assignmentList, discussionTopics, instructorEnrollments, tabs] = await Promise.all([
       $.get(`/api/v1/courses/${courseId}?include[]=term`),
       canvasGet(`/api/v1/courses/${courseId}/assignment_groups?include[]=assignments`),
       canvasGet(`/api/v1/courses/${courseId}/modules?include[]=items&include[]=content_details`),
       canvasGet(`/api/v1/courses/${courseId}/assignments`),
+      canvasGet(`/api/v1/courses/${courseId}/discussion_topics`),
       canvasGet(`/api/v1/courses/${courseId}/enrollments?type[]=TeacherEnrollment&state[]=active&state[]=invited&state[]=creation_pending`),
       canvasGet(`/api/v1/courses/${courseId}/tabs`)
     ]);
@@ -517,9 +533,20 @@
     );
     latestLastModule = modules.length ? modules[modules.length - 1] : null;
 
+    const discussionAssignmentIdsByTopicId = discussionTopics.reduce((map, topic) => {
+      const topicId = Number(topic?.id);
+      const assignmentId = Number(topic?.assignment_id);
+
+      if (Number.isFinite(topicId) && topicId > 0 && Number.isFinite(assignmentId) && assignmentId > 0) {
+        map[topicId] = assignmentId;
+      }
+
+      return map;
+    }, {});
+
     const assignmentModuleIds = new Set(
       moduleItems
-        .map(item => Number(item.content_id))
+        .flatMap(item => getModuleItemContentIds(item, discussionAssignmentIdsByTopicId))
         .filter(id => Number.isFinite(id) && id > 0)
     );
 
