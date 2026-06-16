@@ -303,11 +303,14 @@
           color: #5b6d79;
         }
 
+        #${cardId} .btech-course-readiness__readiness {
+          padding: 0;
+        }
+
         #${cardId} .btech-course-readiness__readiness-banner {
-          margin-top: 0.85rem;
           padding: 0.7rem 0.9rem;
-          border-radius: 6px;
-          border: 1px solid #c7cdd1;
+          border-top: 1px solid #c7cdd1;
+          border-bottom: 1px solid #c7cdd1;
           font-size: 0.82rem;
           font-weight: 700;
           text-align: center;
@@ -1192,6 +1195,8 @@
           <span class="btech-course-readiness__status-label">${progress.percentComplete}% Done</span>
         </div>
         <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
+      </div>
+      <div class="btech-course-readiness__readiness">
         <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
       </div>
       <div class="btech-course-readiness__body">
