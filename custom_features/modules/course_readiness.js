@@ -303,6 +303,34 @@
           color: #5b6d79;
         }
 
+        #${cardId} .btech-course-readiness__readiness-banner {
+          margin-top: 0.85rem;
+          padding: 0.7rem 0.9rem;
+          border-radius: 6px;
+          border: 1px solid #c7cdd1;
+          font-size: 0.82rem;
+          font-weight: 700;
+          text-align: center;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-banner.is-pass {
+          background: #dff3e4;
+          border-color: #0b6b2f;
+          color: #0b6b2f;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-banner.is-fail {
+          background: #fde8e8;
+          border-color: #a61b1b;
+          color: #a61b1b;
+        }
+
+        #${cardId} .btech-course-readiness__readiness-banner.is-loading {
+          background: #eef2f4;
+          border-color: #5b6d79;
+          color: #394b58;
+        }
+
         #${cardId} .btech-course-readiness__body {
           padding: 1rem;
         }
@@ -650,7 +678,7 @@
   }
 
   function getIsReady(data) {
-    return getChecks(data)
+    return getPrerequisiteChecks(data)
       .filter(check => check.isScored !== false)
       .every(check => check.state === "pass");
   }
@@ -930,18 +958,12 @@
     });
   }
 
-  function getPublishedCheck(data, prerequisitesReady) {
+  function getPublishedCheck(data) {
     if (!data.coreLoaded) {
       return {
         ...getLoadingCheck("Published", "Loading publish status..."),
         dividerBefore: true
       };
-    }
-
-    if (!prerequisitesReady) {
-      return createCheck("Published", "fail", "Not ready to publish.", {
-        dividerBefore: true
-      });
     }
 
     if (data.isCoursePublished) {
@@ -991,14 +1013,28 @@
 
   function getChecks(data) {
     const prerequisiteChecks = getPrerequisiteChecks(data);
-    const prerequisitesReady = prerequisiteChecks
-      .filter(check => check.isScored !== false)
-      .every(check => check.state === "pass");
 
     return [
       ...prerequisiteChecks,
-      getPublishedCheck(data, prerequisitesReady)
+      getPublishedCheck(data)
     ];
+  }
+
+  function getReadinessStatus(data) {
+    const checks = getPrerequisiteChecks(data);
+    const scoredChecks = checks.filter(check => check.isScored !== false);
+
+    if (scoredChecks.some(check => check.state === "loading")) {
+      return {
+        state: "loading",
+        checks
+      };
+    }
+
+    return {
+      state: scoredChecks.every(check => check.state === "pass") ? "pass" : "fail",
+      checks
+    };
   }
 
   function getOverallStatus(data) {
@@ -1134,8 +1170,13 @@
     }
 
     const overallStatus = getOverallStatus(data);
+    const readinessStatus = getReadinessStatus(data);
     const progress = getProgressData(overallStatus.checks);
-    const isReady = overallStatus.state === "pass";
+    const readinessLabel = readinessStatus.state === "loading"
+      ? "Checking readiness to publish..."
+      : readinessStatus.state === "pass"
+        ? "Ready to Publish"
+        : "Not Ready to Publish";
 
     card.html(`
       <div class="btech-course-readiness__header">
@@ -1151,14 +1192,13 @@
           <span class="btech-course-readiness__status-label">${progress.percentComplete}% Done</span>
         </div>
         <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
+        <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
       </div>
-      ${isReady ? "" : `
-        <div class="btech-course-readiness__body">
-          <ul class="btech-course-readiness__checks">
-            ${overallStatus.checks.map(check => renderCheck(check)).join("")}
-          </ul>
-        </div>
-      `}
+      <div class="btech-course-readiness__body">
+        <ul class="btech-course-readiness__checks">
+          ${overallStatus.checks.map(check => renderCheck(check)).join("")}
+        </ul>
+      </div>
     `);
 
     bindActionEvents(card);
