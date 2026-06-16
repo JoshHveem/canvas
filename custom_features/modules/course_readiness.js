@@ -552,8 +552,11 @@
 
       const pointsPossible = Number(assignment.points_possible ?? 0);
       const isInModule = getAssignmentContentIds(assignment).some(id => assignmentModuleIds.has(id));
+      const isEmploymentSkillsEvaluationQuiz = Number.isFinite(Number(assignment.quiz_id))
+        && Number(assignment.quiz_id) > 0
+        && String(assignment?.name ?? "").trim().toLowerCase() === "employment skills evaluation";
 
-      if (assignment.published === true && pointsPossible > 0 && !isInModule) {
+      if (assignment.published === true && pointsPossible > 0 && !isInModule && !isEmploymentSkillsEvaluationQuiz) {
         assignmentsWorthPointsNotInModule.push({
           id: assignment.id,
           name: assignment.name,
