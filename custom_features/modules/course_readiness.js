@@ -1143,7 +1143,7 @@
         ? "Published!"
       : readinessStatus.state === "pass"
         ? "Ready to Publish"
-        : "Not Ready to Publish";
+        : "Not Ready";
 
     card.html(`
       <div class="btech-course-readiness__readiness">
