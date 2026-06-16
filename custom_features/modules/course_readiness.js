@@ -639,6 +639,13 @@
       0
     );
     const usesAssignmentGroupWeights = Boolean(course?.apply_assignment_group_weights);
+    const emptyWeightedAssignmentGroups = assignmentGroups
+      .filter(group => Number(group?.group_weight ?? 0) > 0 && (group.assignments ?? []).length === 0)
+      .map(group => ({
+        id: group.id,
+        name: group.name,
+        groupWeight: Number(group.group_weight ?? 0)
+      }));
 
     const instructorEvalAssignments = assignmentList.filter(assignment =>
       String(assignment?.external_tool_tag_attributes?.url ?? "").toLowerCase().includes(`jotform_id=${instructorEvalId}`)
@@ -673,6 +680,7 @@
       usesAssignmentGroupWeights,
       assignmentGroupWeightsAddTo100: usesAssignmentGroupWeights && Math.abs(assignmentGroupWeightTotal - 100) < 0.001,
       assignmentGroupWeightTotal,
+      emptyWeightedAssignmentGroups,
       assignmentsWorthPointsNotInModule,
       unpublishedAssignmentsInModule,
       syllabusModuleLinkMismatches
@@ -695,6 +703,7 @@
       "Assignments in Modules": "assignmentsInModules",
       "Course Content": "courseContent",
       "Course Evaluation": "courseEvaluation",
+      "Empty Group(s)": "groupWeights",
       "Employment Skills Evaluation": "employmentSkillsEvaluation",
       "Group Weights = 100%": "groupWeights",
       "Instructor Evaluation": "instructorEvaluation",
@@ -916,6 +925,22 @@
     );
   }
 
+  function getEmptyGroupsCheck(data) {
+    if (!data.usesAssignmentGroupWeights) {
+      return createCheck("Empty Group(s)", "pass", "Assignment group weighting is not enabled for this course.");
+    }
+
+    if ((data.emptyWeightedAssignmentGroups ?? []).length > 0) {
+      return createCheck("Empty Group(s)", "warn", `${data.emptyWeightedAssignmentGroups.length} weighted assignment group(s) have no assignments.`, {
+        items: data.emptyWeightedAssignmentGroups,
+        itemFormatter: item => `${escapeHtml(item.name)} (${escapeHtml(String(item.groupWeight))}%)`,
+        itemSummary: `${data.emptyWeightedAssignmentGroups.length} empty weighted group(s)`
+      });
+    }
+
+    return createCheck("Empty Group(s)", "pass", "All weighted assignment groups contain assignments.");
+  }
+
   function getAssignmentsInModulesCheck(data) {
     if (!data.hasAnyContent) {
       return createCheck("Assignments in Modules", "fail", "No module content exists yet.");
@@ -968,6 +993,7 @@
         getLoadingCheck("Employment Skills Evaluation"),
         getLoadingCheck("Course Content"),
         getLoadingCheck("Group Weights = 100%"),
+        getLoadingCheck("Empty Group(s)"),
         getLoadingCheck("Assignments in Modules"),
         getLoadingCheck("Assignments Published"),
         getLoadingCheck("Syllabus Module Links"),
@@ -984,6 +1010,7 @@
       getEmploymentSkillsEvaluationCheck(data),
       getContentCheck(data),
       getWeightsCheck(data),
+      getEmptyGroupsCheck(data),
       getAssignmentsInModulesCheck(data),
       getAssignmentsPublishedCheck(data),
       getSyllabusModuleLinksCheck(data),
