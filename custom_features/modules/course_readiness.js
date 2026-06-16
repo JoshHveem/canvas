@@ -29,8 +29,7 @@
     syllabusLinkEnabled: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
     syllabusModuleLinks: "",
     syllabus: "https://docs.google.com/document/d/1gQ3vp4-PcJFETGGA95Ax-oro5LKtmCJ5Awik9bMN7Uk/edit?tab=t.0#heading=h.n1lazhgzfkk9",
-    cleanUnusedContent: "",
-    published: ""
+    cleanUnusedContent: ""
   };
 
   if (!courseId) return;
@@ -700,7 +699,6 @@
       "Group Weights = 100%": "groupWeights",
       "Instructor Evaluation": "instructorEvaluation",
       "Instructors Added": "instructorsAdded",
-      "Published": "published",
       "Syllabus Submitted": "syllabus",
       "Syllabus in Navigation": "syllabusLinkEnabled",
       "Syllabus Module Links": "syllabusModuleLinks"
@@ -961,25 +959,6 @@
     });
   }
 
-  function getPublishedCheck(data) {
-    if (!data.coreLoaded) {
-      return {
-        ...getLoadingCheck("Published", "Loading publish status..."),
-        dividerBefore: true
-      };
-    }
-
-    if (data.isCoursePublished) {
-      return createCheck("Published", "pass", "", {
-        dividerBefore: true
-      });
-    }
-
-    return createCheck("Published", "fail", "Needs to be published.", {
-      dividerBefore: true
-    });
-  }
-
   function getPrerequisiteChecks(data) {
     if (!data.coreLoaded) {
       return [
@@ -1015,12 +994,7 @@
   }
 
   function getChecks(data) {
-    const prerequisiteChecks = getPrerequisiteChecks(data);
-
-    return [
-      ...prerequisiteChecks,
-      getPublishedCheck(data)
-    ];
+    return getPrerequisiteChecks(data);
   }
 
   function getReadinessStatus(data) {
@@ -1175,6 +1149,7 @@
     const overallStatus = getOverallStatus(data);
     const readinessStatus = getReadinessStatus(data);
     const progress = getProgressData(overallStatus.checks);
+    const showReadinessBanner = !(readinessStatus.state === "pass" && data?.isCoursePublished === true);
     const readinessLabel = readinessStatus.state === "loading"
       ? "Checking readiness to publish..."
       : readinessStatus.state === "pass"
@@ -1196,9 +1171,11 @@
         </div>
         <p class="btech-course-readiness__meta">${progress.passCount} of ${progress.total} checks complete. Last checked ${escapeHtml(updatedAt)}</p>
       </div>
-      <div class="btech-course-readiness__readiness">
-        <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
-      </div>
+      ${showReadinessBanner ? `
+        <div class="btech-course-readiness__readiness">
+          <div class="btech-course-readiness__readiness-banner is-${readinessStatus.state}">${escapeHtml(readinessLabel)}</div>
+        </div>
+      ` : ""}
       <div class="btech-course-readiness__body">
         <ul class="btech-course-readiness__checks">
           ${overallStatus.checks.map(check => renderCheck(check)).join("")}
