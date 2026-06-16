@@ -125,7 +125,7 @@
     });
   }
 
-  async function findSyllabusEntityIdFromReports(courseId) {
+  async function findSyllabusCodeFromReports(courseId) {
     const rows = await bridgetools.req3("reports", {
       canvas_course_id: Number(courseId)
     }, {
@@ -135,51 +135,32 @@
     const row = Array.isArray(rows)
       ? rows.find(item => String(item?.simple_syllabus_doc_id ?? "").trim())
       : null;
-    const simpleSyllabusDocId = String(row?.simple_syllabus_doc_id ?? "").trim();
-
-    if (!simpleSyllabusDocId) return null;
-
-    const syllabusDoc = await findSyllabusByCode(simpleSyllabusDocId);
-
-    return String(syllabusDoc?.entity_id ?? "").trim() || null;
+    return String(row?.simple_syllabus_doc_id ?? "").trim() || null;
   }
 
-  let syllabusEntityId = null;
-  let syllabusEntityIdLookupComplete = false;
+  let syllabusDocCode = null;
+  let syllabusDocCodeLookupComplete = false;
 
   async function getSyllabusDocByCourseId(courseId, termYear = "") {
-    if (!syllabusEntityIdLookupComplete) {
-      let reportsEntityId = null;
-      let simpleSyllabusEntityId = null;
-
+    if (!syllabusDocCodeLookupComplete) {
       try {
-        [reportsEntityId, simpleSyllabusEntityId] = await Promise.all([
-          findSyllabusEntityIdFromReports(courseId).catch(error => {
-            console.warn("Course readiness syllabus entity lookup via reports failed.", error);
-            return null;
-          }),
-          findEntityIdByCourseId(courseId, { termYear }).catch(error => {
-            console.warn("Course readiness syllabus entity lookup via Simple Syllabus failed.", error);
-            return null;
-          })
-        ]);
-      } finally {
-        console.log("Course readiness syllabus entity lookup", {
-          courseId: Number(courseId),
-          termYear: String(termYear ?? ""),
-          reportsEntityId,
-          simpleSyllabusEntityId
-        });
+        syllabusDocCode = await findSyllabusCodeFromReports(courseId);
+      } catch (error) {
+        console.warn("Course readiness syllabus code lookup via reports failed.", error);
       }
 
-      syllabusEntityId = reportsEntityId || simpleSyllabusEntityId;
+      console.log("Course readiness syllabus code lookup", {
+        courseId: Number(courseId),
+        termYear: String(termYear ?? ""),
+        syllabusDocCode
+      });
 
-      syllabusEntityIdLookupComplete = true;
+      syllabusDocCodeLookupComplete = true;
     }
 
-    if (!syllabusEntityId) return null;
+    if (!syllabusDocCode) return null;
 
-    return await findSyllabusByEntityId(syllabusEntityId);
+    return await findSyllabusByCode(syllabusDocCode);
   }
 
   function escapeHtml(value) {
