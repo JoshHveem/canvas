@@ -126,15 +126,30 @@
 
   async function getSyllabusDocByCourseId(courseId, termYear = "") {
     if (!syllabusEntityIdLookupComplete) {
+      let reportsEntityId = null;
+      let simpleSyllabusEntityId = null;
+
       try {
-        syllabusEntityId = await findSyllabusEntityIdFromReports(courseId);
-      } catch (error) {
-        console.warn("Course readiness syllabus entity lookup via reports failed.", error);
+        [reportsEntityId, simpleSyllabusEntityId] = await Promise.all([
+          findSyllabusEntityIdFromReports(courseId).catch(error => {
+            console.warn("Course readiness syllabus entity lookup via reports failed.", error);
+            return null;
+          }),
+          findEntityIdByCourseId(courseId, { termYear }).catch(error => {
+            console.warn("Course readiness syllabus entity lookup via Simple Syllabus failed.", error);
+            return null;
+          })
+        ]);
+      } finally {
+        console.log("Course readiness syllabus entity lookup", {
+          courseId: Number(courseId),
+          termYear: String(termYear ?? ""),
+          reportsEntityId,
+          simpleSyllabusEntityId
+        });
       }
 
-      if (!syllabusEntityId) {
-        syllabusEntityId = await findEntityIdByCourseId(courseId, { termYear });
-      }
+      syllabusEntityId = reportsEntityId || simpleSyllabusEntityId;
 
       syllabusEntityIdLookupComplete = true;
     }
