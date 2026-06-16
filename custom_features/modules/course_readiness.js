@@ -107,12 +107,35 @@
     });
   }
 
+  async function findSyllabusEntityIdFromReports(courseId) {
+    const rows = await bridgetools.req3("reports", {
+      canvas_course_id: Number(courseId)
+    }, {
+      dataset: "syllabi_status"
+    });
+
+    const row = Array.isArray(rows)
+      ? rows.find(item => String(item?.simple_syllabus_doc_id ?? "").trim())
+      : null;
+
+    return String(row?.simple_syllabus_doc_id ?? "").trim() || null;
+  }
+
   let syllabusEntityId = null;
   let syllabusEntityIdLookupComplete = false;
 
   async function getSyllabusDocByCourseId(courseId, termYear = "") {
     if (!syllabusEntityIdLookupComplete) {
-      syllabusEntityId = await findEntityIdByCourseId(courseId, { termYear });
+      try {
+        syllabusEntityId = await findSyllabusEntityIdFromReports(courseId);
+      } catch (error) {
+        console.warn("Course readiness syllabus entity lookup via reports failed.", error);
+      }
+
+      if (!syllabusEntityId) {
+        syllabusEntityId = await findEntityIdByCourseId(courseId, { termYear });
+      }
+
       syllabusEntityIdLookupComplete = true;
     }
 
