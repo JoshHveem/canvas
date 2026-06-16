@@ -18,6 +18,8 @@
   var selectedRubricText = '';
   var isReadingRubricFile = false;
   var lastSubmission = null;
+  var initTimer = null;
+  var pageObserver = null;
 
 
   function add_button() {
@@ -930,17 +932,81 @@
     'initiated': false,
     '_init': function () {
       if (this.initiated) {
+        scheduleButtonCheck();
         return;
       }
 
-      if (assocRegex.test(window.location.pathname)) {
-        if (add_button()) {
-          this.initiated = true;
-        }
-      } else {
-      }
+      this.initiated = true;
+      watchNavigation();
+      watchPageChanges();
+      scheduleButtonCheck();
     }
   };
+
+  function scheduleButtonCheck() {
+    if (initTimer) {
+      clearTimeout(initTimer);
+    }
+
+    initTimer = setTimeout(function () {
+      initTimer = null;
+
+      if (!assocRegex.test(window.location.pathname)) {
+        return;
+      }
+
+      add_button();
+    }, 75);
+  }
+
+  function watchPageChanges() {
+    if (pageObserver || !window.MutationObserver || !document.body) {
+      return;
+    }
+
+    pageObserver = new MutationObserver(function () {
+      if (!assocRegex.test(window.location.pathname)) {
+        return;
+      }
+
+      if (!document.getElementById(buttonId)) {
+        scheduleButtonCheck();
+      }
+    });
+
+    pageObserver.observe(document.body, {
+      'childList': true,
+      'subtree': true
+    });
+  }
+
+  function watchNavigation() {
+    if (!window.history || window.BTECH_RUBRIC_JSON_IMPORT_NAV_PATCHED) {
+      window.addEventListener('popstate', scheduleButtonCheck);
+      window.addEventListener('hashchange', scheduleButtonCheck);
+      return;
+    }
+
+    window.BTECH_RUBRIC_JSON_IMPORT_NAV_PATCHED = true;
+    patchHistoryMethod('pushState');
+    patchHistoryMethod('replaceState');
+    window.addEventListener('popstate', scheduleButtonCheck);
+    window.addEventListener('hashchange', scheduleButtonCheck);
+  }
+
+  function patchHistoryMethod(methodName) {
+    var original = window.history[methodName];
+
+    if (typeof original !== 'function') {
+      return;
+    }
+
+    window.history[methodName] = function () {
+      var result = original.apply(this, arguments);
+      scheduleButtonCheck();
+      return result;
+    };
+  }
 
   window.BTECH_RUBRIC_JSON_IMPORT_FEATURE = jsonImportFeature;
   window.IMPORTED_FEATURE = jsonImportFeature;

@@ -3,37 +3,155 @@ let upload = $(`
 `);
 $("body").append(`
   <div 
-    v-if="show"
     class='btech-modal'
-    style="display: inline-block;"
     id='canvas-question-bank-uploader-vue'
+    style='display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); justify-content: center; align-items: center; z-index: 9999; padding: 16px;'
   >
-    <div class='btech-modal-content'>
-      <div 
-        v-if="state === 'upload'"
-        class='btech-modal-content-inner'
-      >
-        <button style='float: right;' @click='show=false;'>X</button>
-        <div class='btech-modal-content-inner'>
-        <input type="file" id="fileInput" multiple>
-        <button @click="processUploadedQuizBank()">Upload</button>
+    <div class='btech-modal-content' style='background:#ffffff; width:min(100%,620px); max-width:620px; border-radius:18px; box-shadow:0 24px 80px rgba(0,0,0,0.18); overflow:hidden; font-family:Arial,Helvetica,sans-serif;'>
+      <div style='padding:20px 24px 12px 24px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:#f5f8ff; border-bottom:1px solid #e7edf7;'>
+        <div>
+          <div style='font-size:20px; font-weight:700; color:#14213d; margin-bottom:6px;'>Upload Question Bank</div>
+          <div style='font-size:14px; color:#4a5568; line-height:1.5;'>Turn your quiz document into a Canvas-readable question bank with AI. Copy the prompt to get started.</div>
+        </div>
+        <button id='canvas-question-bank-uploader-close' style='border:none; background:transparent; color:#334155; font-size:26px; line-height:1; cursor:pointer;'>×</button>
       </div>
-      </div>
-      <div 
-        v-if="state === 'uploading'"
-        class='btech-modal-content-inner'
-      >
-        <div v-for="file in files">
-          <span>{{file.name}}</span><span>{{Math.round(uploadProgress[file.name] * 100)}}%</span>
+      <div class='btech-modal-body' style='padding:24px;'>
+        <div class='btech-modal-content-inner upload-state'>
+          <button id='canvas-question-bank-copy-prompt' style='padding:12px 18px; background:#0f172a; color:#fff; border:none; border-radius:12px; cursor:pointer; margin-bottom:18px;'>Copy Canvas Format Prompt</button>
+          <div style='display:flex; flex-wrap:wrap; gap:12px; margin-bottom:18px;'>
+            <input type="file" id="fileInput" multiple style='flex:1 1 240px; min-width:200px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:#0f172a;' />
+            <button id='canvas-question-bank-uploader-upload' style='padding:12px 18px; background:#2563eb; color:#fff; border:none; border-radius:12px; cursor:pointer; transition: transform .15s ease; box-shadow:0 12px 28px rgba(37,99,235,0.18);'>Upload</button>
+          </div>
+          <div id='canvas-question-bank-copy-status' style='font-size:13px; min-height:18px; color:#334155;'></div>
+        </div>
+        <div class='btech-modal-content-inner uploading-state' style='display:none;'>
+          <div style='font-size:16px; font-weight:700; color:#0f172a; margin-bottom:14px;'>Uploading quiz bank(s)...</div>
+          <div id='canvas-question-bank-progress-list'></div>
         </div>
       </div>
     </div>
   </div>
 `);
-let VUE_APP = new Vue({
-  el: '#canvas-question-bank-uploader-vue',
-  mounted: async function () {
+console.log("upload_questions: modal HTML appended, binding Vue root id #canvas-question-bank-uploader-vue");
+const CANVAS_FORMAT_PROMPT = `AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
+Copy/paste this prompt into an AI tool, then paste the quiz content after it.
 
+Convert the quiz content I provide into a downloadable .txt file.
+You must create and attach the file, not display the contents inline.
+Use the Canvas LMS question‑bank uploader format exactly as specified below.
+Requirements:
+
+Create a real .txt file and return it as a downloadable attachment.
+Do not paste the quiz text into chat.
+Do not summarize or explain anything.
+The response must consist of the file attachment only.
+Preserve all original questions and answers exactly; change formatting only.
+
+I will verify that a download link appears.
+
+REQUIRED FORMAT:
+- Preserve the original quiz content as closely as possible. Only change the formatting
+  needed to match these rules.
+- Do not invent, rewrite, expand, or add new questions, answers, explanations, comments,
+  or feedback.
+- If the original quiz does not include comments or feedback, do not add any ?. or ??.
+- The first line must be: Title: [Quiz Name]
+- Put one blank line after the title.
+- Every question must start with one of these prefixes:
+  MC. = multiple choice, exactly one correct answer
+  MA. = multiple answers, more than one correct answer
+  EQ. = essay question
+  TF. = true/false
+  MT. = matching
+  TX. = text-only informational block
+  FB. = fill in multiple blanks
+  FU. = file upload
+- End every question with exactly one blank line.
+- Use plain text only. Do not use bold, italics, bullets, tables, or HTML.
+
+ANSWER RULES:
+- For MC and MA answers, use A. Answer text, B. Answer text, etc.
+- Mark each correct answer with an asterisk before the letter, like *B. Answer text.
+- MC questions must have exactly one starred answer.
+- MA questions must have two or more starred answers.
+- Optional answer-specific feedback goes immediately after that answer as:
+  ??. Feedback text
+- Optional general question feedback goes after all answers as:
+  ?. Feedback text
+
+TYPE-SPECIFIC RULES:
+- EQ, TX, and FU questions do not need answer lines.
+- TF questions must use exactly two answer lines: T. True and F. False.
+  Put the asterisk on the correct line.
+- MT questions must use one matching pair per line: Term = Matching answer.
+  Each matching pair will be worth 1 point.
+- If the source question has a matching answer bank, such as A. OSHA, B. CDC,
+  followed by prompts with lines like Answer: A, convert the whole block into
+  one MT question. Do not make the answer bank or question directions a separate
+  TX question.
+  Example conversion:
+  Source answer bank: A. OSHA
+  Source prompt: Workplace safety regulations / Answer: A
+  Output pair: OSHA = Workplace safety regulations
+- FB questions must put blank IDs in the question text using square brackets.
+  Example: Roses are [color1]. Then list accepted answers as: color1. Red.
+  Repeat the same blank ID for multiple accepted answers.
+
+EXAMPLE FORMAT:
+Title: Biology Quiz
+
+MC. What is the powerhouse of the cell?
+A. Nucleus
+*B. Mitochondria
+C. Ribosome
+D. Vacuole
+
+MA. Select all nucleotide bases.
+*A. Adenine
+*B. Guanine
+C. Glucose
+*D. Thymine
+
+TF. Mitochondria are the powerhouse of the cell.
+*T. True
+F. False
+
+FINAL CHECK BEFORE YOU BUILD THE FILE:
+- Name the file using the quiz title in a readable underscore format.
+  Replace spaces and punctuation with underscores, remove duplicate underscores,
+  and do not URL-encode spaces or special characters.
+  Example: Title: Chapter 22 Regulatory Advisory Agencies
+  File name: Chapter_22_Regulatory_Advisory_Agencies.txt
+- The file starts with Title:
+- The file contains only the formatted quiz text.
+- No questions, answers, explanations, comments, or feedback were invented.
+- Every question has a blank line after it.
+- MC has one starred answer.
+- MA has multiple starred answers.
+- True/false uses T. True and F. False and has one starred answer.
+- Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
+
+AFTER THE FILE IS CREATED:
+- Do not put these instructions inside the .txt file.
+- Tell the user:
+  "You're all set! 
+  — Download the file, then open your Canvas course.
+  — In the left-hand course menu, open Quizzes. 
+  — Click the three dots in the top right corner, choose Manage Question Banks. 
+  — Select Upload Question Bank.
+  — Upload the .txt file. Happy quizzing!"
+`;
+let VUE_APP = {
+  show: false,
+  state: 'upload',
+  files: [],
+  uploadProgress: {},
+  mounted: async function () {
+    console.log("upload_questions: modal initialized; initial show=", this.show, "state=", this.state);
+    initUploadModalEvents();
+    Object.keys(this.methods || {}).forEach(key => {
+      this[key] = this.methods[key].bind(this);
+    });
   },
   data: function () {
     return {
@@ -45,17 +163,32 @@ let VUE_APP = new Vue({
   },
   methods: {
     processUploadedQuizBank: function () {
+      console.log("upload_questions: processUploadedQuizBank called");
       const fileInput = document.getElementById('fileInput');
+      if (!fileInput) {
+        console.error("upload_questions: fileInput element not found");
+        return;
+      }
+      if (!fileInput.files || fileInput.files.length === 0) {
+        console.warn("upload_questions: no files selected in fileInput");
+        return;
+      }
+      console.log("upload_questions: fileInput found, selected files count=", fileInput.files.length);
       this.files = fileInput.files;
+      console.log("upload_questions: storing selected files", this.files);
       this.state = 'uploading';
+      console.log("upload_questions: state changed to upload", this.state, "show=", this.show);
+      setUploadModalState(true, 'uploading');
       
       let filesProcessed = 0;
       for (let i = 0; i < this.files.length; i++) {
         let file = this.files[i];
+        console.log("upload_questions: starting FileReader for file", file.name, "index", i);
         this.uploadProgress[file.name] = 0;
         let reader = new FileReader();
         reader.readAsText(file);
         reader.onload = async () => {
+          console.log("upload_questions: FileReader loaded file", file.name, "size", file.size);
           let lines = reader.result.split("\n");
           let name = undefined;
           let bankTitle = file.name.replace(/\.txt$/i, '');
@@ -157,7 +290,9 @@ let VUE_APP = new Vue({
 
           }
 
+          console.log("upload_questions: parsed quiz", quiz.length, "questions for file", file.name, "bankTitle", bankTitle);
           let bank = await this.createBank(bankTitle);
+          console.log("upload_questions: createBank returned", bank);
           for (let q in quiz) {
             let question = quiz[q];
             
@@ -189,12 +324,14 @@ let VUE_APP = new Vue({
           }
           filesProcessed += 1;
           if (filesProcessed == this.files.length) {
-            this.show = false;;
+            setUploadModalState(false, 'upload');
+            setTimeout(() => window.location.reload(), 700);
           }
         };
       }
     },
     createBank: async function(title) {
+      console.log("upload_questions: createBank called with title", title);
       $.ajaxSetup({
           headers:{
               'Accept': 'application/json'
@@ -468,7 +605,73 @@ let VUE_APP = new Vue({
       }
     }
   }
-});
+};
+
+function setUploadModalState(show, state) {
+  VUE_APP.show = show;
+  VUE_APP.state = state;
+  const modal = document.getElementById('canvas-question-bank-uploader-vue');
+  if (!modal) return;
+  modal.style.display = show ? 'flex' : 'none';
+  const uploadSection = modal.querySelector('.upload-state');
+  const uploadingSection = modal.querySelector('.uploading-state');
+  const status = modal.querySelector('#canvas-question-bank-copy-status');
+  if (uploadSection) uploadSection.style.display = state === 'upload' ? 'block' : 'none';
+  if (uploadingSection) uploadingSection.style.display = state === 'uploading' ? 'block' : 'none';
+  if (state === 'upload') {
+    if (status) {
+      status.textContent = '';
+      status.style.color = '#334155';
+    }
+  }
+  if (state === 'uploading') renderUploadProgress();
+}
+
+function renderUploadProgress() {
+  const list = document.getElementById('canvas-question-bank-progress-list');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.keys(VUE_APP.uploadProgress).forEach(name => {
+    const percent = Math.round((VUE_APP.uploadProgress[name] || 0) * 100);
+    const item = document.createElement('div');
+    item.textContent = `${name}: ${percent}%`;
+    list.appendChild(item);
+  });
+}
+
+function initUploadModalEvents() {
+  const modal = document.getElementById('canvas-question-bank-uploader-vue');
+  if (!modal) return;
+  const closeBtn = modal.querySelector('#canvas-question-bank-uploader-close');
+  const uploadBtn = modal.querySelector('#canvas-question-bank-uploader-upload');
+  const copyBtn = modal.querySelector('#canvas-question-bank-copy-prompt');
+  if (closeBtn) closeBtn.addEventListener('click', () => setUploadModalState(false, 'upload'));
+  if (uploadBtn) uploadBtn.addEventListener('click', () => VUE_APP.processUploadedQuizBank());
+  if (copyBtn) copyBtn.addEventListener('click', copyCanvasFormatPrompt);
+}
+
+function copyCanvasFormatPrompt() {
+  const status = document.getElementById('canvas-question-bank-copy-status');
+  if (!navigator.clipboard) {
+    if (status) status.textContent = 'Clipboard API unavailable in this browser.';
+    return;
+  }
+  navigator.clipboard.writeText(CANVAS_FORMAT_PROMPT).then(() => {
+    if (status) {
+      status.textContent = 'Prompt copied to clipboard! Paste it into your AI tool.';
+      status.style.color = '#166534';
+    }
+  }).catch(error => {
+    console.error('upload_questions: copy prompt failed', error);
+    if (status) {
+      status.textContent = 'Unable to copy prompt. Please try again.';
+      status.style.color = '#b91c1c';
+    }
+  });
+}
+
+VUE_APP.mounted();
+
 function pad(num, size) {
     num = num.toString();
     while (num.length < size) num = "0" + num;
@@ -478,10 +681,11 @@ function pad(num, size) {
 
 //handling multiple isn't currently working, but add multiple after input 
 upload.click(() => {
-  VUE_APP.show = true;
-  VUE_APP.state = 'upload';
+  console.log("upload_questions: upload button clicked");
+  setUploadModalState(true, 'upload');
 });
 $(".see_bookmarked_banks").after(upload);
+console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
 
 
 
