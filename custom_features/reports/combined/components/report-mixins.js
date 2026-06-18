@@ -161,6 +161,13 @@ window.ReportMixins = {
         };
       },
 
+      withColumnWrap(column, wrap = true) {
+        if (column && typeof column === 'object') {
+          column.wrap = !!wrap;
+        }
+        return column;
+      },
+
       resolveDeferredSelection({ filterKey, options, currentValue, routeValue, allowBlank = false, fallbackValue = '' }) {
         const normalizedOptions = Array.isArray(options) ? options : [];
         if (!normalizedOptions.length) return currentValue;

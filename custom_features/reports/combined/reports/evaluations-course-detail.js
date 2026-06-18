@@ -60,18 +60,18 @@ Vue.component('reports-evaluations-course-detail', {
         row => this.responseLikertPillStyle(row?.likert_would_recommend_course),
         row => Number(row?.likert_would_recommend_course ?? -1)
       ),
-      new window.ReportColumn(
+      this.withColumnWrap(new window.ReportColumn(
         'Positives', 'Positive free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_positives),
         null,
         row => String(row?.free_response_positives ?? '')
-      ),
-      new window.ReportColumn(
+      )),
+      this.withColumnWrap(new window.ReportColumn(
         'Recommendations', 'Recommendation free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_recommendations),
         null,
         row => String(row?.free_response_recommendations ?? '')
-      )
+      ))
     ]);
   },
 

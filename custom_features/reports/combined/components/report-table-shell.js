@@ -109,11 +109,15 @@ Vue.component('report-table-shell', {
           <div
             v-for="col in visibleColumns"
             :key="col.name"
-            style="display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;"
+            :style="col.wrap
+              ? 'display:block; overflow:visible; white-space:normal; text-overflow:clip; line-height:1.2rem; padding:.125rem 0;'
+              : 'display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'"
           >
             <span
               :class="col.style_formula ? 'btech-pill-text' : ''"
-              :style="col.get_style(row)"
+              :style="col.wrap
+                ? Object.assign({}, col.get_style(row), { display: 'block', whiteSpace: 'normal' })
+                : col.get_style(row)"
               v-html="col.getContent(row)"
             ></span>
           </div>
