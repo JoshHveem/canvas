@@ -380,6 +380,12 @@
         syncAcademicYearFilter() {
           const globalAcademicYear = this.getSavedFilterValue("academic_year");
 
+          console.log("[Reporting V3] syncAcademicYearFilter", {
+            globalAcademicYear,
+            settingsGlobalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
           if (globalAcademicYear) {
             this.settings.globalAcademicYear = globalAcademicYear;
             this.$set(this.settings.filters, "academic_year", globalAcademicYear);
@@ -457,11 +463,21 @@
         },
 
         async onReportChange() {
+          console.log("[Reporting V3] onReportChange start", {
+            reportType: this.settings?.reportType,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           this.clearViewFilterControls();
           this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
           this.ensureAcademicYearFilter();
           this.syncAcademicYearFilter();
           await this.ensureSharedFilterData();
+          console.log("[Reporting V3] onReportChange end", {
+            reportType: this.settings?.reportType,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
@@ -469,27 +485,59 @@
           const type = this.currentReportMeta?.value;
           if (!type) return;
 
+          console.log("[Reporting V3] setSubMenu start", {
+            reportType: type,
+            nextSubMenu: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
           this.clearViewFilterControls();
           this.$set(this.settings.subMenuByType, type, value);
           this.ensureCurrentView();
           this.ensureAcademicYearFilter();
           this.syncAcademicYearFilter();
           await this.ensureSharedFilterData();
+          console.log("[Reporting V3] setSubMenu end", {
+            reportType: type,
+            nextSubMenu: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
         async setView(value) {
           if (!this.currentViewSettingsKey) return;
 
+          console.log("[Reporting V3] setView start", {
+            currentViewSettingsKey: this.currentViewSettingsKey,
+            nextView: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
           this.clearViewFilterControls();
           this.$set(this.settings.viewByReport, this.currentViewSettingsKey, value);
           this.ensureAcademicYearFilter();
           this.syncAcademicYearFilter();
           await this.ensureSharedFilterData();
+          console.log("[Reporting V3] setView end", {
+            currentViewSettingsKey: this.currentViewSettingsKey,
+            nextView: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
         async updateFilterValue(filterKey, value) {
+          console.log("[Reporting V3] updateFilterValue start", {
+            filterKey,
+            value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           if (filterKey === "academic_year") {
             this.settings.globalAcademicYear = String(value || "").trim();
           }
@@ -499,6 +547,12 @@
             this.syncAcademicYearFilter();
             await this.ensureSharedFilterData();
           }
+          console.log("[Reporting V3] updateFilterValue end", {
+            filterKey,
+            value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
