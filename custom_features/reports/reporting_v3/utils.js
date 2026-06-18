@@ -57,6 +57,7 @@
       viewByReport: firstView && firstReport.value && firstSubMenu?.value
         ? { [getViewSettingsKey(firstReport.value, firstSubMenu.value)]: firstView.value }
         : {},
+      globalAcademicYear: "",
       filters: {}
     };
   }
@@ -109,6 +110,14 @@
       normalized.filters = {};
     }
 
+    const normalizedGlobalAcademicYear = String(
+      normalized.globalAcademicYear || normalized.filters.academic_year || ""
+    ).trim();
+    normalized.globalAcademicYear = normalizedGlobalAcademicYear;
+    if (normalizedGlobalAcademicYear) {
+      normalized.filters.academic_year = normalizedGlobalAcademicYear;
+    }
+
     const type = normalized.reportType;
     const report = reports.find((item) => item.value === type) || reports[0] || {};
     const firstSubMenu = (report.subMenus || [])[0];
@@ -139,6 +148,7 @@
         reportType: saved.reportType || fallback.reportType,
         subMenuByType: Object.assign({}, fallback.subMenuByType, saved.subMenuByType || {}),
         viewByReport: Object.assign({}, fallback.viewByReport, saved.viewByReport || {}),
+        globalAcademicYear: String(saved.globalAcademicYear || saved?.filters?.academic_year || fallback.globalAcademicYear || "").trim(),
         filters: Object.assign({}, fallback.filters, saved.filters || {})
       };
     } catch (err) {
