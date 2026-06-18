@@ -37,6 +37,12 @@ Vue.component('reports-evaluations-instructor-detail', {
         row => this.courseLabel(row).toLowerCase()
       ),
       new window.ReportColumn(
+        'Instructor', 'Instructor name.', '12rem', false, 'string',
+        row => this.anonymous ? 'INSTRUCTOR' : this.escapeHtml(String(row?.full_name__instructor ?? '')),
+        null,
+        row => String(row?.full_name__instructor ?? '').toLowerCase()
+      ),
+      new window.ReportColumn(
         'Support', 'Available support score.', '6rem', false, 'number',
         row => this.numText(row?.likert_available_support, 0),
         row => this.responseLikertPillStyle(row?.likert_available_support),
@@ -308,6 +314,7 @@ Vue.component('reports-evaluations-instructor-detail', {
           ...row,
           course_code: String(row?.course_code ?? '').trim(),
           course_name: String(row?.course_name ?? '').trim(),
+          full_name__instructor: String(row?.full_name__instructor ?? '').trim(),
           evaluation_submission_id: String(row?.evaluation_submission_id ?? '').trim(),
           likert_available_support: Number(row?.likert_available_support),
           likert_clear_instruction: Number(row?.likert_clear_instruction),
