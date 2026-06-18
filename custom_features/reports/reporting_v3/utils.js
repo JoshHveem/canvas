@@ -21,26 +21,43 @@
     head.insertBefore(style, head.firstChild);
   }
 
+  function addCacheBust(url) {
+    const separator = String(url || "").includes("?") ? "&" : "?";
+    return `${url}${separator}_=${Date.now()}`;
+  }
+
   async function fetchText(url) {
     let value = "";
 
-    await $.get(
-      url,
-      null,
-      function (text) {
-        value = text;
+    await $.ajax({
+      url: addCacheBust(url),
+      method: "GET",
+      dataType: "text",
+      cache: false,
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0"
       },
-      "text"
-    );
+      success: function (text) {
+        value = text;
+      }
+    });
 
     return value;
   }
 
   async function fetchJson(url) {
     return await $.ajax({
-      url,
+      url: addCacheBust(url),
       method: "GET",
-      dataType: "json"
+      dataType: "json",
+      cache: false,
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0"
+      }
     });
   }
 
