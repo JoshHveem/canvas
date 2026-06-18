@@ -285,8 +285,8 @@
               key: "academic_year",
               label: "Academic Year",
               placeholder: "Select Year",
-              options: this.academicYearOptions,
-              value: String(this.settings?.filters?.academic_year || this.currentYear),
+              options: this.getFilterOptionsWithSelection("academic_year", this.academicYearOptions),
+              value: this.getSavedFilterValue("academic_year") || String(this.currentYear),
               disabled: false
             };
           }
@@ -374,6 +374,10 @@
         },
 
         getPendingFilterOptionLabel(filterKey, value) {
+          if (filterKey === "academic_year") {
+            return `${value} (Saved selection)`;
+          }
+
           if (filterKey === "programs") {
             return this.isSharedFilterLoaded(filterKey)
               ? `${value} (Unavailable for current filters)`
@@ -557,10 +561,9 @@
         ensureAcademicYearFilter() {
           if (!this.currentNeedsAcademicYear) return;
 
-          const validYears = new Set(this.academicYearOptions.map((option) => option.value));
-          const currentValue = String(this.settings?.filters?.academic_year || "");
+          const currentValue = this.getSavedFilterValue("academic_year");
 
-          if (!validYears.has(currentValue)) {
+          if (!currentValue) {
             this.$set(this.settings.filters, "academic_year", String(this.currentYear));
           }
         },
