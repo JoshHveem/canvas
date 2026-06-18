@@ -113,6 +113,8 @@
             <div
               v-for="filter in allFilterControls"
               :key="filter.key"
+              class="report-filter-control"
+              :data-filter-key="filter.key"
               style="position:relative;"
             >
               <label
@@ -124,7 +126,10 @@
               </label>
               <select
                 v-if="filter.type !== 'multiselect'"
+                class="report-filter-input"
                 :id="`report-filter-${filter.key}`"
+                :name="`report-filter-${filter.key}`"
+                :data-filter-key="filter.key"
                 :value="filter.value"
                 :disabled="filter.disabled"
                 @change="updateFilterValue(filter.key, $event.target.value)"
@@ -143,7 +148,10 @@
               <div v-else>
                 <button
                   type="button"
+                  class="report-filter-input report-filter-multiselect-trigger"
                   :id="`report-filter-${filter.key}`"
+                  :name="`report-filter-${filter.key}`"
+                  :data-filter-key="filter.key"
                   :disabled="filter.disabled"
                   :aria-expanded="isMultiFilterOpen(filter.key) ? 'true' : 'false'"
                   @click="toggleMultiFilter(filter.key)"

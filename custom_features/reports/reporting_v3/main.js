@@ -94,6 +94,10 @@
           sharedLoading: {
             programs: false,
             avps: false
+          },
+          sharedLoaded: {
+            programs: false,
+            avps: false
           }
         };
       },
@@ -233,6 +237,7 @@
             });
 
             this.programs = Array.isArray(response?.data) ? response.data : [];
+            this.sharedLoaded.programs = true;
           } catch (error) {
             console.error("Failed to load programs", error);
             this.programs = [];
@@ -253,6 +258,7 @@
             console.log("[Reporting V3] loadAvps response.data", response?.data);
             this.avps = Array.isArray(response?.data) ? response.data : [];
             console.log("[Reporting V3] normalized avps list", this.avps);
+            this.sharedLoaded.avps = true;
           } catch (error) {
             console.error("Failed to load avps", error);
             this.avps = [];
@@ -290,7 +296,7 @@
               key: "programs",
               label: "Program",
               placeholder: "All Programs",
-              options: this.getProgramFilterOptions(),
+              options: this.getFilterOptionsWithSelection("programs", this.getProgramFilterOptions()),
               value: String(this.settings?.filters?.programs || ""),
               disabled: this.sharedLoading.programs
             };
@@ -301,7 +307,7 @@
               key: "avps",
               label: "AVP",
               placeholder: "All AVPs",
-              options: this.getAvpFilterOptions(),
+              options: this.getFilterOptionsWithSelection("avps", this.getAvpFilterOptions()),
               value: String(this.settings?.filters?.avps || ""),
               disabled: this.sharedLoading.avps
             };
@@ -359,10 +365,52 @@
           );
         },
 
+        isSharedFilterLoaded(filterKey) {
+          return !!this.sharedLoaded?.[filterKey];
+        },
+
+        getSavedFilterValue(filterKey) {
+          return String(this.settings?.filters?.[filterKey] || "").trim();
+        },
+
+        getPendingFilterOptionLabel(filterKey, value) {
+          if (filterKey === "programs") {
+            return this.isSharedFilterLoaded(filterKey)
+              ? `${value} (Unavailable for current filters)`
+              : `${value} (Saved selection loading...)`;
+          }
+
+          if (filterKey === "avps") {
+            return this.isSharedFilterLoaded(filterKey)
+              ? `${value} (Unavailable)`
+              : `${value} (Saved selection loading...)`;
+          }
+
+          return value;
+        },
+
+        getFilterOptionsWithSelection(filterKey, options) {
+          const normalizedOptions = Array.isArray(options) ? options.slice() : [];
+          const selectedValue = this.getSavedFilterValue(filterKey);
+          if (!selectedValue) return normalizedOptions;
+
+          const hasSelectedOption = normalizedOptions.some((option) => option.value === selectedValue);
+          if (hasSelectedOption) return normalizedOptions;
+
+          return [
+            {
+              value: selectedValue,
+              label: this.getPendingFilterOptionLabel(filterKey, selectedValue)
+            },
+            ...normalizedOptions
+          ];
+        },
+
         pruneFilterSelection(filterKey) {
           if (filterKey !== "programs" && filterKey !== "avps") return;
+          if (!this.isSharedFilterLoaded(filterKey)) return;
 
-          const selected = String(this.settings?.filters?.[filterKey] || "");
+          const selected = this.getSavedFilterValue(filterKey);
           if (!selected) return;
 
           const options = filterKey === "programs" ? this.getProgramFilterOptions() : this.getAvpFilterOptions();
@@ -401,8 +449,7 @@
           this.$set(this.settings.subMenuByType, type, value);
           this.ensureCurrentView();
           this.ensureAcademicYearFilter();
-          this.pruneFilterSelection("programs");
-          this.pruneFilterSelection("avps");
+          await this.ensureSharedFilterData();
           await this.persistSettings();
         },
 
@@ -412,16 +459,14 @@
           this.clearViewFilterControls();
           this.$set(this.settings.viewByReport, this.currentViewSettingsKey, value);
           this.ensureAcademicYearFilter();
-          this.pruneFilterSelection("programs");
-          this.pruneFilterSelection("avps");
+          await this.ensureSharedFilterData();
           await this.persistSettings();
         },
 
         async updateFilterValue(filterKey, value) {
           this.$set(this.settings.filters, filterKey, value);
           if (filterKey === "academic_year") {
-            this.pruneFilterSelection("programs");
-            this.pruneFilterSelection("avps");
+            await this.ensureSharedFilterData();
           }
           await this.persistSettings();
         },
