@@ -13,7 +13,7 @@ Vue.component('reports-evaluations-course-evals-by-course', {
     return {
       colors,
       table,
-      selectedProgramCode: ''
+      selectedProgramCode: String(this.reportContext?.sharedFilters?.program_code ?? this.reportContext?.routeFilters?.programCode ?? '')
     };
   },
 
@@ -90,13 +90,26 @@ Vue.component('reports-evaluations-course-evals-by-course', {
         this.syncSelectedProgram();
       }
     },
+    year() {
+      this.setSharedFilterValue('academic_year', Number(this.year));
+    },
+    selectedProgramCode(value) {
+      this.setSharedFilterValue('program_code', value);
+      const selectedOption = this.programOptions.find(option => option.value === value);
+      if (selectedOption?.label) this.setSharedFilterValue('program_name', selectedOption.label);
+    },
     rows: {
       immediate: true,
       handler() {
-        if (this.selectedProgramCode && this.programOptions.some(option => option.value === this.selectedProgramCode)) {
-          return;
+        const nextProgramCode = this.resolveDeferredSelection({
+          filterKey: 'program_code',
+          options: this.programOptions,
+          currentValue: this.selectedProgramCode,
+          routeValue: this.reportContext?.routeFilters?.programCode
+        });
+        if (!this.filterValuesEqual(nextProgramCode, this.selectedProgramCode)) {
+          this.selectedProgramCode = nextProgramCode;
         }
-        this.selectedProgramCode = this.programOptions[0]?.value || '';
       }
     }
   },
@@ -138,7 +151,9 @@ Vue.component('reports-evaluations-course-evals-by-course', {
     },
 
     syncSelectedProgram() {
-      const routedProgramCode = String(this.reportContext?.routeFilters?.programCode ?? '').trim();
+      const routedProgramCode = String(
+        this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? ''
+      ).trim();
       if (routedProgramCode && routedProgramCode !== this.selectedProgramCode) {
         this.selectedProgramCode = routedProgramCode;
       }
@@ -274,7 +289,7 @@ Vue.component('reports-evaluations-course-evals-by-course', {
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
           <option
             v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
             :key="optionYear"
@@ -285,7 +300,7 @@ Vue.component('reports-evaluations-course-evals-by-course', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
-        <select v-model="selectedProgramCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in programOptions"
             :key="option.value"

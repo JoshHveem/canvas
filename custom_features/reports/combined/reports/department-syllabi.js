@@ -17,9 +17,9 @@ Vue.component('reports-department-syllabi', {
       colors,
       table,
       filters: {
-        submitted: '',
-        approved: '',
-        published_course: ''
+        submitted: this.getSharedFilterValue('submitted', ''),
+        approved: this.getSharedFilterValue('approved', ''),
+        published_course: this.getSharedFilterValue('published_course', '')
       }
     };
   },
@@ -75,6 +75,15 @@ Vue.component('reports-department-syllabi', {
   },
 
   watch: {
+    'filters.submitted'(value) {
+      this.setSharedFilterValue('submitted', value);
+    },
+    'filters.approved'(value) {
+      this.setSharedFilterValue('approved', value);
+    },
+    'filters.published_course'(value) {
+      this.setSharedFilterValue('published_course', value);
+    },
     rows: {
       immediate: true,
       handler() {
@@ -197,7 +206,7 @@ Vue.component('reports-department-syllabi', {
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
           <option
             v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
             :key="optionYear"
@@ -208,7 +217,7 @@ Vue.component('reports-department-syllabi', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
-        <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in departmentOptions"
             :key="option.value"
@@ -219,7 +228,7 @@ Vue.component('reports-department-syllabi', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Submitted</label>
-        <select v-model="filters.submitted" style="font-size:.75rem; min-width:70px;">
+        <select v-model="filters.submitted" v-bind="filterAttrs('submitted')" style="font-size:.75rem; min-width:70px;">
           <option value="">All</option>
           <option :value="true">Yes</option>
           <option :value="false">No</option>
@@ -228,7 +237,7 @@ Vue.component('reports-department-syllabi', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Approved</label>
-        <select v-model="filters.approved" style="font-size:.75rem; min-width:70px;">
+        <select v-model="filters.approved" v-bind="filterAttrs('approved')" style="font-size:.75rem; min-width:70px;">
           <option value="">All</option>
           <option :value="true">Yes</option>
           <option :value="false">No</option>

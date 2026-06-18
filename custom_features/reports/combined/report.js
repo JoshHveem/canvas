@@ -231,6 +231,9 @@
               evaluations: 'course-evals-summary'
             }
           },
+          sharedFilters: {
+            academic_year: new Date().getFullYear()
+          },
           selectedDepartmentCode: '',
           selectedDepartmentName: '',
           selectedProgramCode: '',
@@ -274,6 +277,8 @@
               subMenu: this.currentSubKey,
               dataset: subMeta.dataset || '',
               filters: this.resolveFilters(subMeta.filters || {}),
+              sharedFilters: this.sharedFilters,
+              setSharedFilter: (key, value) => this.setSharedFilter(key, value),
               routeFilters: {
                 departmentCode: this.selectedDepartmentCode,
                 departmentName: this.selectedDepartmentName,
@@ -298,12 +303,12 @@
           const courseCode = String(payload?.course_code ?? '').trim();
           const courseName = String(payload?.course_name ?? '').trim();
 
-          if (account) this.selectedDepartmentCode = account;
-          if (departmentName) this.selectedDepartmentName = departmentName;
-          if (programCode) this.selectedProgramCode = programCode;
-          if (programName) this.selectedProgramName = programName;
-          if (courseCode) this.selectedCourseCode = courseCode;
-          if (courseName) this.selectedCourseName = courseName;
+          if (account) this.setSharedFilter('department_code', account);
+          if (departmentName) this.setSharedFilter('department_name', departmentName);
+          if (programCode) this.setSharedFilter('program_code', programCode);
+          if (programName) this.setSharedFilter('program_name', programName);
+          if (courseCode) this.setSharedFilter('course_code', courseCode);
+          if (courseName) this.setSharedFilter('course_name', courseName);
 
           this.settings.reportType = report || 'syllabi';
           if (!this.settings.subMenuByType) this.$set(this.settings, 'subMenuByType', {});
@@ -322,11 +327,37 @@
           this.$set(this.settings.subMenuByType, this.settings.reportType, value);
         },
 
+        cloneFilterValue(value) {
+          if (Array.isArray(value)) return value.slice();
+          if (value && typeof value === 'object') return Object.assign({}, value);
+          return value;
+        },
+
+        setSharedFilter(key, value) {
+          const filterKey = String(key || '').trim();
+          if (!filterKey) return;
+
+          const nextValue = this.cloneFilterValue(value);
+          this.$set(this.sharedFilters, filterKey, nextValue);
+
+          if (filterKey === 'department_code') this.selectedDepartmentCode = String(value ?? '').trim();
+          if (filterKey === 'department_name') this.selectedDepartmentName = String(value ?? '').trim();
+          if (filterKey === 'program_code') this.selectedProgramCode = String(value ?? '').trim();
+          if (filterKey === 'program_name') this.selectedProgramName = String(value ?? '').trim();
+          if (filterKey === 'course_code') this.selectedCourseCode = String(value ?? '').trim();
+          if (filterKey === 'course_name') this.selectedCourseName = String(value ?? '').trim();
+        },
+
         resolveFilters(filterDefs) {
           const resolved = {};
           const currentYear = new Date().getFullYear();
 
           for (const [key, def] of Object.entries(filterDefs || {})) {
+            if (Object.prototype.hasOwnProperty.call(this.sharedFilters, key)) {
+              resolved[key] = this.cloneFilterValue(this.sharedFilters[key]);
+              continue;
+            }
+
             const source = def?.source;
             if (source === 'current_year') resolved[key] = currentYear;
             else if (source === 'selected_department_code') resolved[key] = this.selectedDepartmentCode;

@@ -119,7 +119,71 @@ window.ReportMixins = {
       numText(v, decimals = 2) { return window.ReportUtils.numText(v, decimals); },
       bandDaysToGrade(v) { return window.ReportUtils.bandDaysToGrade(this.colors, v); },
       bandDaysToRespond(v) { return window.ReportUtils.bandDaysToRespond(this.colors, v); },
-      uniqueSorted(arr) { return window.ReportUtils.uniqueSorted(arr); }
+      uniqueSorted(arr) { return window.ReportUtils.uniqueSorted(arr); },
+
+      cloneFilterValue(value) {
+        if (Array.isArray(value)) return value.slice();
+        if (value && typeof value === 'object') return Object.assign({}, value);
+        return value;
+      },
+
+      filterValuesEqual(a, b) {
+        if (Array.isArray(a) || Array.isArray(b)) {
+          if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+          return a.every((value, index) => this.filterValuesEqual(value, b[index]));
+        }
+        return String(a ?? '') === String(b ?? '');
+      },
+
+      getSharedFilterValue(key, fallback) {
+        const filterKey = String(key || '').trim();
+        const filters = this.reportContext?.sharedFilters || {};
+        if (filterKey && Object.prototype.hasOwnProperty.call(filters, filterKey)) {
+          return this.cloneFilterValue(filters[filterKey]);
+        }
+        return fallback;
+      },
+
+      setSharedFilterValue(key, value) {
+        const setter = this.reportContext?.setSharedFilter;
+        if (typeof setter === 'function') {
+          setter(String(key || '').trim(), this.cloneFilterValue(value));
+        }
+      },
+
+      filterAttrs(key, kind = 'select') {
+        const filterKey = String(key || '').trim();
+        return {
+          id: filterKey ? `report-filter-${filterKey.replace(/[^a-z0-9_-]+/gi, '-')}` : null,
+          class: 'js-report-filter',
+          'data-report-filter-key': filterKey,
+          'data-report-filter-kind': String(kind || 'select').trim() || 'select'
+        };
+      },
+
+      resolveDeferredSelection({ filterKey, options, currentValue, routeValue, allowBlank = false, fallbackValue = '' }) {
+        const normalizedOptions = Array.isArray(options) ? options : [];
+        if (!normalizedOptions.length) return currentValue;
+
+        const optionValues = normalizedOptions.map(option =>
+          option && typeof option === 'object' && Object.prototype.hasOwnProperty.call(option, 'value')
+            ? option.value
+            : option
+        );
+
+        const matchesOption = (value) => {
+          if (allowBlank && String(value ?? '') === '') return true;
+          return optionValues.some(optionValue => this.filterValuesEqual(optionValue, value));
+        };
+
+        const persistedValue = this.getSharedFilterValue(filterKey, undefined);
+        const preferredValues = [persistedValue, routeValue, currentValue];
+        const preferred = preferredValues.find(value => value !== undefined && matchesOption(value));
+        if (preferred !== undefined) return preferred;
+
+        if (allowBlank && String(fallbackValue ?? '') === '') return fallbackValue;
+        return optionValues[0];
+      }
     }
   },
 
@@ -135,7 +199,7 @@ window.ReportMixins = {
           loading: false,
           loadingDepartments: false,
           loadError: '',
-          year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
+          year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: [],
           departmentOptions: [],
           selectedDepartmentCode: '',
@@ -157,24 +221,35 @@ window.ReportMixins = {
           }
         },
         async year() {
+          this.setSharedFilterValue('academic_year', Number(this.year));
           await this.loadDepartmentOptions(true);
         },
         selectedDepartmentCode() {
+          this.setSharedFilterValue('department_code', this.selectedDepartmentCode);
+          const selectedOption = this.departmentOptions.find(option => option.value === this.selectedDepartmentCode);
+          if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
           this.loadData();
         }
       },
 
       methods: {
         syncFromReportContext() {
-          const nextYear = Number(this.reportContext?.filters?.academic_year);
+          const nextYear = Number(this.getSharedFilterValue('academic_year', this.reportContext?.filters?.academic_year));
           if (Number.isFinite(nextYear) && nextYear !== this.year) {
             this.year = nextYear;
           }
 
-          const nextDepartmentCode = this.getDepartmentCode();
+          const nextDepartmentCode = String(
+            this.getSharedFilterValue('department_code', this.getDepartmentCode()) ?? ''
+          ).trim();
           if (nextDepartmentCode && nextDepartmentCode !== this.selectedDepartmentCode) {
             this.selectedDepartmentCode = nextDepartmentCode;
           }
+
+          const nextDepartmentName = String(
+            this.getSharedFilterValue('department_name', this.getDepartmentName()) ?? ''
+          ).trim();
+          if (nextDepartmentName) this.loadedDepartmentName = nextDepartmentName;
         },
 
         getDataset() {
@@ -239,24 +314,26 @@ window.ReportMixins = {
                   }))
                   .filter(option => option.value && option.label)
                   .map(option => [option.value, option])
-              ).values()
-            ).sort((a, b) => a.label.localeCompare(b.label));
+            ).values()
+          ).sort((a, b) => a.label.localeCompare(b.label));
 
-            this.departmentOptions = options;
+          this.departmentOptions = options;
+          const nextDepartmentCode = this.resolveDeferredSelection({
+            filterKey: 'department_code',
+            options,
+            currentValue: this.selectedDepartmentCode,
+            routeValue: this.getDepartmentCode()
+          });
 
-            if (this.selectedDepartmentCode && options.some(option => option.value === this.selectedDepartmentCode)) {
-              if (forceReloadData) this.loadData();
-              return;
-            }
+          if (!this.filterValuesEqual(nextDepartmentCode, this.selectedDepartmentCode)) {
+            this.selectedDepartmentCode = nextDepartmentCode;
+            return;
+          }
 
-            const routedDepartmentCode = this.getDepartmentCode();
-            if (routedDepartmentCode && options.some(option => option.value === routedDepartmentCode)) {
-              this.selectedDepartmentCode = routedDepartmentCode;
-              return;
-            }
-
-            this.selectedDepartmentCode = options[0]?.value || '';
-          } catch (e) {
+          const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextDepartmentCode));
+          if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
+          if (forceReloadData) this.loadData();
+        } catch (e) {
             console.warn('Failed to load department options', e);
             this.departmentOptions = [];
             if (!this.selectedDepartmentCode) {
@@ -319,7 +396,7 @@ window.ReportMixins = {
         return {
           loading: false,
           loadError: '',
-          year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
+          year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: []
         };
       },
@@ -332,7 +409,7 @@ window.ReportMixins = {
         reportContext: {
           deep: true,
           handler() {
-            const nextYear = Number(this.reportContext?.filters?.academic_year);
+            const nextYear = Number(this.getSharedFilterValue('academic_year', this.reportContext?.filters?.academic_year));
             if (Number.isFinite(nextYear) && nextYear !== this.year) {
               this.year = nextYear;
               return;
@@ -341,6 +418,7 @@ window.ReportMixins = {
           }
         },
         year() {
+          this.setSharedFilterValue('academic_year', Number(this.year));
           this.loadData();
         }
       },
