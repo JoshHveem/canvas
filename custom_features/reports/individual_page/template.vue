@@ -64,6 +64,27 @@
           </button>
           <button
             role="tab"
+            :aria-selected="settings.reportType === 'employment-skills-historic' ? 'true' : 'false'"
+            :tabindex="settings.reportType === 'employment-skills-historic' ? 0 : -1"
+            @click="settings.reportType = 'employment-skills-historic'; onReportChange()"
+            style="
+              border:1px solid #e5e7eb;
+              border-radius:12px;
+              padding:6px 12px;
+              font-weight:600;
+              font-size:12px;
+              background: white;
+              cursor:pointer;
+              transition: box-shadow .15s ease, background .15s ease;
+            "
+            :style="settings.reportType === 'employment-skills-historic'
+              ? 'background:#111827; color:#fff; border-color:#111827; box-shadow:0 1px 4px rgba(0,0,0,.15);'
+              : 'background:#fff; color:#111827;'"
+          >
+            Employment Skills (Historic)
+          </button>
+          <button
+            role="tab"
             :aria-selected="settings.reportType === 'hs-grades' ? 'true' : 'false'"
             :tabindex="settings.reportType === 'hs-grades' ? 0 : -1"
             @click="settings.reportType = 'hs-grades'; onReportChange()"
@@ -204,6 +225,15 @@
             :settings="settings"
             :key="'employment-skills-' + selectedMajorIndex"
           ></employment-skills-report>
+        </div>
+        <div v-if="!loading && settings.reportType === 'employment-skills-historic'">
+          <employment-skills-historic-report
+            :user="user"
+            :major="currentMajor"
+            :colors="colors"
+            :settings="settings"
+            :key="'employment-skills-historic-' + selectedMajorIndex"
+          ></employment-skills-historic-report>
         </div>
         <div v-if="!loading && settings.reportType === 'student-grades'">
           <show-student-grades

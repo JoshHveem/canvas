@@ -331,6 +331,7 @@
           reportTypes: [
             { value: 'student-courses',     label: 'Courses',     component: 'student-courses-report',     title: 'Courses Report' },
             { value: 'employment-skills',  label: 'Employment Skills', component: 'employment-skills-report', title: 'Employment Skills Report' },
+            { value: 'employment-skills-historic', label: 'Employment Skills (Historic)', component: 'employment-skills-historic-report', title: 'Employment Skills Historic Report' },
             // { value: 'student-grades',    label: 'Grades',    component: 'student-grades-report',    title: 'Course Grades' },
             { value: 'hs-grades',    label: 'HS Grades',    component: 'show-student-grades',    title: 'HS Grades Between Dates' },
             { value: 'hs-grades-old',    label: 'HS Grades (Old)', component: 'show-student-grades',    title: 'HS Grades Between Dates (Old)' },
@@ -670,6 +671,7 @@
     loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsReport.js`);
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsHistoricReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsHistoricReport.js`);
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js') : SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
