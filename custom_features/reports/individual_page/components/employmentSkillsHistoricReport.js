@@ -241,7 +241,7 @@ Vue.component('employment-skills-historic-report', {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
     },
     headerCellStyle() {
-      return 'position: sticky; top: 0; z-index: 2; padding: 10px 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; font-size: 12px; font-weight: 700; white-space: nowrap;';
+      return 'position: sticky; top: 0; z-index: 2; padding: 10px 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; font-size: 12px; font-weight: 700; white-space: normal; line-height: 1.25;';
     },
     cellStyle(justifyContent = 'center') {
       return 'padding: 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; display: flex; align-items: center; justify-content: ' + justifyContent + '; min-height: 46px;';
