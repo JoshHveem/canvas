@@ -21,23 +21,34 @@ Vue.component('employment-skills-report', {
       >
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
           <h2 style="margin: 0;">Employment Skills</h2>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
+            <span class="btech-ind-header__label">Evaluations</span>
             <span
+              class="btech-pill-text btech-ind-header__pill"
               :style="pillStyle(colors.gray, colors.black)"
             >
-              Evaluations: {{ selectedRecord ? selectedRecord.num_evals__employment_skills || 0 : 0 }}
+              {{ selectedRecord ? selectedRecord.num_evals__employment_skills || 0 : 0 }}
             </span>
+            <span v-if="selectedRecord" class="btech-ind-header__label">Status</span>
             <span
               v-if="selectedRecord"
+              class="btech-pill-text btech-ind-header__pill"
               :style="pendingPillStyle"
             >
               {{ selectedRecord.is_pending_instructor_eval ? 'Instructor Eval Pending' : 'Instructor Eval Complete' }}
             </span>
             <span
               v-if="selectedRecord && selectedRecord.most_recent_employment_skills_created_at"
+              class="btech-ind-header__label"
+            >
+              Most Recent
+            </span>
+            <span
+              v-if="selectedRecord && selectedRecord.most_recent_employment_skills_created_at"
+              class="btech-pill-text btech-ind-header__pill"
               :style="pillStyle(colors.blue, colors.white)"
             >
-              Most Recent: {{ formatDate(selectedRecord.most_recent_employment_skills_created_at) }}
+              {{ formatDate(selectedRecord.most_recent_employment_skills_created_at) }}
             </span>
           </div>
         </div>
@@ -64,12 +75,20 @@ Vue.component('employment-skills-report', {
               <div style="font-weight: 600; margin-bottom: 10px;">
                 {{ entry.name }}
               </div>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <span :style="scorePillStyle(entry.instructorScore)">
-                  Instructor: {{ displayScore(entry.instructorScore) }}
+              <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
+                <span class="btech-ind-header__label">Instructor</span>
+                <span
+                  class="btech-pill-text btech-ind-header__pill"
+                  :style="scorePillStyle(entry.instructorScore)"
+                >
+                  {{ displayScore(entry.instructorScore) }}
                 </span>
-                <span :style="selfScorePillStyle(entry.selfScore)">
-                  Self: {{ displayScore(entry.selfScore) }}
+                <span class="btech-ind-header__label">Self</span>
+                <span
+                  class="btech-pill-text btech-ind-header__pill"
+                  :style="selfScorePillStyle(entry.selfScore)"
+                >
+                  {{ displayScore(entry.selfScore) }}
                 </span>
               </div>
             </div>
@@ -218,15 +237,15 @@ Vue.component('employment-skills-report', {
     scoreBackground(score) {
       const numeric = Number(score);
       if (!Number.isFinite(numeric)) return this.colors.gray;
-      if (numeric >= 4) return this.colors.green;
-      if (numeric >= 3) return this.colors.yellow;
+      if (numeric >= 3) return this.colors.green;
+      if (numeric >= 2) return this.colors.yellow;
       return this.colors.red;
     },
     scoreColor(score) {
       const numeric = Number(score);
       if (!Number.isFinite(numeric)) return this.colors.black;
-      if (numeric >= 4) return this.colors.white;
-      if (numeric >= 3) return this.colors.black;
+      if (numeric >= 3) return this.colors.white;
+      if (numeric >= 2) return this.colors.black;
       return this.colors.white;
     }
   }
