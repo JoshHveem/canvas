@@ -117,6 +117,21 @@ Vue.component('ind-header-credits', {
           </span>
         </div>
 
+        <div
+          v-if="user.career_goal__current"
+          style="
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-left: 4px solid #d1d5db;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            line-height: 1.5;
+          "
+        >
+          "{{ user.career_goal__current }}"
+        </div>
+
       </div>
     
     </div>

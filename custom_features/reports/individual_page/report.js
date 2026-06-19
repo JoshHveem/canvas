@@ -235,6 +235,7 @@
       contracted_hours_total: 0,
       transfer_courses: [],
       distance_approved: false,
+      career_goal__current: '',
     };
   }
 
@@ -556,6 +557,13 @@
           studentHeader = studentHeader || {};
           const sortedMajors = this.sortMajors(majors);
           const defaultMajor = sortedMajors[0] || emptyMajor();
+          const employmentSkills = studentHeader.employment_skills || [];
+          const matchingEmploymentSkills = employmentSkills.find(record => {
+            return String(record.program_code || '').trim().toUpperCase() === String(defaultMajor.major_code || '').trim().toUpperCase()
+              && Number(record.academic_year) === Number(defaultMajor.academic_year__major);
+          }) || employmentSkills.find(record => {
+            return String(record.program_code || '').trim().toUpperCase() === String(defaultMajor.major_code || '').trim().toUpperCase();
+          }) || employmentSkills[0] || {};
 
           const user = {
             majors: sortedMajors,
@@ -578,6 +586,7 @@
             contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours || {}),
             transfer_courses: [],
             distance_approved: Boolean(defaultMajor.is_distance_approved),
+            career_goal__current: matchingEmploymentSkills.career_goal__current || studentHeader.career_goal__current || '',
           };
 
           this.selectedMajorIndex = 0;
@@ -594,6 +603,7 @@
               studentMajors,
               studentHSTerms,
               studentHSTermOverrides,
+              studentEmploymentSkills,
               canvasUser
             ] = await Promise.all([
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
@@ -601,6 +611,7 @@
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms__override'}),
+              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_employment_skills'}),
               $.get(`/api/v1/users/${userId}`)
             ]);
 
@@ -610,7 +621,10 @@
             this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
-              studentHeader: studentHeader?.[0],
+              studentHeader: {
+                ...(studentHeader?.[0] || {}),
+                employment_skills: Array.isArray(studentEmploymentSkills) ? studentEmploymentSkills : []
+              },
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
               majors
