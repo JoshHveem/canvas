@@ -47,7 +47,7 @@ Vue.component('employment-skills-historic-report', {
               :style="headerCellStyle()"
               :title="skillName"
             >
-              {{ shortLabel(skillName) }}
+              {{ skillName }}
             </div>
 
             <template v-for="record in filteredRecords">
@@ -180,19 +180,6 @@ Vue.component('employment-skills-historic-report', {
         record.created_at__instructor_eval,
         record.created_at__self_eval
       ].join('|');
-    },
-    shortLabel(name) {
-      const labels = {
-        'Growth & Development': 'G&D',
-        'Collaboration & Respect': 'C&R',
-        'Initiative & Adaptability': 'I&A',
-        'Integrity & Accountability': 'I&Ac',
-        'Productivity & Reliability': 'P&R',
-        'Verbal & Written Communication': 'V&WC',
-        'Safety & Professional Standards': 'S&PS',
-        'Critical Thinking & Decision Making': 'CT&DM'
-      };
-      return labels[name] || name;
     },
     instructorScore(record, skillName) {
       return record.employment_skills_scores?.[skillName];
