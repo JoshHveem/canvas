@@ -35,18 +35,28 @@ Vue.component('employment-skills-report', {
               {{ formatDate(selectedRecord.most_recent_employment_skills_created_at) }}
             </span>
             <span
-              v-if="selectedRecord && selectedRecord.is_pending_instructor_eval"
+              v-if="selectedRecord"
               class="btech-ind-header__label"
             >
               Status
             </span>
             <span
-              v-if="selectedRecord && selectedRecord.is_pending_instructor_eval"
+              v-if="selectedRecord"
               class="btech-pill-text btech-ind-header__pill"
-              :style="pillStyle(colors.red, colors.white)"
+              :style="statusPillStyle"
             >
-              Pending Instructor Eval
+              {{ selectedRecord.is_pending_instructor_eval ? 'Pending Instructor Eval' : 'Instructor Eval Submitted' }}
             </span>
+            <a
+              v-if="submissionLink"
+              :href="submissionLink"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btech-ind-header__label"
+              style="text-decoration: underline;"
+            >
+              Submission Link
+            </a>
           </div>
           <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
             <span class="btech-ind-header__label">Evaluations Recorded</span>
@@ -171,6 +181,25 @@ Vue.component('employment-skills-report', {
       if (ageInDays < 30) return this.pillStyle(this.colors.green, this.colors.white);
       if (ageInDays < 60) return this.pillStyle(this.colors.yellow, this.colors.black);
       return this.pillStyle(this.colors.red, this.colors.white);
+    },
+    statusPillStyle() {
+      if (!this.selectedRecord) return this.pillStyle(this.colors.gray, this.colors.black);
+      return this.selectedRecord.is_pending_instructor_eval
+        ? this.pillStyle(this.colors.red, this.colors.white)
+        : this.pillStyle(this.colors.green, this.colors.white);
+    },
+    submissionLink() {
+      if (!this.selectedRecord) return '';
+
+      const courseId = this.selectedRecord.canvas_course_id;
+      const assignmentId = this.selectedRecord.canvas_assignment_id;
+      const studentId = this.selectedRecord.canvas_user_id || this.user.canvas_user_id;
+
+      if (!courseId || !assignmentId || !studentId) return '';
+
+      return 'https://btech.instructure.com/courses/' + courseId
+        + '/gradebook/speed_grader?assignment_id=' + assignmentId
+        + '&student_id=' + studentId;
     }
   },
   data() {
