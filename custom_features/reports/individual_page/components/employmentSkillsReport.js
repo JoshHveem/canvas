@@ -233,7 +233,7 @@ Vue.component('employment-skills-report', {
         const data = await bridgetools.req3(
           'reports',
           { sis_user_id: sisUserId },
-          { dataset: 'student_employment_skills' }
+          { dataset: 'student_employment_skills_current' }
         );
 
         this.records = Array.isArray(data) ? data : [];
