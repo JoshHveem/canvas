@@ -236,6 +236,7 @@
       transfer_courses: [],
       distance_approved: false,
       career_goal__current: '',
+      employment_skills_current: [],
     };
   }
 
@@ -559,13 +560,6 @@
           const sortedMajors = this.sortMajors(majors);
           const defaultMajor = sortedMajors[0] || emptyMajor();
           employmentSkills = employmentSkills || [];
-          const matchingEmploymentSkills = employmentSkills.find(record => {
-            return String(record.program_code || '').trim().toUpperCase() === String(defaultMajor.major_code || '').trim().toUpperCase()
-              && Number(record.academic_year) === Number(defaultMajor.academic_year__major);
-          }) || employmentSkills.find(record => {
-            return String(record.program_code || '').trim().toUpperCase() === String(defaultMajor.major_code || '').trim().toUpperCase();
-          }) || employmentSkills[0] || {};
-
           const user = {
             majors: sortedMajors,
             courses: courses || [],
@@ -587,7 +581,8 @@
             contracted_hours_total: this.sumContractedHours(studentHeader.contracted_hours || {}),
             transfer_courses: [],
             distance_approved: Boolean(defaultMajor.is_distance_approved),
-            career_goal__current: matchingEmploymentSkills.career_goal__current || studentHeader.career_goal__current || '',
+            career_goal__current: studentHeader.career_goal__current || '',
+            employment_skills_current: employmentSkills,
           };
 
           this.selectedMajorIndex = 0;
@@ -623,7 +618,7 @@
                 studentEmploymentSkills = await bridgetools.req3(
                   'reports',
                   { sis_user_id: sisUserId },
-                  { dataset: 'student_employment_skills' }
+                  { dataset: 'student_employment_skills_current' }
                 );
               } catch (err) {
                 console.error("Failed loading employment skills for header:", err);

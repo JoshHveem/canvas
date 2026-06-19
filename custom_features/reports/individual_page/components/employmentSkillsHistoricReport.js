@@ -23,61 +23,70 @@ Vue.component('employment-skills-historic-report', {
           No historic employment skills evaluations were found for this student and major.
         </div>
 
-        <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+        <div
+          v-else
+          style="
+            overflow-x: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: #ffffff;
+          "
+        >
           <div
-            v-for="record in filteredRecords"
-            :key="recordKey(record)"
-            :style="rowStyle()"
+            style="
+              display: grid;
+              grid-template-columns: 120px 110px repeat(8, minmax(84px, 1fr));
+              min-width: 980px;
+            "
           >
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 240px;">
-              <span class="btech-ind-header__label">Eval</span>
-              <span
-                class="btech-pill-text btech-ind-header__pill"
-                :style="datePillStyle(record)"
-              >
-                {{ formatDate(record.created_at__instructor_eval || record.created_at__self_eval) }}
-              </span>
-              <span class="btech-ind-header__label">Status</span>
-              <span
-                class="btech-pill-text btech-ind-header__pill"
-                :style="statusPillStyle(record)"
-              >
-                {{ record.is_pending_instructor_eval ? 'Pending' : 'Submitted' }}
-              </span>
-              <a
-                v-if="submissionLink(record)"
-                :href="submissionLink(record)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btech-ind-header__label"
-                style="text-decoration: underline;"
-              >
-                Submission Link
-              </a>
+            <div :style="headerCellStyle()">Submitted At</div>
+            <div :style="headerCellStyle()">Status</div>
+            <div
+              v-for="skillName in skillColumns"
+              :key="'header-' + skillName"
+              :style="headerCellStyle()"
+              :title="skillName"
+            >
+              {{ shortLabel(skillName) }}
             </div>
 
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px;">
+            <template v-for="record in filteredRecords">
               <div
-                v-for="entry in scoreEntries(record)"
-                :key="recordKey(record) + '-' + entry.name"
-                :title="entry.name + ' | Instructor: ' + displayScore(entry.instructorScore) + ' | Self: ' + displayScore(entry.selfScore)"
-                style="display: flex; align-items: center; gap: 4px; white-space: nowrap;"
+                :key="recordKey(record) + '-date'"
+                :style="cellStyle()"
               >
-                <span class="btech-ind-header__label">{{ shortLabel(entry.name) }}</span>
                 <span
                   class="btech-pill-text btech-ind-header__pill"
-                  :style="scorePillStyle(entry.instructorScore)"
+                  :style="datePillStyle(record)"
                 >
-                  {{ displayScore(entry.instructorScore) }}
-                </span>
-                <span
-                  class="btech-pill-text btech-ind-header__pill"
-                  :style="selfScorePillStyle()"
-                >
-                  {{ displayScore(entry.selfScore) }}
+                  {{ formatDate(record.created_at__instructor_eval || record.created_at__self_eval) }}
                 </span>
               </div>
-            </div>
+              <div
+                :key="recordKey(record) + '-status'"
+                :style="cellStyle()"
+              >
+                <span
+                  class="btech-pill-text btech-ind-header__pill"
+                  :style="statusPillStyle(record)"
+                >
+                  {{ record.is_pending_instructor_eval ? 'Pending' : 'Submitted' }}
+                </span>
+              </div>
+              <div
+                v-for="skillName in skillColumns"
+                :key="recordKey(record) + '-' + skillName"
+                :style="cellStyle()"
+                :title="skillName + ': ' + displayScore(instructorScore(record, skillName))"
+              >
+                <span
+                  class="btech-pill-text btech-ind-header__pill"
+                  :style="scorePillStyle(instructorScore(record, skillName))"
+                >
+                  {{ displayScore(instructorScore(record, skillName)) }}
+                </span>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -119,6 +128,13 @@ Vue.component('employment-skills-historic-report', {
           return new Date(b.created_at__instructor_eval || b.created_at__self_eval || 0)
             - new Date(a.created_at__instructor_eval || a.created_at__self_eval || 0);
         });
+    },
+    skillColumns() {
+      const names = new Set();
+      this.filteredRecords.forEach(record => {
+        Object.keys(record.employment_skills_scores || {}).forEach(name => names.add(name));
+      });
+      return Array.from(names);
     }
   },
   watch: {
@@ -165,20 +181,6 @@ Vue.component('employment-skills-historic-report', {
         record.created_at__self_eval
       ].join('|');
     },
-    scoreEntries(record) {
-      const instructorScores = record.employment_skills_scores || {};
-      const selfScores = record.employment_skills_scores__self || {};
-      const categories = Array.from(new Set([
-        ...Object.keys(instructorScores),
-        ...Object.keys(selfScores)
-      ]));
-
-      return categories.map(name => ({
-        name,
-        instructorScore: instructorScores[name],
-        selfScore: selfScores[name]
-      }));
-    },
     shortLabel(name) {
       const labels = {
         'Growth & Development': 'G&D',
@@ -192,16 +194,8 @@ Vue.component('employment-skills-historic-report', {
       };
       return labels[name] || name;
     },
-    submissionLink(record) {
-      const courseId = record.canvas_course_id;
-      const assignmentId = record.canvas_assignment_id;
-      const studentId = record.canvas_user_id || this.user.canvas_user_id;
-
-      if (!courseId || !assignmentId || !studentId) return '';
-
-      return 'https://btech.instructure.com/courses/' + courseId
-        + '/gradebook/speed_grader?assignment_id=' + assignmentId
-        + '&student_id=' + studentId;
+    instructorScore(record, skillName) {
+      return record.employment_skills_scores?.[skillName];
     },
     formatDate(date) {
       if (!date) return 'N/A';
@@ -224,14 +218,14 @@ Vue.component('employment-skills-historic-report', {
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
     },
-    rowStyle() {
-      return 'display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid ' + this.colors.gray + '; border-radius: 10px; background: ' + this.colors.white + '; overflow-x: auto;';
+    headerCellStyle() {
+      return 'position: sticky; top: 0; z-index: 2; padding: 10px 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; font-size: 12px; font-weight: 700; white-space: nowrap;';
+    },
+    cellStyle() {
+      return 'padding: 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; display: flex; align-items: center; justify-content: center; min-height: 46px;';
     },
     pillStyle(backgroundColor, textColor) {
       return 'padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: ' + backgroundColor + '; color: ' + textColor + ';';
-    },
-    selfScorePillStyle() {
-      return 'padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; color: ' + this.colors.black + ';';
     },
     scorePillStyle(score) {
       return this.pillStyle(this.scoreBackground(score), this.scoreColor(score));

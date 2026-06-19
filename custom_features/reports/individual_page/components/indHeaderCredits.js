@@ -118,7 +118,7 @@ Vue.component('ind-header-credits', {
         </div>
 
         <div
-          v-if="user.career_goal__current"
+          v-if="currentCareerGoal"
           style="
             margin-top: 12px;
             padding: 12px 16px;
@@ -129,7 +129,7 @@ Vue.component('ind-header-credits', {
             line-height: 1.5;
           "
         >
-          "{{ user.career_goal__current }}"
+          "{{ currentCareerGoal }}"
         </div>
 
       </div>
@@ -181,6 +181,17 @@ Vue.component('ind-header-credits', {
           return groupSum + Number(course.credits);
         }, 0);
       }, 0);
+    },
+    currentCareerGoal() {
+      const records = this.user.employment_skills_current || [];
+      const matchingRecord = records.find(record => {
+        return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase()
+          && Number(record.academic_year) === Number(this.major.academic_year__major);
+      }) || records.find(record => {
+        return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase();
+      }) || records[0];
+
+      return matchingRecord?.career_goal__current || this.user.career_goal__current || '';
     }
   },
   watch: {
