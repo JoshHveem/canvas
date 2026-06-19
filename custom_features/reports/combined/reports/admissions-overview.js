@@ -1,4 +1,8 @@
 Vue.component('reports-admissions-overview', {
+  mixins: [
+    window.ReportMixins.formatting
+  ],
+
   props: {
     reportContext: { type: Object, default: () => ({}) },
     anonymous: { type: Boolean, default: false }
@@ -8,11 +12,11 @@ Vue.component('reports-admissions-overview', {
     return {
       loading: false,
       loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
+      year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rawRows: [],
-      selectedProgram: '',
-      selectedStageFocus: '',
-      minCountThreshold: 3,
+      selectedProgram: String(this.reportContext?.sharedFilters?.program_name ?? ''),
+      selectedStageFocus: String(this.reportContext?.sharedFilters?.stage_focus ?? ''),
+      minCountThreshold: Number(this.reportContext?.sharedFilters?.min_count_threshold ?? 3) || 3,
       selectedPath: '',
       hoveredPath: '',
       tooltip: {
@@ -50,24 +54,28 @@ Vue.component('reports-admissions-overview', {
     },
 
     year() {
+      this.setSharedFilterValue('academic_year', Number(this.year));
       this.loadData();
     },
 
-    selectedProgram() {
+    selectedProgram(value) {
+      this.setSharedFilterValue('program_name', value);
       this.selectedPath = '';
       this.hoveredPath = '';
       this.hideTooltip();
       this.renderChart();
     },
 
-    selectedStageFocus() {
+    selectedStageFocus(value) {
+      this.setSharedFilterValue('stage_focus', value);
       this.selectedPath = '';
       this.hoveredPath = '';
       this.hideTooltip();
       this.renderChart();
     },
 
-    minCountThreshold() {
+    minCountThreshold(value) {
+      this.setSharedFilterValue('min_count_threshold', Number(value) || 1);
       this.selectedPath = '';
       this.hoveredPath = '';
       this.hideTooltip();
@@ -151,10 +159,14 @@ Vue.component('reports-admissions-overview', {
 
   methods: {
     syncFromReportContext() {
-      const nextYear = Number(this.reportContext?.filters?.academic_year);
+      const nextYear = Number(this.getSharedFilterValue('academic_year', this.reportContext?.filters?.academic_year));
       if (Number.isFinite(nextYear) && nextYear !== this.year) {
         this.year = nextYear;
       }
+
+      this.selectedProgram = String(this.getSharedFilterValue('program_name', this.selectedProgram) ?? '').trim();
+      this.selectedStageFocus = String(this.getSharedFilterValue('stage_focus', this.selectedStageFocus) ?? '').trim();
+      this.minCountThreshold = Number(this.getSharedFilterValue('min_count_threshold', this.minCountThreshold)) || 1;
     },
 
     getDataset() {
@@ -195,11 +207,26 @@ Vue.component('reports-admissions-overview', {
 
         this.rawRows = (Array.isArray(rows) ? rows : []).map(row => this.normalizeRow(row));
 
-        if (this.selectedProgram && !this.programOptions.includes(this.selectedProgram)) {
-          this.selectedProgram = '';
+        const nextProgram = this.resolveDeferredSelection({
+          filterKey: 'program_name',
+          options: [{ value: '', label: 'All programs' }, ...this.programOptions.map(option => ({ value: option, label: option }))],
+          currentValue: this.selectedProgram,
+          allowBlank: true,
+          fallbackValue: ''
+        });
+        if (!this.filterValuesEqual(nextProgram, this.selectedProgram)) {
+          this.selectedProgram = nextProgram;
         }
-        if (this.selectedStageFocus && !this.stageOptions.includes(this.selectedStageFocus)) {
-          this.selectedStageFocus = '';
+
+        const nextStageFocus = this.resolveDeferredSelection({
+          filterKey: 'stage_focus',
+          options: [{ value: '', label: 'All stages' }, ...this.stageOptions.map(option => ({ value: option, label: option }))],
+          currentValue: this.selectedStageFocus,
+          allowBlank: true,
+          fallbackValue: ''
+        });
+        if (!this.filterValuesEqual(nextStageFocus, this.selectedStageFocus)) {
+          this.selectedStageFocus = nextStageFocus;
         }
       } catch (e) {
         console.warn('Failed to load admissions overview dataset', e);
@@ -692,7 +719,7 @@ Vue.component('reports-admissions-overview', {
       <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
         <div style="display:flex; align-items:center; gap:.5rem;">
           <label class="btech-muted" style="font-size:.75rem;">Year</label>
-          <select v-model.number="year" style="font-size:.75rem; min-width:96px;">
+          <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:96px;">
             <option
               v-for="optionYear in yearOptions"
               :key="optionYear"
@@ -703,7 +730,7 @@ Vue.component('reports-admissions-overview', {
 
         <div style="display:flex; align-items:center; gap:.5rem;">
           <label class="btech-muted" style="font-size:.75rem;">Program</label>
-          <select v-model="selectedProgram" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <select v-model="selectedProgram" v-bind="filterAttrs('program_name')" style="font-size:.75rem; min-width:220px; max-width:320px;">
             <option value="">All</option>
             <option
               v-for="program in programOptions"
@@ -715,7 +742,7 @@ Vue.component('reports-admissions-overview', {
 
         <div style="display:flex; align-items:center; gap:.5rem;">
           <label class="btech-muted" style="font-size:.75rem;">Focus Stage</label>
-          <select v-model="selectedStageFocus" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <select v-model="selectedStageFocus" v-bind="filterAttrs('stage_focus')" style="font-size:.75rem; min-width:220px; max-width:320px;">
             <option value="">All</option>
             <option
               v-for="stage in stageOptions"
@@ -729,6 +756,7 @@ Vue.component('reports-admissions-overview', {
           <label class="btech-muted" style="font-size:.75rem;">Min Path Count</label>
           <input
             v-model.number="minCountThreshold"
+            v-bind="filterAttrs('min_count_threshold', 'number')"
             type="number"
             min="1"
             step="1"

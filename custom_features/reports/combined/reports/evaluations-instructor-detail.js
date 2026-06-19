@@ -18,13 +18,13 @@ Vue.component('reports-evaluations-instructor-detail', {
       loading: false,
       loadingOptions: false,
       loadError: '',
-      year: Number(this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
+      year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
       optionRows: [],
-      selectedProgramCode: '',
-      selectedCourseCode: '',
-      selectedPositiveTag: '',
-      selectedRecommendationTag: ''
+      selectedProgramCode: String(this.reportContext?.sharedFilters?.program_code ?? this.reportContext?.routeFilters?.programCode ?? ''),
+      selectedCourseCode: String(this.reportContext?.sharedFilters?.course_code ?? this.reportContext?.routeFilters?.courseCode ?? ''),
+      selectedPositiveTag: String(this.reportContext?.sharedFilters?.positive_tag ?? ''),
+      selectedRecommendationTag: String(this.reportContext?.sharedFilters?.recommendation_tag ?? '')
     };
   },
 
@@ -35,6 +35,12 @@ Vue.component('reports-evaluations-instructor-detail', {
         row => this.anonymous ? 'COURSE' : this.escapeHtml(this.courseLabel(row)),
         null,
         row => this.courseLabel(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Instructor', 'Instructor name.', '12rem', false, 'string',
+        row => this.anonymous ? 'INSTRUCTOR' : this.escapeHtml(String(row?.full_name__instructor ?? '')),
+        null,
+        row => String(row?.full_name__instructor ?? '').toLowerCase()
       ),
       new window.ReportColumn(
         'Support', 'Available support score.', '6rem', false, 'number',
@@ -84,18 +90,18 @@ Vue.component('reports-evaluations-instructor-detail', {
         row => this.responseLikertPillStyle(row?.likert_prepared_for_class),
         row => Number(row?.likert_prepared_for_class ?? -1)
       ),
-      new window.ReportColumn(
+      this.withColumnWrap(new window.ReportColumn(
         'Positives', 'Positive free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_positives),
         null,
         row => String(row?.free_response_positives ?? '')
-      ),
-      new window.ReportColumn(
+      )),
+      this.withColumnWrap(new window.ReportColumn(
         'Recommendations', 'Recommendation free response.', '24rem', false, 'string',
         row => this.textOrDash(row?.free_response_recommendations),
         null,
         row => String(row?.free_response_recommendations ?? '')
-      )
+      ))
     ]);
   },
 
@@ -113,9 +119,13 @@ Vue.component('reports-evaluations-instructor-detail', {
       }
     },
     year() {
+      this.setSharedFilterValue('academic_year', Number(this.year));
       this.loadOptions();
     },
     selectedProgramCode() {
+      this.setSharedFilterValue('program_code', this.selectedProgramCode);
+      const selectedOption = this.programOptions.find(option => option.value === this.selectedProgramCode);
+      if (selectedOption?.label) this.setSharedFilterValue('program_name', selectedOption.label);
       const courseOptions = this.courseOptions;
       if (!courseOptions.some(option => option.value === this.selectedCourseCode)) {
         this.selectedCourseCode = '';
@@ -124,7 +134,16 @@ Vue.component('reports-evaluations-instructor-detail', {
       this.loadData();
     },
     selectedCourseCode() {
+      this.setSharedFilterValue('course_code', this.selectedCourseCode);
+      const selectedOption = this.courseOptions.find(option => option.value === this.selectedCourseCode);
+      if (selectedOption?.label && this.selectedCourseCode) this.setSharedFilterValue('course_name', selectedOption.label);
       this.loadData();
+    },
+    selectedPositiveTag(value) {
+      this.setSharedFilterValue('positive_tag', value);
+    },
+    selectedRecommendationTag(value) {
+      this.setSharedFilterValue('recommendation_tag', value);
     }
   },
 
@@ -200,10 +219,12 @@ Vue.component('reports-evaluations-instructor-detail', {
         this.year = nextYear;
       }
 
-      const routedProgramCode = String(this.reportContext?.routeFilters?.programCode ?? '').trim();
-      const routedCourseCode = String(this.reportContext?.routeFilters?.courseCode ?? '').trim();
+      const routedProgramCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
+      const routedCourseCode = String(this.getSharedFilterValue('course_code', this.reportContext?.routeFilters?.courseCode) ?? '').trim();
       if (routedProgramCode) this.selectedProgramCode = routedProgramCode;
       if (routedCourseCode) this.selectedCourseCode = routedCourseCode;
+      this.selectedPositiveTag = String(this.getSharedFilterValue('positive_tag', this.selectedPositiveTag) ?? '').trim();
+      this.selectedRecommendationTag = String(this.getSharedFilterValue('recommendation_tag', this.selectedRecommendationTag) ?? '').trim();
     },
 
     getDataset() {
@@ -229,13 +250,27 @@ Vue.component('reports-evaluations-instructor-detail', {
           course_name: String(row?.course_name ?? '').trim()
         }));
 
-        if (!this.programOptions.some(option => option.value === this.selectedProgramCode)) {
-          this.selectedProgramCode = this.programOptions[0]?.value || '';
+        const nextProgramCode = this.resolveDeferredSelection({
+          filterKey: 'program_code',
+          options: this.programOptions,
+          currentValue: this.selectedProgramCode,
+          routeValue: this.reportContext?.routeFilters?.programCode
+        });
+        if (!this.filterValuesEqual(nextProgramCode, this.selectedProgramCode)) {
+          this.selectedProgramCode = nextProgramCode;
           return;
         }
 
-        if (!this.courseOptions.some(option => option.value === this.selectedCourseCode)) {
-          this.selectedCourseCode = '';
+        const nextCourseCode = this.resolveDeferredSelection({
+          filterKey: 'course_code',
+          options: this.courseOptions,
+          currentValue: this.selectedCourseCode,
+          routeValue: this.reportContext?.routeFilters?.courseCode,
+          allowBlank: true,
+          fallbackValue: ''
+        });
+        if (!this.filterValuesEqual(nextCourseCode, this.selectedCourseCode)) {
+          this.selectedCourseCode = nextCourseCode;
           return;
         }
 
@@ -279,6 +314,7 @@ Vue.component('reports-evaluations-instructor-detail', {
           ...row,
           course_code: String(row?.course_code ?? '').trim(),
           course_name: String(row?.course_name ?? '').trim(),
+          full_name__instructor: String(row?.full_name__instructor ?? '').trim(),
           evaluation_submission_id: String(row?.evaluation_submission_id ?? '').trim(),
           likert_available_support: Number(row?.likert_available_support),
           likert_clear_instruction: Number(row?.likert_clear_instruction),
@@ -364,7 +400,7 @@ Vue.component('reports-evaluations-instructor-detail', {
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
           <option
             v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
             :key="optionYear"
@@ -375,7 +411,7 @@ Vue.component('reports-evaluations-instructor-detail', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
-        <select v-model="selectedProgramCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in programOptions"
             :key="option.value"
@@ -386,7 +422,7 @@ Vue.component('reports-evaluations-instructor-detail', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Course</label>
-        <select v-model="selectedCourseCode" style="font-size:.75rem; min-width:260px; max-width:360px;">
+        <select v-model="selectedCourseCode" v-bind="filterAttrs('course_code')" style="font-size:.75rem; min-width:260px; max-width:360px;">
           <option
             v-for="option in courseOptions"
             :key="option.value"
@@ -397,7 +433,7 @@ Vue.component('reports-evaluations-instructor-detail', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Positive Tag</label>
-        <select v-model="selectedPositiveTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+        <select v-model="selectedPositiveTag" v-bind="filterAttrs('positive_tag')" style="font-size:.75rem; min-width:180px; max-width:260px;">
           <option value="">All</option>
           <option
             v-for="tag in positiveTagOptions"
@@ -409,7 +445,7 @@ Vue.component('reports-evaluations-instructor-detail', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Recommendation Tag</label>
-        <select v-model="selectedRecommendationTag" style="font-size:.75rem; min-width:180px; max-width:260px;">
+        <select v-model="selectedRecommendationTag" v-bind="filterAttrs('recommendation_tag')" style="font-size:.75rem; min-width:180px; max-width:260px;">
           <option value="">All</option>
           <option
             v-for="tag in recommendationTagOptions"

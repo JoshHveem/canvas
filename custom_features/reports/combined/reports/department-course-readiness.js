@@ -3,6 +3,7 @@ Vue.component('multi-filter-pill', {
     label: { type: String, required: true },
     options: { type: Array, required: true },
     value: { type: Array, required: true },
+    filterKey: { type: String, default: '' },
     placeholder: { type: String, default: 'All' },
     maxSummaryItems: { type: Number, default: 2 }
   },
@@ -68,7 +69,10 @@ Vue.component('multi-filter-pill', {
   template: `
     <div ref="root" style="position:relative; display:inline-block; min-width:220px;">
       <div
-        class="btech-pill"
+        :id="filterKey ? 'report-filter-' + filterKey.replace(/[^a-z0-9_-]+/gi, '-') : null"
+        class="btech-pill js-report-filter"
+        :data-report-filter-key="filterKey || null"
+        data-report-filter-kind="multi-select"
         style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 10px; cursor:pointer; user-select:none;"
         @click="toggleOpen"
         :title="label + ': ' + summary"
@@ -147,9 +151,9 @@ Vue.component('reports-department-course-readiness', {
       colors,
       table,
       filters: {
-        source: ['Jenzabar'],
-        type: ['CS'],
-        course_status: []
+        source: this.getSharedFilterValue('source', ['Jenzabar']),
+        type: this.getSharedFilterValue('type', ['CS']),
+        course_status: this.getSharedFilterValue('course_status', [])
       },
       filtersInitialized: false
     };
@@ -223,6 +227,15 @@ Vue.component('reports-department-course-readiness', {
     },
     selectedDepartmentCode() {
       this.filtersInitialized = false;
+    },
+    'filters.source'(value) {
+      this.setSharedFilterValue('source', value);
+    },
+    'filters.type'(value) {
+      this.setSharedFilterValue('type', value);
+    },
+    'filters.course_status'(value) {
+      this.setSharedFilterValue('course_status', value);
     }
   },
 
@@ -369,7 +382,7 @@ Vue.component('reports-department-course-readiness', {
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
           <option
             v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
             :key="optionYear"
@@ -380,7 +393,7 @@ Vue.component('reports-department-course-readiness', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
-        <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in departmentOptions"
             :key="option.value"
@@ -393,6 +406,7 @@ Vue.component('reports-department-course-readiness', {
         label="Type"
         :options="typeOptions"
         v-model="filters.type"
+        filter-key="type"
         placeholder="All"
       ></multi-filter-pill>
 
@@ -400,6 +414,7 @@ Vue.component('reports-department-course-readiness', {
         label="Course Status"
         :options="courseStatusOptions"
         v-model="filters.course_status"
+        filter-key="course_status"
         placeholder="All"
       ></multi-filter-pill>
     </template>

@@ -94,6 +94,10 @@
           sharedLoading: {
             programs: false,
             avps: false
+          },
+          sharedLoaded: {
+            programs: false,
+            avps: false
           }
         };
       },
@@ -233,6 +237,7 @@
             });
 
             this.programs = Array.isArray(response?.data) ? response.data : [];
+            this.sharedLoaded.programs = true;
           } catch (error) {
             console.error("Failed to load programs", error);
             this.programs = [];
@@ -253,6 +258,7 @@
             console.log("[Reporting V3] loadAvps response.data", response?.data);
             this.avps = Array.isArray(response?.data) ? response.data : [];
             console.log("[Reporting V3] normalized avps list", this.avps);
+            this.sharedLoaded.avps = true;
           } catch (error) {
             console.error("Failed to load avps", error);
             this.avps = [];
@@ -279,8 +285,8 @@
               key: "academic_year",
               label: "Academic Year",
               placeholder: "Select Year",
-              options: this.academicYearOptions,
-              value: String(this.settings?.filters?.academic_year || this.currentYear),
+              options: this.getFilterOptionsWithSelection("academic_year", this.academicYearOptions),
+              value: this.getSavedFilterValue("academic_year") || String(this.currentYear),
               disabled: false
             };
           }
@@ -290,7 +296,7 @@
               key: "programs",
               label: "Program",
               placeholder: "All Programs",
-              options: this.getProgramFilterOptions(),
+              options: this.getFilterOptionsWithSelection("programs", this.getProgramFilterOptions()),
               value: String(this.settings?.filters?.programs || ""),
               disabled: this.sharedLoading.programs
             };
@@ -301,7 +307,7 @@
               key: "avps",
               label: "AVP",
               placeholder: "All AVPs",
-              options: this.getAvpFilterOptions(),
+              options: this.getFilterOptionsWithSelection("avps", this.getAvpFilterOptions()),
               value: String(this.settings?.filters?.avps || ""),
               disabled: this.sharedLoading.avps
             };
@@ -359,10 +365,81 @@
           );
         },
 
+        isSharedFilterLoaded(filterKey) {
+          return !!this.sharedLoaded?.[filterKey];
+        },
+
+        getSavedFilterValue(filterKey) {
+          if (filterKey === "academic_year") {
+            return String(this.settings?.globalAcademicYear || this.settings?.filters?.academic_year || "").trim();
+          }
+
+          return String(this.settings?.filters?.[filterKey] || "").trim();
+        },
+
+        syncAcademicYearFilter() {
+          const globalAcademicYear = this.getSavedFilterValue("academic_year");
+
+          console.log("[Reporting V3] syncAcademicYearFilter", {
+            globalAcademicYear,
+            settingsGlobalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
+          if (globalAcademicYear) {
+            this.settings.globalAcademicYear = globalAcademicYear;
+            this.$set(this.settings.filters, "academic_year", globalAcademicYear);
+            return;
+          }
+
+          this.settings.globalAcademicYear = "";
+          if (this.settings?.filters && Object.prototype.hasOwnProperty.call(this.settings.filters, "academic_year")) {
+            this.$delete(this.settings.filters, "academic_year");
+          }
+        },
+
+        getPendingFilterOptionLabel(filterKey, value) {
+          if (filterKey === "academic_year") {
+            return `${value} (Saved selection)`;
+          }
+
+          if (filterKey === "programs") {
+            return this.isSharedFilterLoaded(filterKey)
+              ? `${value} (Unavailable for current filters)`
+              : `${value} (Saved selection loading...)`;
+          }
+
+          if (filterKey === "avps") {
+            return this.isSharedFilterLoaded(filterKey)
+              ? `${value} (Unavailable)`
+              : `${value} (Saved selection loading...)`;
+          }
+
+          return value;
+        },
+
+        getFilterOptionsWithSelection(filterKey, options) {
+          const normalizedOptions = Array.isArray(options) ? options.slice() : [];
+          const selectedValue = this.getSavedFilterValue(filterKey);
+          if (!selectedValue) return normalizedOptions;
+
+          const hasSelectedOption = normalizedOptions.some((option) => option.value === selectedValue);
+          if (hasSelectedOption) return normalizedOptions;
+
+          return [
+            {
+              value: selectedValue,
+              label: this.getPendingFilterOptionLabel(filterKey, selectedValue)
+            },
+            ...normalizedOptions
+          ];
+        },
+
         pruneFilterSelection(filterKey) {
           if (filterKey !== "programs" && filterKey !== "avps") return;
+          if (!this.isSharedFilterLoaded(filterKey)) return;
 
-          const selected = String(this.settings?.filters?.[filterKey] || "");
+          const selected = this.getSavedFilterValue(filterKey);
           if (!selected) return;
 
           const options = filterKey === "programs" ? this.getProgramFilterOptions() : this.getAvpFilterOptions();
@@ -386,10 +463,21 @@
         },
 
         async onReportChange() {
+          console.log("[Reporting V3] onReportChange start", {
+            reportType: this.settings?.reportType,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           this.clearViewFilterControls();
           this.settings = utils.normalizeSettings(this.settings, this.reportTypes);
           this.ensureAcademicYearFilter();
+          this.syncAcademicYearFilter();
           await this.ensureSharedFilterData();
+          console.log("[Reporting V3] onReportChange end", {
+            reportType: this.settings?.reportType,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
@@ -397,32 +485,74 @@
           const type = this.currentReportMeta?.value;
           if (!type) return;
 
+          console.log("[Reporting V3] setSubMenu start", {
+            reportType: type,
+            nextSubMenu: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
           this.clearViewFilterControls();
           this.$set(this.settings.subMenuByType, type, value);
           this.ensureCurrentView();
           this.ensureAcademicYearFilter();
-          this.pruneFilterSelection("programs");
-          this.pruneFilterSelection("avps");
+          this.syncAcademicYearFilter();
+          await this.ensureSharedFilterData();
+          console.log("[Reporting V3] setSubMenu end", {
+            reportType: type,
+            nextSubMenu: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
         async setView(value) {
           if (!this.currentViewSettingsKey) return;
 
+          console.log("[Reporting V3] setView start", {
+            currentViewSettingsKey: this.currentViewSettingsKey,
+            nextView: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+
           this.clearViewFilterControls();
           this.$set(this.settings.viewByReport, this.currentViewSettingsKey, value);
           this.ensureAcademicYearFilter();
-          this.pruneFilterSelection("programs");
-          this.pruneFilterSelection("avps");
+          this.syncAcademicYearFilter();
+          await this.ensureSharedFilterData();
+          console.log("[Reporting V3] setView end", {
+            currentViewSettingsKey: this.currentViewSettingsKey,
+            nextView: value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
         async updateFilterValue(filterKey, value) {
+          console.log("[Reporting V3] updateFilterValue start", {
+            filterKey,
+            value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
+          if (filterKey === "academic_year") {
+            this.settings.globalAcademicYear = String(value || "").trim();
+          }
+
           this.$set(this.settings.filters, filterKey, value);
           if (filterKey === "academic_year") {
-            this.pruneFilterSelection("programs");
-            this.pruneFilterSelection("avps");
+            this.syncAcademicYearFilter();
+            await this.ensureSharedFilterData();
           }
+          console.log("[Reporting V3] updateFilterValue end", {
+            filterKey,
+            value,
+            globalAcademicYear: this.settings?.globalAcademicYear,
+            filterAcademicYear: this.settings?.filters?.academic_year
+          });
           await this.persistSettings();
         },
 
@@ -512,10 +642,10 @@
         ensureAcademicYearFilter() {
           if (!this.currentNeedsAcademicYear) return;
 
-          const validYears = new Set(this.academicYearOptions.map((option) => option.value));
-          const currentValue = String(this.settings?.filters?.academic_year || "");
+          const currentValue = this.getSavedFilterValue("academic_year");
 
-          if (!validYears.has(currentValue)) {
+          if (!currentValue) {
+            this.settings.globalAcademicYear = String(this.currentYear);
             this.$set(this.settings.filters, "academic_year", String(this.currentYear));
           }
         },
@@ -562,6 +692,7 @@
         this.settings = utils.normalizeSettings(loadedSettings, this.reportTypes);
         this.lockPageViewport();
         this.ensureAcademicYearFilter();
+        this.syncAcademicYearFilter();
         await this.ensureSharedFilterData();
         this.loading = false;
         this.$nextTick(this.updateReportShellSize);

@@ -16,7 +16,7 @@ Vue.component('reports-department-instructors', {
       colors,
       table,
       filters: {
-        instructor_id: ''
+        instructor_id: String(this.reportContext?.sharedFilters?.instructor_id ?? '')
       }
     };
   },
@@ -90,6 +90,9 @@ Vue.component('reports-department-instructors', {
   },
 
   watch: {
+    'filters.instructor_id'(value) {
+      this.setSharedFilterValue('instructor_id', value);
+    },
     rows: {
       immediate: true,
       handler() {
@@ -181,7 +184,7 @@ Vue.component('reports-department-instructors', {
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" style="font-size:.75rem; min-width:90px;">
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
           <option
             v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
             :key="optionYear"
@@ -192,7 +195,7 @@ Vue.component('reports-department-instructors', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
-        <select v-model="selectedDepartmentCode" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option
             v-for="option in departmentOptions"
             :key="option.value"
@@ -203,7 +206,7 @@ Vue.component('reports-department-instructors', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Instructor</label>
-        <select v-model="filters.instructor_id" style="font-size:.75rem; min-width:220px; max-width:320px;">
+        <select v-model="filters.instructor_id" v-bind="filterAttrs('instructor_id')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option value="">All</option>
           <option
             v-for="option in instructorOptions"
