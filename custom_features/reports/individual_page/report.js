@@ -553,11 +553,11 @@
           });
         },
 
-        normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors }) {
+        normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors, employmentSkills }) {
           studentHeader = studentHeader || {};
           const sortedMajors = this.sortMajors(majors);
           const defaultMajor = sortedMajors[0] || emptyMajor();
-          const employmentSkills = studentHeader.employment_skills || [];
+          employmentSkills = employmentSkills || [];
           const matchingEmploymentSkills = employmentSkills.find(record => {
             return String(record.program_code || '').trim().toUpperCase() === String(defaultMajor.major_code || '').trim().toUpperCase()
               && Number(record.academic_year) === Number(defaultMajor.academic_year__major);
@@ -603,7 +603,6 @@
               studentMajors,
               studentHSTerms,
               studentHSTermOverrides,
-              studentEmploymentSkills,
               canvasUser
             ] = await Promise.all([
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
@@ -611,9 +610,25 @@
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms__override'}),
-              bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_employment_skills'}),
               $.get(`/api/v1/users/${userId}`)
             ]);
+
+            const primaryStudentHeader = studentHeader?.[0] || {};
+            const sisUserId = primaryStudentHeader.sis_user_id || canvasUser.sis_user_id || null;
+            let studentEmploymentSkills = [];
+
+            if (sisUserId) {
+              try {
+                studentEmploymentSkills = await bridgetools.req3(
+                  'reports',
+                  { sis_user_id: sisUserId },
+                  { dataset: 'student_employment_skills' }
+                );
+              } catch (err) {
+                console.error("Failed loading employment skills for header:", err);
+                studentEmploymentSkills = [];
+              }
+            }
 
             this.canvasUser = canvasUser;
             this.setLoadingState("Loading major requirements", 60);
@@ -621,13 +636,11 @@
             this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
-              studentHeader: {
-                ...(studentHeader?.[0] || {}),
-                employment_skills: Array.isArray(studentEmploymentSkills) ? studentEmploymentSkills : []
-              },
+              studentHeader: primaryStudentHeader,
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
-              majors
+              majors,
+              employmentSkills: Array.isArray(studentEmploymentSkills) ? studentEmploymentSkills : []
             });
           } catch (err) {
             console.error(err);
