@@ -104,7 +104,7 @@ Vue.component('employment-skills-report', {
             v-if="selectedRecord.employment_skills_goals"
             :style="cardStyle()"
           >
-            <div style="font-weight: 600; margin-bottom: 8px;">Goal(s)</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Feedback/Goal(s)</div>
             <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals }}</div>
           </div>
         </div>
