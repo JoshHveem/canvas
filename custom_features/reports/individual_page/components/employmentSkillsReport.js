@@ -3,7 +3,7 @@ Vue.component('employment-skills-report', {
     <div style="margin-top: 12px;">
       <div
         v-if="loading"
-        :style="panelStyle(colors.gray, colors.black)"
+        :style="panelStyle(colors.white, colors.black)"
       >
         Loading employment skills...
       </div>
@@ -17,7 +17,7 @@ Vue.component('employment-skills-report', {
 
       <div
         v-else
-        :style="panelStyle(colors.gray, colors.black)"
+        :style="panelStyle(colors.white, colors.black)"
       >
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
           <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
