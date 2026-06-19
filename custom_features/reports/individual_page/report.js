@@ -257,8 +257,12 @@
 
   async function postLoad() {
     let vueString = '';
+    const cacheBust = Date.now();
     //gen an initial uuid
-    await $.get((window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/template.vue') : SOURCE_URL + '/custom_features/reports/individual_page/template.vue'), null, function (html) {
+    const templateUrl = window.btechAssetUrl
+      ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/template.vue')
+      : SOURCE_URL + '/custom_features/reports/individual_page/template.vue';
+    await $.get(templateUrl + '?v=' + cacheBust, null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
     let canvasbody = $("#application");

@@ -3,44 +3,27 @@ Vue.component('employment-skills-report', {
     <div style="margin-top: 12px;">
       <div
         v-if="loading"
-        style="
-          padding: 20px;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          background: #f9fafb;
-          color: #4b5563;
-        "
+        :style="panelStyle(colors.gray, colors.black)"
       >
         Loading employment skills...
       </div>
 
       <div
         v-else-if="error"
-        style="
-          padding: 20px;
-          border: 1px solid #fecaca;
-          border-radius: 12px;
-          background: #fef2f2;
-          color: #991b1b;
-        "
+        :style="panelStyle(colors.red, colors.white)"
       >
         {{ error }}
       </div>
 
       <div
         v-else
-        style="
-          padding: 20px;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          background: #f9fafb;
-        "
+        :style="panelStyle(colors.gray, colors.black)"
       >
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
           <h2 style="margin: 0;">Employment Skills</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <span
-              style="padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #e5e7eb; color: #111827;"
+              :style="pillStyle(colors.gray, colors.black)"
             >
               Evaluations: {{ selectedRecord ? selectedRecord.num_evals__employment_skills || 0 : 0 }}
             </span>
@@ -52,14 +35,14 @@ Vue.component('employment-skills-report', {
             </span>
             <span
               v-if="selectedRecord && selectedRecord.most_recent_employment_skills_created_at"
-              style="padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1e3a8a;"
+              :style="pillStyle(colors.blue, colors.white)"
             >
               Most Recent: {{ formatDate(selectedRecord.most_recent_employment_skills_created_at) }}
             </span>
           </div>
         </div>
 
-        <div v-if="!selectedRecord" style="color: #4b5563;">
+        <div v-if="!selectedRecord" :style="{ color: colors.black }">
           No employment skills evaluations were found for this student and major.
         </div>
 
@@ -76,14 +59,9 @@ Vue.component('employment-skills-report', {
             <div
               v-for="entry in scoreEntries"
               :key="entry.name"
-              style="
-                padding: 14px;
-                border: 1px solid #e5e7eb;
-                border-radius: 10px;
-                background: #ffffff;
-              "
+              :style="cardStyle()"
             >
-              <div style="font-weight: 600; margin-bottom: 10px; color: #111827;">
+              <div style="font-weight: 600; margin-bottom: 10px;">
                 {{ entry.name }}
               </div>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -99,15 +77,10 @@ Vue.component('employment-skills-report', {
 
           <div
             v-if="selectedRecord.employment_skills_goals"
-            style="
-              padding: 14px;
-              border: 1px solid #e5e7eb;
-              border-radius: 10px;
-              background: #ffffff;
-            "
+            :style="cardStyle()"
           >
-            <div style="font-weight: 600; margin-bottom: 8px; color: #111827;">Goals</div>
-            <div style="color: #374151; white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals }}</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Goals</div>
+            <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals }}</div>
           </div>
         </div>
       </div>
@@ -121,6 +94,10 @@ Vue.component('employment-skills-report', {
     major: {
       type: Object,
       default: () => ({})
+    },
+    colors: {
+      type: Object,
+      default: () => bridgetools.colors || {}
     },
     settings: {
       type: Object,
@@ -163,8 +140,8 @@ Vue.component('employment-skills-report', {
     pendingPillStyle() {
       if (!this.selectedRecord) return '';
       return this.selectedRecord.is_pending_instructor_eval
-        ? 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #92400e;'
-        : 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534;';
+        ? this.pillStyle(this.colors.yellow, this.colors.black)
+        : this.pillStyle(this.colors.green, this.colors.white);
     }
   },
   data() {
@@ -223,31 +200,34 @@ Vue.component('employment-skills-report', {
     displayScore(score) {
       return score == null || score === '' ? 'N/A' : score;
     },
+    panelStyle(backgroundColor, textColor) {
+      return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
+    },
+    cardStyle() {
+      return 'padding: 14px; border: 1px solid ' + this.colors.gray + '; border-radius: 10px; background: ' + this.colors.white + '; color: ' + this.colors.black + ';';
+    },
+    pillStyle(backgroundColor, textColor) {
+      return 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: ' + backgroundColor + '; color: ' + textColor + ';';
+    },
     scorePillStyle(score) {
-      return 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: '
-        + this.scoreBackground(score)
-        + '; color: '
-        + this.scoreColor(score)
-        + ';';
+      return this.pillStyle(this.scoreBackground(score), this.scoreColor(score));
     },
     selfScorePillStyle(score) {
-      return 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid #d1d5db; background: #f3f4f6; color: '
-        + this.scoreColor(score)
-        + ';';
+      return 'padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; color: ' + this.scoreColor(score) + ';';
     },
     scoreBackground(score) {
       const numeric = Number(score);
-      if (!Number.isFinite(numeric)) return '#e5e7eb';
-      if (numeric >= 4) return '#dcfce7';
-      if (numeric >= 3) return '#fef3c7';
-      return '#fee2e2';
+      if (!Number.isFinite(numeric)) return this.colors.gray;
+      if (numeric >= 4) return this.colors.green;
+      if (numeric >= 3) return this.colors.yellow;
+      return this.colors.red;
     },
     scoreColor(score) {
       const numeric = Number(score);
-      if (!Number.isFinite(numeric)) return '#374151';
-      if (numeric >= 4) return '#166534';
-      if (numeric >= 3) return '#92400e';
-      return '#991b1b';
+      if (!Number.isFinite(numeric)) return this.colors.black;
+      if (numeric >= 4) return this.colors.white;
+      if (numeric >= 3) return this.colors.black;
+      return this.colors.white;
     }
   }
 });

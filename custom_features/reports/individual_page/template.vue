@@ -200,6 +200,7 @@
           <employment-skills-report
             :user="user"
             :major="currentMajor"
+            :colors="colors"
             :settings="settings"
             :key="'employment-skills-' + selectedMajorIndex"
           ></employment-skills-report>
