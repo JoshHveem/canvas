@@ -35,12 +35,13 @@ Vue.component('employment-skills-historic-report', {
           <div
             style="
               display: grid;
-              grid-template-columns: 120px 110px repeat(8, minmax(84px, 1fr));
-              min-width: 980px;
+              grid-template-columns: 160px 110px 220px repeat(8, minmax(84px, 1fr));
+              min-width: 1220px;
             "
           >
             <div :style="headerCellStyle()">Submitted At</div>
             <div :style="headerCellStyle()">Status</div>
+            <div :style="headerCellStyle()">Course</div>
             <div
               v-for="skillName in skillColumns"
               :key="'header-' + skillName"
@@ -71,6 +72,29 @@ Vue.component('employment-skills-historic-report', {
                   :style="statusPillStyle(record)"
                 >
                   {{ record.is_pending_instructor_eval ? 'Pending' : 'Submitted' }}
+                </span>
+              </div>
+              <div
+                :key="recordKey(record) + '-course'"
+                :style="cellStyle('flex-start')"
+              >
+                <a
+                  v-if="submissionLink(record)"
+                  :href="submissionLink(record)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btech-ind-header__label"
+                  :title="record.course_name || 'Open SpeedGrader'"
+                  style="text-decoration: underline;"
+                >
+                  {{ record.course_name || 'Submission Link' }}
+                </a>
+                <span
+                  v-else
+                  class="btech-ind-header__label"
+                  :title="record.course_name || ''"
+                >
+                  {{ record.course_name || 'N/A' }}
                 </span>
               </div>
               <div
@@ -184,6 +208,17 @@ Vue.component('employment-skills-historic-report', {
     instructorScore(record, skillName) {
       return record.employment_skills_scores?.[skillName];
     },
+    submissionLink(record) {
+      const courseId = record.canvas_course_id;
+      const assignmentId = record.canvas_assignment_id;
+      const studentId = record.canvas_user_id || this.user.canvas_user_id;
+
+      if (!courseId || !assignmentId || !studentId) return '';
+
+      return 'https://btech.instructure.com/courses/' + courseId
+        + '/gradebook/speed_grader?assignment_id=' + assignmentId
+        + '&student_id=' + studentId;
+    },
     formatDate(date) {
       if (!date) return 'N/A';
       const parsed = new Date(date);
@@ -208,8 +243,8 @@ Vue.component('employment-skills-historic-report', {
     headerCellStyle() {
       return 'position: sticky; top: 0; z-index: 2; padding: 10px 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; font-size: 12px; font-weight: 700; white-space: nowrap;';
     },
-    cellStyle() {
-      return 'padding: 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; display: flex; align-items: center; justify-content: center; min-height: 46px;';
+    cellStyle(justifyContent = 'center') {
+      return 'padding: 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; display: flex; align-items: center; justify-content: ' + justifyContent + '; min-height: 46px;';
     },
     pillStyle(backgroundColor, textColor) {
       return 'padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: ' + backgroundColor + '; color: ' + textColor + ';';
