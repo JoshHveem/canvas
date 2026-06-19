@@ -78,7 +78,7 @@ Vue.component('employment-skills-report', {
               :key="entry.name"
               :style="cardStyle()"
             >
-              <div style="font-weight: 600; margin-bottom: 10px;">
+              <div style="font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 10px;">
                 {{ entry.name }}
               </div>
               <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
