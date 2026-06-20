@@ -321,6 +321,10 @@
       el: '#canvas-individual-report-vue-app',
       template: vueString,
       mounted: async function () {
+        if (autoOpenConfig.shouldOpen) {
+          modal.show();
+        }
+
         this.setLoadingState("Starting report", 5);
         this.IS_TEACHER = IS_TEACHER;
         // if (!IS_TEACHER) this.menu = 'period';
@@ -351,10 +355,6 @@
         }
         this.setLoadingState("Report ready", 100);
         this.loading = false;
-
-        if (autoOpenConfig.shouldOpen) {
-          modal.show();
-        }
       },
       data: function () {
         return {
