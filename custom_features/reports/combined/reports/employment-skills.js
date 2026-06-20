@@ -22,45 +22,37 @@ Vue.component('reports-employment-skills', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'SIS User ID', 'Student SIS ID.', '8rem', false, 'string',
+        'SIS User ID', 'Student SIS ID.', '6.5rem', false, 'string',
         row => this.escapeHtml(String(row?.sis_user_id ?? '')),
         null,
         row => String(row?.sis_user_id ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Program', 'Program code.', '8rem', false, 'string',
+        'Program', 'Program code.', '6.5rem', false, 'string',
         row => this.escapeHtml(String(row?.program_code ?? '')),
         null,
         row => String(row?.program_code ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Course', 'Course name.', '18rem', false, 'string',
+        'Course', 'Course name.', '12rem', false, 'string',
         row => this.escapeHtml(String(row?.course_name ?? '')),
         null,
         row => String(row?.course_name ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Self Eval', 'Self evaluation submission date.', '11rem', false, 'string',
-        row => this.escapeHtml(String(row?.created_at__self_eval ?? '')),
-        null,
-        row => String(row?.created_at__self_eval ?? '').toLowerCase()
+        'Self Eval', 'Self evaluation submission date.', '8.5rem', false, 'string',
+        row => this.escapeHtml(this.selfEvalText(row)),
+        row => this.selfEvalPillStyle(row),
+        row => this.selfEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Instructor Eval', 'Instructor evaluation submission date or pending state.', '14rem', false, 'string',
-        row => {
-          if (row?.is_pending_instructor_eval) {
-            return '<span title="Pending Instructor Eval">Pending Instructor Eval</span>';
-          }
-          return this.escapeHtml(String(row?.created_at__instructor_eval ?? '')) || '-';
-        },
-        null,
-        row => {
-          if (row?.is_pending_instructor_eval) return 'pending instructor eval';
-          return String(row?.created_at__instructor_eval ?? '').toLowerCase();
-        }
+        'Instructor Eval', 'Instructor evaluation submission date or pending state.', '9.5rem', false, 'string',
+        row => this.escapeHtml(this.instructorEvalText(row)),
+        row => this.instructorEvalPillStyle(row),
+        row => this.instructorEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Submission', 'Link to the Canvas speed grader for the submission.', '20rem', false, 'string',
+        'Submission', 'Link to the Canvas speed grader for the submission.', '11rem', false, 'string',
         row => {
           const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
           const canvasUserId = String(row?.canvas_user_id ?? '').trim();
@@ -73,7 +65,7 @@ Vue.component('reports-employment-skills', {
         row => String(row?.canvas_course_id ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Days Since Self Eval', 'Days since the last self evaluation submission.', '11rem', false, 'number',
+        'Days Since Self Eval', 'Days since the last self evaluation submission.', '8rem', false, 'number',
         row => {
           const days = this.getDaysSinceSelfEval(row);
           return Number.isFinite(days) ? this.intText(days) : '-';
@@ -110,17 +102,62 @@ Vue.component('reports-employment-skills', {
       return String(row?.program_name ?? row?.program_code ?? '').trim();
     },
 
-    getDaysSinceSelfEval(row) {
-      const raw = String(row?.created_at__self_eval ?? '').trim();
+    parseDateValue(value) {
+      const raw = String(value ?? '').trim();
       if (!raw) return null;
 
-      const submittedAt = new Date(raw);
-      if (Number.isNaN(submittedAt.getTime())) return null;
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    },
 
+    getDaysSinceSelfEval(row) {
+      const submittedAt = this.parseDateValue(row?.created_at__self_eval);
+      if (!submittedAt) return null;
       const now = new Date();
       const msPerDay = 24 * 60 * 60 * 1000;
       const diffMs = now.getTime() - submittedAt.getTime();
       return diffMs >= 0 ? Math.floor(diffMs / msPerDay) : 0;
+    },
+
+    selfEvalText(row) {
+      return String(row?.created_at__self_eval ?? '').trim() || '-';
+    },
+
+    selfEvalSortValue(row) {
+      const submittedAt = this.parseDateValue(row?.created_at__self_eval);
+      return submittedAt ? submittedAt.getTime() : -1;
+    },
+
+    selfEvalPillStyle(row) {
+      const days = this.getDaysSinceSelfEval(row);
+      if (!Number.isFinite(days)) {
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
+      }
+      if (days > 60) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (days > 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.green, color: this.colors.white };
+    },
+
+    instructorEvalText(row) {
+      if (row?.is_pending_instructor_eval) return 'Pending';
+      return String(row?.created_at__instructor_eval ?? '').trim() || '-';
+    },
+
+    instructorEvalSortValue(row) {
+      if (row?.is_pending_instructor_eval) return -1;
+      const submittedAt = this.parseDateValue(row?.created_at__instructor_eval);
+      return submittedAt ? submittedAt.getTime() : 0;
+    },
+
+    instructorEvalPillStyle(row) {
+      if (row?.is_pending_instructor_eval) {
+        return { backgroundColor: this.colors.red, color: this.colors.white };
+      }
+      const hasDate = Boolean(this.parseDateValue(row?.created_at__instructor_eval));
+      if (hasDate) {
+        return { backgroundColor: this.colors.green, color: this.colors.white };
+      }
+      return { backgroundColor: this.colors.gray, color: this.colors.black };
     },
 
     mapRows(rows) {
@@ -144,11 +181,11 @@ Vue.component('reports-employment-skills', {
     daysSinceStyle(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) {
-        return { color: '#111827' };
+        return { backgroundColor: this.colors.gray, color: this.colors.black };
       }
-      if (n <= 7) return { color: this.colors.green };
-      if (n <= 14) return { color: this.colors.yellow };
-      return { color: this.colors.red };
+      if (n > 60) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (n > 30) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.green, color: this.colors.white };
     }
   },
 
