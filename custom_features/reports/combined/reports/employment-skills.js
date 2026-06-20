@@ -34,8 +34,8 @@ Vue.component('reports-employment-skills', {
         row => String(row?.program_code ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Course', 'Course name.', '12rem', false, 'string',
-        row => this.escapeHtml(String(row?.course_name ?? '')),
+        'Submission Location', 'Course name linked to the Canvas SpeedGrader submission when available.', '14rem', false, 'string',
+        row => this.submissionLocationHtml(row),
         null,
         row => String(row?.course_name ?? '').toLowerCase()
       ),
@@ -46,26 +46,7 @@ Vue.component('reports-employment-skills', {
         row => this.selfEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Instructor Eval', 'Instructor evaluation submission date or pending state.', '9.5rem', false, 'string',
-        row => this.escapeHtml(this.instructorEvalText(row)),
-        row => this.instructorEvalPillStyle(row),
-        row => this.instructorEvalSortValue(row)
-      ),
-      new window.ReportColumn(
-        'Submission', 'Link to the Canvas speed grader for the submission.', '11rem', false, 'string',
-        row => {
-          const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
-          const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-          const assignmentId = String(row?.canvas_assignment_id ?? '').trim();
-          if (!canvasCourseId || !canvasUserId || !assignmentId) return '-';
-          const url = `https://btech.instructure.com/courses/${encodeURIComponent(canvasCourseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(canvasUserId)}`;
-          return `<a href="${url}" target="_blank" rel="noopener noreferrer">Open SpeedGrader</a>`;
-        },
-        null,
-        row => String(row?.canvas_course_id ?? '').toLowerCase()
-      ),
-      new window.ReportColumn(
-        'Days Since Self Eval', 'Days since the last self evaluation submission.', '8rem', false, 'number',
+        'Days Ago', 'Days since the last self evaluation submission.', '8rem', false, 'number',
         row => {
           const days = this.getDaysSinceSelfEval(row);
           return Number.isFinite(days) ? this.intText(days) : '-';
@@ -75,7 +56,13 @@ Vue.component('reports-employment-skills', {
           const days = this.getDaysSinceSelfEval(row);
           return Number.isFinite(days) ? days : -1;
         }
-      )
+      ),
+      new window.ReportColumn(
+        'Instructor Eval', 'Instructor evaluation submission date or pending state.', '9.5rem', false, 'string',
+        row => this.escapeHtml(this.instructorEvalText(row)),
+        row => this.instructorEvalPillStyle(row),
+        row => this.instructorEvalSortValue(row)
+      ),
     ]);
   },
 
@@ -158,6 +145,19 @@ Vue.component('reports-employment-skills', {
         return { backgroundColor: this.colors.green, color: this.colors.white };
       }
       return { backgroundColor: this.colors.gray, color: this.colors.black };
+    },
+
+    submissionLocationHtml(row) {
+      const courseName = String(row?.course_name ?? '').trim() || '-';
+      const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      const assignmentId = String(row?.canvas_assignment_id ?? '').trim();
+      const text = this.escapeHtml(courseName);
+
+      if (!canvasCourseId || !canvasUserId || !assignmentId) return text;
+
+      const url = `https://btech.instructure.com/courses/${encodeURIComponent(canvasCourseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(canvasUserId)}`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     },
 
     mapRows(rows) {
