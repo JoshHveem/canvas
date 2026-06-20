@@ -85,7 +85,7 @@ Vue.component('reports-employment-skills', {
 
   mounted() {
     this.syncFromReportContext();
-    this.loadData();
+    this.loadOptions();
   },
 
   watch: {
@@ -93,12 +93,12 @@ Vue.component('reports-employment-skills', {
       deep: true,
       handler() {
         this.syncFromReportContext();
-        this.loadData();
+        this.loadOptions();
       }
     },
     year() {
       this.setSharedFilterValue('academic_year', Number(this.year));
-      this.loadData();
+      this.loadOptions();
     },
     selectedProgramCode() {
       this.setSharedFilterValue('program_code', this.selectedProgramCode);
@@ -107,6 +107,28 @@ Vue.component('reports-employment-skills', {
   },
 
   computed: {
+    programOptions() {
+      const options = Array.from(
+        new Map(
+          this.optionRows
+            .map(row => {
+              const programCode = String(row?.program_code ?? '').trim();
+              return {
+                value: programCode,
+                label: programCode || ''
+              };
+            })
+            .filter(option => option.value)
+            .map(option => [option.value, option])
+        ).values()
+      ).sort((a, b) => a.value.localeCompare(b.value));
+
+      return [
+        { value: '', label: 'Select a Program' },
+        ...options
+      ];
+    },
+
     visibleRows() {
       this.table.setRows(this.rows);
       return this.table.getSortedRows();
@@ -130,11 +152,60 @@ Vue.component('reports-employment-skills', {
       return String(this.reportContext?.dataset || 'student_employment_skills').trim();
     },
 
+    async loadOptions() {
+      try {
+        this.loading = true;
+        this.loadError = '';
+
+        const rows = await bridgetools.req3(
+          'reports',
+          { academic_year: Number(this.year) },
+          { dataset: this.getDataset() }
+        );
+
+        this.optionRows = (Array.isArray(rows) ? rows : []).map(row => ({
+          program_code: String(row?.program_code ?? '').trim()
+        }));
+
+        const nextProgramCode = this.resolveDeferredSelection({
+          filterKey: 'program_code',
+          options: this.programOptions,
+          currentValue: this.selectedProgramCode,
+          routeValue: this.reportContext?.routeFilters?.programCode,
+          allowBlank: true,
+          fallbackValue: ''
+        });
+
+        if (!this.filterValuesEqual(nextProgramCode, this.selectedProgramCode)) {
+          this.selectedProgramCode = nextProgramCode;
+          return;
+        }
+
+        if (!this.programOptions.some(option => option.value === this.selectedProgramCode)) {
+          this.selectedProgramCode = '';
+        }
+
+        if (this.selectedProgramCode) {
+          this.loadData();
+        } else {
+          this.rows = [];
+          this.loadError = 'Select a program.';
+        }
+      } catch (e) {
+        console.warn('Failed to load employment skills program options', e);
+        this.optionRows = [];
+        this.rows = [];
+        this.loadError = 'Unable to load program list.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async loadData() {
       const programCode = String(this.selectedProgramCode || '').trim();
       if (!programCode) {
         this.rows = [];
-        this.loadError = 'Enter a program code.';
+        this.loadError = 'Select a program.';
         return;
       }
 
@@ -215,13 +286,11 @@ Vue.component('reports-employment-skills', {
 
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
-        <input
-          v-model="selectedProgramCode"
-          v-bind="filterAttrs('program_code')"
-          type="text"
-          placeholder="Enter program code"
-          style="font-size:.75rem; min-width:220px; max-width:320px; padding:.25rem .5rem;"
-        />
+        <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option v-for="option in programOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
       </div>
     </template>
   </report-table-shell>
