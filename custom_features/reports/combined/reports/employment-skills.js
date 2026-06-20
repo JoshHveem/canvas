@@ -24,7 +24,7 @@ Vue.component('reports-employment-skills', {
     this.table.setColumns([
       new window.ReportColumn(
         'SIS User ID', 'Student SIS ID.', '6.5rem', false, 'string',
-        row => this.escapeHtml(String(row?.sis_user_id ?? '')),
+        row => this.sisUserLinkHtml(row),
         null,
         row => String(row?.sis_user_id ?? '').toLowerCase()
       ),
@@ -164,6 +164,18 @@ Vue.component('reports-employment-skills', {
       if (!canvasCourseId || !canvasUserId || !assignmentId) return text;
 
       const url = `https://btech.instructure.com/courses/${encodeURIComponent(canvasCourseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(canvasUserId)}`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    },
+
+    sisUserLinkHtml(row) {
+      const sisUserId = String(row?.sis_user_id ?? '').trim() || '-';
+      const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      const text = this.escapeHtml(sisUserId);
+
+      if (!canvasCourseId || !canvasUserId) return text;
+
+      const url = `/courses/${encodeURIComponent(canvasCourseId)}/users/${encodeURIComponent(canvasUserId)}?open_btech_report=employment-skills`;
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     },
 
