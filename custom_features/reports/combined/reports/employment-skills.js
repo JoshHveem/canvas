@@ -75,11 +75,14 @@ Vue.component('reports-employment-skills', {
       new window.ReportColumn(
         'Days Since Self Eval', 'Days since the last self evaluation submission.', '11rem', false, 'number',
         row => {
-          const days = Number(row?.days_since_last_self_eval);
+          const days = this.getDaysSinceSelfEval(row);
           return Number.isFinite(days) ? this.intText(days) : '-';
         },
-        row => this.daysSinceStyle(row?.days_since_last_self_eval),
-        row => Number(row?.days_since_last_self_eval ?? -1)
+        row => this.daysSinceStyle(this.getDaysSinceSelfEval(row)),
+        row => {
+          const days = this.getDaysSinceSelfEval(row);
+          return Number.isFinite(days) ? days : -1;
+        }
       )
     ]);
   },
@@ -107,6 +110,19 @@ Vue.component('reports-employment-skills', {
       return String(row?.program_name ?? row?.program_code ?? '').trim();
     },
 
+    getDaysSinceSelfEval(row) {
+      const raw = String(row?.created_at__self_eval ?? '').trim();
+      if (!raw) return null;
+
+      const submittedAt = new Date(raw);
+      if (Number.isNaN(submittedAt.getTime())) return null;
+
+      const now = new Date();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const diffMs = now.getTime() - submittedAt.getTime();
+      return diffMs >= 0 ? Math.floor(diffMs / msPerDay) : 0;
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         ...row,
@@ -121,7 +137,7 @@ Vue.component('reports-employment-skills', {
         is_pending_instructor_eval: Boolean(row?.is_pending_instructor_eval),
         created_at__self_eval: String(row?.created_at__self_eval ?? '').trim(),
         created_at__instructor_eval: String(row?.created_at__instructor_eval ?? '').trim(),
-        days_since_last_self_eval: Number(row?.days_since_last_self_eval) || null
+        days_since_last_self_eval: this.getDaysSinceSelfEval(row)
       }));
     },
 
