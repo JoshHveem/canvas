@@ -43,6 +43,31 @@
     ].join('|');
   }
 
+  function normalizeReportTypeKey(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_]+/g, '-');
+  }
+
+  function getAutoOpenConfig() {
+    const params = new URLSearchParams(window.location.search);
+    const rawReportType = params.get('open_btech_report');
+
+    return {
+      shouldOpen: rawReportType != null,
+      reportType: rawReportType
+    };
+  }
+
+  function resolveUrlReportType(reportTypes, rawReportType) {
+    if (!rawReportType) return null;
+
+    const normalizedTarget = normalizeReportTypeKey(rawReportType);
+    const match = reportTypes.find(report => normalizeReportTypeKey(report.value) === normalizedTarget);
+    return match ? match.value : null;
+  }
+
   const hsGradeCourseCache = new Map();
 
   async function fetchAllCourseConnection(courseId, connectionField, args = {}, nodeSelection = '') {
@@ -290,6 +315,7 @@
     gen_report_button.appendTo(menu_bar);
     let modal = $('#canvas-individual-report-vue');
     modal.hide();
+    const autoOpenConfig = getAutoOpenConfig();
 
     APP = new Vue({
       el: '#canvas-individual-report-vue-app',
@@ -311,6 +337,8 @@
 
         this.setLoadingState("Loading saved settings", 15);
         let settings = await this.loadSettings(this.settings);
+        const urlReportType = resolveUrlReportType(this.reportTypes, autoOpenConfig.reportType);
+        if (urlReportType) settings.reportType = urlReportType;
         this.settings = settings;
         this.setLoadingState("Loading student profile and course records", 30);
 
@@ -323,6 +351,10 @@
         }
         this.setLoadingState("Report ready", 100);
         this.loading = false;
+
+        if (autoOpenConfig.shouldOpen) {
+          modal.show();
+        }
       },
       data: function () {
         return {
