@@ -3,6 +3,7 @@ Vue.component('reports-employment-skills', {
     window.ReportMixins.formatting,
     window.ReportMixins.programScoped({
       optionsDataset: 'student_employment_skills',
+      includeAcademicYear: false,
       emptySelectionMessage: 'Select a program.',
       loadErrorMessage: 'Unable to load employment skills submissions.',
       optionsLoadErrorMessage: 'Unable to load program list.'
@@ -32,6 +33,12 @@ Vue.component('reports-employment-skills', {
         row => this.escapeHtml(String(row?.program_code ?? '')),
         null,
         row => String(row?.program_code ?? '').toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Academic Year', 'Academic year for the submission.', '7rem', false, 'number',
+        row => Number.isFinite(Number(row?.academic_year)) ? this.intText(row?.academic_year) : '-',
+        null,
+        row => Number(row?.academic_year ?? -1)
       ),
       new window.ReportColumn(
         'Submission Location', 'Course name linked to the Canvas SpeedGrader submission when available.', '14rem', false, 'string',
@@ -200,17 +207,6 @@ Vue.component('reports-employment-skills', {
     :row-key-fn="(row, index) => row.sis_user_id || row.canvas_user_id || index"
   >
     <template #filters>
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
-          <option
-            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-            :key="optionYear"
-            :value="optionYear"
-          >{{ optionYear }}</option>
-        </select>
-      </div>
-
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
         <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">

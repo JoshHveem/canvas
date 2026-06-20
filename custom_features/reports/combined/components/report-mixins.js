@@ -427,6 +427,7 @@ window.ReportMixins = {
           }
         },
         async year() {
+          if (config.includeAcademicYear === false) return;
           this.setSharedFilterValue('academic_year', Number(this.year));
           await this.loadProgramOptions(true);
         },
@@ -467,10 +468,18 @@ window.ReportMixins = {
         },
 
         getRequestFilters() {
-          return {
-            academic_year: Number(this.year),
+          const filters = {
             program_code: this.selectedProgramCode
           };
+          if (config.includeAcademicYear !== false) {
+            filters.academic_year = Number(this.year);
+          }
+          return filters;
+        },
+
+        getProgramOptionsRequestFilters() {
+          if (config.includeAcademicYear === false) return {};
+          return { academic_year: Number(this.year) };
         },
 
         getProgramCode() {
@@ -520,7 +529,7 @@ window.ReportMixins = {
 
             const rows = await bridgetools.req3(
               'reports',
-              { academic_year: Number(this.year) },
+              this.getProgramOptionsRequestFilters(),
               { dataset: this.getProgramOptionsDataset() }
             );
 
