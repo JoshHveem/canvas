@@ -29,10 +29,10 @@ Vue.component('reports-employment-skills', {
         row => String(row?.sis_user_id ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Program', 'Program code.', '6.5rem', false, 'string',
-        row => this.escapeHtml(String(row?.program_code ?? '')),
+        'Program Name', 'Program name.', '6.5rem', false, 'string',
+        row => this.escapeHtml(String(row?.program_name ?? '')),
         null,
-        row => String(row?.program_code ?? '').toLowerCase()
+        row => String(row?.program_name ?? '').toLowerCase()
       ),
       new window.ReportColumn(
         'Academic Year', 'Academic year for the submission.', '7rem', false, 'number',
