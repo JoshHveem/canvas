@@ -129,6 +129,12 @@ Vue.component('ind-header-credits', {
             line-height: 1.5;
           "
         >
+          <span
+            class="btech-ind-header__label"
+            style="display: block; margin-bottom: 4px; font-style: normal;"
+          >
+            Career Goal
+          </span>
           "{{ currentCareerGoal }}"
         </div>
 
