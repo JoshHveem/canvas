@@ -3,6 +3,7 @@ Vue.component('reports-employment-skills', {
     window.ReportMixins.formatting,
     window.ReportMixins.programScoped({
       optionsDataset: 'student_employment_skills',
+      hydrate_sis_user_id: true,
       includeAcademicYear: false,
       emptySelectionMessage: 'Select a program.',
       loadErrorMessage: 'Unable to load employment skills submissions.',
@@ -12,7 +13,7 @@ Vue.component('reports-employment-skills', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('SIS User ID', colors);
+    const table = window.ReportUtils.createTable('Student Name', colors);
 
     return {
       colors,
@@ -23,10 +24,10 @@ Vue.component('reports-employment-skills', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'SIS User ID', 'Student SIS ID.', '6.5rem', false, 'string',
-        row => this.sisUserLinkHtml(row),
+        'Student Name', 'Student name pulled from Canvas.', '10rem', false, 'string',
+        row => this.studentNameLinkHtml(row),
         null,
-        row => String(row?.sis_user_id ?? '').toLowerCase()
+        row => this.getStudentName(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Program Name', 'Program name.', '8.5rem', false, 'string',
@@ -92,6 +93,14 @@ Vue.component('reports-employment-skills', {
   },
 
   methods: {
+    getStudentName(row) {
+      const studentName = String(row?.sis_user_id ?? '').trim();
+      if (studentName) return studentName;
+
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
+    },
+
     getProgramLabel(row) {
       return String(row?.program_name ?? row?.program_code ?? '').trim();
     },
@@ -167,11 +176,11 @@ Vue.component('reports-employment-skills', {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     },
 
-    sisUserLinkHtml(row) {
-      const sisUserId = String(row?.sis_user_id ?? '').trim() || '-';
+    studentNameLinkHtml(row) {
+      const studentName = this.getStudentName(row);
       const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      const text = this.escapeHtml(sisUserId);
+      const text = this.escapeHtml(studentName);
 
       if (!canvasCourseId || !canvasUserId) return text;
 
@@ -216,7 +225,7 @@ Vue.component('reports-employment-skills', {
     :loading="loading || loadingPrograms"
     :load-error="loadError"
     loading-text="Loading employment skills submissions..."
-    :row-key-fn="(row, index) => row.sis_user_id || row.canvas_user_id || index"
+    :row-key-fn="(row, index) => row.canvas_user_id || row.sis_user_id || index"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">

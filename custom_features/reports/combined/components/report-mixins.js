@@ -190,6 +190,80 @@ window.ReportMixins = {
 
         if (allowBlank && String(fallbackValue ?? '') === '') return fallbackValue;
         return optionValues[0];
+      },
+
+      getCanvasUserNameCache() {
+        if (!this.__canvasUserNameCache || typeof this.__canvasUserNameCache !== 'object') {
+          this.__canvasUserNameCache = {};
+        }
+        return this.__canvasUserNameCache;
+      },
+
+      async fetchCanvasUserName(canvasUserId) {
+        const id = String(canvasUserId ?? '').trim();
+        if (!id) return '';
+
+        const cache = this.getCanvasUserNameCache();
+        if (Object.prototype.hasOwnProperty.call(cache, id)) {
+          return String(cache[id] ?? '').trim();
+        }
+
+        try {
+          const response = await fetch(`/api/v1/users/${encodeURIComponent(id)}/profile`, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Canvas user lookup failed with ${response.status}`);
+          }
+
+          const profile = await response.json();
+          const name = String(
+            profile?.name ??
+            profile?.short_name ??
+            profile?.sortable_name ??
+            ''
+          ).trim();
+
+          cache[id] = name;
+          return name;
+        } catch (e) {
+          console.warn(`Failed to load Canvas user profile for ${id}`, e);
+          cache[id] = '';
+          return '';
+        }
+      },
+
+      async hydrateSisUserIds(rows, options = {}) {
+        const normalizedRows = Array.isArray(rows) ? rows : [];
+        if (!options?.hydrate_sis_user_id) return normalizedRows;
+
+        const uniqueIds = Array.from(new Set(
+          normalizedRows
+            .map(row => String(row?.canvas_user_id ?? '').trim())
+            .filter(Boolean)
+        ));
+
+        const cache = this.getCanvasUserNameCache();
+        const pendingIds = uniqueIds.filter(id => !Object.prototype.hasOwnProperty.call(cache, id));
+        const chunkSize = 10;
+
+        for (let i = 0; i < pendingIds.length; i += chunkSize) {
+          const chunk = pendingIds.slice(i, i + chunkSize);
+          await Promise.all(chunk.map(id => this.fetchCanvasUserName(id)));
+        }
+
+        return normalizedRows.map(row => {
+          const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+          const hydratedName = canvasUserId ? String(cache[canvasUserId] ?? '').trim() : '';
+          return {
+            ...row,
+            original_sis_user_id: String(row?.original_sis_user_id ?? row?.sis_user_id ?? '').trim(),
+            sis_user_id: hydratedName || String(row?.sis_user_id ?? '').trim()
+          };
+        });
       }
     }
   },
@@ -370,7 +444,8 @@ window.ReportMixins = {
               { dataset: this.getDataset() }
             );
 
-            this.rows = this.normalizeRows(rows);
+            const normalizedRows = this.normalizeRows(rows);
+            this.rows = await this.hydrateSisUserIds(normalizedRows, config);
 
             const first = this.rows[0] || {};
             this.loadedDepartmentName = String(
@@ -594,7 +669,8 @@ window.ReportMixins = {
               { dataset: this.getDataset() }
             );
 
-            this.rows = this.normalizeRows(rows);
+            const normalizedRows = this.normalizeRows(rows);
+            this.rows = await this.hydrateSisUserIds(normalizedRows, config);
 
             const first = this.rows[0] || {};
             this.loadedProgramName = String(
