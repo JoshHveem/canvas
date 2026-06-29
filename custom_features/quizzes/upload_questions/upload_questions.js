@@ -1,6 +1,61 @@
 let upload = $(`
   <button class="upload_bank_link btn button-sidebar-wide"><i class="icon-upload"></i> Upload Question Bank</button>
 `);
+let uploadQuestionBankButtonObserver = null;
+
+function stopUploadQuestionBankButtonWatcher() {
+  if (uploadQuestionBankButtonObserver) {
+    uploadQuestionBankButtonObserver.disconnect();
+    uploadQuestionBankButtonObserver = null;
+  }
+}
+
+function insertUploadQuestionBankButton() {
+  if ($(".upload_bank_link").length) return;
+
+  const anchor = $(".see_bookmarked_banks");
+  if (anchor.length) {
+    anchor.after(upload);
+    stopUploadQuestionBankButtonWatcher();
+    console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
+    return true;
+  }
+
+  return false;
+}
+
+function watchForUploadQuestionBankButton() {
+  if (insertUploadQuestionBankButton()) return;
+
+  let attempts = 0;
+  const maxAttempts = 80;
+  const intervalId = window.setInterval(() => {
+    attempts += 1;
+    if (insertUploadQuestionBankButton()) {
+      window.clearInterval(intervalId);
+      return;
+    }
+
+    if (attempts >= maxAttempts) {
+      window.clearInterval(intervalId);
+      stopUploadQuestionBankButtonWatcher();
+      console.warn("upload_questions: .see_bookmarked_banks not found; upload button was not inserted");
+    }
+  }, 250);
+
+  if (window.MutationObserver && document.body) {
+    uploadQuestionBankButtonObserver = new MutationObserver(() => {
+      if (insertUploadQuestionBankButton()) {
+        window.clearInterval(intervalId);
+      }
+    });
+
+    uploadQuestionBankButtonObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+}
 $("body").append(`
   <div 
     class='btech-modal'
@@ -946,7 +1001,6 @@ upload.click(() => {
   console.log("upload_questions: upload button clicked");
   setUploadModalState(true, 'upload');
 });
-$(".see_bookmarked_banks").after(upload);
-console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
+watchForUploadQuestionBankButton();
 
 
