@@ -326,7 +326,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       let courseData = await $.get('/api/v1/courses/' + CURRENT_COURSE_ID);
       CURRENT_DEPARTMENT_ID = courseData.account_id;
       //AVAILABLE TO EVERYONE
-      feature("quizzes/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
+      feature("quizzes/upload_questions/upload_questions", /\/courses\/([0-9]+)\/question_banks$/);
       feature("rubrics/upload_rubric/create_rubric_from_json", /^\/courses\/[0-9]+\/rubrics$/);
       feature("quizzes/duplicate_bank_item", /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/);
       feature("quizzes/quiz_analytics_print_margin", /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics/);

@@ -11,16 +11,29 @@ $("body").append(`
       <div style='padding:20px 24px 12px 24px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:#f5f8ff; border-bottom:1px solid #e7edf7;'>
         <div>
           <div style='font-size:20px; font-weight:700; color:#14213d; margin-bottom:6px;'>Upload Question Bank</div>
-          <div style='font-size:14px; color:#4a5568; line-height:1.5;'>Turn your quiz document into a Canvas-readable question bank with AI. Copy the prompt to get started.</div>
+          <div style='font-size:14px; color:#4a5568; line-height:1.5;'>Use AI to create a Canvas-ready JSON question bank, then upload the JSON file here.</div>
         </div>
         <button id='canvas-question-bank-uploader-close' style='border:none; background:transparent; color:#334155; font-size:26px; line-height:1; cursor:pointer;'>×</button>
       </div>
       <div class='btech-modal-body' style='padding:24px;'>
         <div class='btech-modal-content-inner upload-state'>
-          <button id='canvas-question-bank-copy-prompt' style='padding:12px 18px; background:#0f172a; color:#fff; border:none; border-radius:12px; cursor:pointer; margin-bottom:18px;'>Copy Canvas Format Prompt</button>
+          <div style='margin-bottom:18px;'>
+            <div style='font-size:15px; font-weight:700; color:#0f172a; margin-bottom:6px;'>Choose Your Starting Point</div>
+            <div style='font-size:13px; color:#4a5568; line-height:1.45; margin-bottom:12px;'>Select an option to copy the matching AI prompt. Both use the same Canvas JSON rules.</div>
+            <div style='display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;'>
+              <button type='button' data-canvas-prompt-type='create' style='text-align:left; padding:14px 16px; background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; border-radius:12px; cursor:pointer;'>
+                <span style='display:block; font-size:14px; font-weight:700; margin-bottom:4px;'>Write a quiz from scratch</span>
+                <span style='display:block; font-size:12px; color:#64748b; line-height:1.35;'>Start with a topic, objectives, and supported question types.</span>
+              </button>
+              <button type='button' data-canvas-prompt-type='convert' style='text-align:left; padding:14px 16px; background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; border-radius:12px; cursor:pointer;'>
+                <span style='display:block; font-size:14px; font-weight:700; margin-bottom:4px;'>I already have a quiz</span>
+                <span style='display:block; font-size:12px; color:#64748b; line-height:1.35;'>Convert a Word doc, textbook quiz, or pasted source text.</span>
+              </button>
+            </div>
+          </div>
           <div style='display:flex; flex-wrap:wrap; gap:12px; margin-bottom:18px;'>
-            <input type="file" id="fileInput" multiple style='flex:1 1 240px; min-width:200px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:#0f172a;' />
-            <button id='canvas-question-bank-uploader-upload' style='padding:12px 18px; background:#2563eb; color:#fff; border:none; border-radius:12px; cursor:pointer; transition: transform .15s ease; box-shadow:0 12px 28px rgba(37,99,235,0.18);'>Upload</button>
+            <input type="file" id="fileInput" accept=".json,application/json" multiple style='flex:1 1 240px; min-width:200px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:#0f172a;' />
+            <button id='canvas-question-bank-uploader-upload' style='padding:12px 18px; background:#2563eb; color:#fff; border:none; border-radius:12px; cursor:pointer; transition: transform .15s ease; box-shadow:0 12px 28px rgba(37,99,235,0.18);'>Upload JSON</button>
           </div>
           <div id='canvas-question-bank-copy-status' style='font-size:13px; min-height:18px; color:#334155;'></div>
         </div>
@@ -33,114 +46,429 @@ $("body").append(`
   </div>
 `);
 console.log("upload_questions: modal HTML appended, binding Vue root id #canvas-question-bank-uploader-vue");
-const CANVAS_FORMAT_PROMPT = `AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
-Copy/paste this prompt into an AI tool, then paste the quiz content after it.
+const CANVAS_PROMPT_PATHS = {
+  convert: "/custom_features/quizzes/upload_questions/convert_existing_quiz_prompt.md",
+  create: "/custom_features/quizzes/upload_questions/create_new_quiz_prompt.md",
+  shared: "/custom_features/quizzes/upload_questions/shared_canvas_format_rules.md"
+};
+let CANVAS_PROMPT_CACHE = {};
 
-Convert the quiz content I provide into a downloadable .txt file.
-You must create and attach the file, not display the contents inline.
-Use the Canvas LMS question‑bank uploader format exactly as specified below.
-Requirements:
+function getSourceUrl() {
+  if (typeof SOURCE_URL !== 'undefined') {
+    return SOURCE_URL;
+  }
 
-Create a real .txt file and return it as a downloadable attachment.
-Do not paste the quiz text into chat.
-Do not summarize or explain anything.
-The response must consist of the file attachment only.
-Preserve all original questions and answers exactly; change formatting only.
+  return '';
+}
 
-I will verify that a download link appears.
+function getCanvasPromptUrl(promptPath) {
+  const url = getSourceUrl() + promptPath;
+  return window.btechAssetUrl ? window.btechAssetUrl(url) : url;
+}
 
-REQUIRED FORMAT:
-- Preserve the original quiz content as closely as possible. Only change the formatting
-  needed to match these rules.
-- Do not invent, rewrite, expand, or add new questions, answers, explanations, comments,
-  or feedback.
-- If the original quiz does not include comments or feedback, do not add any ?. or ??.
-- The first line must be: Title: [Quiz Name]
-- Put one blank line after the title.
-- Every question must start with one of these prefixes:
-  MC. = multiple choice, exactly one correct answer
-  MA. = multiple answers, more than one correct answer
-  EQ. = essay question
-  TF. = true/false
-  MT. = matching
-  TX. = text-only informational block
-  FB. = fill in multiple blanks
-  FU. = file upload
-- End every question with exactly one blank line.
-- Use plain text only. Do not use bold, italics, bullets, tables, or HTML.
+async function loadCanvasPromptFile(promptPath) {
+  if (CANVAS_PROMPT_CACHE[promptPath]) return CANVAS_PROMPT_CACHE[promptPath];
 
-ANSWER RULES:
-- For MC and MA answers, use A. Answer text, B. Answer text, etc.
-- Mark each correct answer with an asterisk before the letter, like *B. Answer text.
-- MC questions must have exactly one starred answer.
-- MA questions must have two or more starred answers.
-- Optional answer-specific feedback goes immediately after that answer as:
-  ??. Feedback text
-- Optional general question feedback goes after all answers as:
-  ?. Feedback text
+  const response = await fetch(getCanvasPromptUrl(promptPath), { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Could not load Canvas prompt. Status: ' + response.status);
+  }
 
-TYPE-SPECIFIC RULES:
-- EQ, TX, and FU questions do not need answer lines.
-- TF questions must use exactly two answer lines: T. True and F. False.
-  Put the asterisk on the correct line.
-- MT questions must use one matching pair per line: Term = Matching answer.
-  Each matching pair will be worth 1 point.
-- If the source question has a matching answer bank, such as A. OSHA, B. CDC,
-  followed by prompts with lines like Answer: A, convert the whole block into
-  one MT question. Do not make the answer bank or question directions a separate
-  TX question.
-  Example conversion:
-  Source answer bank: A. OSHA
-  Source prompt: Workplace safety regulations / Answer: A
-  Output pair: OSHA = Workplace safety regulations
-- FB questions must put blank IDs in the question text using square brackets.
-  Example: Roses are [color1]. Then list accepted answers as: color1. Red.
-  Repeat the same blank ID for multiple accepted answers.
+  CANVAS_PROMPT_CACHE[promptPath] = (await response.text()).trim();
+  return CANVAS_PROMPT_CACHE[promptPath];
+}
 
-EXAMPLE FORMAT:
-Title: Biology Quiz
+async function buildCanvasPrompt(promptType) {
+  const intentPath = CANVAS_PROMPT_PATHS[promptType];
+  if (!intentPath) {
+    throw new Error('Unknown Canvas prompt type: ' + promptType);
+  }
 
-MC. What is the powerhouse of the cell?
-A. Nucleus
-*B. Mitochondria
-C. Ribosome
-D. Vacuole
+  const intentPrompt = await loadCanvasPromptFile(intentPath);
+  const sharedRules = await loadCanvasPromptFile(CANVAS_PROMPT_PATHS.shared);
+  return [intentPrompt, sharedRules].join("\n\n---\n\n");
+}
 
-MA. Select all nucleotide bases.
-*A. Adenine
-*B. Guanine
-C. Glucose
-*D. Thymine
+function getChoiceAnswerMarkers(text) {
+  return Array.from(String(text || "").matchAll(/(\*?[A-Z][.)])\s*/g));
+}
 
-TF. Mitochondria are the powerhouse of the cell.
-*T. True
-F. False
+function startsWithQuestionPrefix(line) {
+  return /^(MC\.|MA\.|EQ\.|TF\.|MT\.|TX\.|FB\.|FU\.|Q?[0-9]+\.)\s*/i.test(line);
+}
 
-FINAL CHECK BEFORE YOU BUILD THE FILE:
-- Name the file using the quiz title in a readable underscore format.
-  Replace spaces and punctuation with underscores, remove duplicate underscores,
-  and do not URL-encode spaces or special characters.
-  Example: Title: Chapter 22 Regulatory Advisory Agencies
-  File name: Chapter_22_Regulatory_Advisory_Agencies.txt
-- The file starts with Title:
-- The file contains only the formatted quiz text.
-- No questions, answers, explanations, comments, or feedback were invented.
-- Every question has a blank line after it.
-- MC has one starred answer.
-- MA has multiple starred answers.
-- True/false uses T. True and F. False and has one starred answer.
-- Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
+function startsWithAnswerOrFeedback(line) {
+  return /^(\*?[A-Z][.)]|\?{1,2}\.)\s*/.test(line);
+}
 
-AFTER THE FILE IS CREATED:
-- Do not put these instructions inside the .txt file.
-- Tell the user:
-  "You're all set! 
-  — Download the file, then open your Canvas course.
-  — In the left-hand course menu, open Quizzes. 
-  — Click the three dots in the top right corner, choose Manage Question Banks. 
-  — Select Upload Question Bank.
-  — Upload the .txt file. Happy quizzing!"
-`;
+function splitInlineChoiceQuestion(prefix, questionText) {
+  const markers = getChoiceAnswerMarkers(questionText);
+  if (markers.length < 2) return null;
+
+  const normalized = [];
+  const prompt = questionText.slice(0, markers[0].index).trim();
+  normalized.push(prefix.toUpperCase() + " " + prompt);
+
+  markers.forEach((marker, index) => {
+    const label = marker[1].replace(")", ".");
+    const answerStart = marker.index + marker[0].length;
+    const answerEnd = index + 1 < markers.length ? markers[index + 1].index : questionText.length;
+    const answerText = questionText.slice(answerStart, answerEnd).trim();
+    if (answerText) normalized.push(label + " " + answerText);
+  });
+
+  return normalized.length > 1 ? normalized : null;
+}
+
+function normalizeQuizTextLines(text) {
+  const rawLines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
+  const normalizedLines = [];
+
+  for (let index = 0; index < rawLines.length; index++) {
+    const line = rawLines[index].trim();
+    const promptMatch = line.match(/^(MC\.|MA\.|TF\.)\s*(.*)/i);
+
+    if (!promptMatch) {
+      normalizedLines.push(line);
+      continue;
+    }
+
+    const prefix = promptMatch[1];
+    let questionText = promptMatch[2].trim();
+    let markers = getChoiceAnswerMarkers(questionText);
+
+    while (
+      markers.length < 2 &&
+      index + 1 < rawLines.length &&
+      rawLines[index + 1].trim() &&
+      !startsWithQuestionPrefix(rawLines[index + 1].trim()) &&
+      !startsWithAnswerOrFeedback(rawLines[index + 1].trim())
+    ) {
+      index += 1;
+      questionText += " " + rawLines[index].trim();
+      markers = getChoiceAnswerMarkers(questionText);
+    }
+
+    const splitLines = splitInlineChoiceQuestion(prefix, questionText);
+    if (splitLines) {
+      normalizedLines.push(...splitLines);
+    } else {
+      normalizedLines.push(line);
+    }
+  }
+
+  return normalizedLines;
+}
+
+function normalizeQuestionType(type) {
+  const value = String(type || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const typeMap = {
+    mc: "MC",
+    multiple_choice: "MC",
+    multiplechoice: "MC",
+    ma: "MA",
+    multiple_answers: "MA",
+    multiple_answer: "MA",
+    multipleanswers: "MA",
+    eq: "EQ",
+    essay: "EQ",
+    essay_question: "EQ",
+    tf: "TF",
+    true_false: "TF",
+    truefalse: "TF",
+    mt: "MT",
+    matching: "MT",
+    matching_question: "MT",
+    tx: "TX",
+    text_only: "TX",
+    text: "TX",
+    text_only_question: "TX",
+    fb: "FB",
+    fill_in_multiple_blanks: "FB",
+    fill_multiple_blanks: "FB",
+    fill_in_blanks: "FB",
+    fu: "FU",
+    file_upload: "FU",
+    file_upload_question: "FU"
+  };
+
+  return typeMap[value] || "";
+}
+
+function getFileTitle(fileName) {
+  return String(fileName || "Question Bank").replace(/\.(json|txt)$/i, "");
+}
+
+function stripJsonCodeFence(text) {
+  const trimmed = String(text || "").trim().replace(/^\uFEFF/, "");
+  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return match ? match[1].trim() : trimmed;
+}
+
+function getJsonTextValue(value) {
+  return String(value || "").trim();
+}
+
+function getJsonBooleanValue(value, defaultValue) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  if (typeof value === "number") return value !== 0;
+  return defaultValue;
+}
+
+function parseJsonQuizBank(rawText, fileName) {
+  const parsed = JSON.parse(stripJsonCodeFence(rawText));
+  const source = Array.isArray(parsed) ? { title: getFileTitle(fileName), questions: parsed } : parsed;
+  const title = getJsonTextValue(source.title || source.quiz_title || source.name) || getFileTitle(fileName);
+  const sourceQuestions = Array.isArray(source.questions) ? source.questions : [];
+
+  if (!sourceQuestions.length) {
+    throw new Error("JSON quiz file must include a non-empty questions array.");
+  }
+
+  const questions = sourceQuestions.map((sourceQuestion, index) => normalizeJsonQuestion(sourceQuestion, index));
+  return { title, questions };
+}
+
+function normalizeJsonQuestion(sourceQuestion, index) {
+  const type = normalizeQuestionType(sourceQuestion.type || sourceQuestion.question_type);
+  const prompt = getJsonTextValue(sourceQuestion.prompt || sourceQuestion.question || sourceQuestion.question_text || sourceQuestion.text);
+  const questionNumber = index + 1;
+
+  if (!type) {
+    throw new Error("Question " + questionNumber + " has an unsupported or missing type.");
+  }
+
+  if (!prompt) {
+    throw new Error("Question " + questionNumber + " is missing a prompt.");
+  }
+
+  const question = {
+    name: getJsonTextValue(sourceQuestion.name || sourceQuestion.question_name) || undefined,
+    prompt,
+    answers: [],
+    comment: getJsonTextValue(sourceQuestion.feedback || sourceQuestion.comment || sourceQuestion.general_feedback),
+    num_correct: 0,
+    type
+  };
+
+  if (type === "MC" || type === "MA") {
+    question.answers = normalizeJsonChoiceAnswers(sourceQuestion.answers, questionNumber);
+    question.num_correct = question.answers.filter(answer => answer.correct).length;
+
+    if (type === "MC" && question.num_correct !== 1) {
+      throw new Error("Question " + questionNumber + " must have exactly one correct answer.");
+    }
+
+    if (type === "MA" && question.num_correct < 2) {
+      throw new Error("Question " + questionNumber + " must have two or more correct answers.");
+    }
+  }
+
+  if (type === "TF") {
+    const correctAnswer = getJsonBooleanValue(sourceQuestion.correct_answer, null);
+    if (correctAnswer === null) {
+      throw new Error("Question " + questionNumber + " must include correct_answer as true or false.");
+    }
+
+    question.answers = [
+      { option: "T. True", correct: correctAnswer === true, comments_html: "" },
+      { option: "F. False", correct: correctAnswer === false, comments_html: "" }
+    ];
+    question.num_correct = 1;
+  }
+
+  if (type === "MT") {
+    question.answers = normalizeJsonMatchingPairs(sourceQuestion.pairs || sourceQuestion.matches || sourceQuestion.answers, questionNumber);
+  }
+
+  if (type === "FB") {
+    question.answers = normalizeJsonBlankAnswers(sourceQuestion.blanks || sourceQuestion.answers, questionNumber);
+  }
+
+  return question;
+}
+
+function normalizeJsonChoiceAnswers(sourceAnswers, questionNumber) {
+  if (!Array.isArray(sourceAnswers) || !sourceAnswers.length) {
+    throw new Error("Question " + questionNumber + " must include an answers array.");
+  }
+
+  return sourceAnswers.map((answer, answerIndex) => {
+    const text = getJsonTextValue(answer.text || answer.answer || answer.option);
+    if (!text) {
+      throw new Error("Question " + questionNumber + ", answer " + (answerIndex + 1) + " is missing text.");
+    }
+
+    return {
+      option: text,
+      correct: getJsonBooleanValue(answer.correct, false),
+      comments_html: getJsonTextValue(answer.feedback || answer.comments_html || answer.comment)
+    };
+  });
+}
+
+function normalizeJsonMatchingPairs(sourcePairs, questionNumber) {
+  if (!Array.isArray(sourcePairs) || !sourcePairs.length) {
+    throw new Error("Question " + questionNumber + " must include a pairs array.");
+  }
+
+  return sourcePairs.map((pair, pairIndex) => {
+    const left = getJsonTextValue(pair.left || pair.term || pair.prompt);
+    const right = getJsonTextValue(pair.right || pair.match || pair.answer);
+    if (!left || !right) {
+      throw new Error("Question " + questionNumber + ", matching pair " + (pairIndex + 1) + " needs left and right values.");
+    }
+
+    return {
+      option: left + " = " + right,
+      correct: true,
+      comments_html: getJsonTextValue(pair.feedback || pair.comments_html || pair.comment)
+    };
+  });
+}
+
+function normalizeJsonBlankAnswers(sourceBlanks, questionNumber) {
+  if (!Array.isArray(sourceBlanks) || !sourceBlanks.length) {
+    throw new Error("Question " + questionNumber + " must include a blanks array.");
+  }
+
+  const answers = [];
+  sourceBlanks.forEach((blank, blankIndex) => {
+    const blankId = getJsonTextValue(blank.id || blank.blank_id || blank.name);
+    const acceptedAnswers = Array.isArray(blank.answers) ? blank.answers : [blank.answer];
+
+    if (!blankId) {
+      throw new Error("Question " + questionNumber + ", blank " + (blankIndex + 1) + " needs an id.");
+    }
+
+    acceptedAnswers.forEach((answer, answerIndex) => {
+      const answerText = getJsonTextValue(answer);
+      if (!answerText) {
+        throw new Error("Question " + questionNumber + ", blank " + blankId + " answer " + (answerIndex + 1) + " is blank.");
+      }
+
+      answers.push({
+        option: blankId + ". " + answerText,
+        correct: true,
+        comments_html: getJsonTextValue(blank.feedback || blank.comments_html || blank.comment)
+      });
+    });
+  });
+
+  return answers;
+}
+
+function parseLegacyTextQuiz(rawText, fileName) {
+  let lines = normalizeQuizTextLines(rawText);
+  let name = undefined;
+  let bankTitle = getFileTitle(fileName);
+  lines.push('');
+  let quiz = [];
+  let prompt = '';
+  let answers = [];
+  let comment = '';
+  let numCorrect = 0;
+  let questionType = null;
+
+  for (let l in lines) {
+    l = parseInt(l);
+    let line = lines[l].trim();
+    let nextLine = (lines?.[l + 1] ?? '').trim();
+
+    let mName = line.match(/^Title\:(.*)/);
+    if (mName) bankTitle = mName[1].trim();
+
+    let mPrompt = line.match(/^(MC\.|MA\.|EQ\.|TF\.|MT\.|TX\.|FB\.|FU\.|Q?[0-9]+\.)\s*(.*)/);
+    if (mPrompt) {
+      let prefix = mPrompt[1].toUpperCase();
+      if (prefix.startsWith('MC.')) questionType = 'MC';
+      else if (prefix.startsWith('MA.')) questionType = 'MA';
+      else if (prefix.startsWith('EQ.')) questionType = 'EQ';
+      else if (prefix.startsWith('TF.')) questionType = 'TF';
+      else if (prefix.startsWith('MT.')) questionType = 'MT';
+      else if (prefix.startsWith('TX.')) questionType = 'TX';
+      else if (prefix.startsWith('FB.')) questionType = 'FB';
+      else if (prefix.startsWith('FU.')) questionType = 'FU';
+      else questionType = null;
+
+      prompt = mPrompt[2];
+      continue;
+    }
+
+    let mFillBlankAnswer = line.match(/^([A-Za-z][\w-]*)\.\s*(.+)/);
+    if (questionType === 'FB' && mFillBlankAnswer) {
+      answers.push({
+        option: `${mFillBlankAnswer[1]}. ${mFillBlankAnswer[2]}`,
+        correct: true,
+        comments_html: ''
+      });
+      continue;
+    }
+
+    let mAnswer = line.match(/^\*{0,1}[A-Za-z](\.|\))(.*)/);
+    if (mAnswer) {
+      let mAnswerComment = nextLine.match(/^\?\?\.(.*)/);
+      let answerComment = '';
+      if (mAnswerComment) answerComment = mAnswerComment[1];
+      answers.push({
+        option: mAnswer[2].trim(),
+        correct: line.charAt(0) == '*',
+        comments_html: answerComment
+      });
+      if (line.charAt(0) == '*') numCorrect += 1;
+    }
+
+    if (questionType === 'MT' && line.includes('=') && !line.match(/^\?\./)) {
+      let parts = line.split('=').map(s => s.trim());
+      if (parts.length === 2) {
+        answers.push({
+          option: line,
+          correct: false,
+          comments_html: ''
+        });
+      }
+    }
+
+    let mComment = line.match(/^\?\.(.*)/);
+    if (mComment) comment = mComment[1];
+
+    let canCloseWithoutAnswers = ['EQ', 'TX', 'FU', 'FR'].includes(questionType);
+    if ((answers.length > 0 || canCloseWithoutAnswers) && line == '') {
+      quiz.push({
+        name: name,
+        prompt: prompt,
+        answers: answers,
+        comment: comment,
+        num_correct: numCorrect,
+        type: questionType
+      });
+      prompt = "";
+      answers = [];
+      numCorrect = 0;
+      comment = "";
+      questionType = null;
+    }
+  }
+
+  return { title: bankTitle, questions: quiz };
+}
+
+function parseUploadedQuizBank(rawText, fileName) {
+  try {
+    return parseJsonQuizBank(rawText, fileName);
+  } catch (jsonError) {
+    const looksLikeJson = /\.json$/i.test(fileName) || /^[\s\uFEFF]*[{[]/.test(rawText || "");
+    if (looksLikeJson) throw jsonError;
+    console.warn("upload_questions: falling back to legacy text parser", jsonError);
+    return parseLegacyTextQuiz(rawText, fileName);
+  }
+}
+
 let VUE_APP = {
   show: false,
   state: 'upload',
@@ -189,106 +517,10 @@ let VUE_APP = {
         reader.readAsText(file);
         reader.onload = async () => {
           console.log("upload_questions: FileReader loaded file", file.name, "size", file.size);
-          let lines = reader.result.split("\n");
-          let name = undefined;
-          let bankTitle = file.name.replace(/\.txt$/i, '');
-          lines.push(''); // kept having an issue where the last question wasn't being loaded if there's no empty line at the end, so just adding a blank line
-          let quiz = [];
-          let prompt = '';
-          let answers = [];
-          let correct = '';
-          let comment = '';
-          let numCorrect = 0;
-          let questionType = null; // MC, MA, FR, or null for catch
-          for (l in lines) {
-            l = parseInt(l); //need this to be a number for the nextLine 
-            let line = lines[l].trim();
-            let nextLine = (lines?.[l + 1] ?? '').trim();
-
-            let mName = line.match(/^Title\:(.*)/);
-            if (mName) bankTitle = mName[1].trim();
-
-            // Check for new question prefixes: MC., MA., EQ., TF., MT., TX., FB., FU., or fallback Q1.
-            let mPrompt = line.match(/^(MC\.|MA\.|EQ\.|TF\.|MT\.|TX\.|FB\.|FU\.|Q?[0-9]+\.)\s*(.*)/);
-            if (mPrompt) {
-                // Extract type from prefix
-                let prefix = mPrompt[1].toUpperCase();
-                if (prefix.startsWith('MC.')) questionType = 'MC';
-                else if (prefix.startsWith('MA.')) questionType = 'MA';
-                else if (prefix.startsWith('EQ.')) questionType = 'EQ';
-                else if (prefix.startsWith('TF.')) questionType = 'TF';
-                else if (prefix.startsWith('MT.')) questionType = 'MT';
-                else if (prefix.startsWith('TX.')) questionType = 'TX';
-                else if (prefix.startsWith('FB.')) questionType = 'FB';
-                else if (prefix.startsWith('FU.')) questionType = 'FU';
-                else questionType = null; // fallback for Q1. etc.
-                
-                prompt = mPrompt[2];
-                continue;
-            }
-            let mFillBlankAnswer = line.match(/^([A-Za-z][\w-]*)\.\s*(.+)/);
-            if (questionType === 'FB' && mFillBlankAnswer) {
-              answers.push({
-                option: `${mFillBlankAnswer[1]}. ${mFillBlankAnswer[2]}`,
-                correct: true,
-                comments_html: ''
-              });
-              continue;
-            }
-
-            let mAnswer = line.match(/^\*{0,1}[A-Za-z](\.|\))(.*)/);
-            if (mAnswer) {
-              let mAnswerComment = nextLine.match(/^\?\?\.(.*)/);
-              let answerComment = '';
-              if (mAnswerComment) {
-                answerComment = mAnswerComment[1];
-              }
-              answers.push({
-                  option: mAnswer[2].trim(),
-                  correct: line.charAt(0) == '*',
-                  comments_html: answerComment
-              });
-              if (line.charAt(0) == '*') numCorrect += 1;
-            }
-
-            // Special parsing for MT (matching) questions
-            if (questionType === 'MT' && line.includes('=') && !line.match(/^\?\./)) {
-              let parts = line.split('=').map(s => s.trim());
-              if (parts.length === 2) {
-                answers.push({
-                  option: line, // store full "left = right"
-                  correct: false,
-                  comments_html: ''
-                });
-              }
-            }
-
-            let mComment = line.match(/^\?\.(.*)/);
-            if (mComment) {
-                comment = mComment[1];
-            }
-
-            // End of question: blank line after answers or no-answer question types.
-            let canCloseWithoutAnswers = ['EQ', 'TX', 'FU', 'FR'].includes(questionType);
-            if ((answers.length > 0 || canCloseWithoutAnswers) && line == '') {
-                let question = {
-                  name: name,
-                  prompt: prompt,
-                  answers: answers,
-                  comment: comment,
-                  num_correct: numCorrect,
-                  type: questionType
-                }
-                quiz.push(question);
-                prompt = "";
-                answers = [];
-                correct = "";
-                numCorrect = 0;
-                comment = "";
-                questionType = null;
-            }
-
-          }
+          try {
+          let parsedQuizBank = parseUploadedQuizBank(reader.result, file.name);
+          let bankTitle = parsedQuizBank.title;
+          let quiz = parsedQuizBank.questions;
 
           console.log("upload_questions: parsed quiz", quiz.length, "questions for file", file.name, "bankTitle", bankTitle);
           let bank = await this.createBank(bankTitle);
@@ -326,6 +558,18 @@ let VUE_APP = {
           if (filesProcessed == this.files.length) {
             setUploadModalState(false, 'upload');
             setTimeout(() => window.location.reload(), 700);
+          }
+          } catch (error) {
+            console.error("upload_questions: upload failed", error);
+            filesProcessed += 1;
+            this.uploadProgress[file.name] = 1;
+            this.uploadProgress = JSON.parse(JSON.stringify(this.uploadProgress));
+            setUploadModalState(true, 'upload');
+            const status = document.getElementById('canvas-question-bank-copy-status');
+            if (status) {
+              status.textContent = 'Upload failed for ' + file.name + ': ' + error.message;
+              status.style.color = '#b91c1c';
+            }
           }
         };
       }
@@ -644,30 +888,48 @@ function initUploadModalEvents() {
   if (!modal) return;
   const closeBtn = modal.querySelector('#canvas-question-bank-uploader-close');
   const uploadBtn = modal.querySelector('#canvas-question-bank-uploader-upload');
-  const copyBtn = modal.querySelector('#canvas-question-bank-copy-prompt');
+  const copyBtns = modal.querySelectorAll('[data-canvas-prompt-type]');
   if (closeBtn) closeBtn.addEventListener('click', () => setUploadModalState(false, 'upload'));
   if (uploadBtn) uploadBtn.addEventListener('click', () => VUE_APP.processUploadedQuizBank());
-  if (copyBtn) copyBtn.addEventListener('click', copyCanvasFormatPrompt);
+  copyBtns.forEach(button => {
+    button.addEventListener('click', () => copyCanvasPrompt(button.getAttribute('data-canvas-prompt-type')));
+  });
 }
 
-function copyCanvasFormatPrompt() {
+async function copyCanvasPrompt(promptType) {
   const status = document.getElementById('canvas-question-bank-copy-status');
   if (!navigator.clipboard) {
     if (status) status.textContent = 'Clipboard API unavailable in this browser.';
     return;
   }
-  navigator.clipboard.writeText(CANVAS_FORMAT_PROMPT).then(() => {
+
+  if (status) {
+    status.textContent = 'Loading prompt...';
+    status.style.color = '#334155';
+  }
+
+  let prompt = '';
+  try {
+    prompt = await buildCanvasPrompt(promptType);
+    await navigator.clipboard.writeText(prompt);
     if (status) {
       status.textContent = 'Prompt copied to clipboard! Paste it into your AI tool.';
       status.style.color = '#166534';
     }
-  }).catch(error => {
+  } catch (error) {
     console.error('upload_questions: copy prompt failed', error);
+    if (prompt) {
+      const blob = new Blob([prompt], { type: 'text/plain' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    } else {
+      const fallbackPath = CANVAS_PROMPT_PATHS[promptType] || CANVAS_PROMPT_PATHS.shared;
+      window.open(getCanvasPromptUrl(fallbackPath), '_blank');
+    }
     if (status) {
-      status.textContent = 'Unable to copy prompt. Please try again.';
+      status.textContent = 'Unable to copy prompt automatically. The prompt opened in a new tab.';
       status.style.color = '#b91c1c';
     }
-  });
+  }
 }
 
 VUE_APP.mounted();
@@ -688,186 +950,3 @@ $(".see_bookmarked_banks").after(upload);
 console.log("upload_questions: upload button inserted after .see_bookmarked_banks");
 
 
-
-
-
-/*
-  FORMATTING
-
-  Convert quiz questions to match the sample format.
-  
-  QUESTION TYPES:
-  - MC. = Multiple Choice (one correct answer)
-  - MA. = Multiple Answers (multiple correct answers, use *)
-  - EQ. = Essay Question
-  - TF. = True/False
-  - MT. = Matching
-  - TX. = Text Only (informational block)
-  - FB. = Fill in Multiple Blanks (use [blankname] in text, no spaces in brackets)
-  - FU. = File Upload
-  
-  EXAMPLE QUIZ FORMAT:
-  Title: Biology Quiz
-  
-  MC. What is the powerhouse of the cell?
-  A. Nucleus
-  *B. Mitochondria
-  C. Ribosome
-  D. Vacuole
-  ?. General feedback for this question
-  
-  MA. Select all that apply
-  *A. Red
-  ??. This feedback shows for option A
-  *B. Blue
-  C. Green
-  
-  EQ. Write an essay about mitochondria
-  ?. General instructions or feedback
-  
-  TF. Mitochondria are the powerhouse of the cell.
-  *T.
-  F.
-  ?. True, they produce energy.
-
-  MT. Match the terms with their definitions
-  1. Mitochondria = a. Powerhouse of the cell
-  2. Nucleus = b. Control center
-  ?. Matching helps identify key concepts.
-  
-  TX. This is an informational text block
-  ?. Optional note about the text.
-  
-  FB. Roses are [color1] violets are [color2]
-  color1. Red
-  color1. red
-  color2. blue
-  color2. Blue
-  ?. Fill in the blanks with colors.
-    
-  FU. Upload your assignment file
-  ?. Make sure to include all required documents.
-  
-  RULES:
-  - Start with: Title: [Quiz Name]
-  - Mark correct MC/MA answers with asterisk: *B. [answer]
-  - Comments for specific answers: ??. [comment text] (next line after answer)
-  - General question comment: ?. [comment text] (on its own line)
-  - IMPORTANT: End each question with a blank line
-  - No formatting (bold, italics, etc) - plain text only
-
-*/
-
-
-
-
-
-/*
-AI PROMPT FOR FORMATTING QUESTION BANK TEXT FILES:
-Copy/paste this prompt into an AI tool, then paste the quiz content after it.
-
-Convert the quiz content I provide into a downloadable .txt file.
-You must create and attach the file, not display the contents inline.
-Use the Canvas LMS question‑bank uploader format exactly as specified below.
-Requirements:
-
-Create a real .txt file and return it as a downloadable attachment.
-Do not paste the quiz text into chat.
-Do not summarize or explain anything.
-The response must consist of the file attachment only.
-Preserve all original questions and answers exactly; change formatting only.
-
-I will verify that a download link appears.
-
-REQUIRED FORMAT:
-- Preserve the original quiz content as closely as possible. Only change the formatting
-  needed to match these rules.
-- Do not invent, rewrite, expand, or add new questions, answers, explanations, comments,
-  or feedback.
-- If the original quiz does not include comments or feedback, do not add any ?. or ??.
-- The first line must be: Title: [Quiz Name]
-- Put one blank line after the title.
-- Every question must start with one of these prefixes:
-  MC. = multiple choice, exactly one correct answer
-  MA. = multiple answers, more than one correct answer
-  EQ. = essay question
-  TF. = true/false
-  MT. = matching
-  TX. = text-only informational block
-  FB. = fill in multiple blanks
-  FU. = file upload
-- End every question with exactly one blank line.
-- Use plain text only. Do not use bold, italics, bullets, tables, or HTML.
-
-ANSWER RULES:
-- For MC and MA answers, use A. Answer text, B. Answer text, etc.
-- Mark each correct answer with an asterisk before the letter, like *B. Answer text.
-- MC questions must have exactly one starred answer.
-- MA questions must have two or more starred answers.
-- Optional answer-specific feedback goes immediately after that answer as:
-  ??. Feedback text
-- Optional general question feedback goes after all answers as:
-  ?. Feedback text
-
-TYPE-SPECIFIC RULES:
-- EQ, TX, and FU questions do not need answer lines.
-- TF questions must use exactly two answer lines: T. True and F. False.
-  Put the asterisk on the correct line.
-- MT questions must use one matching pair per line: Term = Matching answer.
-  Each matching pair will be worth 1 point.
-- If the source question has a matching answer bank, such as A. OSHA, B. CDC,
-  followed by prompts with lines like Answer: A, convert the whole block into
-  one MT question. Do not make the answer bank or question directions a separate
-  TX question.
-  Example conversion:
-  Source answer bank: A. OSHA
-  Source prompt: Workplace safety regulations / Answer: A
-  Output pair: OSHA = Workplace safety regulations
-- FB questions must put blank IDs in the question text using square brackets.
-  Example: Roses are [color1]. Then list accepted answers as: color1. Red.
-  Repeat the same blank ID for multiple accepted answers.
-
-EXAMPLE FORMAT:
-Title: Biology Quiz
-
-MC. What is the powerhouse of the cell?
-A. Nucleus
-*B. Mitochondria
-C. Ribosome
-D. Vacuole
-
-MA. Select all nucleotide bases.
-*A. Adenine
-*B. Guanine
-C. Glucose
-*D. Thymine
-
-TF. Mitochondria are the powerhouse of the cell.
-*T. True
-F. False
-
-FINAL CHECK BEFORE YOU BUILD THE FILE:
-- Name the file using the quiz title in a readable underscore format.
-  Replace spaces and punctuation with underscores, remove duplicate underscores,
-  and do not URL-encode spaces or special characters.
-  Example: Title: Chapter 22 Regulatory Advisory Agencies
-  File name: Chapter_22_Regulatory_Advisory_Agencies.txt
-- The file starts with Title:
-- The file contains only the formatted quiz text.
-- No questions, answers, explanations, comments, or feedback were invented.
-- Every question has a blank line after it.
-- MC has one starred answer.
-- MA has multiple starred answers.
-- True/false uses T. True and F. False and has one starred answer.
-- Fill-in-the-blank prompts use [blank_id] markers and matching blank_id answer lines.
-
-AFTER THE FILE IS CREATED:
-- Do not put these instructions inside the .txt file.
-- Tell the user:
-  "You're all set! 
-  — Download the file, then open your Canvas course.
-  — In the left-hand course menu, open Quizzes. 
-  — Click the three dots in the top right corner, choose Manage Question Banks. 
-  — Select Upload Question Bank.
-  — Upload the .txt file. Happy quizzing!"
-*/
