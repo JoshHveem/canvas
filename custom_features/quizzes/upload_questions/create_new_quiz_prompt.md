@@ -8,4 +8,4 @@ This is a new quiz creation task:
 - If I ask for an unsupported question type, tell me that this uploader cannot create that type yet and suggest a supported alternative.
 - Draft the quiz questions first and let me review them before creating the final `.json` file.
 - After I approve the quiz, create a real `.json` file and return it as a downloadable attachment.
-- When creating the `.json` file, the response must consist of the file attachment only.
+- When creating the `.json` file, the response must consist of the file attachment only
