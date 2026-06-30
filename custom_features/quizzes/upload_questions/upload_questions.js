@@ -11,7 +11,7 @@ function stopUploadQuestionBankButtonWatcher() {
 }
 
 function insertUploadQuestionBankButton() {
-  if ($(".upload_bank_link").length) return;
+  if ($(".upload_bank_link").length) return true;
 
   const anchor = $(".see_bookmarked_banks");
   if (anchor.length) {
