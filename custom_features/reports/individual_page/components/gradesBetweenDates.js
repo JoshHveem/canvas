@@ -1,6 +1,5 @@
 (async function() {
   const FIVE_WEEKS_MS = 60 * 60 * 24 * 7 * 5 * 1000;
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
   const deepClone = value => JSON.parse(JSON.stringify(value));
   const parseDateValue = value => value ? new Date(value) : undefined;
   const normalizeLookupValue = value => String(value ?? '').trim().toLowerCase();
@@ -64,9 +63,6 @@
                 {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_sections}})
               </option>
             </select>
-            <span v-if="selectedTerm?._id">
-              Weeks: {{selectedDateRangeWeeks}} | Holiday Weeks: {{selectedTermHolidayWeeks}}
-            </span>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change="onDateRangeChange()">
 
@@ -327,15 +323,6 @@
           this.selectedTerm?.concurrent_sections,
           this.selectedTerm?.num_weeks__holidays
         );
-      },
-      selectedDateRangeWeeks() {
-        const start = this.parseDate(this.submissionDatesStart);
-        const end = this.parseDate(this.submissionDatesEnd);
-        if (!start || !end || end <= start) return 0;
-        return Math.round(((end - start) / WEEK_MS) * 100) / 100;
-      },
-      selectedTermHolidayWeeks() {
-        return Number(this.selectedTerm?.num_weeks__holidays) || 0;
       },
       weightedGradeForTerm() {
         return this.scaleGradeByCredits(this.unweightedGrade, this.estimatedCreditsRequired);
