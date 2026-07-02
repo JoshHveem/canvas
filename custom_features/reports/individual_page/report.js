@@ -5,6 +5,9 @@
   Show which tab you're on
 */
 (async function () {
+  const REPORT_BASE_PATH = '/custom_features/reports/individual_page';
+  const deepClone = value => JSON.parse(JSON.stringify(value));
+
   function emptyMajor() {
     return {
       major_code: '',
@@ -21,11 +24,11 @@
     };
   }
 
-  function normalizeKeyPart(value) {
+  function normalizeLookupValue(value) {
     return String(value).trim().toLowerCase();
   }
 
-  function normalizeTimestampKey(value) {
+  function normalizeTermTimestamp(value) {
     return String(value)
       .trim()
       .toLowerCase()
@@ -36,10 +39,10 @@
 
   function buildHsTermKey(term) {
     return [
-      normalizeKeyPart(term.sis_user_id),
-      normalizeKeyPart(term.course_code),
-      normalizeKeyPart(term.campus_code),
-      normalizeTimestampKey(term.entry_at__original || term.entry_at),
+      normalizeLookupValue(term.sis_user_id),
+      normalizeLookupValue(term.course_code),
+      normalizeLookupValue(term.campus_code),
+      normalizeTermTimestamp(term.entry_at__original || term.entry_at),
     ].join('|');
   }
 
@@ -51,12 +54,11 @@
   }
 
   function getAutoOpenConfig() {
-    const params = new URLSearchParams(window.location.search);
-    const rawReportType = params.get('open_btech_report');
+    const reportType = new URLSearchParams(window.location.search).get('open_btech_report');
 
     return {
-      shouldOpen: rawReportType != null,
-      reportType: rawReportType
+      shouldOpen: reportType != null,
+      reportType
     };
   }
 
@@ -69,6 +71,14 @@
   }
 
   const hsGradeCourseCache = new Map();
+
+  function parseBoolean(value) {
+    return value === true || value === "true";
+  }
+
+  function getAssetUrl(path) {
+    return window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + path) : SOURCE_URL + path;
+  }
 
   async function fetchAllCourseConnection(courseId, connectionField, args = {}, nodeSelection = '') {
     const pageSize = 50;
@@ -142,12 +152,13 @@
           }
         }
       }`;
-      const groupRes = await $.post("/api/graphql", { query: groupQuery });
+      const [groupRes, assignmentsByGroup, submissions] = await Promise.all([
+        $.post("/api/graphql", { query: groupQuery }),
+        getAllAssignmentsByGroup(course),
+        getAllSubmissions(course, userId)
+      ]);
       const groups = groupRes.data.course.assignmentGroupsConnection.nodes
         .filter(group => group.state === "available");
-
-      const assignmentsByGroup = await getAllAssignmentsByGroup(course);
-      const submissions = await getAllSubmissions(course, userId);
 
       groups.forEach(group => {
         group.assignments = assignmentsByGroup[group._id] || [];
@@ -230,10 +241,6 @@
     return courses;
   }
 
-  function cloneHSGradeCourses(courses) {
-    return JSON.parse(JSON.stringify(courses));
-  }
-
   window.loadIndividualReportHSGradeCourses = async function(userId, onProgress) {
     const key = String(userId);
 
@@ -242,7 +249,7 @@
     }
 
     const courses = await hsGradeCourseCache.get(key);
-    return cloneHSGradeCourses(courses);
+    return deepClone(courses);
   };
 
   function emptyUser() {
@@ -286,10 +293,7 @@
   async function postLoad() {
     let vueString = '';
     const cacheBust = Date.now();
-    //gen an initial uuid
-    const templateUrl = window.btechAssetUrl
-      ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/template.vue')
-      : SOURCE_URL + '/custom_features/reports/individual_page/template.vue';
+    const templateUrl = getAssetUrl(`${REPORT_BASE_PATH}/template.vue`);
     await $.get(templateUrl + '?v=' + cacheBust, null, function (html) {
       vueString = html.replace("<template>", "").replace("</template>", "");
     }, 'text');
@@ -448,29 +452,32 @@
         },
 
         async loadSettings(settings) {
-          const fallback = JSON.parse(JSON.stringify(settings));
+          const fallback = deepClone(settings);
           let saved = {};
           try {
             const resp = await $.get(`/api/v1/users/self/custom_data/instructor?ns=edu.btech.canvas`);
             if (resp.data && resp.data.settings) saved = resp.data.settings;
           } catch (err) { /* keep defaults */ }
 
-          const merged = JSON.parse(JSON.stringify(fallback));
-          merged.account = saved.account ?? fallback.account;
-          merged.reportType = saved.reportType ?? fallback.reportType;
+          const merged = {
+            ...fallback,
+            ...saved,
+            filters: {
+              ...fallback.filters,
+              ...(saved.filters || {})
+            }
+          };
+
           if (!this.reportTypes.some(report => report.value === merged.reportType)) {
             merged.reportType = fallback.reportType;
           }
 
-          if (saved.filters) merged.filters = Object.assign({}, fallback.filters, saved.filters);
-          else merged.filters = JSON.parse(JSON.stringify(fallback.filters));
-
-          if (merged.anonymous === "true") merged.anonymous = true; else merged.anonymous = false;
+          merged.anonymous = parseBoolean(merged.anonymous);
           merged.anonymize = merged.anonymous;
           for (const key in merged.filters) {
-            const val = merged.filters[key];
-            if (val === "true") merged.filters[key] = true;
-            else if (val === "false") merged.filters[key] = false;
+            if (merged.filters[key] === "true" || merged.filters[key] === "false") {
+              merged.filters[key] = parseBoolean(merged.filters[key]);
+            }
           }
           merged.filters.section = 'All';
           return merged;
@@ -504,7 +511,9 @@
           }, 0);
         },
 
-        async loadMajorCourses(major) {
+        async hydrateMajor(major) {
+          if (major.courses) return major;
+
           const majorCourses = await bridgetools.req3(
             'reports',
             {
@@ -522,13 +531,6 @@
               other: majorCourses.filter(course => course.major_requirement_type_code !== 'C' && course.major_requirement_type_code !== 'E'),
             }
           };
-        },
-
-        async normalizeMajors(majors) {
-          return Promise.all(majors.map(async major => {
-            if (major.courses) return major;
-            return this.loadMajorCourses(major);
-          }));
         },
 
         sortMajors(majors) {
@@ -590,7 +592,7 @@
 
         normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors, employmentSkills }) {
           studentHeader = studentHeader || {};
-          const sortedMajors = this.sortMajors(majors);
+          const sortedMajors = this.sortMajors(majors || []);
           const defaultMajor = sortedMajors[0] || emptyMajor();
           employmentSkills = employmentSkills || [];
           const user = {
@@ -661,7 +663,7 @@
 
             this.canvasUser = canvasUser;
             this.setLoadingState("Loading major requirements", 60);
-            const majors = await this.normalizeMajors(studentMajors);
+            const majors = await Promise.all((studentMajors || []).map(major => this.hydrateMajor(major)));
             this.setLoadingState("Finalizing course summary", 85);
             return this.normalizeUserRecord({
               canvasUser,
@@ -695,16 +697,22 @@
   try {
     await $.put("https://reports.bridgetools.dev/gen_uuid?requester_id=" + ENV.current_user_id);
     //styling
-    loadCSS("https://reports.bridgetools.dev/style/main.css");
-    loadCSS("https://reports.bridgetools.dev/department_report/style/main.css");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/studentCoursesReport.js`);
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsReport.js`);
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsHistoricReport.js`) : SOURCE_URL + `/custom_features/reports/individual_page/components/employmentSkillsHistoricReport.js`);
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js') : SOURCE_URL + '/custom_features/reports/individual_page/components/gradesBetweenDates.js');
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseRowInd.js");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/courseProgressBarInd.js");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/indHeaderCredits.js");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js") : SOURCE_URL + "/custom_features/reports/individual_page/gradesBetweenDatesOld.js");
+    [
+      "https://reports.bridgetools.dev/style/main.css",
+      "https://reports.bridgetools.dev/department_report/style/main.css"
+    ].forEach(loadCSS);
+    for (const scriptPath of [
+      `${REPORT_BASE_PATH}/components/studentCoursesReport.js`,
+      `${REPORT_BASE_PATH}/components/employmentSkillsReport.js`,
+      `${REPORT_BASE_PATH}/components/employmentSkillsHistoricReport.js`,
+      `${REPORT_BASE_PATH}/components/gradesBetweenDates.js`,
+      `${REPORT_BASE_PATH}/components/courseRowInd.js`,
+      `${REPORT_BASE_PATH}/components/courseProgressBarInd.js`,
+      `${REPORT_BASE_PATH}/components/indHeaderCredits.js`,
+      `${REPORT_BASE_PATH}/gradesBetweenDatesOld.js`
+    ]) {
+      await $.getScript(getAssetUrl(scriptPath));
+    }
     await loadFirstAvailableScript([
       "https://d3js.org/d3.v6.min.js",
       "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
@@ -729,8 +737,8 @@
     console.error(err);
   }
   function loadCSS(url) {
-    var style = document.createElement('link'),
-      head = document.head || document.getElementsByTagName('head')[0];
+    const style = document.createElement('link');
+    const head = document.head || document.getElementsByTagName('head')[0];
     style.href = url;
     style.type = 'text/css';
     style.rel = "stylesheet";
