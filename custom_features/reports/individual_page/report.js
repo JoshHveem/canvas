@@ -553,13 +553,16 @@
           });
         },
 
-        calculateCreditsRequired(entryAt, exitAt, concurrentCount = 1) {
+        calculateCreditsRequired(entryAt, exitAt, concurrentCount = 1, numWeeksHolidays = 0) {
           const start = new Date(entryAt);
           const end = new Date(exitAt);
           if (end <= start) return 0;
 
           const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-          let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
+          const msInWeek = 60 * 60 * 24 * 7 * 1000;
+          const holidayWeeks = Math.max(Number(numWeeksHolidays) || 0, 0);
+          const effectiveDurationMs = Math.max(end - start - (holidayWeeks * msInWeek), 0);
+          let credits = Math.floor(Number(effectiveDurationMs / msInFiveWeeks) * 4) / 4;
           if (concurrentCount > 1) credits *= concurrentCount;
           return credits;
         },
@@ -575,7 +578,12 @@
             const exitAt = overrideTerm?.exit_at__override || baseTerm.exit_at;
             const creditsRequired = overrideTerm?.credits_required__override != null
               ? Number(overrideTerm.credits_required__override)
-              : this.calculateCreditsRequired(entryAt, exitAt, Number(baseTerm.concurrent_count) || 1);
+              : this.calculateCreditsRequired(
+                  entryAt,
+                  exitAt,
+                  Number(baseTerm.concurrent_count) || 1,
+                  Number(baseTerm.num_weeks__holidays) || 0
+                );
 
             return {
               ...baseTerm,

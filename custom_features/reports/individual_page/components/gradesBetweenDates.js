@@ -30,13 +30,15 @@
     const day = String(parsed.getDate()).padStart(2, '0');
     return `${parsed.getFullYear()}-${month}-${day}`;
   };
-  const calculateCreditsRequired = (entryAt, exitAt, concurrentCount = 1) => {
+  const calculateCreditsRequired = (entryAt, exitAt, concurrentCount = 1, numWeeksHolidays = 0) => {
     const start = parseDateValue(entryAt);
     const end = parseDateValue(exitAt);
 
     if (!start || !end || end <= start) return 0;
 
-    let credits = Math.floor(Number((end - start) / FIVE_WEEKS_MS) * 4) / 4;
+    const holidayWeeks = Math.max(Number(numWeeksHolidays) || 0, 0);
+    const effectiveDurationMs = Math.max(end - start - (holidayWeeks * 7 * 24 * 60 * 60 * 1000), 0);
+    let credits = Math.floor(Number(effectiveDurationMs / FIVE_WEEKS_MS) * 4) / 4;
     const concurrent = Number(concurrentCount) || 1;
     if (concurrent > 1) credits *= concurrent;
     return credits;
@@ -318,7 +320,8 @@
         return calculateCreditsRequired(
           this.submissionDatesStart,
           this.submissionDatesEnd,
-          this.selectedTerm?.concurrent_sections
+          this.selectedTerm?.concurrent_sections,
+          this.selectedTerm?.num_weeks__holidays
         );
       },
       weightedGradeForTerm() {
@@ -484,9 +487,15 @@
           exit_at: effectiveExitAt,
           section_code: baseTerm.section_code,
           concurrent_sections: Number(baseTerm.concurrent_sections),
+          num_weeks__holidays: Number(baseTerm.num_weeks__holidays) || 0,
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
-            : calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_sections),
+            : calculateCreditsRequired(
+                effectiveEntryAt,
+                effectiveExitAt,
+                baseTerm.concurrent_sections,
+                baseTerm.num_weeks__holidays
+              ),
           has_credits_required_override: creditsRequiredOverride != null,
           override: overrideTerm,
         };
@@ -574,7 +583,12 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (nextCreditsRequired !== calculateCreditsRequired(nextEntryAt, nextExitAt, term.concurrent_sections)) {
+        if (nextCreditsRequired !== calculateCreditsRequired(
+          nextEntryAt,
+          nextExitAt,
+          term.concurrent_sections,
+          term.num_weeks__holidays
+        )) {
           payload.credits_required__override = nextCreditsRequired;
         }
 
