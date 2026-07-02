@@ -369,7 +369,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     }
 
     if (ENV?.current_user_roles?.includes('root_admin')) {
-      feature("remove_former_employees", /^\/accounts\/3\/users\/[0-9]+/)
+      feature("remove_former_employees", /^\/(?:accounts\/[0-9]+\/)?users\/[0-9]+/)
     }
   }
 })();
