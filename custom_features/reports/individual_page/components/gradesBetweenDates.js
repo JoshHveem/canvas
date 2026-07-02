@@ -1118,7 +1118,7 @@
           let course = this.courses[i];
           let courseId = course.course_id;
           includedAssignments[courseId] = {
-            name: course.name,
+            name: course.course_name,
             id: courseId,
             include: true,
             groups: {}
