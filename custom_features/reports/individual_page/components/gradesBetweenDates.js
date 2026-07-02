@@ -423,6 +423,7 @@
       this.loadingMessage = "Loading Courses";
 
       this.courses = await this.getCourseData();
+      console.log(this.courses);
 
       if (!this.courses?.length) {
         this.loadingMessage = "No courses available.";
