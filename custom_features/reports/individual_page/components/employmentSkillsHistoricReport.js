@@ -25,19 +25,10 @@ Vue.component('employment-skills-historic-report', {
 
         <div
           v-else
-          style="
-            overflow-x: auto;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            background: #ffffff;
-          "
+          :style="tableWrapperStyle()"
         >
           <div
-            style="
-              display: grid;
-              grid-template-columns: 160px 110px 220px repeat(8, minmax(84px, 1fr));
-              min-width: 1220px;
-            "
+            :style="tableGridStyle()"
           >
             <div :style="headerCellStyle()">Submitted At</div>
             <div :style="headerCellStyle()">Status</div>
@@ -239,6 +230,16 @@ Vue.component('employment-skills-historic-report', {
     },
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
+    },
+    tableWrapperStyle() {
+      return 'overflow: auto; max-height: 70vh; border: 1px solid ' + this.colors.gray + '; border-radius: 10px; background: ' + this.colors.white + ';';
+    },
+    tableGridStyle() {
+      const baseColumns = '160px 110px 220px';
+      const skillColumns = this.skillColumns.map(() => 'minmax(120px, 1fr)').join(' ');
+      const templateColumns = [baseColumns, skillColumns].filter(Boolean).join(' ');
+      const minWidth = 490 + (this.skillColumns.length * 120);
+      return 'display: grid; grid-template-columns: ' + templateColumns + '; min-width: ' + minWidth + 'px;';
     },
     headerCellStyle() {
       return 'position: sticky; top: 0; z-index: 2; padding: 10px 8px; border-bottom: 1px solid ' + this.colors.gray + '; background: ' + this.colors.white + '; font-size: 12px; font-weight: 700; white-space: normal; line-height: 1.25;';
