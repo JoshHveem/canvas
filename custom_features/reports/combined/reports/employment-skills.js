@@ -2,7 +2,7 @@ Vue.component('reports-employment-skills', {
   mixins: [
     window.ReportMixins.formatting,
     window.ReportMixins.programScoped({
-      optionsDataset: 'student_employment_skills',
+      optionsDataset: 'student_employment_skills_current',
       hydrate_sis_user_id: true,
       includeAcademicYear: false,
       emptySelectionMessage: 'Select a program.',

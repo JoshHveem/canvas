@@ -164,7 +164,7 @@
                 value: 'employment-skills',
                 label: 'Submissions',
                 component: 'reports-employment-skills',
-                dataset: 'student_employment_skills',
+                dataset: 'student_employment_skills_current',
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
