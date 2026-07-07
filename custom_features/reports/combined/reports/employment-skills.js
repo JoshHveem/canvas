@@ -44,7 +44,7 @@ Vue.component('reports-employment-skills', {
         'Submission Location', 'Course name linked to the Canvas SpeedGrader submission when available.', '14rem', false, 'string',
         row => this.submissionLocationHtml(row),
         null,
-        row => String(row?.course_name ?? '').toLowerCase()
+        row => this.getSubmissionLocationLabel(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Self Eval', 'Self evaluation submission date.', '8.5rem', false, 'string',
@@ -102,6 +102,16 @@ Vue.component('reports-employment-skills', {
 
     getProgramLabel(row) {
       return String(row?.program_name ?? row?.program_code ?? '').trim();
+    },
+
+    getSubmissionLocationLabel(row) {
+      const courseName = String(row?.course_name ?? '').trim();
+      if (courseName) return courseName;
+
+      const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
+      if (canvasCourseId) return `Course ${canvasCourseId}`;
+
+      return '-';
     },
 
     parseDateValue(value) {
@@ -163,7 +173,7 @@ Vue.component('reports-employment-skills', {
     },
 
     submissionLocationHtml(row) {
-      const courseName = String(row?.course_name ?? '').trim() || '-';
+      const courseName = this.getSubmissionLocationLabel(row);
       const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       const assignmentId = String(row?.canvas_assignment_id ?? '').trim();
@@ -198,7 +208,18 @@ Vue.component('reports-employment-skills', {
         program_code: String(row?.program_code ?? '').trim(),
         program_name: String(row?.program_name ?? '').trim(),
         academic_year: Number(row?.academic_year) || null,
+        num_evals__employment_skills: Number(row?.num_evals__employment_skills) || 0,
+        most_recent_employment_skills_created_at: String(row?.most_recent_employment_skills_created_at ?? '').trim(),
         is_pending_instructor_eval: Boolean(row?.is_pending_instructor_eval),
+        employment_skills_scores__self: row?.employment_skills_scores__self && typeof row.employment_skills_scores__self === 'object'
+          ? row.employment_skills_scores__self
+          : {},
+        employment_skills_scores: row?.employment_skills_scores && typeof row.employment_skills_scores === 'object'
+          ? row.employment_skills_scores
+          : {},
+        employment_skills_goals: String(row?.employment_skills_goals ?? '').trim(),
+        career_goal__current: String(row?.career_goal__current ?? '').trim(),
+        bridgetools_updated_at: String(row?.bridgetools_updated_at ?? '').trim(),
         created_at__self_eval: String(row?.created_at__self_eval ?? '').trim(),
         created_at__instructor_eval: String(row?.created_at__instructor_eval ?? '').trim(),
         days_since_last_self_eval: this.getDaysSinceSelfEval(row)
