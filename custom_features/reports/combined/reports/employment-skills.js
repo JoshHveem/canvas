@@ -53,14 +53,14 @@ Vue.component('reports-employment-skills', {
         row => this.selfEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Days Ago', 'Days since the last self evaluation submission.', '8rem', false, 'number',
+        'Days Ago', 'Days since the last available evaluation submission, preferring self eval then instructor eval.', '8rem', false, 'number',
         row => {
-          const days = this.getDaysSinceSelfEval(row);
+          const days = this.getDaysSinceLatestEval(row);
           return Number.isFinite(days) ? this.intText(days) : '-';
         },
-        row => this.daysSinceStyle(this.getDaysSinceSelfEval(row)),
+        row => this.daysSinceStyle(this.getDaysSinceLatestEval(row)),
         row => {
-          const days = this.getDaysSinceSelfEval(row);
+          const days = this.getDaysSinceLatestEval(row);
           return Number.isFinite(days) ? days : -1;
         }
       ),
@@ -122,8 +122,9 @@ Vue.component('reports-employment-skills', {
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     },
 
-    getDaysSinceSelfEval(row) {
-      const submittedAt = this.parseDateValue(row?.created_at__self_eval);
+    getDaysSinceLatestEval(row) {
+      const submittedAt = this.parseDateValue(row?.created_at__self_eval)
+        || this.parseDateValue(row?.created_at__instructor_eval);
       if (!submittedAt) return null;
       const now = new Date();
       const msPerDay = 24 * 60 * 60 * 1000;
@@ -141,7 +142,7 @@ Vue.component('reports-employment-skills', {
     },
 
     selfEvalPillStyle(row) {
-      const days = this.getDaysSinceSelfEval(row);
+      const days = this.getDaysSinceLatestEval(row);
       if (!Number.isFinite(days)) {
         return { backgroundColor: this.colors.gray, color: this.colors.black };
       }
@@ -222,7 +223,7 @@ Vue.component('reports-employment-skills', {
         bridgetools_updated_at: String(row?.bridgetools_updated_at ?? '').trim(),
         created_at__self_eval: String(row?.created_at__self_eval ?? '').trim(),
         created_at__instructor_eval: String(row?.created_at__instructor_eval ?? '').trim(),
-        days_since_last_self_eval: this.getDaysSinceSelfEval(row)
+        days_since_last_eval: this.getDaysSinceLatestEval(row)
       }));
     },
 
