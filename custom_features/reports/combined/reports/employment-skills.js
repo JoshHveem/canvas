@@ -35,10 +35,10 @@ Vue.component('reports-employment-skills', {
         row => String(row?.program_name ?? '').toLowerCase()
       ),
       new window.ReportColumn(
-        'Academic Year', 'Academic year for the submission.', '7rem', false, 'number',
-        row => Number.isFinite(Number(row?.academic_year)) ? this.intText(row?.academic_year) : '-',
+        'Type', 'Enrollment Type', '5rem', false, 'string',
+        row => this.escapeHtml(String(row?.enrollment_type_code?? '')),
         null,
-        row => Number(row?.academic_year ?? -1)
+        row => String(row?.enrollment_type_code ?? '').toLowerCase()
       ),
       new window.ReportColumn(
         'Submission Location', 'Course name linked to the Canvas SpeedGrader submission when available.', '14rem', false, 'string',
