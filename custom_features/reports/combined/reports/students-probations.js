@@ -97,8 +97,7 @@ Vue.component('reports-students-probations', {
         this.loading = true;
         this.loadError = '';
 
-        const rows = await bridgetools.req3(
-          'reports',
+        const rows = await this.fetchReportDataset(
           {},
           { dataset: this.getDataset() }
         );

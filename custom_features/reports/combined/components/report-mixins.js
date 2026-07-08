@@ -102,6 +102,26 @@ window.ReportUtils = {
 
   uniqueSorted(arr) {
     return Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b));
+  },
+
+  cloneData(value) {
+    if (value === undefined) return undefined;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      return value;
+    }
+  },
+
+  stableSerialize(value) {
+    if (Array.isArray(value)) {
+      return `[${value.map(item => window.ReportUtils.stableSerialize(item)).join(',')}]`;
+    }
+    if (value && typeof value === 'object') {
+      const keys = Object.keys(value).sort();
+      return `{${keys.map(key => `${JSON.stringify(key)}:${window.ReportUtils.stableSerialize(value[key])}`).join(',')}}`;
+    }
+    return JSON.stringify(value);
   }
 };
 
@@ -197,6 +217,39 @@ window.ReportMixins = {
           this.__canvasUserNameCache = {};
         }
         return this.__canvasUserNameCache;
+      },
+
+      getReportDatasetCache() {
+        if (!window.__btechReportDatasetCache || typeof window.__btechReportDatasetCache !== 'object') {
+          window.__btechReportDatasetCache = {};
+        }
+        return window.__btechReportDatasetCache;
+      },
+
+      createReportDatasetCacheKey(dataset, filters = {}, options = {}) {
+        return window.ReportUtils.stableSerialize({
+          report: String(this.reportContext?.reportName ?? '').trim(),
+          subMenu: String(this.reportContext?.subMenu ?? '').trim(),
+          dataset: String(dataset ?? '').trim(),
+          filters: filters && typeof filters === 'object' ? filters : {},
+          options: options && typeof options === 'object' ? options : {}
+        });
+      },
+
+      async fetchReportDataset(filters = {}, options = {}) {
+        const requestFilters = filters && typeof filters === 'object' ? filters : {};
+        const requestOptions = options && typeof options === 'object' ? options : {};
+        const dataset = String(requestOptions?.dataset ?? this.reportContext?.dataset ?? '').trim();
+        const cacheKey = this.createReportDatasetCacheKey(dataset, requestFilters, requestOptions);
+        const cache = this.getReportDatasetCache();
+
+        if (Object.prototype.hasOwnProperty.call(cache, cacheKey)) {
+          return window.ReportUtils.cloneData(cache[cacheKey]);
+        }
+
+        const rows = await bridgetools.req3('reports', requestFilters, requestOptions);
+        cache[cacheKey] = window.ReportUtils.cloneData(Array.isArray(rows) ? rows : []);
+        return window.ReportUtils.cloneData(cache[cacheKey]);
       },
 
       async fetchCanvasUserName(canvasUserId) {
@@ -380,8 +433,7 @@ window.ReportMixins = {
           try {
             this.loadingDepartments = true;
 
-            const rows = await bridgetools.req3(
-              'reports',
+            const rows = await this.fetchReportDataset(
               { academic_year: Number(this.year) },
               { dataset: this.getDepartmentOptionsDataset() }
             );
@@ -438,8 +490,7 @@ window.ReportMixins = {
             this.loading = true;
             this.loadError = '';
 
-            const rows = await bridgetools.req3(
-              'reports',
+            const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
               { dataset: this.getDataset() }
             );
@@ -574,7 +625,7 @@ window.ReportMixins = {
         },
 
         getProgramOptionsDataset() {
-          return config.optionsDataset || this.getDataset();
+          return 'programs';
         },
 
         getProgramLabel(row) {
@@ -602,8 +653,7 @@ window.ReportMixins = {
             this.loadingPrograms = true;
             this.loadError = '';
 
-            const rows = await bridgetools.req3(
-              'reports',
+            const rows = await this.fetchReportDataset(
               this.getProgramOptionsRequestFilters(),
               { dataset: this.getProgramOptionsDataset() }
             );
@@ -663,8 +713,7 @@ window.ReportMixins = {
             this.loading = true;
             this.loadError = '';
 
-            const rows = await bridgetools.req3(
-              'reports',
+            const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
               { dataset: this.getDataset() }
             );
@@ -747,8 +796,7 @@ window.ReportMixins = {
             this.loading = true;
             this.loadError = '';
 
-            const rows = await bridgetools.req3(
-              'reports',
+            const rows = await this.fetchReportDataset(
               Object.assign({}, this.reportContext?.filters || {}, {
                 academic_year: Number(this.year)
               }),
