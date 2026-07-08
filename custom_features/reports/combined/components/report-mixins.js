@@ -351,6 +351,7 @@ window.ReportMixins = {
           loading: false,
           loadingDepartments: false,
           loadError: '',
+          loadRequestId: 0,
           year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: [],
           departmentOptions: [],
@@ -507,14 +508,19 @@ window.ReportMixins = {
           try {
             this.loading = true;
             this.loadError = '';
+            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
               { dataset: this.getDataset() }
             );
 
+            if (requestId !== this.loadRequestId) return;
+
             const normalizedRows = this.normalizeRows(rows);
-            this.rows = await this.hydrateSisUserIds(normalizedRows, config);
+            const hydratedRows = await this.hydrateSisUserIds(normalizedRows, config);
+            if (requestId !== this.loadRequestId) return;
+            this.rows = hydratedRows;
 
             const first = this.rows[0] || {};
             this.loadedDepartmentName = String(
@@ -549,6 +555,7 @@ window.ReportMixins = {
           loading: false,
           loadingPrograms: false,
           loadError: '',
+          loadRequestId: 0,
           year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: [],
           programOptions: [],
@@ -730,14 +737,19 @@ window.ReportMixins = {
           try {
             this.loading = true;
             this.loadError = '';
+            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
               { dataset: this.getDataset() }
             );
 
+            if (requestId !== this.loadRequestId) return;
+
             const normalizedRows = this.normalizeRows(rows);
-            this.rows = await this.hydrateSisUserIds(normalizedRows, config);
+            const hydratedRows = await this.hydrateSisUserIds(normalizedRows, config);
+            if (requestId !== this.loadRequestId) return;
+            this.rows = hydratedRows;
 
             const first = this.rows[0] || {};
             this.loadedProgramName = String(
@@ -769,6 +781,7 @@ window.ReportMixins = {
         return {
           loading: false,
           loadError: '',
+          loadRequestId: 0,
           year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: []
         };
@@ -813,6 +826,7 @@ window.ReportMixins = {
           try {
             this.loading = true;
             this.loadError = '';
+            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               Object.assign({}, this.reportContext?.filters || {}, {
@@ -821,6 +835,7 @@ window.ReportMixins = {
               { dataset: this.getDataset() }
             );
 
+            if (requestId !== this.loadRequestId) return;
             this.rows = this.normalizeRows(rows);
           } catch (e) {
             console.warn('Failed to load summary dataset', e);
