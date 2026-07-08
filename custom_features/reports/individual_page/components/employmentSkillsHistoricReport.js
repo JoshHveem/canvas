@@ -58,12 +58,9 @@ Vue.component('employment-skills-historic-report', {
               <template v-for="record in group.records">
                 <div
                   :key="recordKey(record) + '-date'"
-                  :style="cellStyle()"
+                  :style="cellStyle('flex-start')"
                 >
-                  <span
-                    class="btech-pill-text btech-ind-header__pill"
-                    :style="datePillStyle(record)"
-                  >
+                  <span class="btech-ind-header__label">
                     {{ formatDate(record.created_at__instructor_eval || record.created_at__self_eval) }}
                   </span>
                 </div>
@@ -150,8 +147,7 @@ Vue.component('employment-skills-historic-report', {
     filteredRecords() {
       return this.records
         .filter(record => {
-          return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase()
-            && Number(record.academic_year) === Number(this.major.academic_year__major);
+          return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase();
         })
         .sort((a, b) => {
           return new Date(b.created_at__instructor_eval || b.created_at__self_eval || 0)
@@ -321,12 +317,6 @@ Vue.component('employment-skills-historic-report', {
       return record.is_pending_instructor_eval
         ? this.pillStyle(this.colors.red, this.colors.white)
         : this.pillStyle(this.colors.green, this.colors.white);
-    },
-    datePillStyle(record) {
-      const ageInDays = this.daysSince(record.created_at__instructor_eval || record.created_at__self_eval);
-      if (ageInDays < 30) return this.pillStyle(this.colors.green, this.colors.white);
-      if (ageInDays < 60) return this.pillStyle(this.colors.yellow, this.colors.black);
-      return this.pillStyle(this.colors.red, this.colors.white);
     }
   }
 });
