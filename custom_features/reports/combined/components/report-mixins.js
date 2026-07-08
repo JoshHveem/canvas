@@ -226,6 +226,13 @@ window.ReportMixins = {
         return window.__btechReportDatasetCache;
       },
 
+      getReportDatasetPendingCache() {
+        if (!window.__btechReportDatasetPendingCache || typeof window.__btechReportDatasetPendingCache !== 'object') {
+          window.__btechReportDatasetPendingCache = {};
+        }
+        return window.__btechReportDatasetPendingCache;
+      },
+
       createReportDatasetCacheKey(dataset, filters = {}, options = {}) {
         return window.ReportUtils.stableSerialize({
           report: String(this.reportContext?.reportName ?? '').trim(),
@@ -242,14 +249,25 @@ window.ReportMixins = {
         const dataset = String(requestOptions?.dataset ?? this.reportContext?.dataset ?? '').trim();
         const cacheKey = this.createReportDatasetCacheKey(dataset, requestFilters, requestOptions);
         const cache = this.getReportDatasetCache();
+        const pendingCache = this.getReportDatasetPendingCache();
 
         if (Object.prototype.hasOwnProperty.call(cache, cacheKey)) {
           return window.ReportUtils.cloneData(cache[cacheKey]);
         }
 
-        const rows = await bridgetools.req3('reports', requestFilters, requestOptions);
-        cache[cacheKey] = window.ReportUtils.cloneData(Array.isArray(rows) ? rows : []);
-        return window.ReportUtils.cloneData(cache[cacheKey]);
+        if (!Object.prototype.hasOwnProperty.call(pendingCache, cacheKey)) {
+          pendingCache[cacheKey] = bridgetools.req3('reports', requestFilters, requestOptions)
+            .then(rows => {
+              cache[cacheKey] = window.ReportUtils.cloneData(Array.isArray(rows) ? rows : []);
+              return cache[cacheKey];
+            })
+            .finally(() => {
+              delete pendingCache[cacheKey];
+            });
+        }
+
+        const rows = await pendingCache[cacheKey];
+        return window.ReportUtils.cloneData(rows);
       },
 
       async fetchCanvasUserName(canvasUserId) {

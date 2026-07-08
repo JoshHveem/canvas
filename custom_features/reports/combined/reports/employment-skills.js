@@ -246,7 +246,7 @@ Vue.component('reports-employment-skills', {
     :loading="loading || loadingPrograms"
     :load-error="loadError"
     loading-text="Loading employment skills submissions..."
-    :row-key-fn="(row, index) => row.canvas_user_id || row.sis_user_id || index"
+    :row-key-fn="(row, index) => [row.canvas_user_id || row.sis_user_id || 'x', row.canvas_course_id || 'y', row.canvas_assignment_id || 'z', row.created_at__self_eval || row.created_at__instructor_eval || index].join(':')"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
