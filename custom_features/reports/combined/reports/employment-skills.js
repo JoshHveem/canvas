@@ -77,27 +77,11 @@ Vue.component('reports-employment-skills', {
     filteredRows() {
       const selectedProgramCode = String(this.selectedProgramCode ?? '').trim();
       const selectedYear = Number(this.year);
-      const scopedRows = (Array.isArray(this.rows) ? this.rows : []).filter(row => {
+      return (Array.isArray(this.rows) ? this.rows : []).filter(row => {
         const rowProgramCode = String(row?.program_code ?? '').trim();
         const rowYear = Number(row?.academic_year);
         return rowProgramCode === selectedProgramCode && rowYear === selectedYear;
       });
-
-      const byKey = new Map();
-      for (const row of scopedRows) {
-        const key = [
-          Number(row?.academic_year) || 0,
-          String(row?.program_code ?? '').trim(),
-          String(row?.canvas_user_id ?? row?.sis_user_id ?? '').trim()
-        ].join(':');
-
-        const existing = byKey.get(key);
-        if (!existing || this.rowRecencySortValue(row) > this.rowRecencySortValue(existing)) {
-          byKey.set(key, row);
-        }
-      }
-
-      return Array.from(byKey.values());
     },
 
     visibleRows() {
@@ -128,19 +112,6 @@ Vue.component('reports-employment-skills', {
 
     getProgramLabel(row) {
       return String(row?.program_name ?? row?.program_code ?? '').trim();
-    },
-
-    rowRecencySortValue(row) {
-      const mostRecent = this.parseDateValue(row?.most_recent_employment_skills_created_at);
-      if (mostRecent) return mostRecent.getTime();
-
-      const instructorEval = this.parseDateValue(row?.created_at__instructor_eval);
-      if (instructorEval) return instructorEval.getTime();
-
-      const selfEval = this.parseDateValue(row?.created_at__self_eval);
-      if (selfEval) return selfEval.getTime();
-
-      return 0;
     },
 
     getSubmissionLocationLabel(row) {
