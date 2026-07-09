@@ -113,6 +113,16 @@ function getCourseCodeFromEnv() {
 var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 (async function() {
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
+
+    // instructor hub
+    if (/^\/courses\/0/.test(window.location.pathname)) {
+      feature("instructor_hub/gradebook", [
+        /^\/courses\/[0-9]+\/grades$/,
+        /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
+        /^\/courses\/[0-9]+\/gradebook$/,
+      ]);
+    }
+
     if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
       let DEPT_CODE = COURSE_CODE.substring(0, 4);
