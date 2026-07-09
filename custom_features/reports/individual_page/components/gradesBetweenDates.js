@@ -477,6 +477,13 @@
         const effectiveEntryAt = overrideTerm ? overrideTerm.entry_at__override || baseTerm.entry_at : baseTerm.entry_at;
         const effectiveExitAt = overrideTerm ? overrideTerm.exit_at__override || baseTerm.exit_at : baseTerm.exit_at;
         const creditsRequiredOverride = overrideTerm ? overrideTerm.credits_required__override : null;
+        const dateCalculatedCredits = calculateCreditsRequired(
+          effectiveEntryAt,
+          effectiveExitAt,
+          baseTerm.concurrent_sections,
+          baseTerm.num_weeks__holidays
+        );
+        const defaultCredits = Number(baseTerm.credits__default) || 0;
 
         return {
           ...baseTerm,
@@ -490,12 +497,7 @@
           num_weeks__holidays: Number(baseTerm.num_weeks__holidays) || 0,
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
-            : calculateCreditsRequired(
-                effectiveEntryAt,
-                effectiveExitAt,
-                baseTerm.concurrent_sections,
-                baseTerm.num_weeks__holidays
-              ),
+            : Math.max(dateCalculatedCredits, defaultCredits),
           has_credits_required_override: creditsRequiredOverride != null,
           override: overrideTerm,
         };

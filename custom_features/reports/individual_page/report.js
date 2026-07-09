@@ -576,14 +576,16 @@
             const overrideTerm = overridesByKey.get(buildHsTermKey(baseTerm));
             const entryAt = overrideTerm?.entry_at__override || baseTerm.entry_at;
             const exitAt = overrideTerm?.exit_at__override || baseTerm.exit_at;
+            const dateCalculatedCredits = this.calculateCreditsRequired(
+              entryAt,
+              exitAt,
+              Number(baseTerm.concurrent_count) || 1,
+              Number(baseTerm.num_weeks__holidays) || 0
+            );
+            const defaultCredits = Number(baseTerm.credits__default) || 0;
             const creditsRequired = overrideTerm?.credits_required__override != null
               ? Number(overrideTerm.credits_required__override)
-              : this.calculateCreditsRequired(
-                  entryAt,
-                  exitAt,
-                  Number(baseTerm.concurrent_count) || 1,
-                  Number(baseTerm.num_weeks__holidays) || 0
-                );
+              : Math.max(dateCalculatedCredits, defaultCredits);
 
             return {
               ...baseTerm,
