@@ -241,7 +241,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("instructor_hub/gradebook", [
         /^\/courses\/[0-9]+\/grades$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
-        /^\/courses\/[0-9]+\/gradebook$/,
+        /^\/courses\/[0-9]+\/gradebook\/[0-9]+/,
       ]);
     }
 
