@@ -1,4 +1,5 @@
 (async function () {
+  $('#content').empty();
   const courses = await canvasGet(
     '/api/v1/accounts/4491/courses?include[]=course_image&include[]=banner_image&per_page=100'
   );
