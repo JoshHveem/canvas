@@ -97,21 +97,29 @@ Vue.component('student-courses-report', {
     settings: {}
   },
   computed: {
-    core: function () {
-      return this.buildMajorCourseList(this.coreCourses);
+    userCoursesByCode() {
+      return this.user.courses.reduce((map, course) => {
+        map[course.course_code] = course;
+        return map;
+      }, {});
     },
-    electives: function () {
-      return this.buildMajorCourseList(this.electiveCourses);
-    },
-    others: function () {
-      const majorOtherCourses = this.buildMajorCourseList(this.otherCourses);
-      const majorCourseCodes = new Set(
+    majorCourseCodes() {
+      return new Set(
         [...this.coreCourses, ...this.electiveCourses, ...this.otherCourses]
           .map(course => course.course_code)
       );
+    },
+    core: function () {
+      return this.normalizeCourseList(this.coreCourses);
+    },
+    electives: function () {
+      return this.normalizeCourseList(this.electiveCourses);
+    },
+    others: function () {
+      const majorOtherCourses = this.normalizeCourseList(this.otherCourses);
       const extraUserCourses = this.user.courses
-        .filter(course => !majorCourseCodes.has(course.course_code))
-        .map(course => this.mergeUserCourseData(course, course.course_code));
+        .filter(course => !this.majorCourseCodes.has(course.course_code))
+        .map(course => this.normalizeCourse(course));
 
       return [...majorOtherCourses, ...extraUserCourses]
         .filter((course, index, courses) => {
@@ -123,38 +131,30 @@ Vue.component('student-courses-report', {
   data() {
     return {
       colors: bridgetools.colors,
-      donut: {},
       treatUngradedAsZero: true,
     }
   },
-  mounted() {
-    // let entry = new Date();
-    let donut = new ProgressGraphDonut();
-    this.donut = donut;
-  },
-
   methods: {
     sortByCourseCode(a, b) {
       const ad = String(a.course_code || '').toLowerCase();
       const bd = String(b.course_code || '').toLowerCase();
       return ad.localeCompare(bd);
     },
-    buildMajorCourseList(majorCourses) {
-      return majorCourses
-        .map(course => this.mergeUserCourseData(course, course.course_code))
-        .sort(this.sortByCourseCode);
+    normalizeCourseList(courses) {
+      return courses.map(course => this.normalizeCourse(course)).sort(this.sortByCourseCode);
     },
-    mergeUserCourseData(course, courseCode) {
+    normalizeCourse(course) {
+      const courseCode = course.course_code;
+      const userData = this.userCoursesByCode[courseCode];
       const data = {
         ...course,
         course_code: courseCode,
         course_name: course.course_name
       };
-      const userData = this.getUserCourseData(courseCode);
 
       if (!userData) {
         if (data.time_in_course != null && data.days_in_course == null) {
-          data.days_in_course = this.getDaysInCourse(data.time_in_course);
+          data.days_in_course = this.toDaysInCourse(data.time_in_course);
         }
         data.progress = 0;
         data.state = '';
@@ -177,11 +177,11 @@ Vue.component('student-courses-report', {
         current_score: userData.current_score,
         final_score: userData.final_score,
         credits_per_day: userData.credits_per_day,
-        days_in_course: this.getDaysInCourse(userData.time_in_course),
+        days_in_course: this.toDaysInCourse(userData.time_in_course),
         state: isTransfer ? 'Transfer' : isActive ? 'Active' : 'Concluded',
       };
     },
-    getDaysInCourse(timeInCourse) {
+    toDaysInCourse(timeInCourse) {
       if (timeInCourse == null) return undefined;
       if (typeof timeInCourse === 'number') return timeInCourse / (60 * 60 * 24);
       return timeInCourse.days;
@@ -189,54 +189,6 @@ Vue.component('student-courses-report', {
     getDisplayScore(course) {
       let score = this.treatUngradedAsZero ? course.final_score : course.current_score;
       return score;
-    },
-    updateHeader () {
-      let donut = this.donut;
-      try {
-        donut._init('btech-department-report-student-progress-donut', this.colors.gray);
-        donut.fillHours( 
-          {
-            max: 1, 
-            hours: 0, 
-            color: this.colors.blue, 
-          }
-        );
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    getUserCourseData(courseCode) {
-      for (let c in this.user.courses) {
-        let course = this.user.courses[c];
-        if (course.course_code == courseCode) return course;
-      }
-      return undefined;
-    },
-    calcLastLoginColorBg(date) {
-      let app = this;
-      if (typeof date == 'string') {
-        if (date == "") return app.colors.red;
-        date = new Date(date);
-      }
-      let now = new Date();
-      let diff = now - date;
-      let days = diff / (1000 * 3600 * 24);
-      if (days >= 7) return app.colors.red;
-      if (days >= 5) return app.colors.yellow;
-      return app.colors.green;
-    },
-
-    dateToString(date) {
-      if (typeof date == 'string') {
-        if (date == "" || date == "N/A") return "N/A";
-        date = new Date(date);
-      }
-      if (date == null) return "N/A";
-      let year = date.getFullYear();
-      let month = (1 + date.getMonth()).toString().padStart(2, '0');
-      let day = date.getDate().toString().padStart(2, '0');
-
-      return month + '/' + day + '/' + year;
     },
   },
   destroyed: function () {

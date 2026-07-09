@@ -1,4 +1,49 @@
 (async function() {
+  const FIVE_WEEKS_MS = 60 * 60 * 24 * 7 * 5 * 1000;
+  const deepClone = value => JSON.parse(JSON.stringify(value));
+  const parseDateValue = value => value ? new Date(value) : undefined;
+  const normalizeLookupValue = value => String(value ?? '').trim().toLowerCase();
+  const normalizeTermTimestamp = value => {
+    if (!value) return '';
+
+    const normalized = normalizeLookupValue(value)
+      .replace('t', ' ')
+      .replace('z', '')
+      .split('.')[0];
+    const match = normalized.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+    return match ? `${match[1]} ${match[2]}` : normalized;
+  };
+  const buildTermKey = termLike => [
+    normalizeLookupValue(termLike.sis_user_id),
+    normalizeLookupValue(termLike.course_code),
+    normalizeLookupValue(termLike.campus_code),
+    normalizeTermTimestamp(termLike.entry_at__original || termLike.entry_at)
+  ].join('|');
+  const toReq3DateTime = dateValue => {
+    if (!dateValue) return null;
+    return String(dateValue).includes(' ') ? dateValue : `${dateValue} 00:00:00`;
+  };
+  const toHtmlDate = date => {
+    const parsed = new Date(date);
+    parsed.setDate(parsed.getDate() + 1);
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${parsed.getFullYear()}-${month}-${day}`;
+  };
+  const calculateCreditsRequired = (entryAt, exitAt, concurrentCount = 1, numWeeksHolidays = 0) => {
+    const start = parseDateValue(entryAt);
+    const end = parseDateValue(exitAt);
+
+    if (!start || !end || end <= start) return 0;
+
+    const holidayWeeks = Math.max(Number(numWeeksHolidays) || 0, 0);
+    const effectiveDurationMs = Math.max(end - start - (holidayWeeks * 7 * 24 * 60 * 60 * 1000), 0);
+    let credits = Math.floor(Number(effectiveDurationMs / FIVE_WEEKS_MS) * 4) / 4;
+    const concurrent = Number(concurrentCount) || 1;
+    if (concurrent > 1) credits *= concurrent;
+    return credits;
+  };
+
   Vue.component('grades-between-dates', {
     template: ` 
       <div>
@@ -272,33 +317,15 @@
         });
       },
       calculatedTermCreditsRequired() {
-        const start = this.parseDate(this.submissionDatesStart);
-        const end   = this.parseDate(this.submissionDatesEnd);
-
-        if (!start || !end || end <= start) return 0;
-
-        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
-        const concurrentCount = Number(this.selectedTerm?.concurrent_sections) || 1;
-        if (concurrentCount > 1) credits *= concurrentCount;
-        return credits;
+        return calculateCreditsRequired(
+          this.submissionDatesStart,
+          this.submissionDatesEnd,
+          this.selectedTerm?.concurrent_sections,
+          this.selectedTerm?.num_weeks__holidays
+        );
       },
       weightedGradeForTerm() {
-        const requiredCredits = this.estimatedCreditsRequired;
-        const creditsCompleted = this.sumCreditsCompleted();
-
-        let grade = this.unweightedGrade;
-
-        if (
-          creditsCompleted < requiredCredits &&
-          requiredCredits !== 0 &&
-          creditsCompleted !== 0
-        ) {
-          grade *= creditsCompleted / requiredCredits;
-        }
-
-        const output = Number(grade.toFixed(2));
-        return isNaN(output) ? 0 : output;
+        return this.scaleGradeByCredits(this.unweightedGrade, this.estimatedCreditsRequired);
       },
       unweightedGrade() {
         let totalWeightedGrade = 0;
@@ -330,21 +357,7 @@
 
       //
       weightedFinalGradeForTerm() {
-        const requiredCredits = Number(this.termCreditsRequired) || 0;
-        const creditsCompleted = this.sumCreditsCompleted();
-
-        let grade = this.unweightedGrade;
-
-        if (
-          creditsCompleted < requiredCredits &&
-          requiredCredits !== 0 &&
-          creditsCompleted !== 0
-        ) {
-          grade *= creditsCompleted / requiredCredits;
-        }
-
-        const output = Number(grade.toFixed(2));
-        return isNaN(output) ? 0 : output;
+        return this.scaleGradeByCredits(this.unweightedGrade, this.termCreditsRequired);
       },
       termDatesDirty() {
         return (
@@ -380,12 +393,9 @@
         selectedTerm: {},
         gradesBetweenDates: {},
         progressBetweenDates: {},
-        hoursAssignmentData: {},
-        hoursBetweenDates: {},
         submissionData: {},
         showGradeDetails: false,
         includedAssignments: {},
-        courseTotalPoints: {},
         courseAssignmentGroups: {},
         estimatedCreditsRequired: 0,
         termCreditsRequired: 0,
@@ -395,7 +405,6 @@
         loadingProgress: 0,
         loadingMessage: "Loading...",
         loadingAssignments: true,
-        courseAssignmentGroups: {},
         submissionDates: [],
         courses: [],
       }
@@ -464,71 +473,31 @@
 
 
     methods: {
-      normalizeKeyPart(value) {
-        return String(value ?? '').trim().toLowerCase();
-      },
-
-      normalizeTimestampKey(value) {
-        if (!value) return '';
-
-        const normalized = this.normalizeKeyPart(value)
-          .replace('t', ' ')
-          .replace('z', '')
-          .split('.')[0];
-
-        const match = normalized.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
-        if (match) {
-          return `${match[1]} ${match[2]}`;
-        }
-
-        return normalized;
-      },
-
-      buildTermKey(termLike) {
-        return [
-          this.normalizeKeyPart(termLike.sis_user_id),
-          this.normalizeKeyPart(termLike.course_code),
-          this.normalizeKeyPart(termLike.campus_code),
-          this.normalizeTimestampKey(termLike.entry_at__original || termLike.entry_at)
-        ].join('|');
-      },
-
-      toReq3DateTime(dateValue) {
-        if (!dateValue) return null;
-        if (String(dateValue).includes(' ')) return dateValue;
-        return `${dateValue} 00:00:00`;
-      },
-
-      calculateCreditsRequired(entryAt, exitAt, concurrentCount = 1) {
-        const start = this.parseDate(entryAt);
-        const end = this.parseDate(exitAt);
-
-        if (!start || !end || end <= start) return 0;
-
-        const msInFiveWeeks = 60 * 60 * 24 * 7 * 5 * 1000;
-        let credits = Math.floor(Number((end - start) / msInFiveWeeks) * 4) / 4;
-        const concurrent = Number(concurrentCount) || 1;
-        if (concurrent > 1) credits *= concurrent;
-        return credits;
-      },
-
       normalizeTerm(baseTerm, overrideTerm) {
         const effectiveEntryAt = overrideTerm ? overrideTerm.entry_at__override || baseTerm.entry_at : baseTerm.entry_at;
         const effectiveExitAt = overrideTerm ? overrideTerm.exit_at__override || baseTerm.exit_at : baseTerm.exit_at;
         const creditsRequiredOverride = overrideTerm ? overrideTerm.credits_required__override : null;
+        const dateCalculatedCredits = calculateCreditsRequired(
+          effectiveEntryAt,
+          effectiveExitAt,
+          baseTerm.concurrent_sections,
+          baseTerm.num_weeks__holidays
+        );
+        const defaultCredits = Number(baseTerm.credits__default) || 0;
 
         return {
           ...baseTerm,
-          _id: this.buildTermKey(baseTerm),
+          _id: buildTermKey(baseTerm),
           entry_at__original: baseTerm.entry_at,
           exit_at__original: baseTerm.exit_at,
           entry_at: effectiveEntryAt,
           exit_at: effectiveExitAt,
           section_code: baseTerm.section_code,
           concurrent_sections: Number(baseTerm.concurrent_sections),
+          num_weeks__holidays: Number(baseTerm.num_weeks__holidays) || 0,
           credits_required: creditsRequiredOverride != null
             ? Number(creditsRequiredOverride)
-            : this.calculateCreditsRequired(effectiveEntryAt, effectiveExitAt, baseTerm.concurrent_sections),
+            : Math.max(dateCalculatedCredits, defaultCredits),
           has_credits_required_override: creditsRequiredOverride != null,
           override: overrideTerm,
         };
@@ -536,15 +505,37 @@
 
       mergeTerms(baseTerms, overrideTerms) {
         const overridesByKey = new Map(
-          (overrideTerms || []).map(term => [this.buildTermKey(term), term])
+          (overrideTerms || []).map(term => [buildTermKey(term), term])
         );
 
-        return (baseTerms || []).map(baseTerm => {
-          return this.normalizeTerm(baseTerm, overridesByKey.get(this.buildTermKey(baseTerm)));
-        });
+        return (baseTerms || []).map(baseTerm => this.normalizeTerm(baseTerm, overridesByKey.get(buildTermKey(baseTerm))));
       },
 
-      async loadTerms(filters = {}) {
+      applySelectedTerm(term) {
+        this.selectedTerm = term;
+
+        const start = toHtmlDate(term.entry_at);
+        const end = toHtmlDate(term.exit_at);
+        const creditsRequired = Number(term.credits_required) || 0;
+        const hasOverride = !!term.has_credits_required_override;
+
+        this.submissionDatesStart = start;
+        this.submissionDatesEnd = end;
+        this.savedSubmissionDatesStart = start;
+        this.savedSubmissionDatesEnd = end;
+        this.termCreditsRequired = creditsRequired;
+        this.savedTermCreditsRequired = creditsRequired;
+        this.savedTermCreditsHasOverride = hasOverride;
+        this.termCreditsManuallyEdited = hasOverride;
+
+        this.refreshIncludedAssignments();
+        this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
+        if (hasOverride) {
+          this.estimatedCreditsRequired = creditsRequired;
+        }
+      },
+
+      async loadTerms() {
         const sisUserId = this.user.sis_user_id;
         if (!sisUserId) return;
 
@@ -570,7 +561,7 @@
           : this.sortedTerms[0]._id;
 
         if (this.selectedTermId) {
-          this.updateDatesToSelectedTerm();
+          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
         }
       },
 
@@ -582,8 +573,8 @@
           entry_at: term.entry_at__original,
         };
 
-        const nextEntryAt = this.toReq3DateTime(this.submissionDatesStart);
-        const nextExitAt = this.toReq3DateTime(this.submissionDatesEnd);
+        const nextEntryAt = toReq3DateTime(this.submissionDatesStart);
+        const nextExitAt = toReq3DateTime(this.submissionDatesEnd);
         const nextCreditsRequired = Number(this.termCreditsRequired) || 0;
 
         if (nextEntryAt && nextEntryAt !== term.entry_at__original) {
@@ -594,7 +585,12 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (nextCreditsRequired !== this.calculateCreditsRequired(nextEntryAt, nextExitAt, term.concurrent_sections)) {
+        if (nextCreditsRequired !== calculateCreditsRequired(
+          nextEntryAt,
+          nextExitAt,
+          term.concurrent_sections,
+          term.num_weeks__holidays
+        )) {
           payload.credits_required__override = nextCreditsRequired;
         }
 
@@ -654,7 +650,7 @@
           await this.hsTermsUpdate(payload);
           await this.loadTerms();
           this.selectedTermId = term._id;
-          this.updateDatesToSelectedTerm();
+          this.applySelectedTerm(this.termsData.find(item => item._id === term._id));
           this.closeBulkModal();
         } catch (err) {
           console.error("Failed saving term dates:", err);
@@ -708,9 +704,9 @@
             bridgetools.req3('reports', filters, { dataset: 'student_hs_terms__override' })
           ]);
 
-          const selectedOriginalEntryAt = this.normalizeTimestampKey(this.selectedTerm.entry_at__original);
+          const selectedOriginalEntryAt = normalizeTermTimestamp(this.selectedTerm.entry_at__original);
           const mergedTerms = this.mergeTerms(baseTerms, overrideTerms).filter(term => {
-            return this.normalizeTimestampKey(term.entry_at__original) === selectedOriginalEntryAt;
+            return normalizeTermTimestamp(term.entry_at__original) === selectedOriginalEntryAt;
           });
           this.bulkTermsToUpdate = await this.hydrateBulkTermsWithNames(mergedTerms);
           const currentTermId = this.selectedTerm?._id;
@@ -747,7 +743,7 @@
 
           await this.loadTerms();
           this.selectedTermId = this.selectedTerm._id;
-          this.updateDatesToSelectedTerm();
+          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
           this.closeBulkModal();
           alert("Bulk update complete.");
         } catch (err) {
@@ -879,44 +875,6 @@
           });
       },
 
-      extractYear(termName) {
-        const yearMatch = termName.match(/\b(20\d{2})\b/);
-        return yearMatch ? yearMatch[1] : null;
-      },
-
-      async fetchAllConnection(courseId, connectionField, args = {}, nodeSelection = '') {
-        const pageSize = 50;    // bump up/down as you like
-        let allNodes = [];
-        let hasNext = true;
-        let after = null;
-        while (hasNext) {
-          // Build the GraphQL query
-          const argsStr = Object.entries({ ...args, first: pageSize, after })
-            .map(([k,v]) => `${k}: ${JSON.stringify(v)}`)
-            .join(", ");
-
-          const query = `{
-            course(id: "${courseId}") {
-              ${connectionField}(${argsStr}) {
-                ${nodeSelection}
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }`;
-
-          const res = await $.post("/api/graphql", { query });
-          const conn = res.data.course[connectionField];
-
-          allNodes.push(...conn.nodes);
-          hasNext = conn.pageInfo.hasNextPage;
-          after   = conn.pageInfo.endCursor;
-        }
-
-        return allNodes;
-      },
 
       async getAllAssignmentsByGroup(course) {
         // Pull every assignment in the course
@@ -1007,28 +965,7 @@
         const term = this.termsData.find(t => t._id === this.selectedTermId);
         if (!term) return;
 
-        this.selectedTerm = term;
-
-        const start = this.dateToHTMLDate(term.entry_at);
-        const end   = this.dateToHTMLDate(term.exit_at);
-
-        // working values used by the report
-        this.submissionDatesStart = start;
-        this.submissionDatesEnd   = end;
-
-        // saved baseline used to detect dirty state
-        this.savedSubmissionDatesStart = start;
-        this.savedSubmissionDatesEnd   = end;
-        this.termCreditsRequired = Number(term.credits_required) || 0;
-        this.savedTermCreditsRequired = Number(term.credits_required) || 0;
-        this.savedTermCreditsHasOverride = !!term.has_credits_required_override;
-        this.termCreditsManuallyEdited = !!term.has_credits_required_override;
-
-        this.getIncludedAssignmentsBetweenDates();
-        this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
-        if (term.has_credits_required_override) {
-          this.estimatedCreditsRequired = Number(term.credits_required) || 0;
-        }
+        this.applySelectedTerm(term);
       },
       async saveTermDates() {
         const termId = this.selectedTerm?._id;
@@ -1048,14 +985,14 @@
         this.submissionDatesEnd = this.savedSubmissionDatesEnd;
         this.termCreditsRequired = this.savedTermCreditsRequired;
         this.termCreditsManuallyEdited = this.savedTermCreditsHasOverride;
-        this.getIncludedAssignmentsBetweenDates();
+        this.refreshIncludedAssignments();
       },
 
       onDateRangeChange() {
         if (!this.termCreditsManuallyEdited) {
           this.termCreditsRequired = this.calculatedTermCreditsRequired;
         }
-        this.getIncludedAssignmentsBetweenDates();
+        this.refreshIncludedAssignments();
       },
 
       onTermCreditsRequiredInput() {
@@ -1063,27 +1000,44 @@
         this.calcGradesFromIncludedAssignments();
       },
 
+      scaleGradeByCredits(grade, requiredCredits) {
+        const neededCredits = Number(requiredCredits) || 0;
+        const creditsCompleted = this.sumCreditsCompleted();
+        let adjustedGrade = grade;
+
+        if (
+          creditsCompleted < neededCredits &&
+          neededCredits !== 0 &&
+          creditsCompleted !== 0
+        ) {
+          adjustedGrade *= creditsCompleted / neededCredits;
+        }
+
+        const output = Number(adjustedGrade.toFixed(2));
+        return isNaN(output) ? 0 : output;
+      },
+
 
       sumProgressBetweenDates() {
-        let sum = 0;
-        this.courses.forEach(course => sum += this.progressBetweenDates[course.id]);
-        return sum;
+        return this.courses.reduce((sum, course) => {
+          const courseId = course.course_id ?? course.id;
+          return sum + (this.progressBetweenDates[courseId] || 0);
+        }, 0);
       },
       sumCreditsCompleted() {
         let sum = 0;
         this.courses.forEach(course => {
-          let progress = this.progressBetweenDates[course.course_id];
-          let credits = course.hours / 30;
-          if (credits == "N/A") hours = 0;
+          const progress = this.progressBetweenDates[course.course_id];
+          const credits = Number(course.hours) > 0 ? course.hours / 30 : 0;
           if (progress > 0 && credits > 0) {
-            sum += Math.round(progress * credits) * .01;
+            sum += Math.round(progress * credits) * 0.01;
           }
-        })
+        });
         return parseFloat(sum.toFixed(2)) ?? 0;
       },
 
       parseDate(dateString) {
-        return dateString ? new Date(dateString) : undefined;
+        return parseDateValue(dateString);
       },
 
       getProgressBetweenDates(courseId) {
@@ -1101,89 +1055,77 @@
         let completed = 0;
         if (progress !== undefined) completed = parseFloat((Math.round(progress * course.hours) * .01).toFixed(2));
         if (isNaN(completed)) completed = 0;
-        credits = Math.round((completed / 30) * 100) / 100;
+        const credits = Math.round((completed / 30) * 100) / 100;
         return credits;
       },
 
-      async getIncludedAssignmentsBetweenDates() {
-        let includedAssignments = {};
-        let startDate = this.parseDate(this.submissionDatesStart);
-        let endDate = this.parseDate(this.submissionDatesEnd);
-        //break if a date is undefined
+      buildIncludedAssignmentsForCourse(course, startDate, endDate) {
+        const courseId = course.course_id;
+        const includedCourse = {
+          name: course.name,
+          id: courseId,
+          include: true,
+          groups: {}
+        };
+        const submissions = this.submissionData[courseId];
+        if (!submissions) return includedCourse;
+
+        const submissionsByAssignmentId = submissions.reduce((map, submission) => {
+          if (submission.score !== null) {
+            map[submission.assignmentId] = submission;
+          }
+          return map;
+        }, {});
+        const assignmentGroups = this.courseAssignmentGroups[courseId] || [];
+        const sumWeights = assignmentGroups.reduce((sum, group) => sum + group.groupWeight, 0);
+
+        assignmentGroups.forEach((group, index) => {
+          includedCourse.groups[index] = {
+            name: group.name,
+            id: group.id,
+            groupWeight: group.groupWeight,
+            include: true,
+            assignments: {}
+          };
+
+          if (!(group.groupWeight > 0 || sumWeights === 0)) return;
+
+          group.assignments.forEach(assignment => {
+            const assignmentId = parseInt(assignment._id);
+            const submission = submissionsByAssignmentId[assignmentId];
+            if (!assignment.published || !submission) return;
+
+            const submissionDate = submission.submittedAt || submission.gradedAt;
+            const include = submissionDate
+              ? new Date(submissionDate) >= startDate && new Date(submissionDate) <= endDate
+              : false;
+
+            includedCourse.groups[index].assignments[assignmentId] = {
+              include,
+              id: assignmentId,
+              name: assignment.name,
+              score: submission.score,
+              points_possible: assignment.pointsPossible,
+              sub: submission.id,
+              date: submissionDate
+            };
+          });
+        });
+
+        return includedCourse;
+      },
+
+      refreshIncludedAssignments() {
+        const startDate = this.parseDate(this.submissionDatesStart);
+        const endDate = this.parseDate(this.submissionDatesEnd);
         if (startDate === undefined || endDate === undefined) return;
 
-        //otherwise fill in all the progress / grades data for those dates
-        for (let i = 0; i < this.courses.length; i++) {
-          let course = this.courses[i];
-          let courseId = course.course_id;
-          includedAssignments[courseId] = {
-            name: course.name,
-            id: courseId,
-            include: true,
-            groups: {}
-          };
-          let subs = this.submissionData[courseId];
-          if (subs !== undefined) {
-            //get the data for all submissions
-            let subData = {};
-            for (let s = 0; s < subs.length; s++) {
-              let sub = subs[s];
-              //if (sub.posted_at != null) { //used to check if posted
-              if (sub.score !== null) { //trying out including anything with a score
-                subData[sub.assignmentId] = sub;
-              }
-            }
+        const includedAssignments = this.courses.reduce((map, course) => {
+          map[course.course_id] = this.buildIncludedAssignmentsForCourse(course, startDate, endDate);
+          return map;
+        }, {});
 
-            let assignmentGroups = this.courseAssignmentGroups[courseId];
-
-            //calc sum weights, if zero, then don't check weights to include
-            let sumWeights = 0;
-            for (let g = 0; g < assignmentGroups.length; g++) {
-              let group = assignmentGroups[g];
-              sumWeights += group.groupWeight;
-            }
-
-            //weight grades based on assignment group weighting and hours completed in the course
-            for (let g = 0; g < assignmentGroups.length; g++) {
-              let group = assignmentGroups[g]
-              includedAssignments[courseId].groups[g] = {
-                name: group.name,
-                id: group.id,
-                groupWeight: group.groupWeight,
-                include: true,
-                assignments: {}
-              };
-              if (group.groupWeight > 0 || sumWeights === 0) {
-                //check each assignment to see if it was submitted within the date range and get the points earned as well as points possible
-                for (let a = 0; a < group.assignments.length; a++) {
-                  let assignment = group.assignments[a];
-                  assignment.id = parseInt(assignment._id);
-                  if (assignment.published) {
-                    if (assignment.id in subData) {
-                      let sub = subData[assignment.id];
-                      let subDateString = sub.submittedAt;
-                      if (subDateString === null) subDateString = sub.gradedAt;
-                      includedAssignments[courseId].groups[g].assignments[assignment.id] = {
-                        include: false,
-                        id: assignment.id,
-                        name: assignment.name,
-                        score: sub.score,
-                        points_possible: assignment.pointsPossible,
-                        sub: sub.id,
-                        date: subDateString
-                      };
-                      let subDate = new Date(subDateString);
-                      if (subDate >= startDate && subDate <= endDate) {
-                        includedAssignments[courseId].groups[g].assignments[assignment.id].include = true;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        this.includedAssignments = JSON.parse(JSON.stringify(includedAssignments));
+        this.includedAssignments = deepClone(includedAssignments);
         this.calcGradesFromIncludedAssignments();
       },
 
@@ -1291,8 +1233,8 @@
             }
           }
         }
-        this.gradesBetweenDates = JSON.parse(JSON.stringify(gradesBetweenDates));
-        this.progressBetweenDates = JSON.parse(JSON.stringify(progressBetweenDates));
+        this.gradesBetweenDates = deepClone(gradesBetweenDates);
+        this.progressBetweenDates = deepClone(progressBetweenDates);
         //this value can be edited by the instructor
         let estimatedCreditsRequired = Math.round(Number(this.termCreditsRequired) * midtermPercentCompleted * 100) / 100;
         if (isNaN(estimatedCreditsRequired)) estimatedCreditsRequired = 0;
@@ -1315,36 +1257,6 @@
         return totalPoints;
       },
 
-      newCourse(id, state, name, year, courseCode) {
-        let course = {};
-        course.course_id = id;
-        let hours = "N/A";
-        //get course hours if there's a year
-        if (year !== null) {
-          hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
-          //Check to see if a previous year can be found if current year doesn't work
-          for (let i = 1; i < 5; i++) {
-            if (hours == undefined) hours = COURSE_HOURS?.[courseCode].hours;
-          }
-          if (hours === undefined) hours = 0;
-        }
-        course.hours = hours;
-        course.state = state;
-        course.name = name;
-        course.days_in_course = 0;
-        course.days_since_last_submission = 0;
-        course.days_since_last_submission_color = "#fff";
-        course.section = "";
-        course.grade_to_date = "N/A";
-        course.points = 0;
-        course.final_grade = "N/A";
-        course.section = "";
-        course.ungraded = 0;
-        course.submissions = 0;
-        course.nameHTML = "<a target='_blank' href='" + window.location.origin + "/courses/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + id + "/grades/" + this.userId + "'>grades</a>)";
-        return course;
-      },
-
       checkIncludeCourse(course) {
         return Object.values(course.groups || {}).some(g => this.checkIncludeGroup(g));
       },
@@ -1358,16 +1270,7 @@
       },
 
       dateToHTMLDate(date) {
-        date = new Date(date);
-        date.setDate(date.getDate() + 1);
-        let month = '' + (date.getMonth() + 1);
-        if (month.length === 1) month = '0' + month;
-
-        let day = '' + date.getDate();
-        if (day.length === 1) day = '0' + day;
-
-        let htmlDate = date.getFullYear() + "-" + month + "-" + day;
-        return htmlDate;
+        return toHtmlDate(date);
       },
     }
   });

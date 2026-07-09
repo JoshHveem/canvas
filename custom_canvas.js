@@ -113,6 +113,8 @@ function getCourseCodeFromEnv() {
 var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 (async function() {
   if (window.self === window.top) { //Make sure this is only run on main page, and not every single iframe on the page. For example, Kaltura videos all load in a Canvas iframe
+
+
     if (/^\/courses\/[0-9]+(\/modules)?$/.test(window.location.pathname)) {
       let COURSE_CODE = getCourseCodeFromEnv();
       let DEPT_CODE = COURSE_CODE.substring(0, 4);
@@ -233,6 +235,15 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     feature("welcome_banner", /^\/$/);
     feature('side_menus');
+
+    // instructor hub
+    if (/^\/courses\/611213/.test(window.location.pathname)) {
+      feature("instructor_hub/gradebook", [
+        /^\/courses\/[0-9]+\/grades$/,
+        /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
+        /^\/courses\/[0-9]+\/gradebook\/[0-9]+/,
+      ]);
+    }
 
     feature('modules/enrollment_dates_student_external', /^\/courses\/[0-9]+(\/modules){0,1}$/);
     feature("login_page", /^\/login/);
@@ -369,7 +380,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     }
 
     if (ENV?.current_user_roles?.includes('root_admin')) {
-      feature("remove_former_employees", /^\/accounts\/3\/users\/[0-9]+/)
+      feature("remove_former_employees", /^\/(?:accounts\/[0-9]+\/)?users\/[0-9]+/)
     }
   }
 })();
