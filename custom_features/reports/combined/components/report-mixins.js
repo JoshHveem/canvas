@@ -352,6 +352,7 @@ window.ReportMixins = {
           loadingDepartments: false,
           loadError: '',
           loadRequestId: 0,
+          loadDepartmentsRequestId: 0,
           year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: [],
           departmentOptions: [],
@@ -449,6 +450,7 @@ window.ReportMixins = {
         },
 
         async loadDepartmentOptions(forceReloadData = false) {
+          const requestId = ++this.loadDepartmentsRequestId;
           try {
             this.loadingDepartments = true;
 
@@ -492,7 +494,9 @@ window.ReportMixins = {
               this.loadError = 'Unable to load department list.';
             }
           } finally {
-            this.loadingDepartments = false;
+            if (requestId === this.loadDepartmentsRequestId) {
+              this.loadingDepartments = false;
+            }
           }
         },
 
@@ -505,10 +509,10 @@ window.ReportMixins = {
             return;
           }
 
+          const requestId = ++this.loadRequestId;
           try {
             this.loading = true;
             this.loadError = '';
-            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
@@ -535,7 +539,9 @@ window.ReportMixins = {
             this.loadedDepartmentName = this.departmentOptions.find(option => option.value === departmentCode)?.label || this.getDepartmentName();
             this.loadError = this.getLoadErrorMessage();
           } finally {
-            this.loading = false;
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+            }
           }
         }
       }
@@ -556,6 +562,7 @@ window.ReportMixins = {
           loadingPrograms: false,
           loadError: '',
           loadRequestId: 0,
+          loadProgramsRequestId: 0,
           year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
           rows: [],
           programOptions: [],
@@ -674,6 +681,7 @@ window.ReportMixins = {
         },
 
         async loadProgramOptions(forceReloadData = false) {
+          const requestId = ++this.loadProgramsRequestId;
           try {
             this.loadingPrograms = true;
             this.loadError = '';
@@ -721,7 +729,9 @@ window.ReportMixins = {
               this.loadError = this.getProgramOptionsLoadErrorMessage();
             }
           } finally {
-            this.loadingPrograms = false;
+            if (requestId === this.loadProgramsRequestId) {
+              this.loadingPrograms = false;
+            }
           }
         },
 
@@ -734,10 +744,10 @@ window.ReportMixins = {
             return;
           }
 
+          const requestId = ++this.loadRequestId;
           try {
             this.loading = true;
             this.loadError = '';
-            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               this.getRequestFilters(),
@@ -763,7 +773,9 @@ window.ReportMixins = {
             this.loadedProgramName = this.programOptions.find(option => option.value === programCode)?.label || this.getProgramName();
             this.loadError = this.getLoadErrorMessage();
           } finally {
-            this.loading = false;
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+            }
           }
         }
       }
@@ -823,10 +835,10 @@ window.ReportMixins = {
         },
 
         async loadData() {
+          const requestId = ++this.loadRequestId;
           try {
             this.loading = true;
             this.loadError = '';
-            const requestId = ++this.loadRequestId;
 
             const rows = await this.fetchReportDataset(
               Object.assign({}, this.reportContext?.filters || {}, {
@@ -842,7 +854,9 @@ window.ReportMixins = {
             this.rows = [];
             this.loadError = this.getLoadErrorMessage();
           } finally {
-            this.loading = false;
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+            }
           }
         }
       }
