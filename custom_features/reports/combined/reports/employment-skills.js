@@ -16,7 +16,10 @@ Vue.component('reports-employment-skills', {
 
     return {
       colors,
-      table
+      table,
+      filters: {
+        enrollment_type: ''
+      }
     };
   },
 
@@ -36,9 +39,9 @@ Vue.component('reports-employment-skills', {
       ),
       new window.ReportColumn(
         'Type', 'Enrollment Type', '5rem', false, 'string',
-        row => this.escapeHtml(String(row?.enrollment_type_code?? '')),
+        row => this.escapeHtml(this.getEnrollmentTypeCode(row)),
         null,
-        row => String(row?.enrollment_type_code ?? '').toLowerCase()
+        row => this.getEnrollmentTypeCode(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Submission Location', 'Course name linked to the Canvas SpeedGrader submission when available.', '14rem', false, 'string',
@@ -77,10 +80,14 @@ Vue.component('reports-employment-skills', {
     filteredRows() {
       const selectedProgramCode = String(this.selectedProgramCode ?? '').trim();
       const selectedYear = Number(this.year);
+      const selectedEnrollmentType = String(this.filters.enrollment_type ?? '').trim().toUpperCase();
       return (Array.isArray(this.rows) ? this.rows : []).filter(row => {
         const rowProgramCode = String(row?.program_code ?? '').trim();
         const rowYear = Number(row?.academic_year);
-        return rowProgramCode === selectedProgramCode && rowYear === selectedYear;
+        const rowEnrollmentType = this.getEnrollmentTypeCode(row);
+        if (rowProgramCode !== selectedProgramCode || rowYear !== selectedYear) return false;
+        if (!selectedEnrollmentType) return true;
+        return rowEnrollmentType === selectedEnrollmentType;
       });
     },
 
@@ -102,6 +109,10 @@ Vue.component('reports-employment-skills', {
   },
 
   methods: {
+    getEnrollmentTypeCode(row) {
+      return String(row?.enrollment_type_code ?? '').trim().toUpperCase();
+    },
+
     getStudentName(row) {
       const studentName = String(row?.sis_user_id ?? '').trim();
       if (studentName) return studentName;
@@ -218,6 +229,7 @@ Vue.component('reports-employment-skills', {
         canvas_assignment_id: Number(row?.canvas_assignment_id) || null,
         program_code: String(row?.program_code ?? '').trim(),
         program_name: String(row?.program_name ?? '').trim(),
+        enrollment_type_code: String(row?.enrollment_type_code ?? '').trim(),
         academic_year: Number(row?.academic_year) || null,
         num_evals__employment_skills: Number(row?.num_evals__employment_skills) || 0,
         most_recent_employment_skills_created_at: String(row?.most_recent_employment_skills_created_at ?? '').trim(),
@@ -277,6 +289,15 @@ Vue.component('reports-employment-skills', {
           <option v-for="option in programOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Type</label>
+        <select v-model="filters.enrollment_type" v-bind="filterAttrs('enrollment_type')" style="font-size:.75rem; min-width:90px;">
+          <option value="">All</option>
+          <option value="HS">HS</option>
+          <option value="CS">CS</option>
         </select>
       </div>
     </template>
