@@ -26,7 +26,7 @@ Vue.component('reports-outcomes-cpl', {
       ),
       new window.ReportColumn(
         'Campus', 'Campus code.', '6rem', false, 'string',
-        row => this.escapeHtml(String(row?.campus_code ?? '').trim() || '—'),
+        row => this.escapeHtml(String(row?.campus_code ?? '').trim() || '-'),
         null,
         row => String(row?.campus_code ?? '').trim().toLowerCase()
       ),

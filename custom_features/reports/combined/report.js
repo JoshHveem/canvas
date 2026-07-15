@@ -321,6 +321,7 @@
               routeFilters: {
                 departmentCode: this.selectedDepartmentCode,
                 departmentName: this.selectedDepartmentName,
+                campusCode: this.selectedCampusCode,
                 programCode: this.selectedProgramCode,
                 programName: this.selectedProgramName,
                 courseCode: this.selectedCourseCode,
