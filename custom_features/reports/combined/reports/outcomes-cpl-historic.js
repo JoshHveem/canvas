@@ -42,7 +42,6 @@ Vue.component('reports-outcomes-cpl-historic', {
           key: 'completion',
           title: 'Completion',
           subtitle: 'Program completion rate by year',
-          stroke: '#0f766e',
           cutoff: 0.6,
           latestStyle: this.completionPillStyle(this.latestMetricValue('completion'))
         },
@@ -50,7 +49,6 @@ Vue.component('reports-outcomes-cpl-historic', {
           key: 'placement',
           title: 'Placement',
           subtitle: 'Program placement rate by year',
-          stroke: '#1d4ed8',
           cutoff: 0.7,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('placement'))
         },
@@ -58,14 +56,14 @@ Vue.component('reports-outcomes-cpl-historic', {
           key: 'licensure',
           title: 'Licensure',
           subtitle: 'Program licensure rate by year',
-          stroke: '#7c3aed',
           cutoff: 0.7,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('licensure'))
         }
       ].map(card => ({
         ...card,
-        chart: this.buildLineChart(card.key, card.stroke, card.cutoff)
-      }));
+        series: this.metricSeries(card.key)
+      }))
+        .filter(card => card.series.some(point => Number(point?.value) !== 0));
     }
   },
 
@@ -218,90 +216,168 @@ Vue.component('reports-outcomes-cpl-historic', {
       return this.colors.yellow;
     },
 
-    buildLineChart(metric, stroke, cutoff) {
-      const points = this.metricSeries(metric);
-      const width = 760;
+    renderCharts() {
+      if (!window.d3 || !this.$el) return;
+
+      const cardsByKey = new Map(this.metricCards.map(card => [card.key, card]));
+      const chartEls = Array.from(this.$el.querySelectorAll('[data-cpl-chart-key]'));
+      chartEls.forEach(el => {
+        const key = String(el.getAttribute('data-cpl-chart-key') || '').trim();
+        const card = cardsByKey.get(key);
+        this.renderSingleChart(el, card);
+      });
+    },
+
+    renderSingleChart(container, card) {
+      if (!container || !card || !window.d3) return;
+
+      const d3 = window.d3;
+      const series = Array.isArray(card.series) ? card.series : [];
+      const width = Math.max(container.clientWidth || 760, 320);
       const height = 220;
       const margin = { top: 18, right: 24, bottom: 36, left: 52 };
-      const innerWidth = width - margin.left - margin.right;
-      const innerHeight = height - margin.top - margin.bottom;
+      const innerWidth = Math.max(width - margin.left - margin.right, 40);
+      const innerHeight = Math.max(height - margin.top - margin.bottom, 40);
 
-      if (!points.length) {
-        return {
-          width,
-          height,
-          path: '',
-          areaPath: '',
-          points: [],
-          segments: [],
-          xTicks: [],
-          yTicks: [],
-          targetY: null,
-          hasData: false
-        };
-      }
+      const svg = d3.select(container);
+      svg.selectAll('*').remove();
 
-      const xMin = points[0].year;
-      const xMax = points[points.length - 1].year;
-      const xSpan = Math.max(xMax - xMin, 1);
-      const yMax = 1;
-      const yMin = 0;
+      svg
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('width', '100%')
+        .attr('height', height)
+        .attr('preserveAspectRatio', 'none')
+        .style('display', 'block')
+        .style('background', 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)')
+        .style('border-radius', '10px');
 
-      const xFor = year => margin.left + ((year - xMin) / xSpan) * innerWidth;
-      const yFor = value => margin.top + (1 - ((value - yMin) / (yMax - yMin || 1))) * innerHeight;
+      if (!series.length) return;
 
-      const chartPoints = points.map(point => ({
-        ...point,
-        x: xFor(point.year),
-        y: yFor(point.value),
-        label: this.pctText(point.value),
-        fill: this.pointStatusColor(point.value, cutoff)
+      const years = series.map(point => Number(point.year)).filter(Number.isFinite);
+      const minYear = Math.min(...years);
+      const maxYear = Math.max(...years);
+      const xDomain = minYear === maxYear ? [minYear - 1, maxYear + 1] : [minYear, maxYear];
+
+      const xScale = d3.scaleLinear()
+        .domain(xDomain)
+        .range([margin.left, margin.left + innerWidth]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([margin.top + innerHeight, margin.top]);
+
+      const g = svg.append('g');
+
+      g.selectAll('.grid-line')
+        .data([0, 0.25, 0.5, 0.75, 1])
+        .enter()
+        .append('line')
+        .attr('x1', margin.left)
+        .attr('x2', margin.left + innerWidth)
+        .attr('y1', value => yScale(value))
+        .attr('y2', value => yScale(value))
+        .attr('stroke', '#e5e7eb')
+        .attr('stroke-dasharray', '4 4');
+
+      g.selectAll('.grid-label')
+        .data([0, 0.25, 0.5, 0.75, 1])
+        .enter()
+        .append('text')
+        .attr('x', margin.left - 8)
+        .attr('y', value => yScale(value) + 4)
+        .attr('text-anchor', 'end')
+        .attr('fill', '#6b7280')
+        .style('font-size', '11px')
+        .text(value => this.pctText(value));
+
+      const cutoffY = yScale(card.cutoff);
+      g.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', margin.left + innerWidth)
+        .attr('y1', cutoffY)
+        .attr('y2', cutoffY)
+        .attr('stroke', '#6b7280')
+        .attr('stroke-dasharray', '6 6')
+        .attr('stroke-opacity', 0.45);
+
+      g.append('text')
+        .attr('x', margin.left + innerWidth)
+        .attr('y', cutoffY - 6)
+        .attr('text-anchor', 'end')
+        .attr('fill', '#6b7280')
+        .style('font-size', '11px')
+        .style('font-weight', 600)
+        .text(`Cutoff: ${this.pctText(card.cutoff)}`);
+
+      const area = d3.area()
+        .x(point => xScale(point.year))
+        .y0(margin.top + innerHeight)
+        .y1(point => yScale(point.value));
+
+      g.append('path')
+        .datum(series)
+        .attr('d', area)
+        .attr('fill', card.key === 'completion' ? '#0f766e' : (card.key === 'placement' ? '#1d4ed8' : '#7c3aed'))
+        .attr('fill-opacity', 0.08);
+
+      const segments = series.slice(1).map((point, index) => ({
+        start: series[index],
+        end: point,
+        delta: Number(point.value) - Number(series[index].value)
       }));
 
-      const path = chartPoints
-        .map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(2)},${point.y.toFixed(2)}`)
-        .join(' ');
-      const areaPath = chartPoints.length
-        ? `${path} L${chartPoints[chartPoints.length - 1].x.toFixed(2)},${(margin.top + innerHeight).toFixed(2)} L${chartPoints[0].x.toFixed(2)},${(margin.top + innerHeight).toFixed(2)} Z`
-        : '';
-      const segments = chartPoints.slice(1).map((point, index) => {
-        const previous = chartPoints[index];
-        const delta = point.value - previous.value;
-        return {
-          key: `${previous.year}-${point.year}`,
-          x1: previous.x,
-          y1: previous.y,
-          x2: point.x,
-          y2: point.y,
-          stroke: this.segmentStatusColor(delta)
-        };
-      });
-      const xTicks = chartPoints.map(point => ({
-        key: point.year,
-        x: point.x,
-        label: String(point.year)
-      }));
-      const yTicks = [0, 0.25, 0.5, 0.75, 1].map(value => ({
-        key: value,
-        y: yFor(value),
-        label: this.pctText(value)
-      }));
-      const targetY = yFor(cutoff);
+      g.selectAll('.segment')
+        .data(segments)
+        .enter()
+        .append('line')
+        .attr('x1', segment => xScale(segment.start.year))
+        .attr('y1', segment => yScale(segment.start.value))
+        .attr('x2', segment => xScale(segment.end.year))
+        .attr('y2', segment => yScale(segment.end.value))
+        .attr('stroke', segment => this.segmentStatusColor(segment.delta))
+        .attr('stroke-width', 3)
+        .attr('stroke-linecap', 'round');
 
-      return {
-        width,
-        height,
-        path,
-        areaPath,
-        points: chartPoints,
-        segments,
-        xTicks,
-        yTicks,
-        targetY,
-        cutoff,
-        stroke,
-        hasData: true
-      };
+      const pointGroups = g.selectAll('.point-group')
+        .data(series)
+        .enter()
+        .append('g');
+
+      pointGroups.append('circle')
+        .attr('cx', point => xScale(point.year))
+        .attr('cy', point => yScale(point.value))
+        .attr('r', 5)
+        .attr('fill', point => this.pointStatusColor(point.value, card.cutoff))
+        .attr('stroke', '#ffffff')
+        .attr('stroke-width', 1.5);
+
+      pointGroups.append('text')
+        .attr('x', point => xScale(point.year))
+        .attr('y', point => yScale(point.value) - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#111827')
+        .style('font-size', '11px')
+        .style('font-weight', 600)
+        .text(point => this.pctText(point.value));
+
+      g.selectAll('.x-label')
+        .data(series)
+        .enter()
+        .append('text')
+        .attr('x', point => xScale(point.year))
+        .attr('y', height - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#6b7280')
+        .style('font-size', '11px')
+        .text(point => String(point.year));
+    },
+
+    scheduleRender() {
+      this.$nextTick(() => this.renderCharts());
+    },
+
+    handleResize() {
+      this.renderCharts();
     },
 
     bandStyle(value, warnMin, passMin) {
@@ -335,10 +411,32 @@ Vue.component('reports-outcomes-cpl-historic', {
     };
   },
 
+  mounted() {
+    this._handleResize = () => this.handleResize();
+    window.addEventListener('resize', this._handleResize);
+    this.scheduleRender();
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('resize', this._handleResize);
+  },
+
   watch: {
     selectedCampusCode() {
       this.setSharedFilterValue('campus_code', this.selectedCampusCode);
       this.loadProgramOptions(true);
+    },
+    rows: {
+      deep: true,
+      handler() {
+        this.scheduleRender();
+      }
+    },
+    metricCards: {
+      deep: true,
+      handler() {
+        this.scheduleRender();
+      }
     }
   },
 
@@ -397,86 +495,12 @@ Vue.component('reports-outcomes-cpl-historic', {
         </div>
 
         <svg
-          v-if="card.chart.hasData"
-          :viewBox="'0 0 ' + card.chart.width + ' ' + card.chart.height"
-          width="100%"
-          height="220"
-          preserveAspectRatio="none"
+          v-if="card.series.length"
+          :data-cpl-chart-key="card.key"
           role="img"
           :aria-label="card.title + ' historic line chart'"
-          style="display:block; background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-radius:10px;"
-        >
-          <line
-            v-for="tick in card.chart.yTicks"
-            :key="'y-' + card.key + '-' + tick.key"
-            :x1="52"
-            :x2="736"
-            :y1="tick.y"
-            :y2="tick.y"
-            stroke="#e5e7eb"
-            stroke-dasharray="4 4"
-          />
-          <text
-            v-for="tick in card.chart.yTicks"
-            :key="'yl-' + card.key + '-' + tick.key"
-            x="44"
-            :y="tick.y + 4"
-            text-anchor="end"
-            fill="#6b7280"
-            style="font-size:11px;"
-          >{{ tick.label }}</text>
-
-          <line
-            x1="52"
-            x2="736"
-            :y1="card.chart.targetY"
-            :y2="card.chart.targetY"
-            stroke="#6b7280"
-            stroke-dasharray="6 6"
-            stroke-opacity=".45"
-          />
-          <text
-            x="736"
-            :y="card.chart.targetY - 6"
-            text-anchor="end"
-            fill="#6b7280"
-            style="font-size:11px; font-weight:600;"
-          >Cutoff: {{ pctText(card.chart.cutoff) }}</text>
-
-          <path :d="card.chart.areaPath" :fill="card.chart.stroke" fill-opacity=".08"></path>
-          <line
-            v-for="segment in card.chart.segments"
-            :key="'segment-' + card.key + '-' + segment.key"
-            :x1="segment.x1"
-            :y1="segment.y1"
-            :x2="segment.x2"
-            :y2="segment.y2"
-            :stroke="segment.stroke"
-            stroke-width="3"
-            stroke-linecap="round"
-          />
-
-          <g v-for="point in card.chart.points" :key="card.key + '-' + point.year">
-            <circle :cx="point.x" :cy="point.y" r="5" :fill="point.fill" stroke="#ffffff" stroke-width="1.5"></circle>
-            <text
-              :x="point.x"
-              :y="point.y - 10"
-              text-anchor="middle"
-              fill="#111827"
-              style="font-size:11px; font-weight:600;"
-            >{{ point.label }}</text>
-          </g>
-
-          <text
-            v-for="tick in card.chart.xTicks"
-            :key="'x-' + card.key + '-' + tick.key"
-            :x="tick.x"
-            y="210"
-            text-anchor="middle"
-            fill="#6b7280"
-            style="font-size:11px;"
-          >{{ tick.label }}</text>
-        </svg>
+          style="display:block; width:100%; height:220px;"
+        ></svg>
       </div>
     </div>
   </div>
