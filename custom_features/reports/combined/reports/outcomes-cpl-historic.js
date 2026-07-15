@@ -10,6 +10,16 @@ Vue.component('reports-outcomes-cpl-historic', {
   ],
 
   computed: {
+    campusOptions() {
+      return Array.from(
+        new Set(
+          this.optionRows
+            .map(row => String(row?.campus_code ?? '').trim())
+            .filter(Boolean)
+        )
+      ).sort((a, b) => a.localeCompare(b));
+    },
+
     sortedRows() {
       return [...this.rows].sort((a, b) => {
         const yearDiff = Number(a?.academic_year ?? 0) - Number(b?.academic_year ?? 0);
@@ -57,6 +67,96 @@ Vue.component('reports-outcomes-cpl-historic', {
   },
 
   methods: {
+    syncFromReportContext() {
+      if (typeof window.ReportMixins.programScoped === 'function') {
+        const base = window.ReportMixins.programScoped({ includeAcademicYear: false }).methods?.syncFromReportContext;
+        if (typeof base === 'function') base.call(this);
+      }
+
+      const nextCampusCode = String(
+        this.getSharedFilterValue('campus_code', this.selectedCampusCode) ?? ''
+      ).trim();
+      if (nextCampusCode !== this.selectedCampusCode) {
+        this.selectedCampusCode = nextCampusCode;
+      }
+    },
+
+    getRequestFilters() {
+      const filters = {
+        program_code: this.selectedProgramCode
+      };
+      const campusCode = String(this.selectedCampusCode ?? '').trim();
+      if (campusCode) filters.campus_code = campusCode;
+      return filters;
+    },
+
+    async loadProgramOptions(forceReloadData = false) {
+      const requestId = ++this.loadProgramsRequestId;
+      try {
+        this.loadingPrograms = true;
+        this.loadError = '';
+
+        const rows = await this.fetchReportDataset(
+          {},
+          { dataset: 'program_cpl' }
+        );
+
+        this.optionRows = (Array.isArray(rows) ? rows : []).map(row => ({
+          program_code: String(row?.program_code ?? '').trim(),
+          program_name: String(row?.program_name ?? row?.program_code ?? '').trim(),
+          campus_code: String(row?.campus_code ?? '').trim()
+        }));
+
+        const campusCode = String(this.selectedCampusCode ?? '').trim();
+        const filteredOptionRows = campusCode
+          ? this.optionRows.filter(row => row.campus_code === campusCode)
+          : this.optionRows;
+
+        const options = Array.from(
+          new Map(
+            filteredOptionRows
+              .map(row => ({
+                value: row.program_code,
+                label: row.program_name
+              }))
+              .filter(option => option.value && option.label)
+              .map(option => [option.value, option])
+          ).values()
+        ).sort((a, b) => a.label.localeCompare(b.label));
+
+        this.programOptions = options;
+        const nextProgramCode = this.resolveDeferredSelection({
+          filterKey: 'program_code',
+          options,
+          currentValue: this.selectedProgramCode,
+          routeValue: this.getProgramCode()
+        });
+
+        if (!this.filterValuesEqual(nextProgramCode, this.selectedProgramCode)) {
+          this.selectedProgramCode = nextProgramCode;
+          return;
+        }
+
+        const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextProgramCode));
+        if (selectedOption?.label) {
+          this.loadedProgramName = selectedOption.label;
+          this.setSharedFilterValue('program_name', selectedOption.label);
+        }
+        if (forceReloadData) this.loadData();
+      } catch (e) {
+        console.warn('Failed to load program options', e);
+        this.programOptions = [];
+        this.optionRows = [];
+        if (!this.selectedProgramCode) {
+          this.loadError = this.getProgramOptionsLoadErrorMessage();
+        }
+      } finally {
+        if (requestId === this.loadProgramsRequestId) {
+          this.loadingPrograms = false;
+        }
+      }
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : [])
         .map(row => ({
@@ -64,6 +164,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           academic_year: Number(row?.academic_year),
           program_name: String(row?.program_name ?? '').trim(),
           program_code: String(row?.program_code ?? '').trim(),
+          campus_code: String(row?.campus_code ?? '').trim(),
           completion: Number(row?.completion),
           placement: Number(row?.placement),
           licensure: Number(row?.licensure)
@@ -192,13 +293,32 @@ Vue.component('reports-outcomes-cpl-historic', {
 
   data() {
     return {
-      colors: window.ReportUtils.createColors()
+      colors: window.ReportUtils.createColors(),
+      optionRows: [],
+      selectedCampusCode: ''
     };
+  },
+
+  watch: {
+    selectedCampusCode() {
+      this.setSharedFilterValue('campus_code', this.selectedCampusCode);
+      this.loadProgramOptions(true);
+    }
   },
 
   template: `
   <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; gap:12px; min-height:0; overflow:auto;">
     <div class="btech-row" style="align-items:center; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:.5rem;">
+        <label class="btech-muted" style="font-size:.75rem;">Campus</label>
+        <select v-model="selectedCampusCode" v-bind="filterAttrs('campus_code')" style="font-size:.75rem; min-width:120px;">
+          <option value="">All campuses</option>
+          <option v-for="campus in campusOptions" :key="campus" :value="campus">
+            {{ campus }}
+          </option>
+        </select>
+      </div>
+
       <div style="display:flex; align-items:center; gap:.5rem;">
         <label class="btech-muted" style="font-size:.75rem;">Program</label>
         <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:260px; max-width:360px;">
@@ -209,6 +329,7 @@ Vue.component('reports-outcomes-cpl-historic', {
         </select>
       </div>
 
+      <span v-if="selectedCampusCode" class="btech-pill">Campus: {{ selectedCampusCode }}</span>
       <span v-if="loadedProgramName" class="btech-pill">{{ loadedProgramName }}</span>
       <span class="btech-pill">Years: {{ yearRangeLabel }}</span>
       <span class="btech-pill">Rows: {{ sortedRows.length }}</span>

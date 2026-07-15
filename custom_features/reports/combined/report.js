@@ -274,6 +274,7 @@
           },
           selectedDepartmentCode: '',
           selectedDepartmentName: '',
+          selectedCampusCode: '',
           selectedProgramCode: '',
           selectedProgramName: '',
           selectedCourseCode: '',
@@ -336,6 +337,7 @@
           const subMenu = String(payload?.subMenu ?? 'summary').trim() || 'summary';
           const account = String(payload?.account ?? payload?.department_code ?? '').trim();
           const departmentName = String(payload?.department_name ?? payload?.name ?? '').trim();
+          const campusCode = String(payload?.campus_code ?? '').trim();
           const programCode = String(payload?.program_code ?? '').trim();
           const programName = String(payload?.program_name ?? '').trim();
           const courseCode = String(payload?.course_code ?? '').trim();
@@ -343,6 +345,7 @@
 
           if (account) this.setSharedFilter('department_code', account);
           if (departmentName) this.setSharedFilter('department_name', departmentName);
+          if (campusCode) this.setSharedFilter('campus_code', campusCode);
           if (programCode) this.setSharedFilter('program_code', programCode);
           if (programName) this.setSharedFilter('program_name', programName);
           if (courseCode) this.setSharedFilter('course_code', courseCode);
@@ -380,6 +383,7 @@
 
           if (filterKey === 'department_code') this.selectedDepartmentCode = String(value ?? '').trim();
           if (filterKey === 'department_name') this.selectedDepartmentName = String(value ?? '').trim();
+          if (filterKey === 'campus_code') this.selectedCampusCode = String(value ?? '').trim();
           if (filterKey === 'program_code') this.selectedProgramCode = String(value ?? '').trim();
           if (filterKey === 'program_name') this.selectedProgramName = String(value ?? '').trim();
           if (filterKey === 'course_code') this.selectedCourseCode = String(value ?? '').trim();
