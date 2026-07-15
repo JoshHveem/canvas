@@ -43,6 +43,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Completion',
           subtitle: 'Program completion rate by year',
           stroke: '#0f766e',
+          cutoff: 0.6,
           latestStyle: this.completionPillStyle(this.latestMetricValue('completion'))
         },
         {
@@ -50,6 +51,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Placement',
           subtitle: 'Program placement rate by year',
           stroke: '#1d4ed8',
+          cutoff: 0.7,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('placement'))
         },
         {
@@ -57,11 +59,12 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Licensure',
           subtitle: 'Program licensure rate by year',
           stroke: '#7c3aed',
+          cutoff: 0.7,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('licensure'))
         }
       ].map(card => ({
         ...card,
-        chart: this.buildLineChart(card.key, card.stroke)
+        chart: this.buildLineChart(card.key, card.stroke, card.cutoff)
       }));
     }
   },
@@ -198,7 +201,24 @@ Vue.component('reports-outcomes-cpl-historic', {
         }));
     },
 
-    buildLineChart(metric, stroke) {
+    pointStatusColor(value, cutoff) {
+      const n = Number(value);
+      const threshold = Number(cutoff);
+      if (!Number.isFinite(n) || !Number.isFinite(threshold)) return this.colors.gray;
+      if (n < threshold) return this.colors.red;
+      if (n > threshold + 0.1) return this.colors.green;
+      return this.colors.yellow;
+    },
+
+    segmentStatusColor(delta) {
+      const diff = Number(delta);
+      if (!Number.isFinite(diff)) return this.colors.gray;
+      if (diff > 0) return this.colors.green;
+      if (diff <= -0.05) return this.colors.red;
+      return this.colors.yellow;
+    },
+
+    buildLineChart(metric, stroke, cutoff) {
       const points = this.metricSeries(metric);
       const width = 760;
       const height = 220;
@@ -213,6 +233,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           path: '',
           areaPath: '',
           points: [],
+          segments: [],
           xTicks: [],
           yTicks: [],
           targetY: null,
@@ -233,7 +254,8 @@ Vue.component('reports-outcomes-cpl-historic', {
         ...point,
         x: xFor(point.year),
         y: yFor(point.value),
-        label: this.pctText(point.value)
+        label: this.pctText(point.value),
+        fill: this.pointStatusColor(point.value, cutoff)
       }));
 
       const path = chartPoints
@@ -242,6 +264,18 @@ Vue.component('reports-outcomes-cpl-historic', {
       const areaPath = chartPoints.length
         ? `${path} L${chartPoints[chartPoints.length - 1].x.toFixed(2)},${(margin.top + innerHeight).toFixed(2)} L${chartPoints[0].x.toFixed(2)},${(margin.top + innerHeight).toFixed(2)} Z`
         : '';
+      const segments = chartPoints.slice(1).map((point, index) => {
+        const previous = chartPoints[index];
+        const delta = point.value - previous.value;
+        return {
+          key: `${previous.year}-${point.year}`,
+          x1: previous.x,
+          y1: previous.y,
+          x2: point.x,
+          y2: point.y,
+          stroke: this.segmentStatusColor(delta)
+        };
+      });
       const xTicks = chartPoints.map(point => ({
         key: point.year,
         x: point.x,
@@ -252,7 +286,7 @@ Vue.component('reports-outcomes-cpl-historic', {
         y: yFor(value),
         label: this.pctText(value)
       }));
-      const targetY = yFor(metric === 'completion' ? 0.7 : 0.8);
+      const targetY = yFor(cutoff);
 
       return {
         width,
@@ -260,9 +294,11 @@ Vue.component('reports-outcomes-cpl-historic', {
         path,
         areaPath,
         points: chartPoints,
+        segments,
         xTicks,
         yTicks,
         targetY,
+        cutoff,
         stroke,
         hasData: true
       };
@@ -395,16 +431,33 @@ Vue.component('reports-outcomes-cpl-historic', {
             x2="736"
             :y1="card.chart.targetY"
             :y2="card.chart.targetY"
-            :stroke="card.chart.stroke"
+            stroke="#6b7280"
             stroke-dasharray="6 6"
             stroke-opacity=".45"
           />
+          <text
+            x="736"
+            :y="card.chart.targetY - 6"
+            text-anchor="end"
+            fill="#6b7280"
+            style="font-size:11px; font-weight:600;"
+          >Cutoff: {{ pctText(card.chart.cutoff) }}</text>
 
           <path :d="card.chart.areaPath" :fill="card.chart.stroke" fill-opacity=".08"></path>
-          <path :d="card.chart.path" fill="none" :stroke="card.chart.stroke" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+          <line
+            v-for="segment in card.chart.segments"
+            :key="'segment-' + card.key + '-' + segment.key"
+            :x1="segment.x1"
+            :y1="segment.y1"
+            :x2="segment.x2"
+            :y2="segment.y2"
+            :stroke="segment.stroke"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
 
           <g v-for="point in card.chart.points" :key="card.key + '-' + point.year">
-            <circle :cx="point.x" :cy="point.y" r="4.5" :fill="card.chart.stroke"></circle>
+            <circle :cx="point.x" :cy="point.y" r="5" :fill="point.fill" stroke="#ffffff" stroke-width="1.5"></circle>
             <text
               :x="point.x"
               :y="point.y - 10"
