@@ -53,6 +53,15 @@ Vue.component('reports-outcomes-cpl', {
   },
 
   methods: {
+    drillToHistoric(row) {
+      this.$emit('drill-report', {
+        report: 'outcomes',
+        subMenu: 'cpl-historic',
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: this.programName(row)
+      });
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         ...row,
@@ -94,7 +103,7 @@ Vue.component('reports-outcomes-cpl', {
   },
 
   template: `
-  <report-table-shell
+    <report-table-shell
     title-html="Programs - CPL Summary"
     :table="table"
     :rows="visibleRows"
@@ -102,6 +111,8 @@ Vue.component('reports-outcomes-cpl', {
     :load-error="loadError"
     loading-text="Loading CPL summary..."
     :row-key-fn="(row, index) => row.program_code || row.program_name || index"
+    :row-clickable="true"
+    @row-click="drillToHistoric"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">

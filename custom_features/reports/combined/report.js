@@ -152,6 +152,13 @@
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
+              },
+              {
+                value: 'cpl-historic',
+                label: 'CPL Historic',
+                component: 'reports-outcomes-cpl-historic',
+                dataset: 'program_cpl',
+                filters: {}
               }
             ]
           },
@@ -431,6 +438,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
