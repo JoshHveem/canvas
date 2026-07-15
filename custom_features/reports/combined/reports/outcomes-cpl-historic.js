@@ -235,14 +235,10 @@ Vue.component('reports-outcomes-cpl-historic', {
 
       const slope = ((n * sumXY) - (sumX * sumY)) / denominator;
       const intercept = (sumY - (slope * sumX)) / n;
-      const startYear = Number(points[0].year);
-      const endYear = Number(points[points.length - 1].year);
-
       return {
-        startYear,
-        endYear,
-        startValue: intercept + (slope * startYear),
-        endValue: intercept + (slope * endYear)
+        slope,
+        intercept,
+        throughYear: Number(points[points.length - 1].year)
       };
     },
 
@@ -388,11 +384,16 @@ Vue.component('reports-outcomes-cpl-historic', {
         .attr('stroke-linecap', 'round');
 
       if (trendLine) {
+        const visibleStartYear = Number(series[0]?.year);
+        const visibleEndYear = Number(series[series.length - 1]?.year);
+        const startValue = trendLine.intercept + (trendLine.slope * visibleStartYear);
+        const endValue = trendLine.intercept + (trendLine.slope * visibleEndYear);
+
         g.append('line')
-          .attr('x1', xScale(trendLine.startYear))
-          .attr('y1', yScale(Math.max(0, Math.min(1, trendLine.startValue))))
-          .attr('x2', xScale(trendLine.endYear))
-          .attr('y2', yScale(Math.max(0, Math.min(1, trendLine.endValue))))
+          .attr('x1', xScale(visibleStartYear))
+          .attr('y1', yScale(Math.max(0, Math.min(1, startValue))))
+          .attr('x2', xScale(visibleEndYear))
+          .attr('y2', yScale(Math.max(0, Math.min(1, endValue))))
           .attr('stroke', '#111827')
           .attr('stroke-width', 2)
           .attr('stroke-dasharray', '10 6')
@@ -405,7 +406,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           .attr('fill', '#111827')
           .style('font-size', '11px')
           .style('font-weight', 600)
-          .text(`Trend through ${trendLine.endYear}`);
+          .text(`Trend based on data through ${trendLine.throughYear}`);
       }
 
       const pointGroups = g.selectAll('.point-group')
