@@ -195,7 +195,7 @@
     try {
       enrollments = await bridgetools.req3(
         'reports',
-        { canvas_user_id: studentId, is_deleted: false},
+        { canvas_user_id: studentId},
         { dataset: 'canvas_enrollments' }
       );
       console.log(enrollments);
