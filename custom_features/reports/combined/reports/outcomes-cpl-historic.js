@@ -43,6 +43,8 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Completion',
           subtitle: 'Program completion rate by year',
           cutoff: 0.6,
+          trendMonth: 5,
+          trendDay: 30,
           latestStyle: this.completionPillStyle(this.latestMetricValue('completion'))
         },
         {
@@ -50,6 +52,8 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Placement',
           subtitle: 'Program placement rate by year',
           cutoff: 0.7,
+          trendMonth: 8,
+          trendDay: 30,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('placement'))
         },
         {
@@ -57,11 +61,14 @@ Vue.component('reports-outcomes-cpl-historic', {
           title: 'Licensure',
           subtitle: 'Program licensure rate by year',
           cutoff: 0.7,
+          trendMonth: 5,
+          trendDay: 30,
           latestStyle: this.outcomePillStyle(this.latestMetricValue('licensure'))
         }
       ].map(card => ({
         ...card,
-        series: this.metricSeries(card.key)
+        series: this.metricSeries(card.key),
+        trendSeries: this.metricTrendSeries(card.key, card.trendMonth, card.trendDay)
       }))
         .filter(card => card.series.some(point => Number(point?.value) !== 0));
     }
@@ -199,6 +206,46 @@ Vue.component('reports-outcomes-cpl-historic', {
         }));
     },
 
+    metricTrendSeries(metric, month, day) {
+      return this.metricSeries(metric)
+        .filter(point => this.isTrendYearEligible(point.year, month, day));
+    },
+
+    isTrendYearEligible(academicYear, month, day) {
+      const year = Number(academicYear);
+      if (!Number.isFinite(year)) return false;
+
+      const now = new Date();
+      const cutoffDate = new Date(year + 1, Number(month), Number(day), 23, 59, 59, 999);
+      return now.getTime() >= cutoffDate.getTime();
+    },
+
+    buildTrendLine(trendSeries) {
+      const points = Array.isArray(trendSeries) ? trendSeries : [];
+      if (points.length < 2) return null;
+
+      const n = points.length;
+      const sumX = points.reduce((sum, point) => sum + Number(point.year), 0);
+      const sumY = points.reduce((sum, point) => sum + Number(point.value), 0);
+      const sumXY = points.reduce((sum, point) => sum + (Number(point.year) * Number(point.value)), 0);
+      const sumXX = points.reduce((sum, point) => sum + (Number(point.year) * Number(point.year)), 0);
+      const denominator = (n * sumXX) - (sumX * sumX);
+
+      if (!Number.isFinite(denominator) || denominator === 0) return null;
+
+      const slope = ((n * sumXY) - (sumX * sumY)) / denominator;
+      const intercept = (sumY - (slope * sumX)) / n;
+      const startYear = Number(points[0].year);
+      const endYear = Number(points[points.length - 1].year);
+
+      return {
+        startYear,
+        endYear,
+        startValue: intercept + (slope * startYear),
+        endValue: intercept + (slope * endYear)
+      };
+    },
+
     pointStatusColor(value, cutoff) {
       const n = Number(value);
       const threshold = Number(cutoff);
@@ -326,6 +373,8 @@ Vue.component('reports-outcomes-cpl-historic', {
         delta: Number(point.value) - Number(series[index].value)
       }));
 
+      const trendLine = this.buildTrendLine(card.trendSeries);
+
       g.selectAll('.segment')
         .data(segments)
         .enter()
@@ -337,6 +386,27 @@ Vue.component('reports-outcomes-cpl-historic', {
         .attr('stroke', segment => this.segmentStatusColor(segment.delta))
         .attr('stroke-width', 3)
         .attr('stroke-linecap', 'round');
+
+      if (trendLine) {
+        g.append('line')
+          .attr('x1', xScale(trendLine.startYear))
+          .attr('y1', yScale(Math.max(0, Math.min(1, trendLine.startValue))))
+          .attr('x2', xScale(trendLine.endYear))
+          .attr('y2', yScale(Math.max(0, Math.min(1, trendLine.endValue))))
+          .attr('stroke', '#111827')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '10 6')
+          .attr('stroke-opacity', 0.85);
+
+        g.append('text')
+          .attr('x', margin.left + innerWidth)
+          .attr('y', margin.top + 10)
+          .attr('text-anchor', 'end')
+          .attr('fill', '#111827')
+          .style('font-size', '11px')
+          .style('font-weight', 600)
+          .text(`Trend through ${trendLine.endYear}`);
+      }
 
       const pointGroups = g.selectAll('.point-group')
         .data(series)
