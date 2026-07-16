@@ -25,6 +25,12 @@ Vue.component('reports-outcomes-cpl', {
         row => this.programName(row).toLowerCase()
       ),
       new window.ReportColumn(
+        'Campus', 'Campus code.', '6rem', false, 'string',
+        row => this.escapeHtml(String(row?.campus_code ?? '').trim() || '-'),
+        null,
+        row => String(row?.campus_code ?? '').trim().toLowerCase()
+      ),
+      new window.ReportColumn(
         'Completion', 'Program completion rate.', '8rem', false, 'number',
         row => this.pctText(row?.completion),
         row => this.completionPillStyle(row?.completion),
@@ -53,6 +59,16 @@ Vue.component('reports-outcomes-cpl', {
   },
 
   methods: {
+    drillToHistoric(row) {
+      this.$emit('drill-report', {
+        report: 'outcomes',
+        subMenu: 'cpl-historic',
+        campus_code: String(row?.campus_code ?? '').trim(),
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: this.programName(row)
+      });
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         ...row,
@@ -94,14 +110,16 @@ Vue.component('reports-outcomes-cpl', {
   },
 
   template: `
-  <report-table-shell
+    <report-table-shell
     title-html="Programs - CPL Summary"
     :table="table"
     :rows="visibleRows"
     :loading="loading"
     :load-error="loadError"
     loading-text="Loading CPL summary..."
-    :row-key-fn="(row, index) => row.program_code || row.program_name || index"
+    :row-key-fn="(row, index) => [row.program_code || row.program_name || 'x', row.campus_code || 'y', index].join(':')"
+    :row-clickable="true"
+    @row-click="drillToHistoric"
   >
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">

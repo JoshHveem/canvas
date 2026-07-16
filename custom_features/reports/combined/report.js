@@ -152,6 +152,13 @@
                 filters: {
                   academic_year: { source: 'current_year' }
                 }
+              },
+              {
+                value: 'cpl-historic',
+                label: 'CPL Historic',
+                component: 'reports-outcomes-cpl-historic',
+                dataset: 'program_cpl',
+                filters: {}
               }
             ]
           },
@@ -267,6 +274,7 @@
           },
           selectedDepartmentCode: '',
           selectedDepartmentName: '',
+          selectedCampusCode: '',
           selectedProgramCode: '',
           selectedProgramName: '',
           selectedCourseCode: '',
@@ -313,6 +321,7 @@
               routeFilters: {
                 departmentCode: this.selectedDepartmentCode,
                 departmentName: this.selectedDepartmentName,
+                campusCode: this.selectedCampusCode,
                 programCode: this.selectedProgramCode,
                 programName: this.selectedProgramName,
                 courseCode: this.selectedCourseCode,
@@ -329,6 +338,7 @@
           const subMenu = String(payload?.subMenu ?? 'summary').trim() || 'summary';
           const account = String(payload?.account ?? payload?.department_code ?? '').trim();
           const departmentName = String(payload?.department_name ?? payload?.name ?? '').trim();
+          const campusCode = String(payload?.campus_code ?? '').trim();
           const programCode = String(payload?.program_code ?? '').trim();
           const programName = String(payload?.program_name ?? '').trim();
           const courseCode = String(payload?.course_code ?? '').trim();
@@ -336,6 +346,7 @@
 
           if (account) this.setSharedFilter('department_code', account);
           if (departmentName) this.setSharedFilter('department_name', departmentName);
+          if (campusCode) this.setSharedFilter('campus_code', campusCode);
           if (programCode) this.setSharedFilter('program_code', programCode);
           if (programName) this.setSharedFilter('program_name', programName);
           if (courseCode) this.setSharedFilter('course_code', courseCode);
@@ -373,6 +384,7 @@
 
           if (filterKey === 'department_code') this.selectedDepartmentCode = String(value ?? '').trim();
           if (filterKey === 'department_name') this.selectedDepartmentName = String(value ?? '').trim();
+          if (filterKey === 'campus_code') this.selectedCampusCode = String(value ?? '').trim();
           if (filterKey === 'program_code') this.selectedProgramCode = String(value ?? '').trim();
           if (filterKey === 'program_name') this.selectedProgramName = String(value ?? '').trim();
           if (filterKey === 'course_code') this.selectedCourseCode = String(value ?? '').trim();
@@ -431,6 +443,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-syllabi.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/department-course-readiness.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
