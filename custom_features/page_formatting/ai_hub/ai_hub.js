@@ -6,9 +6,22 @@
 window.AIHubConfig = Object.assign({}, window.AIHubConfig || {}, {
   courseId: "621895"
 });
+window.AIHubStatus = {
+  connected: true,
+  loadedAt: new Date().toISOString(),
+  mounted: false,
+  reason: "loading"
+};
 
 (function () {
-  if (!window.IS_TEACHER) return;
+  const status = window.AIHubStatus;
+  status.path = window.location.pathname;
+  status.isTeacher = Boolean(window.IS_TEACHER);
+
+  if (!status.isTeacher) {
+    status.reason = "not_teacher";
+    return;
+  }
 
   const HUB_CONFIG = window.AIHubConfig;
   const KEEP_TABS = ["Home", "People", "Announcements"];
@@ -2715,14 +2728,27 @@ window.AIHubConfig = Object.assign({}, window.AIHubConfig || {}, {
     nav.appendChild(li);
   }
 
-  if (isAiHubHomePath()) {
+  status.courseId = getCourseId();
+  status.homePath = isAiHubHomePath();
+
+  if (status.homePath) {
     const nav = document.querySelector("#section-tabs");
-    if (!nav) return;
+    status.hasSectionTabs = Boolean(nav);
+    if (!nav) {
+      status.reason = "missing_section_tabs";
+      return;
+    }
 
     hideHeaderBar();
     hideCourseTabs();
     addEditTabs(nav);
     addToggleButton(nav);
+    status.mounted = true;
+    status.reason = "mounted";
+    status.editCalendar = Boolean(document.getElementById("ai-hub-edit-events-link"));
+    status.restoreTabs = Boolean(document.getElementById(TOGGLE_BUTTON_ID));
+  } else {
+    status.reason = "not_ai_hub_home";
   }
 
   window.AIHubData = {
