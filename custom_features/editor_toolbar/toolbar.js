@@ -1,23 +1,27 @@
 TOOLBAR = {
   selects: {},
+  editor: null,
   toolbar: null,
-  initted: false,
 
   async getEditor() {
-    await this.checkReady(1);
-    return tinymce.activeEditor;
+    if (window.tinymce === undefined) {
+      await delay(500);
+      return this.getEditor();
+    } else {
+      return tinymce.activeEditor;
+    }
   },
 
-  async checkReady(override=0) {
-    if (!window?.tinymce?.activeEditor?.initialized || (override === 0 && !TOOLBAR.initted)) {
+  async checkReady() {
+    if (this.editor === null) {
       await delay(500);
-      return this.checkReady(override);
+      return this.checkReady();
     } else {
       return;
     }
   },
 
-  addBackground(remove) {
+  addBackground() {
     let bg = $(`
       <div style="
         overflow: auto; 
@@ -47,7 +51,7 @@ TOOLBAR = {
       </div>
       `);
     $("body").append(bg);
-    if (remove) this.addBackgroundClosing(bg);
+    this.addBackgroundClosing(bg);
     return bg;
   },
 
@@ -67,6 +71,8 @@ TOOLBAR = {
 
   async addSelect(name, description) {
     let feature = this;
+    console.log("NAME");
+    console.log(name);
     feature.selects[name] = {};
     let customButtonsContainer = $("#btech-custom-editor-buttons-container");
     let id = this.selectNameToId(name);
@@ -74,6 +80,7 @@ TOOLBAR = {
     customButtonsContainer.append(select);
     $("#" + id).change(function () {
       let value = $(this).val();
+      console.log(value);
       let func = feature.selects[name][value];
       if (func !== undefined) {
         func();
@@ -82,15 +89,14 @@ TOOLBAR = {
     return select;
   },
 
-  async addSelectOption(name, selectName, description, func, className, data={}) {
+  async addSelectOption(name, selectName, description, func, className) {
     let feature = this;
     let selectId = this.selectNameToId(selectName);
+    console.log("SELECT NAME");
+    console.log(selectName);
     feature.selects[selectName][name] = func;
     let select = $("#" + selectId);
     let option = $("<option title='" + description + "' class='" + className + "' value='" + name + "'>" + name + "</option>");
-    for (let d in data) {
-      option.attr("data-" + d, data[d]);
-    }
     select.append(option);
     return option;
   },
@@ -102,9 +108,9 @@ TOOLBAR = {
     customButtonsContainer.append(button);
     return button;
   },
-  async addButtonIcon(icon, ariaLabel, description, func, className = '') {
+  async addButtonIcon(icon, description, func, className = '') {
     let customButtonsContainer = $("#btech-custom-editor-buttons-container");
-    let button = $(`<div aria-label="${ariaLabel}" title="${description}" style="padding: 4px 8px; color: #000; cursor: pointer;"><i style="font-size: 1rem;" class="${icon} ${className}"></i></a>`);
+    let button = $("<div title='" + description + "' style='padding: 4px 8px; color: #000; cursor: pointer;'><i style='font-size: 1rem;' class='" + icon + " " + className + "'></i></a>");
     button.click(func);
     customButtonsContainer.append(button);
     return button;
@@ -116,18 +122,22 @@ TOOLBAR = {
   },
 
   async _init() {
-    await TOOLBAR_STYLES.init();
     this.editor = await this.getEditor();
-    if ($("#btech-custom-editor-buttons-container").length === 0) {
+    let topPart = null;
+    if (tinymce.majorVersion === "4") {
+      topPart = await getElement(".mce-top-part");
+    } else if (tinymce.majorVersion === "5") {
+      topPart = await getElement(".tox-editor-header");
+    }
+    if (topPart !== null && $("#btech-custom-editor-buttons-container").length === 0) {
       // this.editor.addShortcut("ctrl+alt+h", "The highlighted font will be hidden until the reader highlights it.", hideOnHover);
       // this.editor.addShortcut("ctrl+alt+e", "the highlighted font will be put inside of an emphasis box.", exampleBox);
       // this.editor.addShortcut("ctrl+alt+d", "the highlighted font will display a definition on hover.", exampleBox);
       // this.editor.addShortcut("ctrl+alt+g", "Insert a table that is linked to a google sheet.", googleSheetsTable);
       // this.editor.addShortcut("ctrl+alt+q", "Insert a citation.", googleSheetsTable);
-      TOOLBAR.toolbar = $("<div id='btech-custom-editor-buttons-container'></div>")
-      $(".tox-editor-header").append(TOOLBAR.toolbar);
+      this.toolbar = $("<div id='btech-custom-editor-buttons-container'></div>")
+      topPart.after(this.toolbar);
     }
-    TOOLBAR.initted = true;
   }
 }
 if (TOOLBAR.checkEditorPage()) TOOLBAR._init();

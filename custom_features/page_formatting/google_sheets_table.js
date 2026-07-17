@@ -98,7 +98,7 @@ async function _init() {
             }
           });
         }).fail(function() {
-          console.error("FAILED");
+          console.log("FAILED");
         });
       }
     })

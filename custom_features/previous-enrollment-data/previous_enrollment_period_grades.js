@@ -7,12 +7,17 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
     termStartDate: null,
     termEndDate: null,
     studentAssignmentsData: [],
+    hours: 0,
+    hoursAssignmentData: null,
+    hoursEnrolled: null,
     assignmentGroups: {},
     async _init(params = {}) {
       let feature = this;
       this.courseId = ENV.courses_with_grades[0].id;
       this.studentId = ENV.students[0].id;
       this.studentAssignmentsData = [];
+      window.STUDENT_HOURS = 0;
+      window.TOTAL_HOURS = 0;
       feature.assignmentGroups = await canvasGet("/api/v1/courses/" + feature.courseId + "/assignment_groups", {
         'include': [
           'assignments'
@@ -45,7 +50,10 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
       feature.termEndDate = dateStringNow;
       //GET THE STUDENT'S SUBMISSIONS FOR THIS COURSE
       feature.studentAssignmentsData = await feature.getSubmissionData();
+      //check to see if the student has hours enrolled set up
       feature.createDateSelector(dateStringEnrollment, dateStringNow);
+      this.hours = CURRENT_COURSE_HOURS;
+      window.TOTAL_HOURS = CURRENT_COURSE_HOURS;
     },
     createDateSelector(dateStringEnrollment, dateStringNow) {
       let feature = this;
@@ -56,6 +64,8 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
           <div id="btech-term-teacher-view">
             <h2>Grade for Submissions Between Dates</h2> 
             <p><b>Note:</b>Canvas only tracks the most recent submission, so regraded assignments will only be included in the date range for its most recent submission.</p>
+            <div id="btech-student-hours">
+            </div>
             <p>Start Date</p>
             <input type="date" id="btech-term-grade-start" name="term-start" value="` + dateStringEnrollment + `" min="2010-01-01" max="2020-12-31">
             <p>End Date</p>
@@ -69,6 +79,8 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
           <button class="Button" id="btech-term-reset-button">Reset</button>
           <div id="btech-term-output-container">
             <div id="btech-term-grade-value"></div>
+            <div id="btech-term-hours-completed"></div>
+            <div id="btech-term-hours-warning"></div>
             <div id="btech-term-ungraded-value"></div>
             <div id="btech-term-grade-weighted-value"></div>
           </div>
@@ -79,9 +91,15 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
       $('#btech-term-teacher-view').hide();
       $('#btech-term-ungraded-value').hide(); //Not currently used. Will need to come up with a way of making this only show up if needed
       $('#btech-term-grade-weighted-value').hide();
+      $('#btech-term-hours-warning').hide();
+      //if teacher, show teacher stuff, if student AND enrolled for hours, show student stuff, else, hide everything
       if (IS_TEACHER) $('#btech-term-teacher-view').show();
       if (!IS_TEACHER) {
-        $('#btech-submissions-between-dates-module').hide();
+        if (this.hoursEnrolled !== null) {
+          $('#btech-term-student-view').show();
+        } else {
+          $('#btech-submissions-between-dates-module').hide();
+        }
       }
 
       //set up the buttons
@@ -142,6 +160,7 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
         let assignmentGroups = feature.assignmentGroups;
         let finalScore = 0;
         let finalTotalScore = 0;
+        //used for figuring out scores if using hours enrolled
         let finalPoints = 0;
         let finalUngradedAsZero = 0;
         let totalProgress = 0;
@@ -172,7 +191,9 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
                     finalPoints += (sub.score * group.group_weight);
                     possiblePoints += assignment.points_possible;
                   }
-                } 
+                } else {
+                  //console.log($("#submission_"+id).html());
+                }
               }
             }
             
@@ -213,6 +234,7 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
         if (isNaN(outputScore)) {
           outputScore = "N/A";
         } else {
+          let weightedGrade = outputScore; //has to be set here before it's all messed up, the rest dealing with weighted is done after making sure hoursEnrolled exists
           let gradingScheme = ENV.grading_scheme;
           $("#btech-term-ungraded-value").html("<b>Ungraded as Zero:</b> " + toPrecision(outputUngradedAsZeroScore, 2) + "%");
 
@@ -229,6 +251,25 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
           }
           outputScore *= 100;
           outputScore = toPrecision(outputScore, 2) + "% (" + letterGrade + ")";
+          if (feature.hoursEnrolled !== null) {
+
+            let percCompleted = (totalProgress / totalWeights);
+            let hoursCompleted = toPrecision((feature.hours * percCompleted), 2);
+            let minHoursRequired = feature.hoursEnrolled * .66;
+            if (hoursCompleted < minHoursRequired) {
+              weightedGrade *= (hoursCompleted / minHoursRequired);
+            }
+            weightedGrade = toPrecision(weightedGrade, 2);
+            $("#btech-term-hours-completed").html("<div><b>Hours Completed</b> " + hoursCompleted + " / " + feature.hoursEnrolled + " (" + toPrecision((hoursCompleted / feature.hoursEnrolled) * 100) + "%)</div>");
+            if (hoursCompleted < minHoursRequired) {
+              let warning = $("<i class='icon-warning'></i>");
+              $("#btech-term-hours-completed").append(warning);
+              warning.click(function () {
+                $("#btech-term-hours-warning").show();
+              })
+              $("#btech-term-hours-warning").append("<br><div><b>WARNING:</b> If you were to end your course with your current hours completed, your Term Grade would be reduced to the following score: " + weightedGrade + "%</div>");
+            }
+          }
         }
         $("#btech-term-grade-value").html("<b>Term Grade:</b> " + outputScore);
       }
@@ -247,9 +288,18 @@ if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
         'student_ids': [feature.studentId],
         'include': ['assignment']
       })
+      this.hoursAssignmentData = null;
       for (let s = 0; s < subs.length; s++) {
         let sub = subs[s];
         let assignment = sub.assignment;
+        if (assignment.name.toLowerCase() === "hours") {
+          //in ind report this looks through the grade activity stream, but student doesn't have access to this
+          //will likely need to be fixed there if student is to have access to that
+          //need a new way to get historic grade data of hours
+          //also can just do a check if a teacher, get historic, otherwise, student is stuck with most recent
+          feature.hoursAssignmentData = assignment;
+          feature.hoursEnrolled = sub.score;
+        }
       }
       return subs;
     },

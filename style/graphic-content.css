@@ -15,6 +15,7 @@
 }
 
 .btech-graphic-image-wrapper {
+  width: min-content; 
   position: relative;
 }
 

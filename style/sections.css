@@ -1,23 +1,16 @@
-.btech-sections .btech-sections-header {
+.btech-sections .sections-header {
   text-align: center;
-  height: 0;
 }
-
-.btech-sections {
-  margin-bottom: 2rem;
-}
-
 .btech-sections .btech-sections-header .btech-sections-header-content {
   position: relative; 
   top: -40px; 
-  padding: 5px 2rem;
+  padding: 5px 15px;
   background-color: var(--btech-theme-header-background-color);
   color: var(--btech-theme-header-color);
-  border-radius: 5px;
-  /* box-shadow: 0 4px 2px -2px #888; */
+  border-radius: 10px;
+  box-shadow: 0 4px 2px -2px #888;
 }
 
-/*start of icon header, copy and paste into tinymce_font_size*/
 h2.icon-header {
   position: relative;
   text-align: center;
@@ -49,4 +42,3 @@ h2.icon-header span i {
 h2.icon-header span i::before {
   font-size: 1.5rem;
 }
-/*end*/

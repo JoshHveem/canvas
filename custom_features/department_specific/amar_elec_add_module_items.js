@@ -1,15 +1,9 @@
 (function () {
-  async function addItems(event, courseId, moduleId, item) {
+  async function addItems(courseId, moduleId, item, modTitle) {
     event.preventDefault();
-    let rTitle = /Module ([0-9]+)/;
-    let title = item.find('.name').text();
-    let titleMatch = title.match(rTitle);
-    if (titleMatch !== null) {
-      let modTitle = "Module " + titleMatch[1];
-      await createQuiz(courseId, moduleId, item, modTitle);
-      await createDiscussion(courseId, moduleId, item, modTitle);
-      location.reload(true);
-    }
+    await createQuiz(courseId, moduleId, item, modTitle);
+    await createDiscussion(courseId, moduleId, item, modTitle);
+    location.reload(true);
   }
 
   async function createQuiz(courseId, moduleId, item, modTitle) {

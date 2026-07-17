@@ -23,7 +23,7 @@
         if (match.length > 0) {
           let course_code = match[1];
           let year = match[2];
-          hours = COURSE_HOURS[course_code]?.hours ?? 0;
+          hours = COURSE_HOURS[year][course_code];
         }
       }
     });
