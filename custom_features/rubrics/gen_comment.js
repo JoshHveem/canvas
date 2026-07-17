@@ -100,7 +100,6 @@
       },
 
       async genComment(comment, overrideId = '') {
-        console.log(overrideId);
         //if there's an override id, delete that comment as well as add the new one
         if (overrideId !== '') {
           $.delete('/submission_comments/' + overrideId);

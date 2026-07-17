@@ -1,0 +1,38 @@
+.btech-ul-tree,
+.btech-li-branch {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.btech-ul-tree {
+  padding-left: 1rem;
+}
+.btech-li-branch {
+  padding-left: 1rem;
+  border: 1px dotted black;
+  border-width: 0 0 1px 1px;
+}
+.btech-li-branch.btech-tree-container {
+  border-bottom: 0px;
+}
+.btech-li-branch.btech-branch-empty {
+  font-style: italic;
+  color: silver;
+  border-color: silver;
+}
+.btech-li-branch p {
+  margin: 0;
+  background: white;
+  position: relative;
+  line-height: 2.25rem;
+  top: 1.1rem;
+}
+.btech-li-branch .btech-ul-tree {
+  border-top: 1px dotted black;
+  margin-left: -1rem;
+  padding-left: 2rem;
+}
+.btech-ul-tree .btech-li-branch:last-child .btech-ul-tree {
+  border-left: 1px solid white;
+  margin-left: -17px;
+}

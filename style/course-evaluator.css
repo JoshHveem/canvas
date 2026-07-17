@@ -1,0 +1,11 @@
+.btech-course-evaluator-content-box {
+  background-color: white;
+  border: 1px solid #AAA;
+  border-radius: 0.25rem;
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+.btech-course-evaluator-content-box h2 {
+  font-weight: bold; 
+  font-size: 1.5rem;
+}

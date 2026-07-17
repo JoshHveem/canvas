@@ -1,0 +1,158 @@
+:root {
+  --btech-countdown-font: #B30B0F;
+  --btech-countdown-back: #fff;
+}
+
+#btech-countdown {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#btech-countdown .bloc-time {
+  margin: 0 0.5rem;
+  min-width: 5rem;
+  text-align: center;
+  display: inline-block;
+}
+
+#btech-countdown .bloc-time:last-child {
+  margin-right: 0;
+}
+
+#btech-countdown .count-title {
+  display: block;
+  margin-bottom: 1rem;
+  font: normal 1rem 'Lato';
+  color: #1a1a1a;
+  text-transform: uppercase;
+}
+
+#btech-countdown .figure {
+  position: relative;
+  display: inline-block;
+  height: 2rem;
+  width: 1.5rem;
+  background-color: var(--btech-countdown-back);
+  border-radius: 0.5rem;
+  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .2), inset 2px 4px 0 0 rgba(255, 255, 255, .08);
+}
+
+#btech-countdown .figure:last-child {
+  margin-right: 0;
+}
+
+#btech-countdown .figure > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: auto;
+  font: normal 1.75rem 'Lato';
+  font-weight: 700;
+  color: var(--btech-countdown-font);
+}
+
+#btech-countdown .figure .top:after,
+#btech-countdown .figure .bottom-back:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, .1);
+}
+
+#btech-countdown .figure .top {
+  z-index: 3;
+  background-color: var(--btech-countdown-back);
+  transform-origin: 50% 100%;
+  -webkit-transform-origin: 50% 100%;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transform: perspective(200px);
+}
+
+#btech-countdown .figure .bottom {
+  z-index: 1;
+}
+
+#btech-countdown .figure .bottom:before {
+  content: "";
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background-color: rgba(0, 0, 0, .02);
+}
+
+#btech-countdown .figure .bottom-back {
+  z-index: 2;
+  top: 0;
+  height: 50%;
+  overflow: hidden;    
+  background-color: var(--btech-countdown-back);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+#btech-countdown .figure .bottom-back span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
+#btech-countdown .figure .top,
+#btech-countdown .figure .top-back {
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+#btech-countdown .figure .top-back {
+  z-index: 4;
+  bottom: 0;
+  background-color: var(--btech-countdown-back);
+  -webkit-transform-origin: 50% 0;
+  transform-origin: 50% 0;
+  transform: perspective(200px) rotateX(180deg);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+#btech-countdown .figure .top-back span {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
+#btech-student-progress-bar {
+  text-align: center;
+}
+
+#btech-student-progress-bar .background {
+  color: #000;
+  max-width: 500px;
+  width: 100%;
+  height: 1rem;
+  display: inline-block;
+  position: relative;
+}
+
+#btech-student-progress-bar .fill {
+  color: #fff;
+  max-width: 500px;
+  min-width: 2rem;
+  position: absolute;
+  user-select: none;
+  cursor: help;
+  text-align: left;
+  padding-left: 1rem;
+}

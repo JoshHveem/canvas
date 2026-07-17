@@ -1,0 +1,207 @@
+{
+  "reportTypes": [
+    {
+      "value": "programs",
+      "label": "Programs",
+      "title": "Programs",
+      "component": "reporting-v3-programs",
+      "description": "Programs report group shell.",
+      "filters": ["programs"],
+      "subMenus": [
+        {
+          "value": "cpl",
+          "label": "CPL",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--cpl--initial",
+              "source": "programs__campuses",
+              "include": "cpl"
+            }
+          ]
+        },
+        {
+          "value": "canvas-course-readiness",
+          "label": "Course Readiness",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--canvas-course-readiness--initial",
+              "source": "programs",
+              "include": "canvas_course_readiness"
+            }
+          ]
+        },
+        {
+          "value": "evaluations",
+          "label": "Evaluations",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "course-evaluations",
+              "label": "Course Evaluations",
+              "component": "reports-v3-programs--evaluations--course-evaluations",
+              "source": "programs",
+              "include": "course_evaluations_summary"
+            },
+            {
+              "value": "course-recommendations",
+              "label": "Course Recommendations",
+              "component": "reports-v3-programs--evaluations--course-recommendations",
+              "source": "programs",
+              "include": "course_evaluations_summary"
+            },
+            {
+              "value": "course-recommendation-tags",
+              "label": "Course Recommendation Tags",
+              "component": "reports-v3-programs--evaluations--course-recommendation-tags",
+              "source": "programs__course_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
+              "value": "course-recommendation-responses",
+              "label": "Course Recommendation Responses",
+              "component": "reports-v3-programs--evaluations--course-recommendation-responses",
+              "source": "programs__course_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
+              "value": "instructor-evaluations",
+              "label": "Instructor Evaluations",
+              "component": "reports-v3-programs--evaluations--instructor-evaluations",
+              "source": "programs",
+              "include": "instructor_evaluations_summary"
+            },
+            {
+              "value": "instructor-recommendations",
+              "label": "Instructor Recommendations",
+              "component": "reports-v3-programs--evaluations--instructor-recommendations",
+              "source": "programs",
+              "include": "instructor_evaluations_summary"
+            },
+            {
+              "value": "instructor-recommendation-tags",
+              "label": "Instructor Recommendation Tags",
+              "component": "reports-v3-programs--evaluations--instructor-recommendation-tags",
+              "source": "programs__instructor_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            },
+            {
+              "value": "instructor-recommendation-responses",
+              "label": "Instructor Recommendation Responses",
+              "component": "reports-v3-programs--evaluations--instructor-recommendation-responses",
+              "source": "programs__instructor_eval_rec_tags",
+              "include": "ai_summary",
+              "filters": ["programs"],
+              "required_filters": ["programs"]
+            }
+          ]
+        },
+        {
+          "value": "completions",
+          "label": "Completions",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--completions--initial",
+              "source": "programs__campuses",
+              "include": "completions_projected"
+            }
+          ]
+        },
+        {
+          "value": "graduates",
+          "label": "Graduates",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--graduates--initial",
+              "source": "programs__campuses",
+              "include": "graduates_projected"
+            }
+          ]
+        },
+        {
+          "value": "placements",
+          "label": "Placements",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--placements--initial",
+              "source": "programs__campuses",
+              "include": "placements"
+            }
+          ]
+        },
+        {
+          "value": "syllabi",
+          "label": "Syllabi",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--syllabi--initial",
+              "source": "programs",
+              "include": "syllabi"
+            }
+          ]
+        },
+        {
+          "value": "employment-skills",
+          "label": "Employment Skills",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-programs--employment-skills--initial",
+              "source": "programs__campuses",
+              "include": "employment_skills_summary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "avps",
+      "label": "AVP",
+      "title": "AVP",
+      "source": "avps",
+      "component": "reporting-v3-avps",
+      "description": "AVP report group shell.",
+      "filters": ["avps"],
+      "subMenus": [
+        {
+          "value": "canvas-course-readiness",
+          "label": "Course Readiness",
+          "filter_by_year": true,
+          "views": [
+            {
+              "value": "initial",
+              "label": "Initial View",
+              "component": "reports-v3-avps--canvas-course-readiness--initial",
+              "include": "canvas_course_readiness"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

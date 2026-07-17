@@ -1,4 +1,5 @@
 (function () {
+  if (IS_BLUEPRINT) return;
   function dupStyle(to, from) {
     to.attr('style', from.attr('style'));
     to.attr('border', from.attr('border'));

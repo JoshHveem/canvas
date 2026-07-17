@@ -1,5 +1,5 @@
 (function () {
-  //Make it so the suggested score is out of the poitns available for the assignment, not the rubric
+  //Make it so the suggested score is out of the points available for the assignment, not the rubric
   IMPORTED_FEATURE = {};
   let rWindowSpeedGrader = /^\/courses\/[0-9]+\/gradebook\/speed_grader/;
   if (rWindowSpeedGrader.test(window.location.pathname)) {

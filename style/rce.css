@@ -1,0 +1,65 @@
+/*
+  This is NOT to be imported to custom_canvas.css.
+  It is instead imported directly into the rce
+*/
+html {
+  background-color: #F1F1F1;
+}
+body {
+  margin: auto;
+  background-color: #FFFFFF;
+}
+
+h2 {font-size: 1.5rem;}
+h3 {font-size: 1.2rem;}
+h4 {font-size: 1rem;}
+h2, h3, h4 {
+  clear: both;
+  font-weight: bold;
+}
+.btech-citation {
+  font-size: .66rem;
+}
+.btech-graphic-image {
+  filter: blur(4px);
+}
+
+img[style*="float: left"] {
+  margin: 5px 15px 0px 0px;
+}
+
+img[style*="float: right"] {
+  margin: 5px 0px 0px 15px;
+}
+
+/*the basic header*/
+h2.icon-header {
+  position: relative;
+  text-align: center;
+}
+
+h2.icon-header::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  border-top: 1px solid #888;
+  width: 100%;
+  transform: translateY(-50%);
+}
+h2.icon-header span {
+  position: relative; 
+  background-color: #ffffff;
+  color: #000000;
+  padding: 10px 10px;
+  border-radius: 40px;
+  border: 1px solid #888;
+  font-size: 1.5rem;
+
+}
+h2.icon-header span i {
+  vertical-align: middle;
+}
+h2.icon-header span i::before {
+  font-size: 1.5rem;
+}

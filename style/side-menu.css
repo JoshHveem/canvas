@@ -1,0 +1,38 @@
+.ou-menu-wrapper {
+  padding: 24px 24px 24px 0px;
+}
+.ou-menu-wrapper-in-right-side {
+  padding: 0px; /*get rid of passing if showing in right-side-wrapper*/
+}
+
+.ou-menu-item-wrapper {
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 3px;
+}
+
+.ou-menu-module-title {
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toggle-content {
+  display: none;
+}
+
+.toggle-content.is-visible {
+  display: block;
+}
+
+div.ou-menu-item-active{
+  background-color: var(--ic-brand-primary);
+  border-radius: 3px;
+  /*padding-left: 3px;*/
+}
+
+div.ou-menu-item-active a{
+  font-weight: bold;
+  color: #fff;
+}

@@ -82,7 +82,7 @@
       let app = this;
       let topics = [];
 
-      await $.get("https://jhveem.xyz/api/topics", function (data) {
+      await $.get("https://bridgetools.dev/api/topics", function (data) {
         for (let i = 0; i < data.length; i++) {
           let topic = data[i];
           topic.type = 'topic';
@@ -93,7 +93,7 @@
       app.topics = topics;
       let departments = {};
       let savedData = {};
-      await $.get("https://jhveem.xyz/api/departments", function (data) {
+      await $.get("https://bridgetools.dev/api/departments", function (data) {
         for (let i = 0; i < data.length; i++) {
           let department = data[i];
           savedData[department.departmentId] = department;
@@ -138,7 +138,7 @@
     methods: {
       async createDepartmentElement(department) {
         let departmentId = department.data.id;
-        $.post("https://jhveem.xyz/api/departments", {
+        $.post("https://bridgetools.dev/api/departments", {
           departmentId: departmentId,
           elX: department.elX,
           elY: department.elY
@@ -146,7 +146,7 @@
       },
       async saveDepartmentElement(department) {
         let departmentId = department.data.id;
-        $.put("https://jhveem.xyz/api/departments/" + departmentId, {
+        $.put("https://bridgetools.dev/api/departments/" + departmentId, {
           departmentId: departmentId,
           elX: department.elX,
           elY: department.elY
@@ -154,7 +154,7 @@
       },
       async saveTopicElement(topic) {
         let topicId = topic._id;
-        $.put("https://jhveem.xyz/api/topics/" + topicId, {
+        $.put("https://bridgetools.dev/api/topics/" + topicId, {
           title: topic.title,
           elX: topic.elX,
           elY: topic.elY
@@ -174,11 +174,6 @@
 
             app.xOffset = e.pageX - $(el).offset().left;
             app.yOffset = e.pageY - $(el).offset().top;
-            console.log($(el).offset());
-            console.log(app.xOffset);
-            console.log(app.yOffset);
-            console.log(e.pageX);
-            console.log(e.pageY);
             if (this.currentEl == null) {
               this.currentEl = el;
               this.currentData = data;

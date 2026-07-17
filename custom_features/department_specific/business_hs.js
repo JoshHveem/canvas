@@ -1,50 +1,51 @@
-//https://btech.beta.instructure.com/courses/470598
 (async function () {
   IMPORTED_FEATURE = {};
   //IF the editor, add the ability to add services
-  if (TOOLBAR.checkEditorPage()) {
-    await TOOLBAR.checkReady();
+  // if (TOOLBAR.checkEditorPage()) {
+  //   await TOOLBAR.checkReady();
 
-    function checkButtonColor(btn) {
-      let body = tinyMCE.activeEditor.getBody();
-      let services = $(body).find("#btech-hs-courses");
-      if (services.length === 0) {
-        btn.find('i').css({
-          'color': "#000000"
-        });
-      } else {
-        btn.find('i').css({
-          'color': "#d22212"
-        });
-      }
-    }
-    let btn = await TOOLBAR.addButtonIcon("far fa-abacus", "Convert this assignment to a Course Grading assignment", async function () {
-      let body = tinyMCE.activeEditor.getBody();
-      let div = $(body).find("#btech-hs-courses");
-      if (div.length === 0) {
-        $(body).prepend(`
-          <div id='btech-hs-courses' class='btech-hidden' style='border: 1px solid #000;'>DO NOT DELETE. THIS SETS THIS ASSIGNMENT AS AN ASSIGNMENT TO KEEP TRACK OF COURSES COMPLETED IN A TERM.</div><p> </p>
-        `);
-      } else {
-        div.remove();
-      }
-    });
-    checkButtonColor(btn);
-    btn.click(function () {
-      checkButtonColor(btn);
-    });
-  }
+  //   function checkButtonColor(btn) {
+  //     let body = tinyMCE.activeEditor.getBody();
+  //     let services = $(body).find("#btech-hs-courses");
+  //     if (services.length === 0) {
+  //       btn.find('i').css({
+  //         'color': "#000000"
+  //       });
+  //     } else {
+  //       btn.find('i').css({
+  //         'color': "#d22212"
+  //       });
+  //     }
+  //   }
+  //   let btn = await TOOLBAR.addButtonIcon("far fa-abacus", "Convert this assignment to a Course Grading assignment", async function () {
+  //     let body = tinyMCE.activeEditor.getBody();
+  //     let div = $(body).find("#btech-hs-courses");
+  //     if (div.length === 0) {
+  //       $(body).prepend(`
+  //         <div id='btech-hs-courses' class='btech-hidden' style='border: 1px solid #000;'>DO NOT DELETE. THIS SETS THIS ASSIGNMENT AS AN ASSIGNMENT TO KEEP TRACK OF COURSES COMPLETED IN A TERM.</div><p> </p>
+  //       `);
+  //     } else {
+  //       div.remove();
+  //     }
+  //   });
+  //   checkButtonColor(btn);
+  //   btn.click(function () {
+  //     checkButtonColor(btn);
+  //   });
+  // }
 
   let rPieces = /^\/courses\/([0-9]+)\/assignments\/([0-9]+)\/submissions\/([0-9]+)/;
+  let rPiecesInitial = /^\/courses\/([0-9]+)\/assignments\/([0-9]+)\/submissions\/([0-9]+)/;
   let IS_SPEED_GRADER = false;
   if (window.location.pathname.includes("speed_grader")) {
     rPieces = /^\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)&student_id=([0-9]+)/
+    rPiecesInitial = /^\/courses\/([0-9]+)\/gradebook\/speed_grader\?assignment_id=([0-9]+)/
     IS_SPEED_GRADER = true;
   }
 
   //GRADING VIEW
   //This one has to come first so it doesn't have the submission view run on the grading page
-  if (rPieces.test(window.location.pathname + window.location.search)) {
+  if (rPiecesInitial.test(window.location.pathname + window.location.search)) {
     if (ENV.current_user_roles.includes("teacher")) {
       IMPORTED_FEATURE = {
         initiated: false,
@@ -60,23 +61,22 @@
           let feature = this;
           if (IS_SPEED_GRADER) {
             feature.oldHref = document.location.href,
-              window.onload = function () {
-                var
-                  bodyList = document.querySelector("#right_side"),
-                  observer = new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                      if (feature.oldHref !== document.location.href) {
-                        feature.oldHref = document.location.href;
-                        feature.createApp();
-                      }
-                    });
-                  });
-                var config = {
-                  childList: true,
-                  subtree: true
-                };
-                observer.observe(bodyList, config);
-              };
+            await getElement("#right_side");
+            var
+              bodyList = document.querySelector("#right_side"),
+              observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                  if (feature.oldHref !== document.location.href) {
+                    feature.oldHref = document.location.href;
+                    feature.createApp();
+                  }
+                });
+              });
+            var config = {
+              childList: true,
+              subtree: true
+            };
+            observer.observe(bodyList, config);
           }
           feature.createApp();
         },
@@ -95,7 +95,7 @@
                   <div v-if="menu == 'courses'">
                     <div v-if="loading==true">Loading Content...</div>
                     <div v-else>
-                      <h3>Select a course, enter the grade, and submit to add the course the the list of courses to be averaged for this term.</h3>
+                      <h3>Select a course, enter the grade, and submit to add the course to the list of courses to be averaged for this term.</h3>
                       <select v-model="selectedCourse" @change="onCourseSelect()">
                         <option value="" disabled>-Select Course-</option>
                         <option v-for="course in courses" :value="course.course_id">{{course.name}} ({{course.term}})</option>
@@ -119,9 +119,8 @@
                 </div>
               </div>
             </div>`;
-          let pieces = (window.location.pathname + window.location.search).match(rPieces);
+          let pieces = (window.location.pathname + window.location.search).match(rPiecesInitial);
           let courseId = parseInt(pieces[1]);
-          let studentId = parseInt(pieces[3]);
           let assignmentId = parseInt(pieces[2]);
           let description = '';
           await $.get("/api/v1/courses/" + courseId + "/assignments/" + assignmentId, function (data) {
@@ -131,12 +130,11 @@
             if (rPieces.test(window.location.pathname + window.location.search)) {
               let container;
               if (IS_SPEED_GRADER) {
-                container = $("#submissions_container");
+                container = await getElement("#submissions_container");
               } else {
-                container = $("div.submission-details-frame");
+                container = await getElement("div.submission-details-frame");
               }
               container.prepend(vueString);
-              await getElement("#app-hs-courses");
               new Vue({
                 el: '#app-hs-courses',
                 data: function () {
@@ -166,37 +164,39 @@
                 mounted: async function () {
                   let app = this;
                   let pieces = (window.location.pathname + window.location.search).match(rPieces);
-                  this.courseId = parseInt(pieces[1]);
-                  this.studentId = parseInt(pieces[3]);
-                  this.assignmentId = parseInt(pieces[2]);
-                  let url = window.location.origin + "/users/" + this.studentId;
+                  app.courseId = parseInt(pieces[1]);
+                  app.studentId = parseInt(pieces[3]);
+                  app.assignmentId = parseInt(pieces[2]);
+                  let url = window.location.origin + "/users/" + app.studentId;
                   let list = [];
-                  await $.get(url).done(function (data) {
-                    $(data).find("#content .courses a").each(function () {
-                      let name = $(this).find('span.name').text().trim();
-                      let term = $($(this).find('span.subtitle')[0]).text().trim();
-                      let href = $(this).attr('href');
-                      let match = href.match(/courses\/([0-9]+)\/users/);
-                      if (match) {
-                        let text = $(this).text().trim();
-                        let course_id = match[1];
-                        let state = text.match(/([A-Z|a-z]+),[\s]+?Enrolled as a Student/)[1];
-                        list.push({
-                          name: name,
-                          term: term,
-                          course_id: course_id,
-                          state: state
-                        });
-                      }
-                    });
-                  }).fail(function (e) {
-                    console.log(e);
-                    app.accessDenied = true;
-                  });
+                  let termsData = await canvasGet("/api/v1/accounts/3/terms")
+                  let termsList = termsData[0].enrollment_terms;
+                  let terms = {};
+
+                  for (let t in termsList) {
+                    let term = termsList[t];
+                    terms[term.id] = term;
+                  }
+                  let enrollmentData = await bridgetools.req3('reports', { canvas_user_id: app.studentId}, {dataset: 'canvas_enrollments'});
+                  for (let e in enrollmentData) {
+                    let enrollment = enrollmentData[e];
+                    try {
+                      let course = (await canvasGet("/api/v1/courses/" + enrollment.canvas_course_id))[0];
+                      list.push({
+                        name: course.name,
+                        grade: enrollment?.current_score,
+                        term: terms[course.enrollment_term_id].name,
+                        course_id: course.id
+                      });
+                    } catch {
+                      console.error("ERROR PULLING COURSE " + enrollment.course_id);
+                    }
+                  }
                   app.courses = list;
                   this.comments = await this.getComments();
                   this.processComments(this.comments);
                   this.loading = false;
+                  $("#app-hs-courses").css('display', 'block');
                 },
                 computed: {},
                 methods: {
@@ -221,9 +221,10 @@
                     let courseCount = this.courseGrades.length;
                     for (let c = 0; c < courseCount; c++) {
                       let courseData = this.courseGrades[c];
-                      coursePointsTotal += parseInt(courseData['grade']);
+                      coursePointsTotal += parseFloat(courseData['grade']);
                     }
-                    return (coursePointsTotal / courseCount).toFixed(1);
+                    let average = (Math.round((coursePointsTotal / courseCount) * 10) / 10).toFixed(1);
+                    return average;
                   },
                   minToHoursString: function (minutes) {
                     let hours = Math.floor(minutes / 60);
@@ -257,13 +258,14 @@
                     return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
                   },
                   async submitCourseGrade() {
-                    let course = this.selectedCourse;
+                    let course = '' + this.selectedCourse;
                     let grade = this.selectedGrade;
                     let found = false
                     if (course != "" && grade != "") {
                       for (let c = 0; c < this.courseGrades.length; c++) {
-                        if (this.courseGrades[c].course === course) {
+                        if (('' + this.courseGrades[c].course) === course) {
                           this.courseGrades[c].grade = grade;
+                          found = true;
                           await $.delete(window.location.origin + "/submission_comments/" + this.courseGrades[c].comment_id);
                         }
                       }

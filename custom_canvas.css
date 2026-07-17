@@ -1,16 +1,23 @@
-@import 'https://jhveem.xyz/canvas/style/ArrowTabs.css';
-@import 'https://jhveem.xyz/canvas/style/sections.css';
-@import 'https://jhveem.xyz/canvas/style/style.css';
-@import 'https://jhveem.xyz/canvas/style/flags.css';
-@import 'https://jhveem.xyz/canvas/style/reports.css';
-@import 'https://jhveem.xyz/canvas/style/department-report.css';
-@import 'https://jhveem.xyz/canvas/style/glossary.css';
-@import 'https://jhveem.xyz/canvas/style/custom-fonts.css';
-@import 'https://jhveem.xyz/canvas/style/graphic-content.css';
-@import 'https://bridgerland-web-dev.github.io/html_practice/html_practice.css';
+@import 'https://bridgetools.dev/canvas/style/ArrowTabs.css';
+@import 'https://bridgetools.dev/canvas/style/cleoDucktra.css';
+@import 'https://bridgetools.dev/canvas/style/webm-classes.css';
+@import 'https://bridgetools.dev/canvas/style/tree-branches.css';
+@import 'https://bridgetools.dev/canvas/style/sections.css';
+@import 'https://bridgetools.dev/canvas/style/style.css';
+@import 'https://bridgetools.dev/canvas/style/countdown.css';
+@import 'https://bridgetools.dev/canvas/style/flags.css';
+@import 'https://bridgetools.dev/canvas/style/carousel.css';
+@import 'https://bridgetools.dev/canvas/style/reports.css';
+@import 'https://bridgetools.dev/canvas/style/department-report.css';
+@import 'https://bridgetools.dev/canvas/style/glossary.css';
+@import 'https://bridgetools.dev/canvas/style/custom-fonts.css';
+@import 'https://bridgetools.dev/canvas/style/graphic-content.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.6/select2-bootstrap.css';
-/*@import 'https://kit.fontawesome.com/870f83fdd7.js';/*Not sure why this was included since it's a js file*/
+@import 'https://bridgetools.dev/canvas/style/icons.css';
+@import 'https://bridgetools.dev/canvas/style/btech-brexit.css';
+@import 'https://bridgetools.dev/canvas/style/course-evaluator.css';
+@import 'https://bridgetools.dev/canvas/style/sidebar-comments.css';
 /*INCLUDE CSS FOR CANVAS COMMENTS*/
 
 :root {
@@ -18,8 +25,8 @@
   --btech-theme-header-color: #fff;
   --btech-theme-header-hover-background-color: #912;
   --btech-theme-header-hover-color: #fff;
+  --btech-max-width: 900px;
 }
-
 
 
 /*used for question bank organizer*/
@@ -44,6 +51,7 @@ ul.btech-question-banks-sorter li.btech-bank-course:hover {
 ul.btech-question-banks-sorter li.btech-bank-course.selected {
   background-color: #ccc;
 }
+
 
 /* end question bank organizer */
 
@@ -90,6 +98,21 @@ ul.btech-question-banks-sorter li.btech-bank-course.selected {
 }
 /* end of changes to course menu */
 
+#questions {
+  max-width: 1050px;
+  margin: auto;
+}
+
+/*update in tinymce_font_size*/
+#content .user_content {
+  max-width: var(--btech-max-width);
+  margin: auto;
+}
+
+.ic-DashboardCard__header_image .ic-DashboardCard__header_hero {
+  background:none !important;
+}
+
 /* collapsible divs */
 .btech-toggler {
   background: #f8f8f8;
@@ -123,17 +146,6 @@ ul.btech-question-banks-sorter li.btech-bank-course.selected {
   padding: 3px;
 }
 
-.btech-example-table {
-  box-shadow: 3px 6px 6px #888;
-}
-
-.btech-example-table td {
-  padding: 2px;
-}
-
-.btech-example-table td p {
-  margin: 4px 0px 4px 0px;
-}
 
 .btech-hover-show {
   background-color: #000;
@@ -192,10 +204,20 @@ ul.btech-question-banks-sorter li.btech-bank-course.selected {
 #btech-custom-editor-buttons-container {
   display: flex;
   flex-wrap: wrap;
+  background-color: #FFFFFF;
 }
+
+.canvas-rce__skins--root { background-color: #ffffff; }
 
 #btech-services {
   display: none;
 }
 
 /* end collapsible divs */
+
+
+#course_home_content .header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 999999;
+}

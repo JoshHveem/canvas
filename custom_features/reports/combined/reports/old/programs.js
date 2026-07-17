@@ -1,0 +1,78 @@
+// programs.js
+Vue.component('reports-programs', {
+  template: `
+    <div>
+      <reports-programs-completion
+        v-if="subMenu == 'completion'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-completion>
+
+      <reports-programs-graduates
+        v-if="subMenu == 'graduates'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-graduates>
+
+      <reports-programs-placements
+        v-if="subMenu == 'placements'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-placements>
+
+      <reports-programs-syllabi
+        v-if="subMenu == 'syllabi'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-syllabi>
+
+      <reports-programs-employment-skills
+        v-if="subMenu == 'employment-skills'"
+        :year="year"
+        :programs="programsClean"
+        @drill-report="$emit('drill-report', $event)"
+      ></reports-programs-employment-skills>
+ 
+    </div>
+  `,
+
+  props: {
+    year: { type: [Number, String], required: true },
+    subMenu: { type: [Number, String], required: true },
+    programsRaw: { type: Array, default: () => [] }
+  },
+
+  data() {
+    return {
+      programsClean: [],
+      allSurveyTags: []
+    };
+  },
+
+  computed: {
+    yearNum() { return Number(this.year) || new Date().getFullYear(); }
+  },
+
+  watch: {
+    year: 'rebuildPrograms',
+    programsRaw: 'rebuildPrograms'
+  },
+
+  mounted() {
+    this.rebuildPrograms();
+  },
+
+  methods: {
+    rebuildPrograms() {
+      const list = Array.isArray(this.programsRaw) ? this.programsRaw : [];
+      const year = this.yearNum;
+
+      const programs = list.filter(p => Number(p?.academic_year) === Number(year));
+      this.programsClean = programs;
+    }
+  }
+});

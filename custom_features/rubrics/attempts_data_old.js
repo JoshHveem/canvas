@@ -1,4 +1,3 @@
-console.log("ATTEMPTS");
 (function () {
   IMPORTED_FEATURE = {};
   let rWindowSpeedGrader = /^\/courses\/[0-9]+\/gradebook\/speed_grader/;
@@ -18,13 +17,11 @@ console.log("ATTEMPTS");
         }
         feature.insertAttemptsData();
         $(".save_rubric_button").on("click", function () {
-          console.log("save data");
           feature.calcAttemptsData();
           feature.attempts += 1;
         });
       },
       async insertAttemptsData() {
-        console.log("Add Div");
         let feature = this;
         let details;
         if (rWindowSpeedGrader.test(window.location.pathname)) {
@@ -55,7 +52,6 @@ console.log("ATTEMPTS");
         });
         if (feature.attempts > 0) {
           let rubricTotalText = $("[data-selenium='rubric_total']").text();
-          console.log(rubricTotalText);
           let match = rubricTotalText.match(/([0-9]+)/g);
           rubricTotal = parseInt(match[0]);
           rubricMax = ENV.rubric.points_possible;

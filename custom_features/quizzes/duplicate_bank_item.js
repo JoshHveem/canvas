@@ -5,7 +5,12 @@
   let bankId = matches[2];
   $("#questions .question_holder").each(function () {
     let question = $(this).find(".question");
-    let questionId = (question.attr("id")).replace("question_", "");
+    let questionId = (question.attr("id")).match('\d+');
+    if (questionId) {
+      questionId = questionId[0];
+    } else {
+      return;
+    }
     let dupButton = $('<a href="#" class="no-hover" title="Duplicate this Question"><i class="icon-plus standalone-icon"><span class="screenreader-only">Duplicate this Question</span></i></a>');
     dupButton.click(function () {
       duplicateQuestion(questionId);

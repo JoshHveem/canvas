@@ -59,7 +59,7 @@
   }
 
   async function googleSheetsTable() {
-    let editor = TOOLBAR.editor;
+    let editor = tinymce.activeEditor;
     let selection = editor.selection;
     let bg = TOOLBAR.addBackground();
     bg.append(`
@@ -102,8 +102,7 @@
   }
 
   async function tableFromPage() {
-    let editor = TOOLBAR.editor;
-    let selection = editor.selection;
+    let editor = tinymce.activeEditor;
     let bg = TOOLBAR.addBackground();
     bg.append(`
       <div id='table-from-page-id-container' style='
@@ -146,19 +145,18 @@
 
   await TOOLBAR.checkReady();
   //TOOLBAR.addButtonIcon("far fa-file-spreadsheet", "Insert a table which will be linked to a google sheet. You will need the google sheet id.", googleSheetsTable);
-  TOOLBAR.addButtonIcon("icon-ms-excel", "Insert a table which will be linked to a source table on a Canvas page. You will need the page id as it appears in the page URL.", tableFromPage);
-  let select = TOOLBAR.addSelect("tables", "Convert tables to other display options.");
+  // TOOLBAR.addButtonIcon("icon-ms-excel", "Insert a table which will be linked to a source table on a Canvas page. You will need the page id as it appears in the page URL.", tableFromPage);
+  let select = await TOOLBAR.addSelect("tables", "Convert tables to other display options.");
   for (let i = 0; i < tableOptions.length; i++) {
     let className = tableOptions[i];
     let optionName = className.replace("btech-", "").replace("-table", "");
     let option = await TOOLBAR.addSelectOption(optionName, 'tables', '', function () {
-      console.log("TEST");
       addClassToTable(className);
       resetTableButtons();
     }, 'btech-table-edit-option');
-    console.log(optionName);
     option.attr('id', className + '-option');
   }
+  $("#" + $(select).attr("id")).select2();
 
   //whenever you click in the editor, see if it's selected a table with one of the classes
   tinymce.activeEditor.on("click", function () {

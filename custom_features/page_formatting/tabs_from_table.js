@@ -11,7 +11,7 @@
     let optionHeader = "";
     let valueHeader = "";
     let caption = originalTable.find("caption").html();
-    if (caption !== null) {
+    if (caption !== null && caption !== undefined) {
       newTable.prepend("<div style='width: 100%; text-align: center;'>" + caption + "</div><br>");
     }
     let checkFirst = false;
@@ -19,7 +19,7 @@
       let row = $(this);
       let cells = row.find("td");
       if (cells.length > 0) {
-        let tab = $(cells[0]).text();
+        let tab = $(cells[0]).html();
         let li = $("<li>" + tab + "</li>");
         data[tab] = $(cells[1]).html();
         if (checkFirst === false) {

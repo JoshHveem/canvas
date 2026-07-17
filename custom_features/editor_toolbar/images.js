@@ -10,7 +10,6 @@
     let bgColor = getComputedStyle(document.documentElement, null).getPropertyValue("--ic-brand-button--secondary-bgd-darkened-5");
     let node = tinyMCE.activeEditor.selection.getNode();
     let parent = tinyMCE.activeEditor.dom.getParent(node, "img");
-    console.log(parent);
     for (let c = 0; c < imgOptions.length; c++) {
       let className = imgOptions[c];
       let optionClassName = className + '-option';
@@ -54,7 +53,7 @@
   function setImageAlign() {
     addClassToImage('btech-img-align');
   }
-  TOOLBAR.addButtonIcon("icon-image", "Blur image with graphic content.", function() {blurGraphicImage();resetImgButtons();}, 'btech-img-option btech-graphic-image-option');
+  TOOLBAR.addButtonIcon("icon-image icon-Solid", "Blur", "Blur image with graphic content.", function() {blurGraphicImage();resetImgButtons();}, 'btech-img-option btech-graphic-image-option');
   // TOOLBAR.addButtonIcon("far fa-arrows-alt-h", "Set image to appear on same row as images adjacent to it.", function() {setImageAlign();resetImgButtons();}, 'btech-img-option btech-img-align-option');
   tinymce.activeEditor.on("click", function () {
     resetImgButtons();

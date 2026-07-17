@@ -111,19 +111,6 @@ if (/^\/courses\/[0-9]+\/gradebook\/speed_grader/.test(window.location.pathname)
       let user = ENV.RUBRIC_ASSESSMENT.assessment_user_id;
       let assignment = ENV.assignment_id;
       genRubricComment(course, assignment, user, "div#rubric_full", "div#rubric_full", 2);
-      /*
-      let comment = "-RUBRIC-%0A";
-      let rows = $("div#rubric_full").find("tr");
-      comment += ($(rows[rows.length - 2]).text().trim() + "%0A%0A");
-      $("div#rubric_full").find("tr.rubric-criterion").each(function(index) {
-        let description = $(this).find("th.description-header").find("div.description").text();
-        let points_val = $(this).find("td.criterion_points").find("div.graded-points").find("input").val();
-        let points = $(this).find("td.criterion_points").find("div.graded-points").text();
-        description = description.replace("This criterion is linked to a Learning Outcome", "");
-        comment += (description + "%0A" + points_val + points.replace("Points", "") + "%0A%0A");
-      });
-      $.put("https://btech.beta.instructure.com/api/v1/courses/"+ENV.course_id+"/assignments/"+ENV.assignment_id+"/submissions/"+ENV.RUBRIC_ASSESSMENT.assessment_user_id+"?comment[text_comment]="+comment,{} );
-      */
     });
   }
 }

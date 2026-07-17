@@ -1,3 +1,4 @@
+/*
 tableOptions = [
   'btech-tabs-table',
   'btech-dropdown-table'
@@ -46,7 +47,7 @@ async function exampleBox() {
 </table>`);
 }
 
-function addBackground() {
+function addBackground(close) {
   let bg = $(`
   <div style="
       overflow: auto; 
@@ -75,7 +76,7 @@ function addBackground() {
     </div>
   </div>`);
   $("body").append(bg);
-  addBackgroundClosing(bg);
+  if (close) addBackgroundClosing(bg);
   return bg;
 }
 //This needs to be called after all children are added to the backround otherwise it'll close on click anywhere.
@@ -103,7 +104,11 @@ async function citationKeypress(bg) {
           let last = authorEl.find(".last-name").val();
           let first = authorEl.find(".first-name").val();
           if (last !== "") {
-            citationString += (last + ", " + first.charAt(0) + ". ")
+            if (first !== "") {
+              citationString += (last + ", " + first.charAt(0) + ". ")
+            } else {
+              citationString += last + ". "
+            }
           }
         })
         if (date !== "") {
@@ -117,7 +122,7 @@ async function citationKeypress(bg) {
         if (url !== "") {
           citationString += ("Retrieved from "+url);
         }
-        citationString = "<p class='btech-citation'>" + citationString + "</p>";
+        citationString = "<p class='btech-citation' style='text-align: right;'>" + citationString + "</p>";
         editor.execCommand("mceReplaceContent", false, `<p>`+citationString+`</p>`);
         bg.remove();
       }
@@ -126,7 +131,10 @@ async function citationKeypress(bg) {
   });
 }
 async function citation() {
-  let bg = addBackground();
+  let bg = addBackground(false);
+  let close = $(`<span class="btech-pill-text" style="background-color: position: absolute; right: 2rem;">Close</span>`);
+  close.click(() => {bg.remove();});
+  bg.find('#background-container').append(close);
   bg.find('#background-container').append(`
     <p>Name of Image, Book, Article, Video, etc.*</p>
     <input style='width: 100%; height: 40px; box-sizing: border-box;' type="text" class="citation-information" id="citation-name">
@@ -138,8 +146,8 @@ async function citation() {
       </div>
     </div>
     <a class='btn' id="citation-add-author">Add Author</a>
-    <p>Date Published</p>
-    <input style='width: 100%; height: 40px; box-sizing: border-box;' type="date" class="citation-information" id="citation-date-accessed">
+    <p>Year Published</p>
+    <input style='width: 100%; height: 40px; box-sizing: border-box;' type="number" class="citation-information" id="citation-date-accessed">
     <p>Publisher</p>
     <input style='width: 100%; height: 40px; box-sizing: border-box;' type="text" class="citation-information" id="citation-publisher">
     <p>URL (If Applicable)</p>
@@ -160,7 +168,7 @@ async function citation() {
 async function googleSheetsTable() {
   let editor = await getEditor();
   let selection = editor.selection;
-  let bg = addBackground();
+  let bg = addBackground(true);
   bg.append(`
     <div id='google-sheet-id-container' style='
     width: 500px;
@@ -197,7 +205,6 @@ async function googleSheetsTable() {
 </tr>
 </tbody>
 </table>`);
-      //*/
       bg.remove();
     }
     event.stopPropagation();
@@ -346,12 +353,12 @@ async function _init() {
     editor.addShortcut("ctrl+alt+e", "the highlighted font will be put inside of an emphasis box.", exampleBox);
     editor.addShortcut("ctrl+alt+d", "the highlighted font will display a definition on hover.", exampleBox);
     editor.addShortcut("ctrl+alt+g", "Insert a table that is linked to a google sheet.", googleSheetsTable);
-    editor.addShortcut("ctrl+alt+q", "Insert a citation.", googleSheetsTable);
+    editor.addShortcut("ctrl+alt+q", "Insert a citation.", citation);
     topPart.after("<div id='btech-custom-editor-buttons-container'></div>");
     let customButtonsContainer = $("#btech-custom-editor-buttons-container");
-    customButtonsContainer.prepend(`<input type="color" id="btech-custom-editor-buttons-color" value="#d22232" style="width: 48px; padding: 4px; padding-right: 0px;" list="default-colors"/>
+    customButtonsContainer.prepend(`<input type="color" id="btech-custom-editor-buttons-color" value="#B30B0F" style="width: 48px; padding: 4px; padding-right: 0px;" list="default-colors"/>
     <datalist id="default-colors">
-      <option>#d22232</option>
+      <option>#B30B0F</option>
       <option>#2232d2</option>
       <option>#32A852</option>
       <option>#E2A208</option>
@@ -383,3 +390,4 @@ async function _init() {
   }
 }
 if (window.location.pathname.includes("edit")) _init();
+*/
