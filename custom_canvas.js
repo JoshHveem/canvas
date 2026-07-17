@@ -75,7 +75,7 @@ var COURSE_HOURS;
 
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
-window.BTECH_CANVAS_ASSET_VERSION = '2026-07-17-1';
+window.BTECH_CANVAS_ASSET_VERSION = '2026-06-04-1';
 window.btechAssetUrl = function(url) {
   if (!window.BTECH_CANVAS_ASSET_VERSION) return url;
   const sep = url.includes('?') ? '&' : '?';
@@ -235,9 +235,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     await $.getScript("https://reports.bridgetools.dev/department_report/graphs.js");
     feature("welcome_banner", /^\/$/);
     feature('side_menus');
-
-    // CUSTOM COURSE PAGES
-    if (IS_TEACHER) feature("page_formatting/ai_hub/ai_hub", /^\/courses\/[0-9]+\/?$/);
 
     // instructor hub
     if (/^\/courses\/611213/.test(window.location.pathname)) {
