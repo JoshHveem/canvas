@@ -111,11 +111,11 @@ Vue.component('employment-skills-report', {
           </div>
 
           <div
-            v-if="selectedRecord.employment_skills_goals"
+            v-if="selectedRecord.employment_skills_goals__current"
             :style="cardStyle()"
           >
             <div style="font-weight: 600; margin-bottom: 8px;">Feedback/Goal(s)</div>
-            <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals }}</div>
+            <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals__current }}</div>
           </div>
         </div>
       </div>
