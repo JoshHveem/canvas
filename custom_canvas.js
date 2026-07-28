@@ -236,6 +236,9 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     feature("welcome_banner", /^\/$/);
     feature('side_menus');
 
+    // CUSTOM COURSE PAGES
+    if (IS_TEACHER) feature("page_formatting/ai_hub/ai_hub", /^\/courses\/[0-9]+\/?$/);
+
     // instructor hub
     if (/^\/courses\/611213/.test(window.location.pathname)) {
       feature("instructor_hub/gradebook", [
