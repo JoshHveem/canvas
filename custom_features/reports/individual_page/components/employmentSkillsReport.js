@@ -166,11 +166,13 @@ Vue.component('employment-skills-report', {
         ...Object.keys(selfScores)
       ]));
 
-      return categories.map(name => ({
-        name,
-        instructorScore: instructorScores[name],
-        selfScore: selfScores[name]
-      }));
+      return categories
+        .map(name => ({
+          name,
+          instructorScore: instructorScores[name],
+          selfScore: selfScores[name]
+        }))
+        .sort((a, b) => this.compareSkillNames(a.name, b.name));
     },
     lastEvaluationPillStyle() {
       if (!this.selectedRecord || !this.selectedRecord.most_recent_employment_skills_created_at) {
@@ -275,6 +277,18 @@ Vue.component('employment-skills-report', {
     formatSkillName(name) {
       const code = this.skillCodeFor(name);
       return code ? code + ' - ' + name : name;
+    },
+    compareSkillNames(a, b) {
+      const aCode = this.skillCodeFor(a);
+      const bCode = this.skillCodeFor(b);
+
+      if (aCode && bCode && aCode !== bCode) {
+        return aCode.localeCompare(bCode, undefined, { numeric: true });
+      }
+      if (aCode && !bCode) return -1;
+      if (!aCode && bCode) return 1;
+
+      return String(a || '').localeCompare(String(b || ''));
     },
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
