@@ -89,7 +89,7 @@ Vue.component('employment-skills-report', {
               :style="cardStyle()"
             >
               <div style="font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 10px;">
-                {{ entry.name }}
+                {{ formatSkillName(entry.name) }}
               </div>
               <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
                 <span class="btech-ind-header__label">Instructor</span>
@@ -262,6 +262,19 @@ Vue.component('employment-skills-report', {
       const parsed = new Date(date);
       if (Number.isNaN(parsed.getTime())) return Number.POSITIVE_INFINITY;
       return (Date.now() - parsed.getTime()) / (1000 * 60 * 60 * 24);
+    },
+    normalizeSkillName(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+    },
+    skillCodeFor(name) {
+      const lookup = this.user?.employment_skill_lookup || {};
+      return lookup[this.normalizeSkillName(name)] || '';
+    },
+    formatSkillName(name) {
+      const code = this.skillCodeFor(name);
+      return code ? code + ' - ' + name : name;
     },
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
