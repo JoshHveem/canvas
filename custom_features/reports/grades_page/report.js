@@ -529,6 +529,7 @@
             }
           }`;
           let res = await $.post('/api/graphql', { query: queryString });
+          console.log(res);
           return res.data.course;
         },
 
