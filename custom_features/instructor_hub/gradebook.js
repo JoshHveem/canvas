@@ -1,8 +1,16 @@
 (async function () {
   $('#content').empty();
-  const courses = await canvasGet(
-    '/api/v1/accounts/4491/courses?include[]=course_image&include[]=banner_image&per_page=100'
-  );
+  const accountIds = [4491, 4492];
+
+  const courses = (
+    await Promise.all(
+      accountIds.map(accountId =>
+        canvasGet(
+          `/api/v1/accounts/${accountId}/courses?include[]=course_image&include[]=banner_image&per_page=100`
+        )
+      )
+    )
+  ).flat();
 
   const enrollments = await canvasGet(
     `/api/v1/users/${ENV.student_id}/enrollments?type[]=StudentEnrollment&per_page=100`
