@@ -75,7 +75,7 @@ var COURSE_HOURS;
 
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
-window.BTECH_CANVAS_ASSET_VERSION = '2026-08-07-3';
+window.BTECH_CANVAS_ASSET_VERSION = '2026-08-07-4';
 window.btechAssetUrl = function(url) {
   if (!window.BTECH_CANVAS_ASSET_VERSION) return url;
   const sep = url.includes('?') ? '&' : '?';

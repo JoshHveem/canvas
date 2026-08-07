@@ -418,11 +418,20 @@ window.AIHubStatus = {
       const text = item.textContent.trim().replace(/\s+/g, " ");
       return text === "Micro-Trainings & Resources" || text === "AI Mini-Trainings";
     });
-    const shell = heading?.parentElement?.parentElement;
+    const shell = heading?.parentElement?.parentElement
+      || Array.from(root.querySelectorAll("div")).find(item => {
+        const text = item.textContent || "";
+        return /AI Toolbox/i.test(text) && /Micro-Trainings|AI Mini-Trainings/i.test(text);
+      });
     if (!shell) return null;
 
-    return Array.from(shell.children)
-      .find(child => child !== heading.parentElement && child.querySelector("a[href]"));
+    const headingWrap = heading?.parentElement || null;
+    const directSection = Array.from(shell.children)
+      .find(child => child !== headingWrap && child.querySelector("a[href]"));
+    if (directSection) return directSection;
+
+    const cardGrid = shell.querySelector("div[style*='grid'][style*='minmax']");
+    return cardGrid?.parentElement || null;
   }
 
   function findResourcesSection(root) {
@@ -1084,7 +1093,9 @@ window.AIHubStatus = {
     try {
       updatedBody = replaceRenderedSectionInBody(page.body, normalizedData, renderedSectionName);
     } catch (error) {
-      if (renderedSectionName !== "resources" || (!isAiHubToolboxPath() && !isToolboxPageBody(page.body))) {
+      const canUseToolboxFallback = renderedSectionName === "resources"
+        && (isAiHubToolboxPath() || isToolboxPageBody(page.body) || /tool/i.test(pageUrl));
+      if (!canUseToolboxFallback) {
         throw error;
       }
 
@@ -2759,6 +2770,14 @@ window.AIHubStatus = {
         }
       } catch (error) {
         console.error(error);
+        if (action === "delete-resource") {
+          try {
+            clearForm();
+            await refreshResources();
+          } catch (refreshError) {
+            console.error(refreshError);
+          }
+        }
         setMessage("Action failed:\n" + error.message, true);
       }
     });
@@ -2791,6 +2810,11 @@ window.AIHubStatus = {
         setMessage("Resource saved to JSON and hub page.", false);
       } catch (error) {
         console.error(error);
+        try {
+          await refreshResources();
+        } catch (refreshError) {
+          console.error(refreshError);
+        }
         setMessage("Save failed:\n" + error.message, true);
       } finally {
         submitButton.disabled = false;
@@ -2805,6 +2829,7 @@ window.AIHubStatus = {
     form.elements.icon.addEventListener("blur", () => sanitizeIconInput(true));
     form.elements.icon.addEventListener("focus", () => form.elements.icon.select());
     form.elements.icon.addEventListener("click", () => form.elements.icon.select());
+    form.elements.action_type.value = "canvas_page";
     updateActionFields();
     updateTextCounts();
 
