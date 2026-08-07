@@ -47,6 +47,8 @@ window.AIHubStatus = {
   const DATA_ELEMENT_ID = "ai-hub-json-data";
   const HUB_SECTION_ATTRIBUTE = "data-ai-hub-section";
   const HUB_PAGE_BACKUP_PREFIX = "ai-hub-page-backup";
+  const EVENTS_GRID_COLUMNS = "repeat(auto-fit,minmax(190px,1fr))";
+  const EVENTS_GRID_GAP = "14px";
   const EVENT_TITLE_MAX_LENGTH = 40;
   const COURSE_TITLE_MAX_LENGTH = 40;
   const COURSE_DESCRIPTION_MAX_LENGTH = 80;
@@ -433,6 +435,23 @@ window.AIHubStatus = {
     return root.querySelector(getManagedSectionSelector("events")) || findSectionByHeading(root, "Upcoming Events");
   }
 
+  function applyEventsGridLayout(root) {
+    const section = findEventsSection(root);
+    if (!section) return false;
+
+    const grid = Array.from(section.querySelectorAll("div")).find(element => {
+      const style = element.getAttribute("style") || "";
+      return /display\s*:\s*grid/i.test(style) && /grid-template-columns/i.test(style);
+    });
+    if (!grid) return false;
+
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = EVENTS_GRID_COLUMNS;
+    grid.style.gap = EVENTS_GRID_GAP;
+    grid.style.justifyContent = "";
+    return true;
+  }
+
   function findCoursesSection(root) {
     return root.querySelector(getManagedSectionSelector("courses")) || findSectionByHeading(root, "Explore Courses");
   }
@@ -608,7 +627,7 @@ window.AIHubStatus = {
         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 28px; color: #000000;">Upcoming Events</h2>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,300px)); gap: 16px; justify-content: start;">
+        <div style="display: grid; grid-template-columns: ${EVENTS_GRID_COLUMNS}; gap: ${EVENTS_GRID_GAP};">
           ${cardsHtml}
         </div>
       </div>
@@ -3288,6 +3307,7 @@ window.AIHubStatus = {
     hideCourseTabs();
     addEditTabs(nav);
     addToggleButton(nav);
+    if (isAiHubHomePath()) applyEventsGridLayout(document);
     status.mounted = true;
     status.reason = "mounted";
     status.editCalendar = Boolean(document.getElementById("ai-hub-edit-events-link"));
