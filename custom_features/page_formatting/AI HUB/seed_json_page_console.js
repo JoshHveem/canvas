@@ -4,7 +4,7 @@
   Copy/paste this whole file into the browser console while logged into Canvas.
   It seeds this hidden Canvas page:
 
-  https://btech.instructure.com/courses/[course id]/pages/json
+  https://btech.instructure.com/courses/[course id]/pages/ai-hub-json
 
   with starter JSON data for events, courses, and resources.
 */
@@ -14,7 +14,7 @@ window.AIHubConfig = Object.assign({
 
 (async function () {
   const HUB_CONFIG = window.AIHubConfig;
-  const DATA_PAGE_URL = "json";
+  const DATA_PAGE_URL = "ai-hub-json";
   const DATA_ELEMENT_ID = "ai-hub-json-data";
 
   function getCourseId() {

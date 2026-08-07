@@ -39,7 +39,9 @@ window.AIHubStatus = {
   const HIDDEN_HEADER_ATTRIBUTE = "data-ai-hub-hidden-header";
   const POPUP_BACKDROP_ID = "ai-hub-editor-backdrop";
   const POPUP_PANEL_ID = "ai-hub-editor-panel";
-  const DATA_PAGE_URL = "json";
+  const DATA_PAGE_URL = "ai-hub-json";
+  const LEGACY_DATA_PAGE_URLS = ["json"];
+  const DATA_PAGE_TITLE = "AI Hub JSON";
   const TOOLBOX_PAGE_URL = "tool-box";
   const RESOURCE_MODULE_NAMES = ["AI Tools and Resources", "AI Tools and Resources Module"];
   const DATA_ELEMENT_ID = "ai-hub-json-data";
@@ -81,6 +83,7 @@ window.AIHubStatus = {
     live_cohort: "Live Cohort",
     self_paced: "Self-Paced"
   };
+  let activeDataPageUrl = DATA_PAGE_URL;
 
   function getCourseId() {
     const courseId = String(HUB_CONFIG.courseId || "").trim();
@@ -113,8 +116,8 @@ window.AIHubStatus = {
     return [];
   }
 
-  function getDataPageApiUrl() {
-    return "/api/v1/courses/" + getCourseId() + "/pages/" + encodeURIComponent(DATA_PAGE_URL);
+  function getDataPageApiUrl(pageUrl) {
+    return "/api/v1/courses/" + getCourseId() + "/pages/" + encodeURIComponent(pageUrl || activeDataPageUrl || DATA_PAGE_URL);
   }
 
   function getPageApiUrl(pageUrl) {
@@ -123,6 +126,15 @@ window.AIHubStatus = {
 
   function getPagesApiUrl() {
     return "/api/v1/courses/" + getCourseId() + "/pages";
+  }
+
+  function getDataPageCandidateUrls() {
+    const urls = [activeDataPageUrl, DATA_PAGE_URL].concat(LEGACY_DATA_PAGE_URLS);
+    return urls.filter((pageUrl, index) => pageUrl && urls.indexOf(pageUrl) === index);
+  }
+
+  function setActiveDataPageUrl(pageUrl) {
+    if (pageUrl) activeDataPageUrl = pageUrl;
   }
 
   function getModulesApiUrl() {
@@ -349,11 +361,11 @@ window.AIHubStatus = {
     return `<pre id="${DATA_ELEMENT_ID}">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
   }
 
-  function getDataPagePayload(data) {
+  function getDataPagePayload(data, pageUrl) {
     return {
       wiki_page: {
-        url: DATA_PAGE_URL,
-        title: "AI Hub JSON",
+        url: pageUrl || activeDataPageUrl || DATA_PAGE_URL,
+        title: DATA_PAGE_TITLE,
         editing_roles: "teachers",
         published: false,
         hide_from_students: true,
@@ -815,8 +827,8 @@ window.AIHubStatus = {
     }
   }
 
-  async function fetchDataPage() {
-    const response = await fetch(getDataPageApiUrl(), {
+  async function fetchDataPageAtUrl(pageUrl) {
+    const response = await fetch(getDataPageApiUrl(pageUrl), {
       method: "GET",
       credentials: "include",
       headers: {
@@ -824,11 +836,40 @@ window.AIHubStatus = {
       }
     });
 
-    if (!response.ok) {
-      throw new Error("Could not fetch JSON data page. Status: " + response.status);
+    if (response.ok) {
+      const page = await response.json();
+      setActiveDataPageUrl(page.url || pageUrl);
+      return page;
     }
 
-    return response.json();
+    const error = new Error("Could not fetch JSON data page /pages/" + pageUrl + ". Status: " + response.status);
+    error.status = response.status;
+    error.pageUrl = pageUrl;
+    throw error;
+  }
+
+  async function fetchDataPage() {
+    const errors = [];
+
+    for (const pageUrl of getDataPageCandidateUrls()) {
+      try {
+        return await fetchDataPageAtUrl(pageUrl);
+      } catch (error) {
+        error.pageUrl = error.pageUrl || pageUrl;
+        errors.push(error);
+        if (![403, 404].includes(error.status)) break;
+      }
+    }
+
+    const statusSummary = errors
+      .map(error => "/pages/" + error.pageUrl + " -> " + (error.status || "request failed"))
+      .join("; ");
+    const hasPermissionError = errors.some(error => error.status === 403);
+    const guidance = hasPermissionError
+      ? " Canvas denied access. Confirm the AI Hub JSON page exists at /pages/" + DATA_PAGE_URL + " and that your Canvas role can read and edit course pages."
+      : " Confirm the AI Hub JSON page exists at /pages/" + DATA_PAGE_URL + ".";
+
+    throw new Error("Could not fetch AI Hub JSON data page. Tried " + statusSummary + "." + guidance);
   }
 
   async function loadHubData() {
@@ -845,8 +886,9 @@ window.AIHubStatus = {
     const csrfToken = getCsrfToken();
     if (csrfToken) headers["x-csrf-token"] = csrfToken;
 
-    const payload = getDataPagePayload(data);
-    let response = await fetch(getDataPageApiUrl(), {
+    const pageUrl = activeDataPageUrl || DATA_PAGE_URL;
+    const payload = getDataPagePayload(data, pageUrl);
+    let response = await fetch(getDataPageApiUrl(pageUrl), {
       method: "PUT",
       credentials: "include",
       headers,
@@ -854,11 +896,12 @@ window.AIHubStatus = {
     });
 
     if (response.status === 404) {
+      setActiveDataPageUrl(DATA_PAGE_URL);
       response = await fetch(getPagesApiUrl(), {
         method: "POST",
         credentials: "include",
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(getDataPagePayload(data, DATA_PAGE_URL))
       });
     }
 
@@ -866,7 +909,9 @@ window.AIHubStatus = {
       throw new Error("Could not save JSON data page. Status: " + response.status + ". " + await response.text());
     }
 
-    return response.json();
+    const savedPage = await response.json();
+    setActiveDataPageUrl(savedPage.url || pageUrl);
+    return savedPage;
   }
 
   async function fetchCanvasPage(pageUrl) {
