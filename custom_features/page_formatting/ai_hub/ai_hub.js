@@ -1121,35 +1121,46 @@ window.AIHubStatus = {
     return `
       <div data-ai-hub-resource-page="true" style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
         <div style="padding: 0 4px 24px;">
-          <a style="display: inline-block; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 11px 18px; border-radius: 8px;" href="${escapeAttribute(backHref)}">&larr; Back to resources</a>
+          <a style="display: inline-block; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; padding: 11px 18px; border-radius: 8px;" href="${escapeAttribute(backHref)}">&larr; Back to resources</a>
         </div>
-        <div style="padding: 0 4px 30px;">
-          <div data-ai-hub-resource-meta style="display: inline-block; color: #1d4ed8; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">${escapeHtml(metaLine)}</div>
-          <h2 data-ai-hub-resource-title style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
-          <p data-ai-hub-resource-description style="margin: 18px 0 0; font-size: 17px; max-width: 720px; color: #4b5563;">${escapeHtml(description)}</p>
+        <div style="padding: 0 4px 28px;">
+          <div data-ai-hub-resource-meta style="display: inline-block; color: #1d4ed8; font-size: 12px; margin-bottom: 10px;">${escapeHtml(metaLine)}</div>
+          <h2 data-ai-hub-resource-title style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
+          <p data-ai-hub-resource-description style="margin: 18px 0 0; font-size: 17px; color: #4b5563;">${escapeHtml(description)}</p>
+          <p style="margin: 14px 0 0; font-size: 16px; color: #4b5563;">AI is already changing how people write, plan, search, summarize, create, and solve problems. For instructors, the goal is to understand what these tools are good at, where they are risky, and how they can support stronger teaching, clearer communication, better feedback, and more relevant learning experiences.</p>
         </div>
-        <div style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
-          <div style="display: flex; align-items: center; justify-content: center; min-height: 320px; aspect-ratio: 16 / 9; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 14px; color: #1d4ed8; text-align: center;">
-            <div>
-              <div style="font-size: 48px; line-height: 1; margin-bottom: 12px;" aria-hidden="true">&#9654;</div>
-              <strong style="display: block; font-size: 20px; color: #000000;">Video placeholder</strong>
-              <span style="display: block; margin-top: 6px; font-size: 14px; color: #4b5563;">Add the video embed here.</span>
+        <div style="padding: 0 4px;">
+          [insert video]
+        </div>
+        <div style="margin-top: 30px; padding: 0 4px;">
+          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
+          <p style="margin: 0; font-size: 16px; color: #4b5563;">The most powerful use of AI in education is not replacing the teacher. It is freeing the teacher to do more of the work that actually requires human judgment, care, and expertise. When AI helps with repeatable tasks like drafting, organizing, summarizing, brainstorming, or rewording, instructors can spend more time coaching students, mentoring learners, clarifying misconceptions, giving meaningful feedback, and creating the kind of classroom presence that technology cannot replace. Used well, AI can make you a more valuable teacher because it gives you more space to do the parts of teaching that are most human and most fulfilling.</p>
+        </div>
+        <div style="margin-top: 28px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #bfdbfe;">
+          <div style="background: #1d4ed8; color: #ffffff; padding: 12px 18px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 16px;">Before You Apply This</div>
+          <div style="padding: 18px 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 22px;">
+              <div>
+                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Safe</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Do not enter private, sensitive, student, or protected information into AI tools.</p>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Appropriate</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Use AI for planning, drafting, practice, and feedback support while keeping instructor expertise central.</p>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Transparent</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Be clear with learners or colleagues when AI helped shape materials, feedback, examples, or decisions.</p>
+              </div>
             </div>
           </div>
         </div>
-        <div style="margin-top: 28px; padding: 0 4px;">
-          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
-          <p style="margin: 0; font-size: 16px; color: #4b5563;">Use this space to summarize what the video demonstrated, what the viewer should try next, and any important context that makes the resource easier to apply.</p>
-        </div>
-        <div style="margin-top: 28px; background: #f8fafc; border: 1px solid #dbe3f0; border-left: 5px solid #1d4ed8; border-radius: 14px; padding: 20px 22px;">
-          <h3 style="margin: 0 0 8px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 20px; line-height: 1.2; color: #000000;">Use AI responsibly</h3>
-          <p style="margin: 0; font-size: 15px; color: #4b5563;">Stay safe, appropriate, and transparent: avoid entering private or sensitive information, verify AI output before using it, and tell learners or colleagues when AI helped shape the work.</p>
-        </div>
         <div style="margin-top: 28px; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; padding: 20px 22px;">
-          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 20px; line-height: 1.2; color: #000000;">Additional Resources</h3>
+          <div style="display: inline-block; background: #e0efff; color: #1d4ed8; border-radius: 8px; padding: 5px 10px; font-size: 12px; margin-bottom: 12px;">Resources</div>
           <ul style="margin: 0; padding-left: 22px; font-size: 15px; color: #4b5563;">
-            <li>Add related links, files, examples, prompt templates, or next steps here.</li>
-            <li>Keep this list focused on what viewers need to use the resource well.</li>
+            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">AI use guidelines and expectations</a></li>
+            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Sample syllabus language for AI use</a></li>
+            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Prompt examples for teaching and course design</a></li>
           </ul>
         </div>
       </div>
