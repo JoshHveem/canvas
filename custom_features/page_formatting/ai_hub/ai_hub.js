@@ -41,6 +41,7 @@ window.AIHubStatus = {
   const POPUP_PANEL_ID = "ai-hub-editor-panel";
   const DATA_PAGE_URL = "json";
   const TOOLBOX_PAGE_URL = "tool-box";
+  const RESOURCE_MODULE_NAMES = ["AI Tools and Resources", "AI Tools and Resources Module"];
   const DATA_ELEMENT_ID = "ai-hub-json-data";
   const HUB_SECTION_ATTRIBUTE = "data-ai-hub-section";
   const HUB_PAGE_BACKUP_PREFIX = "ai-hub-page-backup";
@@ -122,6 +123,14 @@ window.AIHubStatus = {
 
   function getPagesApiUrl() {
     return "/api/v1/courses/" + getCourseId() + "/pages";
+  }
+
+  function getModulesApiUrl() {
+    return "/api/v1/courses/" + getCourseId() + "/modules";
+  }
+
+  function getModuleItemsApiUrl(moduleId) {
+    return "/api/v1/courses/" + getCourseId() + "/modules/" + encodeURIComponent(moduleId) + "/items";
   }
 
   function getCurrentHubPageUrl() {
@@ -876,6 +885,179 @@ window.AIHubStatus = {
     return response.json();
   }
 
+  function getNextPageUrl(response) {
+    const linkHeader = response.headers.get("Link") || "";
+    const nextLink = linkHeader.split(",").find(part => /rel="?next"?/i.test(part));
+    const match = nextLink ? nextLink.match(/<([^>]+)>/) : null;
+    return match ? match[1] : "";
+  }
+
+  async function fetchPaginatedJson(startUrl, errorLabel) {
+    let nextUrl = startUrl;
+    const records = [];
+
+    while (nextUrl) {
+      const response = await fetch(nextUrl, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "accept": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(errorLabel + ". Status: " + response.status);
+      }
+
+      const pageRecords = await response.json();
+      records.push(...(Array.isArray(pageRecords) ? pageRecords : [pageRecords]));
+      nextUrl = getNextPageUrl(response);
+    }
+
+    return records;
+  }
+
+  function normalizeResourceModuleName(moduleName) {
+    return String(moduleName || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/\s+module$/, "");
+  }
+
+  async function fetchCourseModules() {
+    return fetchPaginatedJson(getModulesApiUrl() + "?per_page=100", "Could not fetch course modules");
+  }
+
+  async function fetchModuleItems(moduleId) {
+    return fetchPaginatedJson(getModuleItemsApiUrl(moduleId) + "?per_page=100", "Could not fetch module items");
+  }
+
+  async function createResourceModule() {
+    const headers = {
+      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
+      "content-type": "application/json",
+      "x-requested-with": "XMLHttpRequest"
+    };
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["x-csrf-token"] = csrfToken;
+
+    const response = await fetch(getModulesApiUrl(), {
+      method: "POST",
+      mode: "cors",
+      credentials: "include",
+      headers,
+      referrer: window.location.origin + getCoursePath() + "/modules",
+      body: JSON.stringify({
+        module: {
+          name: RESOURCE_MODULE_NAMES[0],
+          position: 999
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not create the " + RESOURCE_MODULE_NAMES[0] + " module. Status: " + response.status + ". " + await response.text());
+    }
+
+    return response.json();
+  }
+
+  async function findOrCreateResourceModule() {
+    const targetNames = RESOURCE_MODULE_NAMES.map(normalizeResourceModuleName);
+    const modules = await fetchCourseModules();
+    const resourceModule = modules.find(moduleRecord => targetNames.includes(normalizeResourceModuleName(moduleRecord.name)));
+
+    return resourceModule || createResourceModule();
+  }
+
+  function moduleItemMatchesResourcePage(moduleItem, resourceRecord, page) {
+    if (moduleItem?.type !== "Page") return false;
+
+    const pageSlug = page?.url || getResourcePageSlug(resourceRecord);
+    const pageId = String(page?.page_id || page?.id || resourceRecord?.page_id || "");
+    const itemPageSlug = moduleItem.page_url || "";
+    const itemContentId = String(moduleItem.content_id || "");
+
+    return Boolean(pageSlug && itemPageSlug === pageSlug)
+      || Boolean(pageId && itemContentId === pageId);
+  }
+
+  async function updateResourceModuleItemTitle(moduleId, moduleItem, title) {
+    if (!moduleItem?.id || moduleItem.title === title) return moduleItem;
+
+    const headers = {
+      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
+      "content-type": "application/json",
+      "x-requested-with": "XMLHttpRequest"
+    };
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["x-csrf-token"] = csrfToken;
+
+    const response = await fetch(getModuleItemsApiUrl(moduleId) + "/" + encodeURIComponent(moduleItem.id), {
+      method: "PUT",
+      mode: "cors",
+      credentials: "include",
+      headers,
+      referrer: window.location.origin + getCoursePath() + "/modules",
+      body: JSON.stringify({
+        module_item: {
+          title
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not update the resource module item title. Status: " + response.status + ". " + await response.text());
+    }
+
+    return response.json();
+  }
+
+  async function ensureResourcePageInModule(resourceRecord, page) {
+    const pageSlug = page?.url || getResourcePageSlug(resourceRecord);
+    if (!pageSlug) {
+      throw new Error("Could not add resource to module because the Canvas page slug is missing.");
+    }
+
+    const resourceModule = await findOrCreateResourceModule();
+    const moduleItems = await fetchModuleItems(resourceModule.id);
+    const existingItem = moduleItems.find(moduleItem => moduleItemMatchesResourcePage(moduleItem, resourceRecord, page));
+    const title = resourceRecord.title || page?.title || "Resource";
+    if (existingItem) return updateResourceModuleItemTitle(resourceModule.id, existingItem, title);
+
+    const headers = {
+      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
+      "content-type": "application/json",
+      "x-requested-with": "XMLHttpRequest"
+    };
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["x-csrf-token"] = csrfToken;
+
+    const response = await fetch(getModuleItemsApiUrl(resourceModule.id), {
+      method: "POST",
+      mode: "cors",
+      credentials: "include",
+      headers,
+      referrer: window.location.origin + getCoursePath() + "/modules",
+      body: JSON.stringify({
+        module_item: {
+          title,
+          type: "Page",
+          page_url: pageSlug,
+          indent: 0,
+          position: 999
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not add resource page to the " + RESOURCE_MODULE_NAMES[0] + " module. Status: " + response.status + ". " + await response.text());
+    }
+
+    return response.json();
+  }
+
   function saveLocalPageBackup(pageUrl, body) {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const key = HUB_PAGE_BACKUP_PREFIX + ":" + getCourseId() + ":" + pageUrl + ":" + stamp;
@@ -1036,6 +1218,7 @@ window.AIHubStatus = {
           editor: "rce",
           block_editor_attributes: null,
           publishable: true,
+          published: true,
           deletable: true,
           title: resourceRecord.title || "New Resource",
           body: renderResourcePageBody(resourceRecord),
@@ -1098,6 +1281,7 @@ window.AIHubStatus = {
       url: pageUrl,
       title: resourceRecord.title || page.title || "Resource",
       body: updateResourcePageBody(page.body, resourceRecord),
+      published: true,
       notify_of_update: "0",
       student_planner_checkbox: false
     });
@@ -1115,6 +1299,45 @@ window.AIHubStatus = {
 
     if (!response.ok) {
       throw new Error("Could not update resource Canvas page. Status: " + response.status + ". " + await response.text());
+    }
+
+    return response.json();
+  }
+
+  async function unpublishCanvasResourcePage(resourceRecord) {
+    const pageSlug = getResourcePageSlug(resourceRecord);
+    if (!pageSlug) return null;
+
+    const page = await fetchCanvasPage(pageSlug);
+    const headers = {
+      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
+      "content-type": "application/json",
+      "x-requested-with": "XMLHttpRequest"
+    };
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["x-csrf-token"] = csrfToken;
+
+    const pageUrl = page.url || pageSlug;
+    const wikiPage = Object.assign({}, page, {
+      url: pageUrl,
+      published: false,
+      notify_of_update: "0",
+      student_planner_checkbox: false
+    });
+
+    const response = await fetch(getPageApiUrl(pageUrl), {
+      method: "PUT",
+      mode: "cors",
+      credentials: "include",
+      headers,
+      referrer: window.location.origin + getCoursePath() + "/pages/" + pageUrl + "/edit",
+      body: JSON.stringify({
+        wiki_page: wikiPage
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not unpublish linked resource page. Status: " + response.status + ". " + await response.text());
     }
 
     return response.json();
@@ -1499,11 +1722,13 @@ window.AIHubStatus = {
     const existingIndex = data.resources.findIndex(item => item.id === resourceId);
     const existingResource = existingIndex >= 0 ? data.resources[existingIndex] : null;
     const resourceRecord = buildResourceRecord(formResourceData, existingResource);
+    let resourcePage = null;
 
     if (resourceRecord.action_type === "canvas_page") {
       const page = getResourcePageSlug(resourceRecord)
         ? await updateCanvasResourcePage(resourceRecord)
         : await createCanvasResourcePage(resourceRecord);
+      resourcePage = page;
       resourceRecord.page_id = page.page_id || page.id || resourceRecord.page_id || "";
       resourceRecord.page_slug = page.url || resourceRecord.page_slug || "";
       resourceRecord.page_url = page.html_url || (page.url ? getCoursePath() + "/pages/" + page.url : resourceRecord.page_url || "");
@@ -1518,6 +1743,19 @@ window.AIHubStatus = {
 
     renumberResources(data);
     await saveHubDataAndRenderedPage(data, "resources");
+
+    if (resourceRecord.action_type === "canvas_page") {
+      try {
+        await ensureResourcePageInModule(resourceRecord, resourcePage);
+      } catch (moduleError) {
+        console.warn("AI Hub resource page was saved, but module item creation failed.", moduleError);
+        Object.defineProperty(resourceRecord, "module_item_warning", {
+          value: moduleError.message,
+          enumerable: false
+        });
+      }
+    }
+
     return resourceRecord;
   }
 
@@ -1527,10 +1765,29 @@ window.AIHubStatus = {
 
   async function deleteResourceFromHubData(resourceId) {
     const data = normalizeHubData(await loadHubData());
+    const resourceRecord = data.resources.find(item => item.id === resourceId);
+    const result = {
+      resources: [],
+      page_unpublished: false,
+      page_unpublish_warning: ""
+    };
+
     data.resources = data.resources.filter(item => item.id !== resourceId);
     renumberResources(data);
     await saveHubDataAndRenderedPage(data, "resources");
-    return data.resources;
+    result.resources = data.resources;
+
+    if (resourceRecord && getResourceActionType(resourceRecord) === "canvas_page" && getResourcePageSlug(resourceRecord)) {
+      try {
+        await unpublishCanvasResourcePage(resourceRecord);
+        result.page_unpublished = true;
+      } catch (unpublishError) {
+        console.warn("AI Hub resource card was deleted, but linked page unpublish failed.", unpublishError);
+        result.page_unpublish_warning = unpublishError.message;
+      }
+    }
+
+    return result;
   }
 
   function hideHeaderBar() {
@@ -2828,12 +3085,18 @@ window.AIHubStatus = {
         }
 
         if (action === "delete-resource") {
-          const ok = window.confirm("Delete this resource card? This will not delete any Canvas page that was already created.");
+          const ok = window.confirm("Delete this resource card? The linked Canvas page will be kept and unpublished.");
           if (!ok) return;
-          await deleteResourceFromHubData(actionButton.getAttribute("data-resource-id"));
+          const deleteResult = await deleteResourceFromHubData(actionButton.getAttribute("data-resource-id"));
           clearForm();
           await refreshResources();
-          setMessage("Resource deleted.", false);
+          if (deleteResult.page_unpublish_warning) {
+            setMessage("Resource card deleted, but linked page could not be unpublished:\n" + deleteResult.page_unpublish_warning, true);
+          } else if (deleteResult.page_unpublished) {
+            setMessage("Resource card deleted. Linked Canvas page was unpublished.", false);
+          } else {
+            setMessage("Resource deleted.", false);
+          }
         }
       } catch (error) {
         console.error(error);
@@ -2865,6 +3128,12 @@ window.AIHubStatus = {
         submitButton.textContent = resourceData.action_type === "canvas_page" ? "Creating page..." : "Saving...";
         const savedResource = await saveResourceToHubData(resourceData.id || null, resourceData);
         console.log("AI Hub resource saved to JSON page and visible hub page:", savedResource);
+        if (savedResource.module_item_warning) {
+          await refreshResources();
+          setMessage("Resource saved, but module add failed:\n" + savedResource.module_item_warning, true);
+          return;
+        }
+
         const editUrl = getResourcePageEditUrl(savedResource);
         if (savedResource.action_type === "canvas_page" && editUrl) {
           setMessage("Resource saved. Opening the Canvas page editor...", false);
@@ -2980,7 +3249,10 @@ window.AIHubStatus = {
     addCourseToHubData,
     addResourceToHubData,
     createCanvasResourcePage,
+    createResourceModule,
+    ensureResourcePageInModule,
     updateCanvasResourcePage,
+    unpublishCanvasResourcePage,
     deleteCourseFromHubData,
     deleteEventFromHubData,
     deleteResourceFromHubData,
