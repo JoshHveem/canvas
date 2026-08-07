@@ -26,10 +26,11 @@ window.AIHubStatus = {
   const HUB_CONFIG = window.AIHubConfig;
   const KEEP_TABS = ["Home", "People", "Announcements"];
   const EDIT_TAB_ATTRIBUTE = "data-ai-hub-edit-tab";
-  const EDIT_TABS = [
+  const HOME_EDIT_TABS = [
     { id: "ai-hub-edit-events-link", label: "Edit Calendar", editor: "events" }
-    // { id: "ai-hub-edit-courses-link", label: "Edit Courses", editor: "courses" },
-    // { id: "ai-hub-edit-resources-link", label: "Edit Resources", editor: "resources" }
+  ];
+  const TOOLBOX_EDIT_TABS = [
+    { id: "ai-hub-edit-resources-link", label: "Edit Resources", editor: "resources" }
   ];
   const TOGGLE_BUTTON_ID = "ai-hub-toggle-tabs-button";
   const HIDDEN_TAB_ATTRIBUTE = "data-ai-hub-hidden-tab";
@@ -39,6 +40,7 @@ window.AIHubStatus = {
   const POPUP_BACKDROP_ID = "ai-hub-editor-backdrop";
   const POPUP_PANEL_ID = "ai-hub-editor-panel";
   const DATA_PAGE_URL = "json";
+  const TOOLBOX_PAGE_URL = "tool-box";
   const DATA_ELEMENT_ID = "ai-hub-json-data";
   const HUB_SECTION_ATTRIBUTE = "data-ai-hub-section";
   const HUB_PAGE_BACKUP_PREFIX = "ai-hub-page-backup";
@@ -47,6 +49,8 @@ window.AIHubStatus = {
   const COURSE_DESCRIPTION_MAX_LENGTH = 80;
   const RESOURCE_TITLE_MAX_LENGTH = 40;
   const RESOURCE_DESCRIPTION_MAX_LENGTH = 150;
+  const RESOURCE_CATEGORY_MAX_LENGTH = 28;
+  const RESOURCE_DETAIL_MAX_LENGTH = 18;
   const RESOURCE_DEFAULT_ICON = "📄";
   const COURSE_DEFAULT_ICON = "📚";
   const COURSE_ICON_BY_KEY = {
@@ -91,6 +95,17 @@ window.AIHubStatus = {
 
   function isAiHubHomePath() {
     return new RegExp("^" + getCoursePath() + "/?$").test(window.location.pathname);
+  }
+
+  function isAiHubToolboxPath() {
+    return getCurrentHubPageUrl() === TOOLBOX_PAGE_URL
+      || new RegExp("^" + getCoursePath() + "/pages/" + TOOLBOX_PAGE_URL + "/?$").test(window.location.pathname);
+  }
+
+  function getActiveEditTabs() {
+    if (isAiHubToolboxPath()) return TOOLBOX_EDIT_TABS;
+    if (isAiHubHomePath()) return HOME_EDIT_TABS;
+    return [];
   }
 
   function getDataPageApiUrl() {
@@ -241,6 +256,8 @@ window.AIHubStatus = {
         {
           id: "resource_ai_policy_template",
           icon_key: "document",
+          category: "Policy",
+          detail: "Template",
           title: "AI Use Policy Template",
           description: "Editable language for setting expectations around AI use.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-1",
@@ -252,6 +269,8 @@ window.AIHubStatus = {
         {
           id: "resource_prompt_library",
           icon_key: "checklist",
+          category: "Prompting",
+          detail: "Library",
           title: "Prompt Library",
           description: "Reusable prompts for planning, teaching, assessment, and feedback.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-2",
@@ -263,6 +282,8 @@ window.AIHubStatus = {
         {
           id: "resource_ai_assignment_checklist",
           icon_key: "play",
+          category: "Assignments",
+          detail: "Checklist",
           title: "AI Assignment Checklist",
           description: "Review assignments for AI clarity, usefulness, and integrity.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-3",
@@ -274,6 +295,8 @@ window.AIHubStatus = {
         {
           id: "resource_tool_evaluation_guide",
           icon_key: "comment",
+          category: "Tools",
+          detail: "Guide",
           title: "Tool Evaluation Guide",
           description: "Compare AI tools for privacy, accessibility, cost, and fit.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-4",
@@ -389,8 +412,20 @@ window.AIHubStatus = {
     return root.querySelector(getManagedSectionSelector("courses")) || findSectionByHeading(root, "Explore Courses");
   }
 
+  function findToolboxResourcesSection(root) {
+    const headings = Array.from(root.querySelectorAll("h2"));
+    const heading = headings.find(item => item.textContent.trim().replace(/\s+/g, " ") === "AI Mini-Trainings");
+    const shell = heading?.parentElement?.parentElement;
+    if (!shell) return null;
+
+    return Array.from(shell.children)
+      .find(child => child !== heading.parentElement && child.querySelector("a[href]"));
+  }
+
   function findResourcesSection(root) {
-    return root.querySelector(getManagedSectionSelector("resources")) || findSectionByHeading(root, "Featured Resources");
+    return root.querySelector(getManagedSectionSelector("resources"))
+      || findToolboxResourcesSection(root)
+      || findSectionByHeading(root, "Featured Resources");
   }
 
   function getCoursesViewAllUrl(section) {
@@ -441,6 +476,26 @@ window.AIHubStatus = {
     return actionType === "download" ? "Download" : "View Resource";
   }
 
+  function getResourceHref(resourceRecord) {
+    const actionType = getResourceActionType(resourceRecord);
+    return actionType === "canvas_page"
+      ? resourceRecord.page_url || resourceRecord.html_url || "#"
+      : resourceRecord.resource_url || "#";
+  }
+
+  function getResourceMetaLine(resourceRecord) {
+    const category = limitText(resourceRecord.category || resourceRecord.topic || "", RESOURCE_CATEGORY_MAX_LENGTH);
+    const detail = limitText(resourceRecord.detail || resourceRecord.duration || "", RESOURCE_DETAIL_MAX_LENGTH);
+    if (category && detail) return escapeHtml(category) + " &middot; " + escapeHtml(detail);
+    if (category) return escapeHtml(category);
+    if (detail) return escapeHtml(detail);
+    return escapeHtml(getResourceActionLabel(resourceRecord));
+  }
+
+  function getResourceCardActionText(resourceRecord) {
+    return getResourceActionType(resourceRecord) === "download" ? "Download resource" : "Open resource";
+  }
+
   function renderEventCard(eventRecord) {
     const title = eventRecord.title || "Untitled Event";
     const monthLabel = getShortMonth(eventRecord.event_date) || "TBD";
@@ -483,19 +538,17 @@ window.AIHubStatus = {
     const title = resourceRecord.title || "Untitled Resource";
     const description = resourceRecord.description || "";
     const icon = getResourceIcon(resourceRecord);
-    const actionLabel = getResourceActionLabel(resourceRecord);
-    const actionType = getResourceActionType(resourceRecord);
-    const href = actionType === "canvas_page"
-      ? resourceRecord.page_url || resourceRecord.html_url || "#"
-      : resourceRecord.resource_url || "#";
-    const arrow = actionLabel === "Download" ? "&#11015;" : "&rarr;";
+    const metaLine = getResourceMetaLine(resourceRecord);
+    const actionLabel = getResourceCardActionText(resourceRecord);
+    const href = getResourceHref(resourceRecord);
 
     return `
-      <div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec;">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: #eeeeef; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px;" aria-hidden="true">${escapeHtml(icon)}</div>
-        <h3 style="margin: 0 0 8px; font-size: 16px; color: #000000; line-height: 1.25;">${escapeHtml(title)}</h3>
-        <p style="margin: 0 0 16px; font-size: 13px; color: #6b7280;">${escapeHtml(description)}</p>
-        <a style="margin-top: auto; color: #1d4ed8; font-size: 14px; text-decoration: underline;" href="${escapeAttribute(href)}" aria-label="${escapeAttribute(actionLabel + " " + title)}">${escapeHtml(actionLabel)} <span aria-hidden="true">${arrow}</span></a>
+      <div style="display: flex; flex-direction: column; min-height: 270px; color: #111827; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 118px; background: #eff6ff; color: #1d4ed8; font-size: 46px; line-height: 1; border-bottom: 1px solid #dbe3f0;" role="img" aria-label="${escapeAttribute(title + " image placeholder")}">${escapeHtml(icon)}</div>
+        <span style="display: block; padding: 16px 16px 0; font-size: 12px; color: #1d4ed8; text-transform: uppercase; font-weight: bold;">${metaLine}</span>
+        <strong style="display: block; padding: 8px 16px 0; font-size: 19px; line-height: 1.2; color: #000000;">${escapeHtml(title)}</strong>
+        <span style="display: block; padding: 8px 16px 0; font-size: 14px; color: #4b5563;">${escapeHtml(description)}</span>
+        <a style="display: block; margin-top: auto; padding: 16px; color: #1d4ed8; font-size: 14px; font-weight: bold; text-decoration: none;" href="${escapeAttribute(href)}" aria-label="${escapeAttribute(actionLabel + " " + title)}">${escapeHtml(actionLabel)} <span aria-hidden="true">&rarr;</span></a>
       </div>
     `;
   }
@@ -540,20 +593,30 @@ window.AIHubStatus = {
 
   function renderResourcesSection(resources, options) {
     const sortedResources = sortBySortOrder(resources || []);
-    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-RESOURCES-LINK";
     const cardsHtml = sortedResources.length
       ? sortedResources.map(renderResourceCard).join("")
-      : `<div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No featured resources have been added yet.</div>`;
+      : `<div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No resources have been added yet.</div>`;
 
     return `
-      <div ${HUB_SECTION_ATTRIBUTE}="resources" style="margin-top: 52px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: 700; font-size: 28px; color: #000000;">Featured Resources</h2>
-          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all resources <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
+      <div ${HUB_SECTION_ATTRIBUTE}="resources" style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
+      </div>
+    `;
+  }
+
+  function renderToolboxPageBody(data) {
+    const normalizedData = normalizeHubData(data);
+
+    return `
+      <div style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
+        <div style="padding: 0 4px 34px;">
+          <div style="display: inline-block; color: #1d4ed8; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">AI Toolbox</div>
+          <h2 style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">AI Mini-Trainings</h2>
+          <p style="margin: 18px 0 0; font-size: 17px; max-width: 680px; color: #4b5563;">Pick a short training and jump into a specific AI skill, workflow, or teaching move.</p>
+        </div>
+        ${renderResourcesSection(normalizedData.resources, {})}
       </div>
     `;
   }
@@ -637,13 +700,11 @@ window.AIHubStatus = {
     const currentSection = findResourcesSection(doc);
 
     if (!currentSection) {
-      throw new Error('Could not find the "Featured Resources" section in the current hub page body.');
+      throw new Error('Could not find the toolbox resources section in the current AI Hub page body.');
     }
 
     const template = doc.createElement("template");
-    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {
-      viewAllUrl: getResourcesViewAllUrl(currentSection)
-    }).trim();
+    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {}).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return doc.body.innerHTML;
@@ -665,9 +726,7 @@ window.AIHubStatus = {
     if (!currentSection) return false;
 
     const template = document.createElement("template");
-    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {
-      viewAllUrl: getResourcesViewAllUrl(currentSection)
-    }).trim();
+    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {}).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return true;
@@ -684,6 +743,22 @@ window.AIHubStatus = {
 
     currentSection.replaceWith(template.content.firstElementChild);
     return true;
+  }
+
+  function replaceRenderedSectionInBody(body, data, sectionName) {
+    if (sectionName === "courses") return replaceCoursesSectionInBody(body, data);
+    if (sectionName === "resources") return replaceResourcesSectionInBody(body, data);
+    return replaceEventsSectionInBody(body, data);
+  }
+
+  function replaceRenderedSectionInCurrentDom(data, sectionName) {
+    if (sectionName === "courses") return replaceCoursesSectionInCurrentDom(data);
+    if (sectionName === "resources") return replaceResourcesSectionInCurrentDom(data);
+    return replaceEventsSectionInCurrentDom(data);
+  }
+
+  function getCurrentRenderedSectionName() {
+    return isAiHubToolboxPath() ? "resources" : "events";
   }
 
   function readDataFromPageBody(body) {
@@ -981,8 +1056,9 @@ window.AIHubStatus = {
     }
   }
 
-  async function saveRenderedHubPage(data) {
+  async function saveRenderedHubPage(data, sectionName) {
     const pageUrl = getCurrentHubPageUrl();
+    const renderedSectionName = sectionName || getCurrentRenderedSectionName();
 
     if (!pageUrl) {
       throw new Error("Could not determine the current Canvas page URL.");
@@ -994,19 +1070,19 @@ window.AIHubStatus = {
 
     const page = await fetchCanvasPage(pageUrl);
     const normalizedData = normalizeHubData(data);
-    const updatedBody = replaceEventsSectionInBody(page.body, normalizedData);
+    const updatedBody = replaceRenderedSectionInBody(page.body, normalizedData, renderedSectionName);
     const backupKey = saveLocalPageBackup(pageUrl, page.body);
     const savedPage = await saveCanvasPageBody(page, updatedBody);
-    replaceEventsSectionInCurrentDom(normalizedData);
+    replaceRenderedSectionInCurrentDom(normalizedData, renderedSectionName);
     console.log("AI Hub visible page saved:", pageUrl, "Backup:", backupKey);
     return savedPage;
   }
 
-  async function saveHubDataAndRenderedPage(data) {
+  async function saveHubDataAndRenderedPage(data, sectionName) {
     await saveHubData(data);
 
     try {
-      await saveRenderedHubPage(data);
+      await saveRenderedHubPage(data, sectionName);
     } catch (error) {
       throw new Error("JSON page saved, but visible hub page update failed. " + error.message);
     }
@@ -1034,14 +1110,17 @@ window.AIHubStatus = {
       throw new Error("Open the visible AI Hub page before seeding the page layout.");
     }
 
-    const ok = window.confirm("Replace the current Canvas page body with the starter AI Hub layout and save starter JSON to /pages/" + DATA_PAGE_URL + "?");
+    const layoutLabel = isAiHubToolboxPath() ? "starter AI Toolbox layout" : "starter AI Hub layout";
+    const ok = window.confirm("Replace the current Canvas page body with the " + layoutLabel + " and save starter JSON to /pages/" + DATA_PAGE_URL + "?");
     if (!ok) return null;
 
     const data = getStarterHubData();
     await saveHubData(data);
 
     const page = await fetchCanvasPage(pageUrl);
-    const updatedBody = renderHubPageBody(data).trim();
+    const updatedBody = isAiHubToolboxPath()
+      ? renderToolboxPageBody(data).trim()
+      : renderHubPageBody(data).trim();
     const backupKey = saveLocalPageBackup(pageUrl, page.body);
     const savedPage = await saveCanvasPageBody(page, updatedBody);
     replaceCurrentPageBodyInDom(updatedBody);
@@ -1154,7 +1233,7 @@ window.AIHubStatus = {
     }
 
     sortAndRenumberEventsByDate(normalizedData);
-    await saveHubDataAndRenderedPage(normalizedData);
+    await saveHubDataAndRenderedPage(normalizedData, "events");
     return eventRecord;
   }
 
@@ -1162,7 +1241,7 @@ window.AIHubStatus = {
     const data = normalizeHubData(await loadHubData());
     data.events = data.events.filter(item => item.id !== eventId);
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "events");
     return data.events;
   }
 
@@ -1174,7 +1253,7 @@ window.AIHubStatus = {
     eventRecord.status = status;
     eventRecord.updated_at = new Date().toISOString();
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "events");
     return eventRecord;
   }
 
@@ -1191,7 +1270,7 @@ window.AIHubStatus = {
     data.events[currentIndex] = data.events[nextIndex];
     data.events[nextIndex] = moved;
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "events");
     return data.events;
   }
 
@@ -1213,7 +1292,7 @@ window.AIHubStatus = {
 
     data.events = reorderedEvents.concat(unorderedEvents);
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "events");
     return data.events;
   }
 
@@ -1258,7 +1337,7 @@ window.AIHubStatus = {
     }
 
     renumberCourses(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "courses");
     return courseRecord;
   }
 
@@ -1270,7 +1349,7 @@ window.AIHubStatus = {
     const data = normalizeHubData(await loadHubData());
     data.courses = data.courses.filter(item => item.id !== courseId);
     renumberCourses(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "courses");
     return data.courses;
   }
 
@@ -1282,10 +1361,16 @@ window.AIHubStatus = {
     const now = new Date().toISOString();
     const actionType = normalizeResourceActionType(formResourceData.action_type, formResourceData.action_label);
     const actionLabel = actionType === "download" ? "Download" : "View Resource";
+    const hasCategory = Object.prototype.hasOwnProperty.call(formResourceData, "category");
+    const hasDetail = Object.prototype.hasOwnProperty.call(formResourceData, "detail");
+    const category = hasCategory ? formResourceData.category : (existingResource?.category || existingResource?.topic);
+    const detail = hasDetail ? formResourceData.detail : (existingResource?.detail || existingResource?.duration);
 
     return Object.assign({}, existingResource || {}, {
       id: existingResource?.id || createId("resource"),
       icon: normalizeResourceIcon(formResourceData.icon || existingResource?.icon || existingResource?.icon_key),
+      category: limitText(category, RESOURCE_CATEGORY_MAX_LENGTH),
+      detail: limitText(detail, RESOURCE_DETAIL_MAX_LENGTH),
       title: limitText(formResourceData.title, RESOURCE_TITLE_MAX_LENGTH),
       description: limitText(formResourceData.description, RESOURCE_DESCRIPTION_MAX_LENGTH),
       action_type: actionType,
@@ -1328,7 +1413,7 @@ window.AIHubStatus = {
     }
 
     renumberResources(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "resources");
     return resourceRecord;
   }
 
@@ -1340,7 +1425,7 @@ window.AIHubStatus = {
     const data = normalizeHubData(await loadHubData());
     data.resources = data.resources.filter(item => item.id !== resourceId);
     renumberResources(data);
-    await saveHubDataAndRenderedPage(data);
+    await saveHubDataAndRenderedPage(data, "resources");
     return data.resources;
   }
 
@@ -1392,7 +1477,7 @@ window.AIHubStatus = {
   }
 
   function addEditTabs(nav) {
-    EDIT_TABS.forEach(tabData => {
+    getActiveEditTabs().forEach(tabData => {
       if (document.getElementById(tabData.id)) return;
 
       const li = document.createElement("li");
@@ -2423,6 +2508,18 @@ window.AIHubStatus = {
                     </span>
                   </label>
 
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
+                      Category
+                      <input name="category" type="text" maxlength="${RESOURCE_CATEGORY_MAX_LENGTH}" placeholder="Prompting" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;" />
+                    </label>
+
+                    <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
+                      Detail
+                      <input name="detail" type="text" maxlength="${RESOURCE_DETAIL_MAX_LENGTH}" placeholder="10 min" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;" />
+                    </label>
+                  </div>
+
                   <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
                     <span style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                       <span>Title</span>
@@ -2543,6 +2640,8 @@ window.AIHubStatus = {
     function fillForm(resourceRecord) {
       form.elements.id.value = resourceRecord.id || "";
       form.elements.icon.value = getResourceIcon(resourceRecord);
+      form.elements.category.value = limitText(resourceRecord.category || resourceRecord.topic, RESOURCE_CATEGORY_MAX_LENGTH);
+      form.elements.detail.value = limitText(resourceRecord.detail || resourceRecord.duration, RESOURCE_DETAIL_MAX_LENGTH);
       form.elements.title.value = limitText(resourceRecord.title, RESOURCE_TITLE_MAX_LENGTH);
       form.elements.description.value = limitText(resourceRecord.description, RESOURCE_DESCRIPTION_MAX_LENGTH);
       form.elements.action_type.value = getResourceActionType(resourceRecord);
@@ -2557,16 +2656,19 @@ window.AIHubStatus = {
       const icon = getResourceIcon(resourceRecord);
       const title = resourceRecord.title || "Untitled Resource";
       const description = resourceRecord.description || "";
-      const actionLabel = getResourceActionLabel(resourceRecord);
+      const metaLine = getResourceMetaLine(resourceRecord);
+      const actionLabel = getResourceCardActionText(resourceRecord);
       const createdPage = resourceRecord.page_url && getResourceActionType(resourceRecord) === "canvas_page";
+      const statusLine = createdPage ? "Canvas page created" : actionLabel;
 
       return `
         <div data-resource-card data-resource-id="${escapeAttribute(resourceRecord.id)}">
-          <div style="background:#ffffff; border-radius:14px; padding:18px; border:1px solid #e6e8ec; min-height:220px; display:flex; flex-direction:column;">
-            <div style="width:44px; height:44px; border-radius:10px; background:#eeeeef; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px;" aria-hidden="true">${escapeHtml(icon)}</div>
-            <h3 style="margin:0 0 8px; font-size:16px; line-height:1.25; color:#000000;">${escapeHtml(title)}</h3>
-            <div style="font-size:13px; color:#6b7280; margin-bottom:12px;">${escapeHtml(description)}</div>
-            <div style="font-size:12px; color:#1d4ed8; margin-top:auto;">${escapeHtml(actionLabel)}${createdPage ? " page created" : ""}</div>
+          <div style="display:flex; flex-direction:column; min-height:270px; color:#111827; background:#ffffff; border:1px solid #dbe3f0; border-radius:14px; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:center; width:100%; height:96px; background:#eff6ff; color:#1d4ed8; font-size:40px; line-height:1; border-bottom:1px solid #dbe3f0;" aria-hidden="true">${escapeHtml(icon)}</div>
+            <span style="display:block; padding:14px 16px 0; font-size:12px; color:#1d4ed8; text-transform:uppercase; font-weight:bold;">${metaLine}</span>
+            <strong style="display:block; padding:8px 16px 0; font-size:18px; line-height:1.2; color:#000000;">${escapeHtml(title)}</strong>
+            <span style="display:block; padding:8px 16px 0; font-size:14px; color:#4b5563;">${escapeHtml(description)}</span>
+            <div style="display:block; margin-top:auto; padding:16px; color:#1d4ed8; font-size:14px; font-weight:bold;">${escapeHtml(statusLine)} <span aria-hidden="true">&rarr;</span></div>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
             <button type="button" data-action="edit-resource" data-resource-id="${escapeAttribute(resourceRecord.id)}" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:5px 8px; cursor:pointer;">Edit</button>
@@ -2730,8 +2832,9 @@ window.AIHubStatus = {
 
   status.courseId = getCourseId();
   status.homePath = isAiHubHomePath();
+  status.toolboxPath = isAiHubToolboxPath();
 
-  if (status.homePath) {
+  if (status.homePath || status.toolboxPath) {
     const nav = document.querySelector("#section-tabs");
     status.hasSectionTabs = Boolean(nav);
     if (!nav) {
@@ -2746,9 +2849,10 @@ window.AIHubStatus = {
     status.mounted = true;
     status.reason = "mounted";
     status.editCalendar = Boolean(document.getElementById("ai-hub-edit-events-link"));
+    status.editResources = Boolean(document.getElementById("ai-hub-edit-resources-link"));
     status.restoreTabs = Boolean(document.getElementById(TOGGLE_BUTTON_ID));
   } else {
-    status.reason = "not_ai_hub_home";
+    status.reason = "not_ai_hub_home_or_toolbox";
   }
 
   window.AIHubData = {
@@ -2770,6 +2874,7 @@ window.AIHubStatus = {
     replaceCoursesSectionInBody,
     replaceResourcesSectionInBody,
     renderHubPageBody,
+    renderToolboxPageBody,
     renderCoursesSection,
     renderEventsSection,
     renderResourcesSection,
