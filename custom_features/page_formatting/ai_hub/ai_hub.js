@@ -631,7 +631,7 @@ window.AIHubStatus = {
 
     return `
       <div ${HUB_SECTION_ATTRIBUTE}="resources" style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,300px)); gap: 16px; justify-content: start;">
+        <div style="display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
       </div>
@@ -1127,14 +1127,13 @@ window.AIHubStatus = {
           <div data-ai-hub-resource-meta style="display: inline-block; color: #1d4ed8; font-size: 12px; margin-bottom: 10px;">${escapeHtml(metaLine)}</div>
           <h2 data-ai-hub-resource-title style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
           <p data-ai-hub-resource-description style="margin: 18px 0 0; font-size: 17px; color: #4b5563;">${escapeHtml(description)}</p>
-          <p style="margin: 14px 0 0; font-size: 16px; color: #4b5563;">AI is already changing how people write, plan, search, summarize, create, and solve problems. For instructors, the goal is to understand what these tools are good at, where they are risky, and how they can support stronger teaching, clearer communication, better feedback, and more relevant learning experiences.</p>
         </div>
         <div style="padding: 0 4px;">
           [insert video]
         </div>
         <div style="margin-top: 30px; padding: 0 4px;">
           <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
-          <p style="margin: 0; font-size: 16px; color: #4b5563;">The most powerful use of AI in education is not replacing the teacher. It is freeing the teacher to do more of the work that actually requires human judgment, care, and expertise. When AI helps with repeatable tasks like drafting, organizing, summarizing, brainstorming, or rewording, instructors can spend more time coaching students, mentoring learners, clarifying misconceptions, giving meaningful feedback, and creating the kind of classroom presence that technology cannot replace. Used well, AI can make you a more valuable teacher because it gives you more space to do the parts of teaching that are most human and most fulfilling.</p>
+          <p style="margin: 0; font-size: 16px; color: #4b5563;">&nbsp;</p>
         </div>
         <div style="margin-top: 28px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #bfdbfe;">
           <div style="background: #1d4ed8; color: #ffffff; padding: 12px 18px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 16px;">Before You Apply This</div>
@@ -1158,9 +1157,7 @@ window.AIHubStatus = {
         <div style="margin-top: 28px; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; padding: 20px 22px;">
           <div style="display: inline-block; background: #e0efff; color: #1d4ed8; border-radius: 8px; padding: 5px 10px; font-size: 12px; margin-bottom: 12px;">Resources</div>
           <ul style="margin: 0; padding-left: 22px; font-size: 15px; color: #4b5563;">
-            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">AI use guidelines and expectations</a></li>
-            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Sample syllabus language for AI use</a></li>
-            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Prompt examples for teaching and course design</a></li>
+            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Example resource link</a></li>
           </ul>
         </div>
       </div>
