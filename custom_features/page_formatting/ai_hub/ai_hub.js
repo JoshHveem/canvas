@@ -51,7 +51,7 @@ window.AIHubStatus = {
   const RESOURCE_DESCRIPTION_MAX_LENGTH = 150;
   const RESOURCE_CATEGORY_MAX_LENGTH = 28;
   const RESOURCE_DETAIL_MAX_LENGTH = 18;
-  const RESOURCE_DEFAULT_ICON = "📄";
+  const RESOURCE_DEFAULT_ICON = "🤖";
   const COURSE_DEFAULT_ICON = "📚";
   const COURSE_ICON_BY_KEY = {
     chart: "📊",
@@ -414,7 +414,10 @@ window.AIHubStatus = {
 
   function findToolboxResourcesSection(root) {
     const headings = Array.from(root.querySelectorAll("h2"));
-    const heading = headings.find(item => item.textContent.trim().replace(/\s+/g, " ") === "AI Mini-Trainings");
+    const heading = headings.find(item => {
+      const text = item.textContent.trim().replace(/\s+/g, " ");
+      return text === "Micro-Trainings & Resources" || text === "AI Mini-Trainings";
+    });
     const shell = heading?.parentElement?.parentElement;
     if (!shell) return null;
 
@@ -613,7 +616,7 @@ window.AIHubStatus = {
       <div style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
         <div style="padding: 0 4px 34px;">
           <div style="display: inline-block; color: #1d4ed8; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">AI Toolbox</div>
-          <h2 style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">AI Mini-Trainings</h2>
+          <h2 style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">Micro-Trainings &amp; Resources</h2>
           <p style="margin: 18px 0 0; font-size: 17px; max-width: 680px; color: #4b5563;">Pick a short training and jump into a specific AI skill, workflow, or teaching move.</p>
         </div>
         ${renderResourcesSection(normalizedData.resources, {})}
@@ -759,6 +762,11 @@ window.AIHubStatus = {
 
   function getCurrentRenderedSectionName() {
     return isAiHubToolboxPath() ? "resources" : "events";
+  }
+
+  function isToolboxPageBody(body) {
+    const text = new DOMParser().parseFromString(body || "", "text/html").body.textContent || "";
+    return /AI Toolbox/i.test(text) && /Micro-Trainings|AI Mini-Trainings/i.test(text);
   }
 
   function readDataFromPageBody(body) {
@@ -1070,10 +1078,28 @@ window.AIHubStatus = {
 
     const page = await fetchCanvasPage(pageUrl);
     const normalizedData = normalizeHubData(data);
-    const updatedBody = replaceRenderedSectionInBody(page.body, normalizedData, renderedSectionName);
+    let usedFullPageFallback = false;
+    let updatedBody = "";
+
+    try {
+      updatedBody = replaceRenderedSectionInBody(page.body, normalizedData, renderedSectionName);
+    } catch (error) {
+      if (renderedSectionName !== "resources" || (!isAiHubToolboxPath() && !isToolboxPageBody(page.body))) {
+        throw error;
+      }
+
+      usedFullPageFallback = true;
+      updatedBody = renderToolboxPageBody(normalizedData).trim();
+      console.warn("AI Hub toolbox resources section was not found. Replacing the toolbox page body instead.", error);
+    }
+
     const backupKey = saveLocalPageBackup(pageUrl, page.body);
     const savedPage = await saveCanvasPageBody(page, updatedBody);
-    replaceRenderedSectionInCurrentDom(normalizedData, renderedSectionName);
+    if (usedFullPageFallback) {
+      replaceCurrentPageBodyInDom(updatedBody);
+    } else {
+      replaceRenderedSectionInCurrentDom(normalizedData, renderedSectionName);
+    }
     console.log("AI Hub visible page saved:", pageUrl, "Backup:", backupKey);
     return savedPage;
   }
@@ -1359,7 +1385,7 @@ window.AIHubStatus = {
 
   function buildResourceRecord(formResourceData, existingResource) {
     const now = new Date().toISOString();
-    const actionType = normalizeResourceActionType(formResourceData.action_type, formResourceData.action_label);
+    const actionType = normalizeResourceActionType(formResourceData.action_type || "canvas_page", formResourceData.action_label);
     const actionLabel = actionType === "download" ? "Download" : "View Resource";
     const hasCategory = Object.prototype.hasOwnProperty.call(formResourceData, "category");
     const hasDetail = Object.prototype.hasOwnProperty.call(formResourceData, "detail");
@@ -2539,8 +2565,8 @@ window.AIHubStatus = {
                   <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
                     Action
                     <select name="action_type" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;">
-                      <option value="download">Download</option>
                       <option value="canvas_page">Canvas Page</option>
+                      <option value="download">Download</option>
                       <option value="external_link">External Link</option>
                     </select>
                   </label>
@@ -2631,6 +2657,7 @@ window.AIHubStatus = {
       form.reset();
       form.elements.id.value = "";
       form.elements.icon.value = RESOURCE_DEFAULT_ICON;
+      form.elements.action_type.value = "canvas_page";
       formTitle.textContent = "Add Resource";
       output.style.display = "none";
       updateActionFields();
