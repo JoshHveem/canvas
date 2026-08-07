@@ -76,7 +76,7 @@ var COURSE_HOURS;
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
 // Cache nudge for the AI Hub toolbox resources editor.
-window.BTECH_CANVAS_ASSET_VERSION = '2026-08-07-5';
+window.BTECH_CANVAS_ASSET_VERSION = '2026-08-07-7';
 window.btechAssetUrl = function(url) {
   if (!window.BTECH_CANVAS_ASSET_VERSION) return url;
   const sep = url.includes('?') ? '&' : '?';
@@ -238,10 +238,10 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     feature('side_menus');
 
     // CUSTOM COURSE PAGES
-    if (IS_TEACHER) feature("page_formatting/ai_hub/ai_hub", [
-      /^\/courses\/[0-9]+\/?$/,
-      /^\/courses\/621895\/pages\/tool-box\/?$/
-    ]);
+    const AI_HUB_COURSE_ID = 621895;
+    if (IS_TEACHER && CURRENT_COURSE_ID === AI_HUB_COURSE_ID) {
+      feature("page_formatting/ai_hub/ai_hub", /^\/courses\/621895(?:\/.*)?$/);
+    }
 
     // instructor hub
     if (/^\/courses\/611213/.test(window.location.pathname)) {

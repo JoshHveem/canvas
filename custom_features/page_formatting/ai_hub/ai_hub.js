@@ -102,6 +102,10 @@ window.AIHubStatus = {
       || new RegExp("^" + getCoursePath() + "/pages/" + TOOLBOX_PAGE_URL + "/?$").test(window.location.pathname);
   }
 
+  function isAiHubCoursePath() {
+    return new RegExp("^" + getCoursePath() + "(?:/|$)").test(window.location.pathname);
+  }
+
   function getActiveEditTabs() {
     if (isAiHubToolboxPath()) return TOOLBOX_EDIT_TABS;
     if (isAiHubHomePath()) return HOME_EDIT_TABS;
@@ -495,13 +499,20 @@ window.AIHubStatus = {
       : resourceRecord.resource_url || "#";
   }
 
+  function getResourceMetaText(resourceRecord) {
+    const category = limitText(resourceRecord.category || resourceRecord.topic || "", RESOURCE_CATEGORY_MAX_LENGTH);
+    const detail = limitText(resourceRecord.detail || resourceRecord.duration || "", RESOURCE_DETAIL_MAX_LENGTH);
+    if (category && detail) return category + " - " + detail;
+    if (category) return category;
+    if (detail) return detail;
+    return getResourceActionLabel(resourceRecord);
+  }
+
   function getResourceMetaLine(resourceRecord) {
     const category = limitText(resourceRecord.category || resourceRecord.topic || "", RESOURCE_CATEGORY_MAX_LENGTH);
     const detail = limitText(resourceRecord.detail || resourceRecord.duration || "", RESOURCE_DETAIL_MAX_LENGTH);
     if (category && detail) return escapeHtml(category) + " &middot; " + escapeHtml(detail);
-    if (category) return escapeHtml(category);
-    if (detail) return escapeHtml(detail);
-    return escapeHtml(getResourceActionLabel(resourceRecord));
+    return escapeHtml(getResourceMetaText(resourceRecord));
   }
 
   function getResourceCardActionText(resourceRecord) {
@@ -576,7 +587,7 @@ window.AIHubStatus = {
         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 28px; color: #000000;">Upcoming Events</h2>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,300px)); gap: 16px; justify-content: start;">
           ${cardsHtml}
         </div>
       </div>
@@ -611,7 +622,7 @@ window.AIHubStatus = {
 
     return `
       <div ${HUB_SECTION_ATTRIBUTE}="resources" style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,300px)); gap: 16px; justify-content: start;">
           ${cardsHtml}
         </div>
       </div>
@@ -920,9 +931,46 @@ window.AIHubStatus = {
   }
 
   function renderResourcePageBody(resourceRecord) {
+    const title = resourceRecord.title || "Resource";
+    const description = resourceRecord.description || "A short AI toolbox resource.";
+    const metaLine = getResourceMetaText(resourceRecord);
+    const backHref = getCoursePath() + "/pages/" + TOOLBOX_PAGE_URL;
+
     return `
-      <h2>${escapeHtml(resourceRecord.title || "Resource")}</h2>
-      <p>${escapeHtml(resourceRecord.description || "")}</p>
+      <div data-ai-hub-resource-page="true" style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
+        <div style="padding: 0 4px 24px;">
+          <a style="display: inline-block; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 11px 18px; border-radius: 8px;" href="${escapeAttribute(backHref)}">&larr; Back to resources</a>
+        </div>
+        <div style="padding: 0 4px 30px;">
+          <div data-ai-hub-resource-meta style="display: inline-block; color: #1d4ed8; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">${escapeHtml(metaLine)}</div>
+          <h2 data-ai-hub-resource-title style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
+          <p data-ai-hub-resource-description style="margin: 18px 0 0; font-size: 17px; max-width: 720px; color: #4b5563;">${escapeHtml(description)}</p>
+        </div>
+        <div style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
+          <div style="display: flex; align-items: center; justify-content: center; min-height: 320px; aspect-ratio: 16 / 9; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 14px; color: #1d4ed8; text-align: center;">
+            <div>
+              <div style="font-size: 48px; line-height: 1; margin-bottom: 12px;" aria-hidden="true">&#9654;</div>
+              <strong style="display: block; font-size: 20px; color: #000000;">Video placeholder</strong>
+              <span style="display: block; margin-top: 6px; font-size: 14px; color: #4b5563;">Add the video embed here.</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 28px; padding: 0 4px;">
+          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
+          <p style="margin: 0; font-size: 16px; color: #4b5563;">Use this space to summarize what the video demonstrated, what the viewer should try next, and any important context that makes the resource easier to apply.</p>
+        </div>
+        <div style="margin-top: 28px; background: #f8fafc; border: 1px solid #dbe3f0; border-left: 5px solid #1d4ed8; border-radius: 14px; padding: 20px 22px;">
+          <h3 style="margin: 0 0 8px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 20px; line-height: 1.2; color: #000000;">Use AI responsibly</h3>
+          <p style="margin: 0; font-size: 15px; color: #4b5563;">Stay safe, appropriate, and transparent: avoid entering private or sensitive information, verify AI output before using it, and tell learners or colleagues when AI helped shape the work.</p>
+        </div>
+        <div style="margin-top: 28px; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; padding: 20px 22px;">
+          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 20px; line-height: 1.2; color: #000000;">Additional Resources</h3>
+          <ul style="margin: 0; padding-left: 22px; font-size: 15px; color: #4b5563;">
+            <li>Add related links, files, examples, prompt templates, or next steps here.</li>
+            <li>Keep this list focused on what viewers need to use the resource well.</li>
+          </ul>
+        </div>
+      </div>
     `;
   }
 
@@ -931,7 +979,26 @@ window.AIHubStatus = {
     const descriptionHtml = `<p>${escapeHtml(resourceRecord.description || "")}</p>`;
     let body = String(existingBody || "").trim();
 
-    if (!body) return titleHtml + "\n" + descriptionHtml;
+    if (!body) return renderResourcePageBody(resourceRecord).trim();
+
+    if (/^<h2\b[^>]*>[\s\S]*?<\/h2>\s*<p\b[^>]*>[\s\S]*?<\/p>$/i.test(body)) {
+      return renderResourcePageBody(resourceRecord).trim();
+    }
+
+    const doc = new DOMParser().parseFromString(body, "text/html");
+    const managedPage = doc.querySelector("[data-ai-hub-resource-page]");
+
+    if (managedPage) {
+      const titleElement = managedPage.querySelector("[data-ai-hub-resource-title]");
+      const descriptionElement = managedPage.querySelector("[data-ai-hub-resource-description]");
+      const metaElement = managedPage.querySelector("[data-ai-hub-resource-meta]");
+
+      if (titleElement) titleElement.textContent = resourceRecord.title || "Resource";
+      if (descriptionElement) descriptionElement.textContent = resourceRecord.description || "A short AI toolbox resource.";
+      if (metaElement) metaElement.textContent = getResourceMetaText(resourceRecord);
+
+      return doc.body.innerHTML.trim();
+    }
 
     if (/<h2\b[^>]*>[\s\S]*?<\/h2>/i.test(body)) {
       body = body.replace(/<h2\b[^>]*>[\s\S]*?<\/h2>/i, titleHtml);
@@ -2883,10 +2950,11 @@ window.AIHubStatus = {
   }
 
   status.courseId = getCourseId();
+  status.coursePath = isAiHubCoursePath();
   status.homePath = isAiHubHomePath();
   status.toolboxPath = isAiHubToolboxPath();
 
-  if (status.homePath || status.toolboxPath) {
+  if (status.coursePath) {
     const nav = document.querySelector("#section-tabs");
     status.hasSectionTabs = Boolean(nav);
     if (!nav) {
@@ -2904,7 +2972,7 @@ window.AIHubStatus = {
     status.editResources = Boolean(document.getElementById("ai-hub-edit-resources-link"));
     status.restoreTabs = Boolean(document.getElementById(TOGGLE_BUTTON_ID));
   } else {
-    status.reason = "not_ai_hub_home_or_toolbox";
+    status.reason = "not_ai_hub_course";
   }
 
   window.AIHubData = {
@@ -2926,6 +2994,7 @@ window.AIHubStatus = {
     replaceCoursesSectionInBody,
     replaceResourcesSectionInBody,
     renderHubPageBody,
+    renderResourcePageBody,
     renderToolboxPageBody,
     renderCoursesSection,
     renderEventsSection,
