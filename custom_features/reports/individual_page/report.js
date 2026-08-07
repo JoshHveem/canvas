@@ -28,6 +28,30 @@
     return String(value).trim().toLowerCase();
   }
 
+  function normalizeEmploymentSkillLabel(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '');
+  }
+
+  function normalizeEmploymentSkillCode(value) {
+    const digits = String(value || '').replace(/\D+/g, '');
+    return digits ? digits.padStart(2, '0') : '';
+  }
+
+  function buildEmploymentSkillLookup(records) {
+    return (Array.isArray(records) ? records : []).reduce((lookup, record) => {
+      const normalizedLabel = normalizeEmploymentSkillLabel(record?.employment_skill);
+      const normalizedCode = normalizeEmploymentSkillCode(record?.employment_skill_code);
+
+      if (normalizedLabel && normalizedCode && !lookup[normalizedLabel]) {
+        lookup[normalizedLabel] = normalizedCode;
+      }
+
+      return lookup;
+    }, {});
+  }
+
   function normalizeTermTimestamp(value) {
     return String(value)
       .trim()
@@ -270,6 +294,7 @@
       distance_approved: false,
       career_goal__current: '',
       employment_skills_current: [],
+      employment_skill_lookup: {},
     };
   }
 
@@ -600,11 +625,12 @@
           });
         },
 
-        normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors, employmentSkills }) {
+        normalizeUserRecord({ canvasUser, studentHeader, hsTerms, courses, majors, employmentSkills, employmentSkillCatalog }) {
           studentHeader = studentHeader || {};
           const sortedMajors = this.sortMajors(majors || []);
           const defaultMajor = sortedMajors[0] || emptyMajor();
           employmentSkills = employmentSkills || [];
+          const employmentSkillLookup = buildEmploymentSkillLookup(employmentSkillCatalog);
           const user = {
             majors: sortedMajors,
             courses: courses || [],
@@ -628,6 +654,7 @@
             distance_approved: Boolean(defaultMajor.is_distance_approved),
             career_goal__current: studentHeader.career_goal__current || '',
             employment_skills_current: employmentSkills,
+            employment_skill_lookup: employmentSkillLookup,
           };
 
           this.selectedMajorIndex = 0;
@@ -644,14 +671,16 @@
               studentMajors,
               studentHSTerms,
               studentHSTermOverrides,
-              canvasUser
+              canvasUser,
+              employmentSkillCatalog
             ] = await Promise.all([
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_header'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_courses'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_majors'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms'}),
               bridgetools.req3('reports', {canvas_user_id: userId}, {dataset: 'student_hs_terms__override'}),
-              $.get(`/api/v1/users/${userId}`)
+              $.get(`/api/v1/users/${userId}`),
+              bridgetools.req3('reports', {}, {dataset: 'employment_skills'})
             ]);
 
             const primaryStudentHeader = studentHeader?.[0] || {};
@@ -681,7 +710,8 @@
               hsTerms: this.mergeHSTerms(studentHSTerms, studentHSTermOverrides),
               courses: studentCourses,
               majors,
-              employmentSkills: Array.isArray(studentEmploymentSkills) ? studentEmploymentSkills : []
+              employmentSkills: Array.isArray(studentEmploymentSkills) ? studentEmploymentSkills : [],
+              employmentSkillCatalog: Array.isArray(employmentSkillCatalog) ? employmentSkillCatalog : []
             });
           } catch (err) {
             console.error(err);

@@ -89,7 +89,7 @@ Vue.component('employment-skills-report', {
               :style="cardStyle()"
             >
               <div style="font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 10px;">
-                {{ entry.name }}
+                {{ formatSkillName(entry.name) }}
               </div>
               <div style="display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center;">
                 <span class="btech-ind-header__label">Instructor</span>
@@ -111,11 +111,11 @@ Vue.component('employment-skills-report', {
           </div>
 
           <div
-            v-if="selectedRecord.employment_skills_goals"
+            v-if="selectedRecord.employment_skills_goals__current"
             :style="cardStyle()"
           >
             <div style="font-weight: 600; margin-bottom: 8px;">Feedback/Goal(s)</div>
-            <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals }}</div>
+            <div style="white-space: pre-wrap;">{{ selectedRecord.employment_skills_goals__current }}</div>
           </div>
         </div>
       </div>
@@ -166,11 +166,13 @@ Vue.component('employment-skills-report', {
         ...Object.keys(selfScores)
       ]));
 
-      return categories.map(name => ({
-        name,
-        instructorScore: instructorScores[name],
-        selfScore: selfScores[name]
-      }));
+      return categories
+        .map(name => ({
+          name,
+          instructorScore: instructorScores[name],
+          selfScore: selfScores[name]
+        }))
+        .sort((a, b) => this.compareSkillNames(a.name, b.name));
     },
     lastEvaluationPillStyle() {
       if (!this.selectedRecord || !this.selectedRecord.most_recent_employment_skills_created_at) {
@@ -262,6 +264,31 @@ Vue.component('employment-skills-report', {
       const parsed = new Date(date);
       if (Number.isNaN(parsed.getTime())) return Number.POSITIVE_INFINITY;
       return (Date.now() - parsed.getTime()) / (1000 * 60 * 60 * 24);
+    },
+    normalizeSkillName(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+    },
+    skillCodeFor(name) {
+      const lookup = this.user?.employment_skill_lookup || {};
+      return lookup[this.normalizeSkillName(name)] || '';
+    },
+    formatSkillName(name) {
+      const code = this.skillCodeFor(name);
+      return code ? code + ' - ' + name : name;
+    },
+    compareSkillNames(a, b) {
+      const aCode = this.skillCodeFor(a);
+      const bCode = this.skillCodeFor(b);
+
+      if (aCode && bCode && aCode !== bCode) {
+        return aCode.localeCompare(bCode, undefined, { numeric: true });
+      }
+      if (aCode && !bCode) return -1;
+      if (!aCode && bCode) return 1;
+
+      return String(a || '').localeCompare(String(b || ''));
     },
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';

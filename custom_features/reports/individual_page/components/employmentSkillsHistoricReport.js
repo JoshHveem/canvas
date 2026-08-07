@@ -50,9 +50,9 @@ Vue.component('employment-skills-historic-report', {
                 v-for="skillName in group.skillColumns"
                 :key="'header-' + groupIndex + '-' + skillName"
                 :style="headerCellStyle()"
-                :title="skillName"
+                :title="formatSkillName(skillName)"
               >
-                {{ skillName }}
+                {{ formatSkillName(skillName) }}
               </div>
 
               <template v-for="record in group.records">
@@ -234,7 +234,7 @@ Vue.component('employment-skills-historic-report', {
       });
 
       return (populatedSkillNames.length ? populatedSkillNames : allSkillNames)
-        .sort((a, b) => a.localeCompare(b));
+        .sort((a, b) => this.compareSkillNames(a, b));
     },
     buildSkillSignature(skillColumns) {
       return (skillColumns || []).join('|');
@@ -273,6 +273,31 @@ Vue.component('employment-skills-historic-report', {
     },
     displayScore(score) {
       return score == null || score === '' ? 'N/A' : score;
+    },
+    normalizeSkillName(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+    },
+    skillCodeFor(name) {
+      const lookup = this.user?.employment_skill_lookup || {};
+      return lookup[this.normalizeSkillName(name)] || '';
+    },
+    formatSkillName(name) {
+      const code = this.skillCodeFor(name);
+      return code ? code + ' - ' + name : name;
+    },
+    compareSkillNames(a, b) {
+      const aCode = this.skillCodeFor(a);
+      const bCode = this.skillCodeFor(b);
+
+      if (aCode && bCode && aCode !== bCode) {
+        return aCode.localeCompare(bCode, undefined, { numeric: true });
+      }
+      if (aCode && !bCode) return -1;
+      if (!aCode && bCode) return 1;
+
+      return String(a || '').localeCompare(String(b || ''));
     },
     panelStyle(backgroundColor, textColor) {
       return 'padding: 20px; border: 1px solid ' + backgroundColor + '; border-radius: 12px; background: ' + backgroundColor + '; color: ' + textColor + ';';
