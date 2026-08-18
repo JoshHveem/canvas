@@ -1,3 +1,6 @@
+// Very temporary tool while trying to sort out Pharmacy Tech weird cartridge importing.
+// Maybe keep while they use the tool, but turn it off in custom_canvas.js once they're done with it for this year.
+
 (() => {
   "use strict";
 
@@ -98,7 +101,9 @@
   function parseChapter(name) {
     const match = String(name || "")
       .trim()
-      .match(/^(?:Chapter|Ch)\s+0*(\d+)\s+(.+)$/i);
+      .match(
+        /^(?:Chapter|Ch)\s+0*(\d+)(?:\s*[:.-]\s*|\s+)(.+)$/i
+      );
 
     if (!match) return null;
 
@@ -843,7 +848,8 @@
             }
           );
 
-        const typeMap = new Map();
+        const chapterAssignments = [];
+        const typeCounts = new Map();
         const unmatched = [];
 
         selectedAssignments.forEach(
@@ -858,11 +864,48 @@
             }
 
             const key = normalize(type);
+            chapterAssignments.push({
+              assignment,
+              key,
+              label: type,
+              chapter:
+                getChapterNumber(
+                  assignment.name
+                )
+            });
+            typeCounts.set(
+              key,
+              (typeCounts.get(key) || 0) + 1
+            );
+          }
+        );
+
+        const typeMap = new Map();
+        const chapterSpecific = [];
+
+        chapterAssignments.forEach(
+          ({
+            assignment,
+            key,
+            label,
+            chapter
+          }) => {
+            if (
+              chapter !== null &&
+              typeCounts.get(key) === 1
+            ) {
+              chapterSpecific.push({
+                assignment,
+                chapter,
+                label
+              });
+              return;
+            }
 
             if (!typeMap.has(key)) {
               typeMap.set(key, {
                 key,
-                label: type,
+                label,
                 count: 0
               });
             }
@@ -875,6 +918,14 @@
           ...typeMap.values()
         ].sort((a, b) =>
           a.label.localeCompare(b.label)
+        );
+
+        chapterSpecific.sort((a, b) =>
+          (a.chapter ?? 0) -
+            (b.chapter ?? 0) ||
+          a.label.localeCompare(
+            b.label
+          )
         );
 
         unmatched.sort((a, b) =>
@@ -1082,10 +1133,64 @@
         modal.append(
           title,
           instructions,
-          legend,
-          typeHeading,
-          typeList
+          legend
         );
+
+        if (types.length) {
+          modal.append(
+            typeHeading,
+            typeList
+          );
+        }
+
+        if (chapterSpecific.length) {
+          const chapterHeading =
+            document.createElement("h3");
+
+          chapterHeading.textContent =
+            `Chapter specific (${chapterSpecific.length})`;
+
+          const chapterInstructions =
+            document.createElement("p");
+
+          chapterInstructions.textContent =
+            "These items only appear in one selected chapter, so choose them individually.";
+
+          const chapterList =
+            document.createElement("div");
+
+          chapterList.className =
+            "chcm-content-list";
+
+          chapterSpecific.forEach(
+            ({
+              assignment,
+              chapter
+            }) => {
+              chapterList.append(
+                createChoiceRow({
+                  label:
+                    assignment.name,
+                  detail:
+                    chapter === null
+                      ? null
+                      : `(Chapter ${chapter})`,
+                  actionMap:
+                    assignmentActions,
+                  actionKey: Number(
+                    assignment.id
+                  )
+                })
+              );
+            }
+          );
+
+          modal.append(
+            chapterHeading,
+            chapterInstructions,
+            chapterList
+          );
+        }
 
         if (unmatched.length) {
           const otherHeading =
