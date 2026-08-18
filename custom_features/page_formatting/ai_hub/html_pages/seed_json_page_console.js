@@ -4,7 +4,7 @@
   Copy/paste this whole file into the browser console while logged into Canvas.
   It seeds this hidden Canvas page:
 
-  https://btech.instructure.com/courses/[course id]/pages/json
+  https://btech.instructure.com/courses/[course id]/pages/ai-hub-json
 
   with starter JSON data for events, courses, and resources.
 */
@@ -14,7 +14,7 @@ window.AIHubConfig = Object.assign({
 
 (async function () {
   const HUB_CONFIG = window.AIHubConfig;
-  const DATA_PAGE_URL = "json";
+  const DATA_PAGE_URL = "ai-hub-json";
   const DATA_ELEMENT_ID = "ai-hub-json-data";
 
   function getCourseId() {
@@ -162,6 +162,8 @@ window.AIHubConfig = Object.assign({
       {
         id: "resource_ai_policy_template",
         icon_key: "document",
+        category: "Policy",
+        detail: "Template",
         title: "AI Use Policy Template",
         description: "Editable language for setting expectations around AI use.",
         resource_url: "REPLACE-WITH-RESOURCE-LINK-1",
@@ -173,6 +175,8 @@ window.AIHubConfig = Object.assign({
       {
         id: "resource_prompt_library",
         icon_key: "checklist",
+        category: "Prompting",
+        detail: "Library",
         title: "Prompt Library",
         description: "Reusable prompts for planning, teaching, assessment, and feedback.",
         resource_url: "REPLACE-WITH-RESOURCE-LINK-2",
@@ -184,6 +188,8 @@ window.AIHubConfig = Object.assign({
       {
         id: "resource_ai_assignment_checklist",
         icon_key: "play",
+        category: "Assignments",
+        detail: "Checklist",
         title: "AI Assignment Checklist",
         description: "Review assignments for AI clarity, usefulness, and integrity.",
         resource_url: "REPLACE-WITH-RESOURCE-LINK-3",
@@ -195,6 +201,8 @@ window.AIHubConfig = Object.assign({
       {
         id: "resource_tool_evaluation_guide",
         icon_key: "comment",
+        category: "Tools",
+        detail: "Guide",
         title: "Tool Evaluation Guide",
         description: "Compare AI tools for privacy, accessibility, cost, and fit.",
         resource_url: "REPLACE-WITH-RESOURCE-LINK-4",

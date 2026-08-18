@@ -435,8 +435,9 @@
         },
 
         dateToString(date) {
-          date = new Date(Date.parse(date));
-          return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+          const parsedDate = date instanceof Date ? date : new Date(date);
+          if (Number.isNaN(parsedDate.getTime())) return 'n/a';
+          return parsedDate.getFullYear() + '-' + (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
         },
 
         // Returns { [userId]: submissionNode } for newest submission since submittedSince
@@ -538,6 +539,13 @@
           return diffDays;
         },
 
+        parseGraphQLDate(value) {
+          if (value == null || value === '') return null;
+
+          const timestamp = value instanceof Date ? value.getTime() : typeof value === 'number' ? value : Date.parse(value);
+          return Number.isFinite(timestamp) ? timestamp : null;
+        },
+
         async loadEnrollments(courseId) {
           let enrollments = [];
           const lookbackDays = 14;
@@ -554,12 +562,12 @@
           for (let e = 0; e < enrollmentsData.length; e++) {
             let enrollmentData = enrollmentsData[e];
 
-            let endAt = enrollmentData.endAt ? Date.parse(enrollmentData.endAt) : null;
-            let startAt = enrollmentData.startAt ?? enrollmentData.createdAt;
-            startAt = startAt ? Date.parse(startAt) : null;
+            const endAt = this.parseGraphQLDate(enrollmentData.endAt);
+            const startAt =
+              this.parseGraphQLDate(enrollmentData.startAt) ?? this.parseGraphQLDate(enrollmentData.createdAt);
 
-            let daysLeft = this.calcDaysBetweenDates(new Date(), endAt);
-            let daysInCourse = this.calcDaysBetweenDates(startAt);
+            const daysLeft = endAt == null ? null : this.calcDaysBetweenDates(new Date(), endAt);
+            const daysInCourse = startAt == null ? null : this.calcDaysBetweenDates(startAt);
 
             if (!this.section_names.includes(enrollmentData.section.name)) {
               this.section_names.push(enrollmentData.section.name);
@@ -626,6 +634,8 @@
           if (enrollment.current_score > 0) {
             enrollment.progress = Math.round((enrollment.final_score / enrollment.current_score) * 100);
           }
+          if (enrollment.created_at == null) return enrollment;
+
           let now = Date.now();
           let diffTime = now - enrollment.created_at;
           if (diffTime > 0) {
