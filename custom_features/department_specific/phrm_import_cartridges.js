@@ -1199,6 +1199,18 @@
       )
     ]);
 
+    const destinationModuleItems =
+      (
+        await Promise.all(
+          destinationModules.map(
+            module =>
+              canvasGet(
+                `/api/v1/courses/${destinationCourseId}/modules/${module.id}/items`
+              )
+          )
+        )
+      ).flat();
+
     const modulesByName = new Map(
       destinationModules.map(module => [
         normalize(module.name),
@@ -1226,6 +1238,26 @@
         ]
       )
     );
+
+    const existingExternalToolUrls =
+      new Set(
+        [
+          ...destinationAssignments.map(
+            assignment =>
+              normalize(
+                assignment
+                  .external_tool_tag_attributes
+                  ?.url
+              )
+          ),
+          ...destinationModuleItems.map(
+            item =>
+              normalize(
+                item.external_url
+              )
+          )
+        ].filter(Boolean)
+      );
 
     const moduleItemsById = new Map();
     const toolIdsByUrl = new Map();
@@ -1358,6 +1390,18 @@
         const launchUrl =
           source.external_tool_tag_attributes
             .url;
+        const normalizedLaunchUrl =
+          normalize(launchUrl);
+
+        if (
+          normalizedLaunchUrl &&
+          existingExternalToolUrls.has(
+            normalizedLaunchUrl
+          )
+        ) {
+          skipped.push(source.name);
+          continue;
+        }
 
         if (action === "link") {
           const existingLink =
@@ -1407,6 +1451,9 @@
               });
 
             moduleItems.push(item);
+            existingExternalToolUrls.add(
+              normalizedLaunchUrl
+            );
           }
 
           addedLinks.push(source.name);
@@ -1438,6 +1485,9 @@
           assignmentsByKey.set(
             assignmentKey,
             assignment
+          );
+          existingExternalToolUrls.add(
+            normalizedLaunchUrl
           );
         }
 

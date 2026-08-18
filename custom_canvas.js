@@ -368,7 +368,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
         feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
         feature("people_page/instructor_add_remove_guide", /^\/courses\/[0-9]+\/users$/);
       }
-      if (CURRENT_DEPARTMENT_ID == 3945) { //PHARMACY
+      if (CURRENT_DEPARTMENT_ID == 3945 && IS_TEACHER) { //PHARMACY
         feature('department_specific/phrm_import_cartridges', /^\/courses\/[0-9]+(\/modules){0,1}$/);
       }
       if (CURRENT_DEPARTMENT_ID == 3827) { //NURSING
