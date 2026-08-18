@@ -48,6 +48,35 @@
     return text ? JSON.parse(text) : null;
   }
 
+  async function canvasAction(
+    url,
+    method,
+    body = null
+  ) {
+    const response = await fetch(url, {
+      method,
+      credentials: "same-origin",
+      headers: {
+        "X-CSRF-Token": csrfToken,
+        ...(body
+          ? {
+              "Content-Type":
+                "application/x-www-form-urlencoded;charset=UTF-8"
+            }
+          : {})
+      },
+      body
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `${method} ${url}: ${response.status} ${await response.text()}`
+      );
+    }
+
+    return response.text();
+  }
+
   function normalize(value) {
     return String(value || "")
       .trim()
@@ -276,45 +305,161 @@
         display: flex;
         gap: 8px;
       }
+
+      .chcm-progress {
+        width: 100%;
+        height: 18px;
+        margin: 12px 0 10px;
+        border: 1px solid #c7cdd1;
+        border-radius: 999px;
+        background: #f5f5f5;
+        overflow: hidden;
+      }
+
+      .chcm-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: #0b6b15;
+        transition: width 160ms ease;
+      }
+
+      .chcm-progress-text {
+        margin: 0;
+        color: #4a5968;
+        font-size: 0.95rem;
+      }
     `;
 
     document.head.append(style);
   }
 
   function openWizard(courses) {
-    return new Promise(resolve => {
-      addWizardStyles();
+    addWizardStyles();
 
-      const overlay =
-        document.createElement("div");
+    const overlay =
+      document.createElement("div");
 
-      overlay.className = "chcm-overlay";
+    overlay.className = "chcm-overlay";
 
-      const modal =
-        document.createElement("div");
+    const modal =
+      document.createElement("div");
 
-      modal.className = "chcm-modal";
-      modal.setAttribute("role", "dialog");
-      modal.setAttribute("aria-modal", "true");
-      modal.setAttribute(
-        "aria-labelledby",
-        "chcm-wizard-title"
-      );
+    modal.className = "chcm-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute(
+      "aria-labelledby",
+      "chcm-wizard-title"
+    );
 
-      overlay.append(modal);
-      document.body.append(overlay);
+    overlay.append(modal);
+    document.body.append(overlay);
 
-      let selectedCourse = null;
-      let selectedChapters = new Set();
-      let sourceAssignments = [];
-      let sourceGroups = [];
+    let selectedCourse = null;
+    let selectedChapters = new Set();
+    let sourceAssignments = [];
+    let sourceGroups = [];
+    let isBusy = false;
+    let isResolved = false;
+    let resolveResult = () => {};
+    const result = new Promise(
+      resolve => {
+        resolveResult = resolve;
+      }
+    );
 
-      function close(result) {
-        overlay.remove();
-        resolve(result);
+    function resolveOnce(value) {
+      if (isResolved) return;
+      isResolved = true;
+      resolveResult(value);
+    }
+
+    function close(result) {
+      overlay.remove();
+      resolveOnce(result);
+    }
+
+    function renderProgressPage({
+      title,
+      message,
+      current = null,
+      total = null
+    }) {
+      isBusy = true;
+      modal.replaceChildren();
+
+      const heading =
+        document.createElement("h2");
+
+      heading.id = "chcm-wizard-title";
+      heading.textContent = title;
+
+      const instructions =
+        document.createElement("p");
+
+      instructions.textContent = message;
+
+      modal.append(heading);
+
+      if (
+        Number.isFinite(current) &&
+        Number.isFinite(total) &&
+        total > 0
+      ) {
+        const progress =
+          document.createElement("div");
+
+        progress.className =
+          "chcm-progress";
+        progress.setAttribute(
+          "role",
+          "progressbar"
+        );
+        progress.setAttribute(
+          "aria-valuemin",
+          "0"
+        );
+        progress.setAttribute(
+          "aria-valuemax",
+          String(total)
+        );
+        progress.setAttribute(
+          "aria-valuenow",
+          String(current)
+        );
+        progress.setAttribute(
+          "aria-label",
+          "Import progress"
+        );
+
+        const progressBar =
+          document.createElement("div");
+
+        progressBar.className =
+          "chcm-progress-bar";
+        progressBar.style.width = `${Math.max(
+          0,
+          Math.min(
+            100,
+            (current / total) * 100
+          )
+        )}%`;
+
+        progress.append(progressBar);
+        modal.append(progress);
       }
 
-      function createFooter({
+      const status =
+        document.createElement("p");
+
+      status.className =
+        "chcm-progress-text";
+      status.textContent = message;
+
+      modal.append(status);
+    }
+
+    function createFooter({
         backAction,
         nextText,
         nextAction,
@@ -349,6 +494,7 @@
         const cancel = makeButton("Cancel");
 
         cancel.addEventListener("click", () => {
+          if (isBusy) return;
           close(null);
         });
 
@@ -372,7 +518,8 @@
         };
       }
 
-      function renderCoursePage() {
+    function renderCoursePage() {
+      isBusy = false;
         modal.replaceChildren();
 
         const title =
@@ -546,7 +693,8 @@
         search.focus();
       }
 
-      function renderChapterPage() {
+    function renderChapterPage() {
+      isBusy = false;
         modal.replaceChildren();
 
         const chapters = [
@@ -672,7 +820,8 @@
         );
       }
 
-      function renderContentPage() {
+    function renderContentPage() {
+      isBusy = false;
         modal.replaceChildren();
 
         /*
@@ -982,7 +1131,7 @@
           backAction: renderChapterPage,
           nextText: "Add selected content",
           nextAction: () => {
-            close({
+            resolveOnce({
               sourceCourse: selectedCourse,
               assignments:
                 selectedAssignments,
@@ -999,26 +1148,50 @@
         footer.next.focus();
       }
 
-      overlay.addEventListener(
-        "click",
-        event => {
-          if (event.target === overlay) {
-            close(null);
-          }
+    overlay.addEventListener(
+      "click",
+      event => {
+        if (
+          event.target === overlay &&
+          !isBusy
+        ) {
+          close(null);
         }
-      );
+      }
+    );
 
-      modal.addEventListener(
-        "keydown",
-        event => {
-          if (event.key === "Escape") {
-            close(null);
-          }
+    modal.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key === "Escape" &&
+          !isBusy
+        ) {
+          close(null);
         }
-      );
+      }
+    );
 
-      renderCoursePage();
-    });
+    renderCoursePage();
+
+    return {
+      result,
+      showProgress(
+        current,
+        total
+      ) {
+        renderProgressPage({
+          title: "Adding content",
+          message:
+            `Do not leave this page or your progress will be lost. ${current} of ${total} processed.`,
+          current,
+          total
+        });
+      },
+      close() {
+        close(null);
+      }
+    };
   }
 
   async function createModule(
@@ -1096,6 +1269,54 @@
     );
   }
 
+  async function updateAssignment(
+    assignmentId,
+    source,
+    assignmentGroupId
+  ) {
+    return canvasWrite(
+      `/api/v1/courses/${destinationCourseId}/assignments/${assignmentId}`,
+      "PUT",
+      form({
+        "assignment[name]": source.name,
+        "assignment[description]":
+          source.description || "",
+        "assignment[position]":
+          source.position,
+        "assignment[assignment_group_id]":
+          assignmentGroupId,
+        "assignment[submission_types][]":
+          "external_tool",
+        "assignment[external_tool_tag_attributes][url]":
+          source.external_tool_tag_attributes
+            .url,
+        "assignment[external_tool_tag_attributes][new_tab]":
+          source.external_tool_tag_attributes
+            .new_tab ?? true,
+        "assignment[points_possible]":
+          source.points_possible ?? 0,
+        "assignment[grading_type]":
+          source.grading_type || "points",
+        "assignment[omit_from_final_grade]":
+          source.omit_from_final_grade ??
+          false,
+        "assignment[hide_in_gradebook]":
+          source.hide_in_gradebook ?? false,
+        "assignment[published]":
+          source.published === true
+      })
+    );
+  }
+
+  async function deleteAssignment(
+    assignmentId
+  ) {
+    return canvasWrite(
+      `/api/v1/courses/${destinationCourseId}/assignments/${assignmentId}`,
+      "DELETE"
+    );
+  }
+
   async function getDestinationToolId(
     launchUrl
   ) {
@@ -1158,9 +1379,79 @@
     return item;
   }
 
+  async function deleteModuleItem(
+    moduleId,
+    itemId
+  ) {
+    return canvasWrite(
+      `/api/v1/courses/${destinationCourseId}/modules/${moduleId}/items/${itemId}`,
+      "DELETE"
+    );
+  }
+
+  async function getDeletedAssignments() {
+    const html = await canvasAction(
+      `/courses/${destinationCourseId}/undelete`,
+      "GET"
+    );
+
+    const doc = new DOMParser().parseFromString(
+      html,
+      "text/html"
+    );
+
+    return [
+      ...doc.querySelectorAll(
+        'a[href*="/undelete/assignment_"], form[action*="/undelete/assignment_"]'
+      )
+    ]
+      .map(element => {
+        const source =
+          element.getAttribute("action") ||
+          element.getAttribute("href") ||
+          "";
+
+        const match = source.match(
+          /\/undelete\/assignment_(\d+)/
+        );
+
+        if (!match) return null;
+
+        const container =
+          element.closest(
+            "li, tr, .item, .ic-Table__row"
+          ) || element.parentElement;
+
+        const name = String(
+          container?.textContent ||
+            element.textContent ||
+            ""
+        )
+          .replace(/\brestore\b/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        return {
+          id: Number(match[1]),
+          name,
+          restorePath: source
+        };
+      })
+      .filter(Boolean);
+  }
+
+  async function restoreDeletedAssignment(
+    restorePath
+  ) {
+    await canvasAction(
+      restorePath,
+      "POST"
+    );
+  }
+
   async function importContent(
     wizardResult,
-    button
+    wizard
   ) {
     const {
       assignments,
@@ -1203,10 +1494,15 @@
       (
         await Promise.all(
           destinationModules.map(
-            module =>
-              canvasGet(
-                `/api/v1/courses/${destinationCourseId}/modules/${module.id}/items`
-              )
+            async module =>
+              (
+                await canvasGet(
+                  `/api/v1/courses/${destinationCourseId}/modules/${module.id}/items`
+                )
+              ).map(item => ({
+                ...item,
+                module_id: module.id
+              }))
           )
         )
       ).flat();
@@ -1225,58 +1521,206 @@
       ])
     );
 
-    const assignmentsByKey = new Map(
-      destinationAssignments.map(
-        assignment => [
-          [
-            normalize(assignment.name),
-            assignment
-              .external_tool_tag_attributes
-              ?.url || ""
-          ].join("|"),
-          assignment
-        ]
-      )
+    const assignmentsByKey = new Map();
+    const assignmentsByUrl = new Map();
+    const linksByUrl = new Map();
+    const moduleItemsById = new Map(
+      destinationModules.map(module => [
+        module.id,
+        destinationModuleItems.filter(
+          item =>
+            Number(item.module_id) ===
+            Number(module.id)
+        )
+      ])
     );
+    const toolIdsByUrl = new Map();
+    let deletedAssignmentsPromise = null;
 
-    const existingExternalToolUrls =
-      new Set(
-        [
-          ...destinationAssignments.map(
-            assignment =>
-              normalize(
-                assignment
-                  .external_tool_tag_attributes
-                  ?.url
-              )
-          ),
-          ...destinationModuleItems.map(
-            item =>
-              normalize(
-                item.external_url
-              )
-          )
-        ].filter(Boolean)
+    function getAssignmentKey(
+      assignmentName,
+      launchUrl
+    ) {
+      return [
+        normalize(assignmentName),
+        normalize(launchUrl)
+      ].join("|");
+    }
+
+    function pushByKey(map, key, value) {
+      if (!key) return;
+
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+
+      map.get(key).push(value);
+    }
+
+    function removeByKey(
+      map,
+      key,
+      predicate
+    ) {
+      if (!map.has(key)) return;
+
+      const next = map
+        .get(key)
+        .filter(item => !predicate(item));
+
+      if (next.length) {
+        map.set(key, next);
+      } else {
+        map.delete(key);
+      }
+    }
+
+    function indexAssignment(
+      assignment
+    ) {
+      const normalizedUrl =
+        normalize(
+          assignment
+            .external_tool_tag_attributes
+            ?.url
+        );
+
+      if (!normalizedUrl) return;
+
+      assignmentsByKey.set(
+        getAssignmentKey(
+          assignment.name,
+          normalizedUrl
+        ),
+        assignment
       );
 
-    const moduleItemsById = new Map();
-    const toolIdsByUrl = new Map();
+      pushByKey(
+        assignmentsByUrl,
+        normalizedUrl,
+        assignment
+      );
+    }
+
+    function unindexAssignment(
+      assignment
+    ) {
+      const normalizedUrl =
+        normalize(
+          assignment
+            .external_tool_tag_attributes
+            ?.url
+        );
+
+      if (!normalizedUrl) return;
+
+      assignmentsByKey.delete(
+        getAssignmentKey(
+          assignment.name,
+          normalizedUrl
+        )
+      );
+
+      removeByKey(
+        assignmentsByUrl,
+        normalizedUrl,
+        item =>
+          Number(item.id) ===
+          Number(assignment.id)
+      );
+    }
+
+    function indexLink(item) {
+      const normalizedUrl =
+        normalize(item.external_url);
+
+      if (!normalizedUrl) return;
+
+      pushByKey(
+        linksByUrl,
+        normalizedUrl,
+        item
+      );
+    }
+
+    function unindexLink(item) {
+      const normalizedUrl =
+        normalize(item.external_url);
+
+      if (!normalizedUrl) return;
+
+      removeByKey(
+        linksByUrl,
+        normalizedUrl,
+        current =>
+          Number(current.id) ===
+            Number(item.id) &&
+          Number(current.module_id) ===
+            Number(item.module_id)
+      );
+    }
+
+    destinationAssignments.forEach(
+      indexAssignment
+    );
+    destinationModuleItems
+      .filter(
+        item => item.type === "ExternalTool"
+      )
+      .forEach(indexLink);
 
     async function getModuleItems(
       moduleId
     ) {
-      if (!moduleItemsById.has(moduleId)) {
-        moduleItemsById.set(
-          moduleId,
-          await canvasGet(
-            `/api/v1/courses/${destinationCourseId}/modules/${moduleId}/items`
-          )
-        );
-      }
-
       return moduleItemsById.get(
         moduleId
+      ) || [];
+    }
+
+    async function getDeletedAssignmentsCached() {
+      if (!deletedAssignmentsPromise) {
+        deletedAssignmentsPromise =
+          getDeletedAssignments();
+      }
+
+      return deletedAssignmentsPromise;
+    }
+
+    async function findRestorableAssignment(
+      source
+    ) {
+      const deletedAssignments =
+        await getDeletedAssignmentsCached();
+      const sourceName = normalize(
+        source.name
       );
+
+      return (
+        deletedAssignments.find(
+          assignment =>
+            normalize(
+              assignment.name
+            ) === sourceName
+        ) || null
+      );
+    }
+
+    function removeDeletedAssignmentCandidate(
+      deletedAssignmentId
+    ) {
+      if (!deletedAssignmentsPromise) return;
+
+      deletedAssignmentsPromise =
+        deletedAssignmentsPromise.then(
+          deletedAssignments =>
+            deletedAssignments.filter(
+              assignment =>
+                Number(assignment.id) !==
+                Number(
+                  deletedAssignmentId
+                )
+            )
+        );
     }
 
     async function ensureModule(
@@ -1340,6 +1784,9 @@
 
     const addedAssignments = [];
     const addedLinks = [];
+    const restoredAssignments = [];
+    const replacedAssignments = [];
+    const replacedLinks = [];
     const skipped = [];
     const failed = [];
 
@@ -1355,8 +1802,10 @@
         selections
       );
 
-      button.textContent =
-        `Adding ${index + 1} of ${assignments.length}…`;
+      wizard.showProgress(
+        index + 1,
+        assignments.length
+      );
 
       try {
         if (action === "skip") {
@@ -1392,72 +1841,152 @@
             .url;
         const normalizedLaunchUrl =
           normalize(launchUrl);
+        const existingAssignments =
+          normalizedLaunchUrl
+            ? [
+                ...(
+                  assignmentsByUrl.get(
+                    normalizedLaunchUrl
+                  ) || []
+                )
+              ]
+            : [];
+        const existingLinks =
+          normalizedLaunchUrl
+            ? [
+                ...(
+                  linksByUrl.get(
+                    normalizedLaunchUrl
+                  ) || []
+                )
+              ]
+            : [];
 
-        if (
-          normalizedLaunchUrl &&
-          existingExternalToolUrls.has(
-            normalizedLaunchUrl
-          )
-        ) {
+        if (action === "link") {
+          if (existingLinks.length) {
+            skipped.push(source.name);
+            continue;
+          }
+
+          for (const assignment of existingAssignments) {
+            await deleteAssignment(
+              assignment.id
+            );
+
+            unindexAssignment(
+              assignment
+            );
+            replacedAssignments.push(
+              source.name
+            );
+
+            moduleItemsById.forEach(
+              items => {
+                for (
+                  let itemIndex =
+                    items.length - 1;
+                  itemIndex >= 0;
+                  itemIndex--
+                ) {
+                  const item =
+                    items[itemIndex];
+
+                  if (
+                    item.type ===
+                      "Assignment" &&
+                    Number(
+                      item.content_id
+                    ) ===
+                      Number(
+                        assignment.id
+                      )
+                  ) {
+                    items.splice(
+                      itemIndex,
+                      1
+                    );
+                  }
+                }
+              }
+            );
+          }
+
+          let toolId =
+            toolIdsByUrl.get(
+              launchUrl
+            );
+
+          if (!toolId) {
+            toolId =
+              await getDestinationToolId(
+                launchUrl
+              );
+
+            toolIdsByUrl.set(
+              launchUrl,
+              toolId
+            );
+          }
+
+          const item =
+            await createModuleItem({
+              module,
+              type: "ExternalTool",
+              title: source.name,
+              contentId: toolId,
+              externalUrl: launchUrl,
+              position:
+                source.position,
+              published:
+                source.published ===
+                true,
+              newTab:
+                source
+                  .external_tool_tag_attributes
+                  .new_tab ?? true
+            });
+
+          item.module_id = module.id;
+          moduleItems.push(item);
+          indexLink(item);
+
+          addedLinks.push(source.name);
+          continue;
+        }
+
+        if (existingAssignments.length) {
           skipped.push(source.name);
           continue;
         }
 
-        if (action === "link") {
-          const existingLink =
-            moduleItems.find(item => {
-              return (
-                item.type ===
-                  "ExternalTool" &&
-                item.external_url ===
-                  launchUrl
-              );
-            });
+        for (const link of existingLinks) {
+          await deleteModuleItem(
+            link.module_id,
+            link.id
+          );
 
-          if (!existingLink) {
-            let toolId =
-              toolIdsByUrl.get(
-                launchUrl
-              );
+          const items =
+            await getModuleItems(
+              link.module_id
+            );
+          const itemIndex =
+            items.findIndex(
+              item =>
+                Number(item.id) ===
+                Number(link.id)
+            );
 
-            if (!toolId) {
-              toolId =
-                await getDestinationToolId(
-                  launchUrl
-                );
-
-              toolIdsByUrl.set(
-                launchUrl,
-                toolId
-              );
-            }
-
-            const item =
-              await createModuleItem({
-                module,
-                type: "ExternalTool",
-                title: source.name,
-                contentId: toolId,
-                externalUrl: launchUrl,
-                position:
-                  source.position,
-                published:
-                  source.published ===
-                  true,
-                newTab:
-                  source
-                    .external_tool_tag_attributes
-                    .new_tab ?? true
-              });
-
-            moduleItems.push(item);
-            existingExternalToolUrls.add(
-              normalizedLaunchUrl
+          if (itemIndex >= 0) {
+            items.splice(
+              itemIndex,
+              1
             );
           }
 
-          addedLinks.push(source.name);
-          continue;
+          unindexLink(link);
+          replacedLinks.push(
+            source.name
+          );
         }
 
         const destinationGroup =
@@ -1476,18 +2005,40 @@
           );
 
         if (!assignment) {
-          assignment =
-            await createAssignment(
-              source,
-              destinationGroup.id
+          const restorableAssignment =
+            await findRestorableAssignment(
+              source
             );
 
-          assignmentsByKey.set(
-            assignmentKey,
+          if (restorableAssignment) {
+            await restoreDeletedAssignment(
+              restorableAssignment.restorePath
+            );
+
+            removeDeletedAssignmentCandidate(
+              restorableAssignment.id
+            );
+
+            assignment =
+              await updateAssignment(
+                restorableAssignment.id,
+                source,
+                destinationGroup.id
+              );
+
+            restoredAssignments.push(
+              source.name
+            );
+          } else {
+            assignment =
+              await createAssignment(
+                source,
+                destinationGroup.id
+              );
+          }
+
+          indexAssignment(
             assignment
-          );
-          existingExternalToolUrls.add(
-            normalizedLaunchUrl
           );
         }
 
@@ -1547,12 +2098,33 @@
       }))
     );
 
+    console.table(
+      restoredAssignments.map(name => ({
+        restoredAssignment: name
+      }))
+    );
+
+    console.table(
+      replacedAssignments.map(name => ({
+        replacedAssignmentWithLink:
+          name
+      }))
+    );
+
+    console.table(
+      replacedLinks.map(name => ({
+        replacedLinkWithAssignment:
+          name
+      }))
+    );
+
     console.table(failed);
 
     alert(
       [
         `Assignments added: ${addedAssignments.length}`,
         `Links added: ${addedLinks.length}`,
+        `Assignments restored: ${restoredAssignments.length}`,
         `Not pulled in: ${skipped.length}`,
         `Failed: ${failed.length}`
       ].join("\n")
@@ -1580,19 +2152,20 @@
       button.disabled = false;
       button.innerHTML = originalHtml;
 
+      const wizard = openWizard(courses);
       const wizardResult =
-        await openWizard(courses);
+        await wizard.result;
 
       if (!wizardResult) return;
 
       button.disabled = true;
-      button.textContent =
-        "Adding content…";
 
       await importContent(
         wizardResult,
-        button
+        wizard
       );
+
+      wizard.close();
 
       location.reload();
     } catch (error) {
