@@ -4,7 +4,7 @@
 (() => {
   "use strict";
 
-  const sourceAccountId = 4494;
+  const sourceAccountId = 4495;
   const destinationCourseId = ENV.COURSE_ID;
   const buttonId = "import-chcm-content";
 
