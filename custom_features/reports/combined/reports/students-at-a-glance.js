@@ -77,7 +77,7 @@ Vue.component('reports-students-at-a-glance', {
 
   mounted() {
     this.syncFromReportContext();
-    this.loadDepartmentOptions();
+    this.loadDepartmentOptions(true);
   },
 
   watch: {
