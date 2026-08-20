@@ -20,6 +20,7 @@ Vue.component('reports-students-at-a-glance', {
       loadError: '',
       loadRequestId: 0,
       loadDepartmentsRequestId: 0,
+      hasLoadedDepartmentOptions: false,
       year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
       allMajors: [],
@@ -77,7 +78,7 @@ Vue.component('reports-students-at-a-glance', {
 
   mounted() {
     this.syncFromReportContext();
-    this.loadDepartmentOptions(true);
+    this.loadDepartmentOptions();
   },
 
   watch: {
@@ -85,17 +86,20 @@ Vue.component('reports-students-at-a-glance', {
       deep: true,
       async handler() {
         this.syncFromReportContext();
-        await this.loadDepartmentOptions(true);
+        await this.loadDepartmentOptions();
       }
     },
     async year() {
       this.setSharedFilterValue('academic_year', Number(this.year));
-      await this.loadDepartmentOptions(true);
+      this.rows = [];
+      this.loadError = 'Select a department.';
+      await this.loadDepartmentOptions();
     },
     selectedDepartmentCode() {
       this.setSharedFilterValue('department_code', this.selectedDepartmentCode);
       const selectedOption = this.departmentOptions.find(option => option.value === this.selectedDepartmentCode);
       if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
+      if (!this.hasLoadedDepartmentOptions) return;
       this.loadData();
     }
   },
@@ -232,22 +236,24 @@ Vue.component('reports-students-at-a-glance', {
       }));
     },
 
-    async loadDepartmentOptions(forceReloadData = false) {
+    async loadDepartmentOptions() {
       const requestId = ++this.loadDepartmentsRequestId;
 
       try {
         this.loadingDepartments = true;
-        this.loadError = '';
+        this.hasLoadedDepartmentOptions = false;
+        if (!this.loading) this.loadError = '';
 
-        const majorRows = await this.fetchReportDataset({}, { dataset: 'student_majors' });
+        const majorRows = await this.fetchReportDataset(
+          { academic_year__major: Number(this.year), is_active_degree: true },
+          { dataset: 'student_majors' }
+        );
         if (requestId !== this.loadDepartmentsRequestId) return;
 
         this.allMajors = this.normalizeMajorRows(majorRows);
-
-        const yearScopedMajors = this.allMajors.filter(row => row.academic_year__major === Number(this.year));
         const options = Array.from(
           new Map(
-            yearScopedMajors
+            this.allMajors
               .map(row => ({
                 value: String(row?.department_code ?? '').trim(),
                 label: String(row?.department_code ?? '').trim()
@@ -273,7 +279,6 @@ Vue.component('reports-students-at-a-glance', {
 
         const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextDepartmentCode));
         if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
-        if (forceReloadData) this.loadData();
       } catch (e) {
         console.warn('Failed to load student at-a-glance department options', e);
         this.allMajors = [];
@@ -282,7 +287,11 @@ Vue.component('reports-students-at-a-glance', {
         this.loadError = 'Unable to load department list.';
       } finally {
         if (requestId === this.loadDepartmentsRequestId) {
+          this.hasLoadedDepartmentOptions = true;
           this.loadingDepartments = false;
+          if (!this.selectedDepartmentCode && !this.rows.length) {
+            this.loadError = 'Select a department.';
+          }
         }
       }
     },
@@ -443,10 +452,14 @@ Vue.component('reports-students-at-a-glance', {
         this.loading = true;
         this.loadError = '';
 
-        const selectedMajorRows = this.allMajors.filter(row =>
-          String(row?.department_code ?? '').trim() === departmentCode &&
-          row.academic_year__major === Number(this.year)
-        );
+        const selectedMajorRows = this.normalizeMajorRows(await this.fetchReportDataset(
+          {
+            academic_year__major: Number(this.year),
+            department_code: departmentCode,
+            is_active_degree: true
+          },
+          { dataset: 'student_majors' }
+        ));
 
         if (!selectedMajorRows.length) {
           this.rows = [];
@@ -454,16 +467,40 @@ Vue.component('reports-students-at-a-glance', {
           return;
         }
 
+        const sisUserIds = Array.from(new Set(
+          selectedMajorRows.map(row => this.normalizeSisUserId(row?.sis_user_id)).filter(Boolean)
+        ));
+        const canvasUserIds = Array.from(new Set(
+          selectedMajorRows.map(row => this.normalizeCanvasUserId(row?.canvas_user_id)).filter(Boolean)
+        ));
+
+        const userFilters = {};
+        if (sisUserIds.length) userFilters.sis_user_id = sisUserIds;
+        if (canvasUserIds.length) userFilters.canvas_user_id = canvasUserIds;
+
         const [
           headerRows,
           endDateRows,
           employmentRows,
           activityRows
         ] = await Promise.all([
-          this.fetchReportDataset({}, { dataset: 'student_header' }),
-          this.fetchReportDataset({}, { dataset: 'student_upcoming_end_dates' }),
-          this.fetchReportDataset({}, { dataset: 'student_employment_skills_current' }),
-          this.fetchReportDataset({}, { dataset: 'student_canvas_activity' })
+          this.fetchReportDataset(
+            Object.assign({}, userFilters, {
+              enrollment_type_code__current: 'CS'
+            }),
+            { dataset: 'student_header' }
+          ),
+          this.fetchReportDataset(
+            userFilters,
+            { dataset: 'student_upcoming_end_dates' }
+          ),
+          this.fetchReportDataset(
+            Object.assign({}, userFilters, {
+              academic_year: Number(this.year)
+            }),
+            { dataset: 'student_employment_skills_current' }
+          ),
+          this.fetchReportDataset(userFilters, { dataset: 'student_canvas_activity' })
         ]);
 
         if (requestId !== this.loadRequestId) return;
