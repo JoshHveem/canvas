@@ -62,7 +62,7 @@ Vue.component('reports-students-at-a-glance', {
       new window.ReportColumn(
         'Days Since Last Submission', 'Alerted when the student has not submitted in at least 7 days. The compose icon opens a check-in message to the student.', '11rem', false, 'number',
         row => this.daysSinceLastSubmissionHtml(row),
-        row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
+        null,
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
       new window.ReportColumn(
@@ -167,12 +167,13 @@ Vue.component('reports-students-at-a-glance', {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
 
+      const dayPill = `<span class="btech-pill-text" style="background-color:${this.colors.red}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;">${this.escapeHtml(days)}</span>`;
       const composeUrl = this.composeMessageUrl(row);
-      if (!composeUrl) return days;
+      if (!composeUrl) return dayPill;
 
       const studentName = this.escapeHtml(this.getStudentName(row));
       const href = this.escapeHtml(composeUrl);
-      return `${days} <a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a submission check-in message to ${studentName}" aria-label="Compose a submission check-in message to ${studentName}" style="color:inherit; margin-left:.35rem;"><i class="icon-compose"></i></a>`;
+      return `${dayPill}<a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a submission check-in message to ${studentName}" aria-label="Compose a submission check-in message to ${studentName}" style="margin-left:.35rem;"><i class="icon-compose"></i></a>`;
     },
 
     composeMessageUrl(row) {
