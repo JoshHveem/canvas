@@ -36,13 +36,13 @@ Vue.component('reports-students-at-a-glance', {
         row => this.getStudentName(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Pending Instructor Eval', 'Alerted when the student has an instructor evaluation pending.', '11rem', false, 'number',
-        row => this.alertText(row?.is_pending_instructor_eval),
+        'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
+        row => this.pendingInstructorEvalHtml(row),
         row => this.alertPillStyle(row?.is_pending_instructor_eval),
-        row => this.boolSort(row?.is_pending_instructor_eval)
+        row => this.pendingInstructorEvalSort(row)
       ),
       new window.ReportColumn(
-        '30+ Days Since Last Eval', 'Alerted when the most recent evaluation is at least 30 days old.', '11rem', false, 'number',
+        'Days Since Last Eval', 'Alerted when the most recent evaluation is at least 30 days old.', '11rem', false, 'number',
         row => this.dayCountText(row?.num_days_since_last_eval),
         row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval),
         row => this.dayCountSort(row?.num_days_since_last_eval)
@@ -60,19 +60,13 @@ Vue.component('reports-students-at-a-glance', {
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
-        'Recently Off Probation', 'Alerted when the student was newly removed from academic standing.', '11rem', false, 'number',
-        row => row?.is_recently_off_probation ? '<i class="icon-check icon-Solid" style="color: #22d232;"></i>' : '',
-        null,
-        row => this.boolSort(row?.is_recently_off_probation)
-      ),
-      new window.ReportColumn(
-        '<= 7 Days Until Next End Date', 'Alerted when the student has an upcoming course end date within 7 days.', '11rem', false, 'number',
+        'Days Until Next End Date', 'Alerted when the student has an upcoming course end date within 7 days.', '11rem', false, 'number',
         row => this.dayCountText(row?.num_days_until_next_end_date),
         row => this.alertPillStyle(row?.is_lte_7_days_until_next_end_date),
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
-        '7+ Days Since Last Activity', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
+        'Days Since Last Activity', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
         row => this.dayCountText(row?.num_days_since_last_activity),
         row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
         row => this.dayCountSort(row?.num_days_since_last_activity)
@@ -202,7 +196,6 @@ Vue.component('reports-students-at-a-glance', {
         sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
         academic_standing_code: String(row?.academic_standing_code ?? '').trim(),
-        is_newly_removed__academic_standing: Boolean(row?.is_newly_removed__academic_standing),
         enrollment_type_code__current: String(row?.enrollment_type_code__current ?? '').trim().toUpperCase()
       }));
     },
@@ -224,6 +217,10 @@ Vue.component('reports-students-at-a-glance', {
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
         program_code: String(row?.program_code ?? '').trim(),
         academic_year: this.normalizeMajorYear(row?.academic_year),
+        canvas_course_id: String(row?.canvas_course_id ?? '').trim(),
+        canvas_assignment_id: String(row?.canvas_assignment_id ?? '').trim(),
+        course_code: String(row?.course_code ?? '').trim(),
+        course_name: String(row?.course_name ?? '').trim(),
         is_pending_instructor_eval: Boolean(row?.is_pending_instructor_eval),
         num_days_since_last_eval: this.normalizeDayCount(row?.num_days_since_last_eval)
       }));
@@ -235,6 +232,31 @@ Vue.component('reports-students-at-a-glance', {
 
       const days = Number(raw);
       return Number.isFinite(days) ? days : null;
+    },
+
+    pendingInstructorEvalHtml(row) {
+      const courses = Array.isArray(row?.pending_instructor_eval_courses)
+        ? row.pending_instructor_eval_courses
+        : [];
+      if (!courses.length) return row?.is_pending_instructor_eval ? '!' : '';
+
+      return courses.map(course => {
+        const label = this.escapeHtml(course?.course_code || course?.course_name || 'Course');
+        const courseId = String(course?.canvas_course_id ?? '').trim();
+        const assignmentId = String(course?.canvas_assignment_id ?? '').trim();
+        const studentId = String(row?.canvas_user_id ?? '').trim();
+        if (!courseId || !assignmentId || !studentId) return label;
+
+        const url = `/courses/${encodeURIComponent(courseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(studentId)}`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${label}</a>`;
+      }).join('<br>');
+    },
+
+    pendingInstructorEvalSort(row) {
+      return (Array.isArray(row?.pending_instructor_eval_courses) ? row.pending_instructor_eval_courses : [])
+        .map(course => String(course?.course_code ?? course?.course_name ?? '').trim())
+        .join(' ')
+        .toLowerCase();
     },
 
     normalizeCanvasActivityRows(rows) {
@@ -324,10 +346,10 @@ Vue.component('reports-students-at-a-glance', {
           sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
           canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
           is_pending_instructor_eval: false,
+          pending_instructor_eval_courses: [],
           is_gte_30_days_since_last_eval: false,
           is_no_es_eval_on_record: false,
           is_on_probation: false,
-          is_recently_off_probation: false,
           is_lte_7_days_until_next_end_date: false,
           is_gte_7_days_since_last_activity: false,
           academic_standing_code: '',
@@ -388,7 +410,6 @@ Vue.component('reports-students-at-a-glance', {
         row?.is_gte_30_days_since_last_eval ||
         row?.is_no_es_eval_on_record ||
         row?.is_on_probation ||
-        row?.is_recently_off_probation ||
         row?.is_lte_7_days_until_next_end_date ||
         row?.is_gte_7_days_since_last_activity
       );
@@ -401,14 +422,13 @@ Vue.component('reports-students-at-a-glance', {
 
       headerRows
         .filter(row => row.enrollment_type_code__current === 'CS')
-        .filter(row => row.is_newly_removed__academic_standing || row.academic_standing_code)
+        .filter(row => row.academic_standing_code)
         .forEach(row => {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_on_probation = record.is_on_probation || Boolean(row.academic_standing_code);
-          record.is_recently_off_probation = record.is_recently_off_probation || Boolean(row.is_newly_removed__academic_standing);
           if (row.academic_standing_code) record.academic_standing_code = row.academic_standing_code;
         });
 
@@ -439,6 +459,18 @@ Vue.component('reports-students-at-a-glance', {
         const record = this.ensureStudentRecord(studentMap, studentKey, row);
         if (row.is_pending_instructor_eval) {
           record.is_pending_instructor_eval = true;
+          const course = {
+            canvas_course_id: row.canvas_course_id,
+            canvas_assignment_id: row.canvas_assignment_id,
+            course_code: row.course_code,
+            course_name: row.course_name
+          };
+          const courseKey = [course.canvas_course_id, course.canvas_assignment_id, course.course_code].join(':');
+          if (!record.pending_instructor_eval_courses.some(item =>
+            [item.canvas_course_id, item.canvas_assignment_id, item.course_code].join(':') === courseKey
+          )) {
+            record.pending_instructor_eval_courses.push(course);
+          }
         }
 
         if (Number.isFinite(row.num_days_since_last_eval) && row.num_days_since_last_eval >= 30) {
