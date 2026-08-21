@@ -54,9 +54,9 @@ Vue.component('reports-students-at-a-glance', {
         row => Number.isFinite(row?.upcoming_course_progress) ? row.upcoming_course_progress : -1
       )),
       new window.ReportColumn(
-        'Days Until Exit', 'Red below 7 days; green at 7 days or more.', '10rem', false, 'number',
-        row => this.dayCountText(row?.num_days_until_next_end_date),
-        row => this.daysUntilExitPillStyle(row?.num_days_until_next_end_date, row?.upcoming_course_progress),
+        'Days Until Exit', 'Red below 7 days; green at 7 days or more. The compose icon opens an exit-date check-in message.', '10rem', false, 'number',
+        row => this.daysUntilExitHtml(row),
+        null,
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
@@ -78,9 +78,9 @@ Vue.component('reports-students-at-a-glance', {
         row => this.pendingInstructorEvalSort(row)
       ),
       new window.ReportColumn(
-        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
-        row => this.evaluationStatusText(row),
-        row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval || row?.is_no_es_eval_on_record),
+        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
+        row => this.daysSinceLastEvalHtml(row),
+        null,
         row => this.evaluationStatusSort(row)
       )
     ]);
@@ -167,27 +167,65 @@ Vue.component('reports-students-at-a-glance', {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
 
-      const dayPill = `<span class="btech-pill-text" style="background-color:${this.colors.red}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;">${this.escapeHtml(days)}</span>`;
-      const composeUrl = this.composeMessageUrl(row);
+      const dayPill = this.dayPillHtml(days, this.colors.red);
+      const prefill = `${this.getStudentName(row)},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
+      const composeUrl = this.composeMessageUrl(row, prefill);
       if (!composeUrl) return dayPill;
 
-      const studentName = this.escapeHtml(this.getStudentName(row));
-      const href = this.escapeHtml(composeUrl);
-      return `${dayPill}<a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a submission check-in message to ${studentName}" aria-label="Compose a submission check-in message to ${studentName}" style="margin-left:.35rem;"><i class="icon-compose"></i></a>`;
+      return `${dayPill}${this.composeIconHtml(composeUrl, 'Compose a submission check-in message', row)}`;
     },
 
-    composeMessageUrl(row) {
+    daysUntilExitHtml(row) {
+      const days = this.dayCountText(row?.num_days_until_next_end_date);
+      if (!days) return '';
+
+      const isExitAlert = Boolean(row?.is_lte_7_days_until_next_end_date);
+      const dayPill = this.dayPillHtml(days, isExitAlert ? this.colors.red : this.colors.green);
+      if (!isExitAlert) return dayPill;
+
+      const courseName = String(row?.upcoming_course_name ?? '').trim() || 'this course';
+      const dayLabel = `${days} ${Number(days) === 1 ? 'day' : 'days'}`;
+      const prefill = `${this.getStudentName(row)},\n\nI see your defined exit date for ${courseName} is coming up in ${dayLabel}. Let's sit down together to discuss a schedule to ensure you can finish the course on time.`;
+      const composeUrl = this.composeMessageUrl(row, prefill);
+      return composeUrl
+        ? `${dayPill}${this.composeIconHtml(composeUrl, 'Compose an exit-date check-in message', row)}`
+        : dayPill;
+    },
+
+    daysSinceLastEvalHtml(row) {
+      const status = this.evaluationStatusText(row);
+      if (!status) return '';
+
+      const dayPill = this.dayPillHtml(status, this.colors.red);
+      const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your next progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
+      const composeUrl = this.composeMessageUrl(row, prefill);
+      return composeUrl
+        ? `${dayPill}${this.composeIconHtml(composeUrl, 'Compose a progress-meeting message', row)}`
+        : dayPill;
+    },
+
+    dayPillHtml(value, backgroundColor) {
+      return `<span class="btech-pill-text" style="background-color:${backgroundColor}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;">${this.escapeHtml(value)}</span>`;
+    },
+
+    composeIconHtml(composeUrl, description, row) {
+      const studentName = this.escapeHtml(this.getStudentName(row));
+      const href = this.escapeHtml(composeUrl);
+      const label = this.escapeHtml(`${description} to ${studentName}`);
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${label}" aria-label="${label}" style="margin-left:.35rem;"><i class="icon-compose"></i></a>`;
+    },
+
+    composeMessageUrl(row, prefill) {
       const courseId = String(row?.upcoming_canvas_course_id ?? '').trim();
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       if (!courseId || !canvasUserId) return '';
 
       const studentName = this.getStudentName(row);
-      const prefill = `${studentName},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
       const params = new URLSearchParams({
         context_id: `course_${courseId}`,
         user_id: canvasUserId,
         user_name: studentName,
-        prefill
+        prefill: String(prefill ?? '').trim()
       });
       return `/conversations?${params.toString()}#filter=type=inbox&course=course_${encodeURIComponent(courseId)}`;
     },
@@ -227,17 +265,6 @@ Vue.component('reports-students-at-a-glance', {
 
     isCourseComplete(value) {
       return Number.isFinite(value) && value >= 0.99;
-    },
-
-    daysUntilExitPillStyle(value, courseProgress) {
-      if (!Number.isFinite(value)) return {};
-      return {
-        backgroundColor: value < 7 && !this.isCourseComplete(courseProgress) ? this.colors.red : this.colors.green,
-        color: this.colors.white,
-        display: 'inline-block',
-        minWidth: '1.2rem',
-        textAlign: 'center'
-      };
     },
 
     courseProgressHtml(value) {
