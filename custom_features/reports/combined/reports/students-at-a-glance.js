@@ -43,33 +43,33 @@ Vue.component('reports-students-at-a-glance', {
       ),
       new window.ReportColumn(
         '30+ Days Since Last Eval', 'Alerted when the most recent evaluation is at least 30 days old.', '11rem', false, 'number',
-        row => this.alertText(row?.is_gte_30_days_since_last_eval),
+        row => this.dayCountText(row?.num_days_since_last_eval),
         row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval),
-        row => this.boolSort(row?.is_gte_30_days_since_last_eval)
+        row => this.dayCountSort(row?.num_days_since_last_eval)
       ),
       new window.ReportColumn(
         'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
-        row => this.alertText(row?.is_on_probation),
+        row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
         row => this.alertPillStyle(row?.is_on_probation),
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
         'Recently Off Probation', 'Alerted when the student was newly removed from academic standing.', '11rem', false, 'number',
-        row => this.alertText(row?.is_recently_off_probation),
-        row => this.alertPillStyle(row?.is_recently_off_probation),
+        row => row?.is_recently_off_probation ? '<i class="icon-check icon-Solid" style="color: #22d232;"></i>' : '',
+        null,
         row => this.boolSort(row?.is_recently_off_probation)
       ),
       new window.ReportColumn(
         '<= 7 Days Until Next End Date', 'Alerted when the student has an upcoming course end date within 7 days.', '11rem', false, 'number',
-        row => this.alertText(row?.is_lte_7_days_until_next_end_date),
+        row => this.dayCountText(row?.num_days_until_next_end_date),
         row => this.alertPillStyle(row?.is_lte_7_days_until_next_end_date),
-        row => this.boolSort(row?.is_lte_7_days_until_next_end_date)
+        row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
         '7+ Days Since Last Activity', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
-        row => this.alertText(row?.is_gte_7_days_since_last_activity),
+        row => this.dayCountText(row?.num_days_since_last_activity),
         row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
-        row => this.boolSort(row?.is_gte_7_days_since_last_activity)
+        row => this.dayCountSort(row?.num_days_since_last_activity)
       )
     ]);
   },
@@ -149,6 +149,14 @@ Vue.component('reports-students-at-a-glance', {
         minWidth: '1.2rem',
         textAlign: 'center'
       };
+    },
+
+    dayCountText(value) {
+      return Number.isFinite(value) ? String(value) : '';
+    },
+
+    dayCountSort(value) {
+      return Number.isFinite(value) ? value : -1;
     },
 
     normalizeSisUserId(value) {
@@ -306,7 +314,11 @@ Vue.component('reports-students-at-a-glance', {
           is_on_probation: false,
           is_recently_off_probation: false,
           is_lte_7_days_until_next_end_date: false,
-          is_gte_7_days_since_last_activity: false
+          is_gte_7_days_since_last_activity: false,
+          academic_standing_code: '',
+          num_days_since_last_eval: null,
+          num_days_until_next_end_date: null,
+          num_days_since_last_activity: null
         });
       }
 
@@ -380,6 +392,7 @@ Vue.component('reports-students-at-a-glance', {
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_on_probation = record.is_on_probation || Boolean(row.academic_standing_code);
           record.is_recently_off_probation = record.is_recently_off_probation || Boolean(row.is_newly_removed__academic_standing);
+          if (row.academic_standing_code) record.academic_standing_code = row.academic_standing_code;
         });
 
       endDateRows
@@ -390,6 +403,9 @@ Vue.component('reports-students-at-a-glance', {
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_lte_7_days_until_next_end_date = true;
+          record.num_days_until_next_end_date = Number.isFinite(record.num_days_until_next_end_date)
+            ? Math.min(record.num_days_until_next_end_date, row.num_days_until_exit)
+            : row.num_days_until_exit;
         });
 
       employmentRows.forEach(row => {
@@ -409,6 +425,9 @@ Vue.component('reports-students-at-a-glance', {
 
         if (Number.isFinite(row.num_days_since_last_eval) && row.num_days_since_last_eval >= 30) {
           record.is_gte_30_days_since_last_eval = true;
+          record.num_days_since_last_eval = Number.isFinite(record.num_days_since_last_eval)
+            ? Math.max(record.num_days_since_last_eval, row.num_days_since_last_eval)
+            : row.num_days_since_last_eval;
         }
       });
 
@@ -420,6 +439,9 @@ Vue.component('reports-students-at-a-glance', {
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_gte_7_days_since_last_activity = true;
+          record.num_days_since_last_activity = Number.isFinite(record.num_days_since_last_activity)
+            ? Math.max(record.num_days_since_last_activity, row.num_days_since_last_submission)
+            : row.num_days_since_last_submission;
         });
 
       return Array.from(studentMap.values()).filter(row => this.hasAnyAlert(row));
