@@ -60,8 +60,8 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
-        'Days Since Last Submission', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
-        row => this.dayCountText(row?.num_days_since_last_activity),
+        'Days Since Last Submission', 'Alerted when the student has not submitted in at least 7 days. The compose icon opens a check-in message to the student.', '11rem', false, 'number',
+        row => this.daysSinceLastSubmissionHtml(row),
         row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
@@ -161,6 +161,32 @@ Vue.component('reports-students-at-a-glance', {
 
       const url = `/courses/${encodeURIComponent(courseId)}/users/${encodeURIComponent(canvasUserId)}`;
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    },
+
+    daysSinceLastSubmissionHtml(row) {
+      const days = this.dayCountText(row?.num_days_since_last_activity);
+      if (!days) return '';
+
+      const composeUrl = this.composeMessageUrl(row);
+      if (!composeUrl) return days;
+
+      const studentName = this.escapeHtml(this.getStudentName(row));
+      const href = this.escapeHtml(composeUrl);
+      return `${days} <a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a submission check-in message to ${studentName}" aria-label="Compose a submission check-in message to ${studentName}" style="color:inherit; margin-left:.35rem;"><i class="icon-compose"></i></a>`;
+    },
+
+    composeMessageUrl(row) {
+      const courseId = String(row?.upcoming_canvas_course_id ?? '').trim();
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      if (!courseId || !canvasUserId) return '';
+
+      const studentName = this.getStudentName(row);
+      const params = new URLSearchParams({
+        context_id: `course_${courseId}`,
+        user_id: canvasUserId,
+        user_name: studentName
+      });
+      return `/conversations?${params.toString()}#filter=type=inbox&course=course_${encodeURIComponent(courseId)}`;
     },
 
     alertText(value) {
