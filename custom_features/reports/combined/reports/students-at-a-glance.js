@@ -31,9 +31,15 @@ Vue.component('reports-students-at-a-glance', {
     this.table.setColumns([
       new window.ReportColumn(
         'Student Name', 'Student name pulled from Canvas after load.', '14rem', false, 'string',
-        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentName(row)),
+        row => this.anonymous ? 'STUDENT' : this.studentNameLinkHtml(row),
         null,
         row => this.getStudentName(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'SIS ID', 'Student information system ID.', '9rem', false, 'string',
+        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentSisId(row)),
+        null,
+        row => this.getStudentSisId(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
@@ -142,6 +148,21 @@ Vue.component('reports-students-at-a-glance', {
       return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
     },
 
+    getStudentSisId(row) {
+      return String(row?.original_sis_user_id || row?.sis_user_id || '').trim();
+    },
+
+    studentNameLinkHtml(row) {
+      const studentName = this.getStudentName(row);
+      const courseId = String(row?.upcoming_canvas_course_id ?? '').trim();
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      const label = this.escapeHtml(studentName);
+      if (!courseId || !canvasUserId) return label;
+
+      const url = `/courses/${encodeURIComponent(courseId)}/users/${encodeURIComponent(canvasUserId)}`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    },
+
     alertText(value) {
       return value ? '!' : '';
     },
@@ -243,6 +264,7 @@ Vue.component('reports-students-at-a-glance', {
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
         sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
         program_code: String(row?.program_code ?? '').trim(),
+        canvas_course_id: String(row?.canvas_course_id ?? '').trim(),
         num_days_until_exit: Number(row?.num_days_until_exit),
         course_name: String(row?.course_name ?? '').trim(),
         course_progress: this.normalizeCourseProgress(row?.course_progress),
@@ -402,6 +424,7 @@ Vue.component('reports-students-at-a-glance', {
           academic_standing_code: '',
           num_days_since_last_eval: null,
           num_days_until_next_end_date: null,
+          upcoming_canvas_course_id: '',
           upcoming_course_name: '',
           upcoming_course_progress: null,
           num_days_since_last_activity: null
@@ -492,6 +515,7 @@ Vue.component('reports-students-at-a-glance', {
             || row.num_days_until_exit < record.num_days_until_next_end_date;
           if (isSoonerEndDate) {
             record.num_days_until_next_end_date = row.num_days_until_exit;
+            record.upcoming_canvas_course_id = row.canvas_course_id;
             record.upcoming_course_name = row.course_name;
             record.upcoming_course_progress = row.course_progress;
             record.is_lte_7_days_until_next_end_date = row.num_days_until_exit < 7
