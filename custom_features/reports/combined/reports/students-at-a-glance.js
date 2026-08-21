@@ -23,7 +23,8 @@ Vue.component('reports-students-at-a-glance', {
       hasLoadedDepartmentOptions: false,
       rows: [],
       departmentOptions: [],
-      selectedDepartmentCode: ''
+      selectedDepartmentCode: '',
+      selectedFlagReason: 'all'
     };
   },
 
@@ -110,8 +111,12 @@ Vue.component('reports-students-at-a-glance', {
   },
 
   computed: {
+    filteredRows() {
+      return this.rows.filter(row => this.matchesFlagReason(row));
+    },
+
     visibleRows() {
-      this.table.setRows(this.rows);
+      this.table.setRows(this.filteredRows);
       return this.table.getSortedRows();
     },
 
@@ -128,6 +133,25 @@ Vue.component('reports-students-at-a-glance', {
   },
 
   methods: {
+    matchesFlagReason(row) {
+      switch (this.selectedFlagReason) {
+        case 'defined-exit-date':
+          return Boolean(row?.is_lte_7_days_until_next_end_date);
+        case 'course-activity':
+          return Boolean(row?.is_gte_7_days_since_last_activity);
+        case 'academic-standing':
+          return Boolean(row?.is_on_probation);
+        case 'progress-meetings':
+          return Boolean(
+            row?.is_pending_instructor_eval ||
+            row?.is_gte_30_days_since_last_eval ||
+            row?.is_no_es_eval_on_record
+          );
+        default:
+          return true;
+      }
+    },
+
     syncFromReportContext() {
       const nextDepartmentCode = String(
         this.getSharedFilterValue(
@@ -772,6 +796,17 @@ Vue.component('reports-students-at-a-glance', {
     </template>
 
     <template #filters>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Flag Reason</label>
+        <select v-model="selectedFlagReason" v-bind="filterAttrs('flag_reason')" style="font-size:.75rem; min-width:180px;">
+          <option value="all">All</option>
+          <option value="defined-exit-date">Defined Exit Date</option>
+          <option value="course-activity">Course Activity</option>
+          <option value="academic-standing">Academic Standing</option>
+          <option value="progress-meetings">Progress Meetings</option>
+        </select>
+      </div>
+
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
         <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
