@@ -42,24 +42,6 @@ Vue.component('reports-students-at-a-glance', {
         row => this.getStudentSisId(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
-        row => this.pendingInstructorEvalHtml(row),
-        row => this.alertPillStyle(row?.is_pending_instructor_eval),
-        row => this.pendingInstructorEvalSort(row)
-      ),
-      new window.ReportColumn(
-        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
-        row => this.evaluationStatusText(row),
-        row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval || row?.is_no_es_eval_on_record),
-        row => this.evaluationStatusSort(row)
-      ),
-      new window.ReportColumn(
-        'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
-        row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
-        row => this.alertPillStyle(row?.is_on_probation),
-        row => this.boolSort(row?.is_on_probation)
-      ),
-      new window.ReportColumn(
         'Next Course to Exit', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
         row => this.escapeHtml(row?.upcoming_course_name || ''),
         null,
@@ -82,6 +64,24 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountText(row?.num_days_since_last_activity),
         row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
         row => this.dayCountSort(row?.num_days_since_last_activity)
+      ),
+      new window.ReportColumn(
+        'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
+        row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
+        row => this.alertPillStyle(row?.is_on_probation),
+        row => this.boolSort(row?.is_on_probation)
+      ),
+      new window.ReportColumn(
+        'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
+        row => this.pendingInstructorEvalHtml(row),
+        row => this.alertPillStyle(row?.is_pending_instructor_eval),
+        row => this.pendingInstructorEvalSort(row)
+      ),
+      new window.ReportColumn(
+        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
+        row => this.evaluationStatusText(row),
+        row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval || row?.is_no_es_eval_on_record),
+        row => this.evaluationStatusSort(row)
       )
     ]);
   },
