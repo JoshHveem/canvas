@@ -181,10 +181,12 @@ Vue.component('reports-students-at-a-glance', {
       if (!courseId || !canvasUserId) return '';
 
       const studentName = this.getStudentName(row);
+      const prefill = `${studentName},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
       const params = new URLSearchParams({
         context_id: `course_${courseId}`,
         user_id: canvasUserId,
-        user_name: studentName
+        user_name: studentName,
+        prefill
       });
       return `/conversations?${params.toString()}#filter=type=inbox&course=course_${encodeURIComponent(courseId)}`;
     },
