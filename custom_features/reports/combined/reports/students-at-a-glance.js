@@ -179,7 +179,7 @@ Vue.component('reports-students-at-a-glance', {
       if (!Number.isFinite(value)) return '';
 
       const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
-      return `<span role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" style="display:inline-block; width:100%;"><span style="display:block; background:#e5e7eb; border-radius:999px; height:.75rem; overflow:hidden;"><span style="display:block; background:#22d232; height:100%; width:${percent}%;"></span></span><span style="font-size:.7rem;">${percent}%</span></span>`;
+      return `<span class="btech-progress" role="presentation"><span class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></span></span>`;
     },
 
     normalizeSisUserId(value) {
