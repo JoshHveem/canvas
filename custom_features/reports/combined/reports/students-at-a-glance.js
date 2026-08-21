@@ -42,16 +42,10 @@ Vue.component('reports-students-at-a-glance', {
         row => this.pendingInstructorEvalSort(row)
       ),
       new window.ReportColumn(
-        'Days Since Last Eval', 'Alerted when the most recent evaluation is at least 30 days old.', '11rem', false, 'number',
-        row => this.dayCountText(row?.num_days_since_last_eval),
-        row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval),
-        row => this.dayCountSort(row?.num_days_since_last_eval)
-      ),
-      new window.ReportColumn(
-        'No ES Eval on Record', 'Alerted when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
-        row => this.alertText(row?.is_no_es_eval_on_record),
-        row => this.alertPillStyle(row?.is_no_es_eval_on_record),
-        row => this.boolSort(row?.is_no_es_eval_on_record)
+        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
+        row => this.evaluationStatusText(row),
+        row => this.alertPillStyle(row?.is_gte_30_days_since_last_eval || row?.is_no_es_eval_on_record),
+        row => this.evaluationStatusSort(row)
       ),
       new window.ReportColumn(
         'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
@@ -159,6 +153,16 @@ Vue.component('reports-students-at-a-glance', {
       return Number.isFinite(value) ? value : -1;
     },
 
+    evaluationStatusText(row) {
+      if (row?.is_no_es_eval_on_record) return 'X';
+      return this.dayCountText(row?.num_days_since_last_eval);
+    },
+
+    evaluationStatusSort(row) {
+      if (row?.is_no_es_eval_on_record) return -1;
+      return this.dayCountSort(row?.num_days_since_last_eval);
+    },
+
     normalizeSisUserId(value) {
       return String(value ?? '').trim();
     },
@@ -241,7 +245,7 @@ Vue.component('reports-students-at-a-glance', {
       if (!courses.length) return row?.is_pending_instructor_eval ? '!' : '';
 
       return courses.map(course => {
-        const label = this.escapeHtml(course?.course_code || course?.course_name || 'Course');
+        const label = 'Complete Now';
         const courseId = String(course?.canvas_course_id ?? '').trim();
         const assignmentId = String(course?.canvas_assignment_id ?? '').trim();
         const studentId = String(row?.canvas_user_id ?? '').trim();
