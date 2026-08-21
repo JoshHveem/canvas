@@ -188,9 +188,7 @@
                 label: 'At a Glance',
                 component: 'reports-students-at-a-glance',
                 dataset: 'student_majors',
-                filters: {
-                  academic_year: { source: 'current_year' }
-                }
+                filters: {}
               },
               {
                 value: 'probations',

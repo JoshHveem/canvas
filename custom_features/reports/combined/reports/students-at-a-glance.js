@@ -21,9 +21,7 @@ Vue.component('reports-students-at-a-glance', {
       loadRequestId: 0,
       loadDepartmentsRequestId: 0,
       hasLoadedDepartmentOptions: false,
-      year: Number(this.reportContext?.sharedFilters?.academic_year ?? this.reportContext?.filters?.academic_year) || new Date().getFullYear(),
       rows: [],
-      allMajors: [],
       departmentOptions: [],
       selectedDepartmentCode: ''
     };
@@ -89,12 +87,6 @@ Vue.component('reports-students-at-a-glance', {
         await this.loadDepartmentOptions();
       }
     },
-    async year() {
-      this.setSharedFilterValue('academic_year', Number(this.year));
-      this.rows = [];
-      this.loadError = 'Select a department.';
-      await this.loadDepartmentOptions();
-    },
     selectedDepartmentCode() {
       this.setSharedFilterValue('department_code', this.selectedDepartmentCode);
       const selectedOption = this.departmentOptions.find(option => option.value === this.selectedDepartmentCode);
@@ -124,11 +116,6 @@ Vue.component('reports-students-at-a-glance', {
 
   methods: {
     syncFromReportContext() {
-      const nextYear = Number(this.getSharedFilterValue('academic_year', this.reportContext?.filters?.academic_year));
-      if (Number.isFinite(nextYear) && nextYear !== this.year) {
-        this.year = nextYear;
-      }
-
       const nextDepartmentCode = String(
         this.getSharedFilterValue(
           'department_code',
@@ -244,21 +231,22 @@ Vue.component('reports-students-at-a-glance', {
         this.hasLoadedDepartmentOptions = false;
         if (!this.loading) this.loadError = '';
 
-        const majorRows = await this.fetchReportDataset(
-          { academic_year__major: Number(this.year), is_active_degree: true },
-          { dataset: 'student_majors' }
+        const departmentRows = await this.fetchReportDataset(
+          {},
+          { dataset: 'departments' }
         );
         if (requestId !== this.loadDepartmentsRequestId) return;
 
-        this.allMajors = this.normalizeMajorRows(majorRows);
         const options = Array.from(
           new Map(
-            this.allMajors
+            (Array.isArray(departmentRows) ? departmentRows : [])
               .map(row => ({
-                value: String(row?.department_code ?? '').trim(),
-                label: String(row?.department_code ?? '').trim()
+                value: String(row?.department_code ?? row?.code ?? '').trim(),
+                label: String(
+                  row?.department_name ?? row?.department ?? row?.name ?? ''
+                ).trim()
               }))
-              .filter(option => option.value)
+              .filter(option => option.value && option.label)
               .map(option => [option.value, option])
           ).values()
         ).sort((a, b) => a.label.localeCompare(b.label));
@@ -281,7 +269,6 @@ Vue.component('reports-students-at-a-glance', {
         if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
       } catch (e) {
         console.warn('Failed to load student at-a-glance department options', e);
-        this.allMajors = [];
         this.departmentOptions = [];
         this.rows = [];
         this.loadError = 'Unable to load department list.';
@@ -454,7 +441,6 @@ Vue.component('reports-students-at-a-glance', {
 
         const selectedMajorRows = this.normalizeMajorRows(await this.fetchReportDataset(
           {
-            academic_year__major: Number(this.year),
             department_code: departmentCode,
             is_active_degree: true
           },
@@ -463,7 +449,7 @@ Vue.component('reports-students-at-a-glance', {
 
         if (!selectedMajorRows.length) {
           this.rows = [];
-          this.loadError = 'No active students found for this department and year.';
+          this.loadError = 'No active students found for this department.';
           return;
         }
 
@@ -495,9 +481,7 @@ Vue.component('reports-students-at-a-glance', {
             { dataset: 'student_upcoming_end_dates' }
           ),
           this.fetchReportDataset(
-            Object.assign({}, userFilters, {
-              academic_year: Number(this.year)
-            }),
+            userFilters,
             { dataset: 'student_employment_skills_current' }
           ),
           this.fetchReportDataset(userFilters, { dataset: 'student_canvas_activity' })
@@ -540,17 +524,6 @@ Vue.component('reports-students-at-a-glance', {
     :row-key-fn="(row, index) => row.student_key || row.canvas_user_id || row.sis_user_id || index"
   >
     <template #filters>
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
-          <option
-            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-            :key="optionYear"
-            :value="optionYear"
-          >{{ optionYear }}</option>
-        </select>
-      </div>
-
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
         <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
