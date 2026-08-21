@@ -54,13 +54,25 @@ Vue.component('reports-students-at-a-glance', {
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
-        'Days Until Next End Date', 'Alerted when the student has an upcoming course end date within 7 days.', '11rem', false, 'number',
+        'Course Name', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
+        row => this.escapeHtml(row?.upcoming_course_name || ''),
+        null,
+        row => String(row?.upcoming_course_name ?? '').toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Course Progress', 'Student progress in the course with the nearest upcoming end date.', '10rem', false, 'number',
+        row => this.courseProgressHtml(row?.upcoming_course_progress),
+        null,
+        row => Number.isFinite(row?.upcoming_course_progress) ? row.upcoming_course_progress : -1
+      ),
+      new window.ReportColumn(
+        'Days Until Exit', 'Alerted when the student has an upcoming course end date within 7 days.', '10rem', false, 'number',
         row => this.dayCountText(row?.num_days_until_next_end_date),
         row => this.alertPillStyle(row?.is_lte_7_days_until_next_end_date),
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
-        'Days Since Last Activity', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
+        'Days Since Last Submission', 'Alerted when the student has not submitted in at least 7 days.', '11rem', false, 'number',
         row => this.dayCountText(row?.num_days_since_last_activity),
         row => this.alertPillStyle(row?.is_gte_7_days_since_last_activity),
         row => this.dayCountSort(row?.num_days_since_last_activity)
@@ -163,6 +175,13 @@ Vue.component('reports-students-at-a-glance', {
       return this.dayCountSort(row?.num_days_since_last_eval);
     },
 
+    courseProgressHtml(value) {
+      if (!Number.isFinite(value)) return '';
+
+      const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
+      return `<span role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" style="display:inline-block; width:100%;"><span style="display:block; background:#e5e7eb; border-radius:999px; height:.75rem; overflow:hidden;"><span style="display:block; background:#22d232; height:100%; width:${percent}%;"></span></span><span style="font-size:.7rem;">${percent}%</span></span>`;
+    },
+
     normalizeSisUserId(value) {
       return String(value ?? '').trim();
     },
@@ -211,6 +230,7 @@ Vue.component('reports-students-at-a-glance', {
         program_code: String(row?.program_code ?? '').trim(),
         num_days_until_exit: Number(row?.num_days_until_exit),
         course_name: String(row?.course_name ?? '').trim(),
+        course_progress: this.normalizeCourseProgress(row?.course_progress),
         course_exit_at__target: String(row?.course_exit_at__target ?? '').trim()
       }));
     },
@@ -236,6 +256,14 @@ Vue.component('reports-students-at-a-glance', {
 
       const days = Number(raw);
       return Number.isFinite(days) ? days : null;
+    },
+
+    normalizeCourseProgress(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return null;
+
+      const progress = Number(raw);
+      return Number.isFinite(progress) ? progress : null;
     },
 
     pendingInstructorEvalHtml(row) {
@@ -359,6 +387,8 @@ Vue.component('reports-students-at-a-glance', {
           academic_standing_code: '',
           num_days_since_last_eval: null,
           num_days_until_next_end_date: null,
+          upcoming_course_name: '',
+          upcoming_course_progress: null,
           num_days_since_last_activity: null
         });
       }
@@ -444,9 +474,13 @@ Vue.component('reports-students-at-a-glance', {
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_lte_7_days_until_next_end_date = true;
-          record.num_days_until_next_end_date = Number.isFinite(record.num_days_until_next_end_date)
-            ? Math.min(record.num_days_until_next_end_date, row.num_days_until_exit)
-            : row.num_days_until_exit;
+          const isSoonerEndDate = !Number.isFinite(record.num_days_until_next_end_date)
+            || row.num_days_until_exit < record.num_days_until_next_end_date;
+          if (isSoonerEndDate) {
+            record.num_days_until_next_end_date = row.num_days_until_exit;
+            record.upcoming_course_name = row.course_name;
+            record.upcoming_course_progress = row.course_progress;
+          }
         });
 
       employmentRows.forEach(row => {
