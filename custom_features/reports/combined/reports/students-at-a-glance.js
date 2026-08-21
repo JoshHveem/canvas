@@ -74,6 +74,14 @@ Vue.component('reports-students-at-a-glance', {
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
+        'Pending Academic Standing', 'Expected standing code that Student Services still needs to add.', '11rem', false, 'string',
+        row => row?.is_pending_add__academic_standing
+          ? this.escapeHtml(row?.academic_standing_code__expected || 'Pending')
+          : '',
+        row => this.alertPillStyle(row?.is_pending_add__academic_standing),
+        row => this.boolSort(row?.is_pending_add__academic_standing)
+      ),
+      new window.ReportColumn(
         'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
         row => this.pendingInstructorEvalHtml(row),
         row => this.alertPillStyle(row?.is_pending_instructor_eval),
@@ -140,7 +148,7 @@ Vue.component('reports-students-at-a-glance', {
         case 'course-activity':
           return Boolean(row?.is_gte_7_days_since_last_activity);
         case 'academic-standing':
-          return Boolean(row?.is_on_probation);
+          return Boolean(row?.is_on_probation || row?.is_pending_add__academic_standing);
         case 'progress-meetings':
           return Boolean(
             row?.is_pending_instructor_eval ||
@@ -365,6 +373,8 @@ Vue.component('reports-students-at-a-glance', {
         sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
         academic_standing_code: String(row?.academic_standing_code ?? '').trim(),
+        academic_standing_code__expected: String(row?.academic_standing_code__expected ?? '').trim(),
+        is_pending_add__academic_standing: Boolean(row?.is_pending_add__academic_standing),
         enrollment_type_code__current: String(row?.enrollment_type_code__current ?? '').trim().toUpperCase()
       }));
     },
@@ -529,9 +539,11 @@ Vue.component('reports-students-at-a-glance', {
           is_gte_30_days_since_last_eval: false,
           is_no_es_eval_on_record: false,
           is_on_probation: false,
+          is_pending_add__academic_standing: false,
           is_lte_7_days_until_next_end_date: false,
           is_gte_7_days_since_last_activity: false,
           academic_standing_code: '',
+          academic_standing_code__expected: '',
           num_days_since_last_eval: null,
           num_days_until_next_end_date: null,
           upcoming_canvas_course_id: '',
@@ -592,6 +604,7 @@ Vue.component('reports-students-at-a-glance', {
         row?.is_gte_30_days_since_last_eval ||
         row?.is_no_es_eval_on_record ||
         row?.is_on_probation ||
+        row?.is_pending_add__academic_standing ||
         row?.is_lte_7_days_until_next_end_date ||
         row?.is_gte_7_days_since_last_activity
       );
@@ -604,7 +617,11 @@ Vue.component('reports-students-at-a-glance', {
 
       headerRows
         .filter(row => row.enrollment_type_code__current === 'CS')
-        .filter(row => row.academic_standing_code)
+        .filter(row =>
+          row.academic_standing_code ||
+          row.is_pending_add__academic_standing ||
+          row.academic_standing_code__expected
+        )
         .forEach(row => {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
@@ -612,6 +629,13 @@ Vue.component('reports-students-at-a-glance', {
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_on_probation = record.is_on_probation || Boolean(row.academic_standing_code);
           if (row.academic_standing_code) record.academic_standing_code = row.academic_standing_code;
+          const pendingStandingAdd = row.is_pending_add__academic_standing || (
+            !row.academic_standing_code && Boolean(row.academic_standing_code__expected)
+          );
+          record.is_pending_add__academic_standing = record.is_pending_add__academic_standing || pendingStandingAdd;
+          if (row.academic_standing_code__expected) {
+            record.academic_standing_code__expected = row.academic_standing_code__expected;
+          }
         });
 
       endDateRows
