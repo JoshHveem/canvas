@@ -797,6 +797,16 @@ Vue.component('reports-students-at-a-glance', {
 
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Department</label>
+        <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option value="">Select a Department</option>
+          <option v-for="option in departmentOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Flag Reason</label>
         <select v-model="selectedFlagReason" v-bind="filterAttrs('flag_reason')" style="font-size:.75rem; min-width:180px;">
           <option value="all">All</option>
@@ -804,16 +814,6 @@ Vue.component('reports-students-at-a-glance', {
           <option value="course-activity">Course Activity</option>
           <option value="academic-standing">Academic Standing</option>
           <option value="progress-meetings">Progress Meetings</option>
-        </select>
-      </div>
-
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Department</label>
-        <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
-          <option value="">Select a Department</option>
-          <option v-for="option in departmentOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
         </select>
       </div>
     </template>
