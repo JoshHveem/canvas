@@ -53,6 +53,16 @@
       template: vueString,
 
       data: function () {
+        const reportOrder = [
+          'students',
+          'evaluations',
+          'employment-skills',
+          'outcomes',
+          'instructors',
+          'course-readiness',
+          'syllabi',
+          'admissions'
+        ];
         const reports = [
           {
             value: 'syllabi',
@@ -260,12 +270,12 @@
               }
             ]
           }
-        ];
+        ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
           reportTypes: reports,
           settings: {
-            reportType: 'syllabi',
+            reportType: 'students',
             subMenuByType: {
               syllabi: 'summary',
               'course-readiness': 'department-summary',
