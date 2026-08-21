@@ -68,7 +68,7 @@ Vue.component('reports-students-at-a-glance', {
       new window.ReportColumn(
         'Days Until Exit', 'Red below 7 days; green at 7 days or more.', '10rem', false, 'number',
         row => this.dayCountText(row?.num_days_until_next_end_date),
-        row => this.daysUntilExitPillStyle(row?.num_days_until_next_end_date),
+        row => this.daysUntilExitPillStyle(row?.num_days_until_next_end_date, row?.upcoming_course_progress),
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
@@ -175,10 +175,14 @@ Vue.component('reports-students-at-a-glance', {
       return this.dayCountSort(row?.num_days_since_last_eval);
     },
 
-    daysUntilExitPillStyle(value) {
+    isCourseComplete(value) {
+      return Number.isFinite(value) && value >= 0.99;
+    },
+
+    daysUntilExitPillStyle(value, courseProgress) {
       if (!Number.isFinite(value)) return {};
       return {
-        backgroundColor: value < 7 ? this.colors.red : this.colors.green,
+        backgroundColor: value < 7 && !this.isCourseComplete(courseProgress) ? this.colors.red : this.colors.green,
         color: this.colors.white,
         display: 'inline-block',
         minWidth: '1.2rem',
@@ -490,7 +494,8 @@ Vue.component('reports-students-at-a-glance', {
             record.num_days_until_next_end_date = row.num_days_until_exit;
             record.upcoming_course_name = row.course_name;
             record.upcoming_course_progress = row.course_progress;
-            record.is_lte_7_days_until_next_end_date = row.num_days_until_exit < 7;
+            record.is_lte_7_days_until_next_end_date = row.num_days_until_exit < 7
+              && !this.isCourseComplete(row.course_progress);
           }
         });
 
