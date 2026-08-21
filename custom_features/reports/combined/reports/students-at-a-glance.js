@@ -69,7 +69,7 @@ Vue.component('reports-students-at-a-glance', {
       new window.ReportColumn(
         'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
         row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
-        row => this.alertPillStyle(row?.is_on_probation),
+        row => this.probationPillStyle(row),
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
@@ -215,7 +215,8 @@ Vue.component('reports-students-at-a-glance', {
       const status = this.evaluationStatusText(row);
       if (!status) return '';
 
-      const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your next progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
+      const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
+      const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your ${meetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
       const composeUrl = this.composeMessageUrl(row, prefill);
       return this.dayPillHtml(status, this.colors.red, composeUrl, 'Compose a progress-meeting message', row);
     },
@@ -255,6 +256,19 @@ Vue.component('reports-students-at-a-glance', {
       return {
         backgroundColor: this.colors.red,
         color: this.colors.white,
+        display: 'inline-block',
+        minWidth: '1.2rem',
+        textAlign: 'center'
+      };
+    },
+
+    probationPillStyle(row) {
+      if (!row?.is_on_probation) return {};
+
+      const standingCode = String(row?.academic_standing_code ?? '').trim().toUpperCase();
+      return {
+        backgroundColor: standingCode.startsWith('W') ? this.colors.yellow : this.colors.red,
+        color: standingCode.startsWith('W') ? this.colors.black : this.colors.white,
         display: 'inline-block',
         minWidth: '1.2rem',
         textAlign: 'center'
