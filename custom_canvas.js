@@ -262,7 +262,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // dashboard level reports that need vue
     await $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"));
     feature('reports/automations/report', /^\/automations$/);
-    feature('inbox-prefill/inbox-prefill', /^\/conversations$/);
+    featureISD('inbox-prefill/inbox-prefill', /^\/conversations$/);
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
