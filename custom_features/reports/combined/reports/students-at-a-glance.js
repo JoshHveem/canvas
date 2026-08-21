@@ -54,21 +54,21 @@ Vue.component('reports-students-at-a-glance', {
         row => this.boolSort(row?.is_on_probation)
       ),
       new window.ReportColumn(
-        'Course Name', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
+        'Next Course to Exit', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
         row => this.escapeHtml(row?.upcoming_course_name || ''),
         null,
         row => String(row?.upcoming_course_name ?? '').toLowerCase()
       ),
-      new window.ReportColumn(
+      this.withColumnWrap(new window.ReportColumn(
         'Course Progress', 'Student progress in the course with the nearest upcoming end date.', '10rem', false, 'number',
         row => this.courseProgressHtml(row?.upcoming_course_progress),
         null,
         row => Number.isFinite(row?.upcoming_course_progress) ? row.upcoming_course_progress : -1
-      ),
+      )),
       new window.ReportColumn(
-        'Days Until Exit', 'Alerted when the student has an upcoming course end date within 7 days.', '10rem', false, 'number',
+        'Days Until Exit', 'Red below 7 days; green at 7 days or more.', '10rem', false, 'number',
         row => this.dayCountText(row?.num_days_until_next_end_date),
-        row => this.alertPillStyle(row?.is_lte_7_days_until_next_end_date),
+        row => this.daysUntilExitPillStyle(row?.num_days_until_next_end_date),
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
@@ -173,6 +173,17 @@ Vue.component('reports-students-at-a-glance', {
     evaluationStatusSort(row) {
       if (row?.is_no_es_eval_on_record) return -1;
       return this.dayCountSort(row?.num_days_since_last_eval);
+    },
+
+    daysUntilExitPillStyle(value) {
+      if (!Number.isFinite(value)) return {};
+      return {
+        backgroundColor: value < 7 ? this.colors.red : this.colors.green,
+        color: this.colors.white,
+        display: 'inline-block',
+        minWidth: '1.2rem',
+        textAlign: 'center'
+      };
     },
 
     courseProgressHtml(value) {
@@ -467,19 +478,19 @@ Vue.component('reports-students-at-a-glance', {
         });
 
       endDateRows
-        .filter(row => Number.isFinite(row.num_days_until_exit) && row.num_days_until_exit <= 7)
+        .filter(row => Number.isFinite(row.num_days_until_exit))
         .forEach(row => {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
-          record.is_lte_7_days_until_next_end_date = true;
           const isSoonerEndDate = !Number.isFinite(record.num_days_until_next_end_date)
             || row.num_days_until_exit < record.num_days_until_next_end_date;
           if (isSoonerEndDate) {
             record.num_days_until_next_end_date = row.num_days_until_exit;
             record.upcoming_course_name = row.course_name;
             record.upcoming_course_progress = row.course_progress;
+            record.is_lte_7_days_until_next_end_date = row.num_days_until_exit < 7;
           }
         });
 
