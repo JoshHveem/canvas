@@ -29,6 +29,7 @@ Vue.component('reports-students-at-a-glance', {
 
   created() {
     this.table.setColumns([
+      this.createGenericComposeColumn(),
       new window.ReportColumn(
         'Student Name', 'Student name pulled from Canvas after load.', '14rem', false, 'string',
         row => this.anonymous ? 'STUDENT' : this.studentNameLinkHtml(row),
@@ -163,16 +164,37 @@ Vue.component('reports-students-at-a-glance', {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     },
 
+    createGenericComposeColumn() {
+      const column = new window.ReportColumn(
+        '', 'Compose a blank Canvas Inbox message to this student.', '2rem', false, 'string',
+        row => this.genericComposeHtml(row),
+        null,
+        () => ''
+      );
+      column.hideHeader = true;
+      return column;
+    },
+
+    genericComposeHtml(row) {
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      if (!canvasUserId) return '';
+
+      const params = new URLSearchParams({
+        user_id: canvasUserId,
+        user_name: this.getStudentName(row)
+      });
+      const href = this.escapeHtml(`/conversations?${params.toString()}#filter=type=inbox`);
+      const studentName = this.escapeHtml(this.getStudentName(row));
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a blank message to ${studentName}" aria-label="Compose a blank message to ${studentName}"><i class="icon-compose"></i></a>`;
+    },
+
     daysSinceLastSubmissionHtml(row) {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
 
-      const dayPill = this.dayPillHtml(days, this.colors.red);
       const prefill = `${this.getStudentName(row)},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      if (!composeUrl) return dayPill;
-
-      return `${dayPill}${this.composeIconHtml(composeUrl, 'Compose a submission check-in message', row)}`;
+      return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose a submission check-in message', row);
     },
 
     daysUntilExitHtml(row) {
@@ -180,39 +202,33 @@ Vue.component('reports-students-at-a-glance', {
       if (!days) return '';
 
       const isExitAlert = Boolean(row?.is_lte_7_days_until_next_end_date);
-      const dayPill = this.dayPillHtml(days, isExitAlert ? this.colors.red : this.colors.green);
-      if (!isExitAlert) return dayPill;
+      if (!isExitAlert) return this.dayPillHtml(days, this.colors.green);
 
       const courseName = String(row?.upcoming_course_name ?? '').trim() || 'this course';
       const dayLabel = `${days} ${Number(days) === 1 ? 'day' : 'days'}`;
       const prefill = `${this.getStudentName(row)},\n\nI see your defined exit date for ${courseName} is coming up in ${dayLabel}. Let's sit down together to discuss a schedule to ensure you can finish the course on time.`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      return composeUrl
-        ? `${dayPill}${this.composeIconHtml(composeUrl, 'Compose an exit-date check-in message', row)}`
-        : dayPill;
+      return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose an exit-date check-in message', row);
     },
 
     daysSinceLastEvalHtml(row) {
       const status = this.evaluationStatusText(row);
       if (!status) return '';
 
-      const dayPill = this.dayPillHtml(status, this.colors.red);
       const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your next progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      return composeUrl
-        ? `${dayPill}${this.composeIconHtml(composeUrl, 'Compose a progress-meeting message', row)}`
-        : dayPill;
+      return this.dayPillHtml(status, this.colors.red, composeUrl, 'Compose a progress-meeting message', row);
     },
 
-    dayPillHtml(value, backgroundColor) {
-      return `<span class="btech-pill-text" style="background-color:${backgroundColor}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;">${this.escapeHtml(value)}</span>`;
-    },
+    dayPillHtml(value, backgroundColor, composeUrl = '', description = '', row = {}) {
+      const text = this.escapeHtml(value);
+      const style = `background-color:${backgroundColor}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;`;
+      if (!composeUrl) return `<span class="btech-pill-text" style="${style}">${text}</span>`;
 
-    composeIconHtml(composeUrl, description, row) {
       const studentName = this.escapeHtml(this.getStudentName(row));
       const href = this.escapeHtml(composeUrl);
       const label = this.escapeHtml(`${description} to ${studentName}`);
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${label}" aria-label="${label}" style="margin-left:.35rem;"><i class="icon-compose"></i></a>`;
+      return `<a class="btech-pill-text" href="${href}" target="_blank" rel="noopener noreferrer" title="${label}" aria-label="${label}" style="${style} text-decoration:none;">${text}</a>`;
     },
 
     composeMessageUrl(row, prefill) {
@@ -737,6 +753,10 @@ Vue.component('reports-students-at-a-glance', {
     loading-text="Loading student at-a-glance report..."
     :row-key-fn="(row, index) => row.student_key || row.canvas_user_id || row.sis_user_id || index"
   >
+    <template #description>
+      A list of all students flagged as needing attention. The report updates once per day in the morning. Click on flagged items to reach out to the student in Canvas Messaging. The compose button will open a blank message. The specific items will prefill with a sample message.
+    </template>
+
     <template #filters>
       <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
         <label class="btech-muted" style="font-size:.75rem;">Department</label>
