@@ -36,7 +36,7 @@ Vue.component('reports-students-at-a-glance', {
         row => this.getStudentName(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'SIS ID', 'Student information system ID.', '9rem', false, 'string',
+        'SIS ID', 'Student information system ID.', '5rem', false, 'string',
         row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentSisId(row)),
         null,
         row => this.getStudentSisId(row).toLowerCase()
