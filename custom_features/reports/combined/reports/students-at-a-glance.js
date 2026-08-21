@@ -48,6 +48,12 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountSort(row?.num_days_since_last_eval)
       ),
       new window.ReportColumn(
+        'No ES Eval on Record', 'Alerted when no employment skills evaluation record matches the student\'s active major.', '11rem', false, 'number',
+        row => this.alertText(row?.is_no_es_eval_on_record),
+        row => this.alertPillStyle(row?.is_no_es_eval_on_record),
+        row => this.boolSort(row?.is_no_es_eval_on_record)
+      ),
+      new window.ReportColumn(
         'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
         row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
         row => this.alertPillStyle(row?.is_on_probation),
@@ -219,8 +225,16 @@ Vue.component('reports-students-at-a-glance', {
         program_code: String(row?.program_code ?? '').trim(),
         academic_year: this.normalizeMajorYear(row?.academic_year),
         is_pending_instructor_eval: Boolean(row?.is_pending_instructor_eval),
-        num_days_since_last_eval: Number(row?.num_days_since_last_eval)
+        num_days_since_last_eval: this.normalizeDayCount(row?.num_days_since_last_eval)
       }));
+    },
+
+    normalizeDayCount(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return null;
+
+      const days = Number(raw);
+      return Number.isFinite(days) ? days : null;
     },
 
     normalizeCanvasActivityRows(rows) {
@@ -311,6 +325,7 @@ Vue.component('reports-students-at-a-glance', {
           canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
           is_pending_instructor_eval: false,
           is_gte_30_days_since_last_eval: false,
+          is_no_es_eval_on_record: false,
           is_on_probation: false,
           is_recently_off_probation: false,
           is_lte_7_days_until_next_end_date: false,
@@ -371,6 +386,7 @@ Vue.component('reports-students-at-a-glance', {
       return Boolean(
         row?.is_pending_instructor_eval ||
         row?.is_gte_30_days_since_last_eval ||
+        row?.is_no_es_eval_on_record ||
         row?.is_on_probation ||
         row?.is_recently_off_probation ||
         row?.is_lte_7_days_until_next_end_date ||
@@ -381,6 +397,7 @@ Vue.component('reports-students-at-a-glance', {
     mergeRows({ headerRows, endDateRows, employmentRows, activityRows, selectedMajorRows }) {
       const indexes = this.buildMajorIndexes(selectedMajorRows);
       const studentMap = new Map();
+      const studentsWithEmploymentSkills = new Set();
 
       headerRows
         .filter(row => row.enrollment_type_code__current === 'CS')
@@ -418,6 +435,7 @@ Vue.component('reports-students-at-a-glance', {
         const validMajorYearKeys = indexes.majorKeysByStudent.get(studentKey);
         if (!validMajorYearKeys || !validMajorYearKeys.has(rowMajorYearKey)) return;
 
+        studentsWithEmploymentSkills.add(studentKey);
         const record = this.ensureStudentRecord(studentMap, studentKey, row);
         if (row.is_pending_instructor_eval) {
           record.is_pending_instructor_eval = true;
@@ -429,6 +447,14 @@ Vue.component('reports-students-at-a-glance', {
             ? Math.max(record.num_days_since_last_eval, row.num_days_since_last_eval)
             : row.num_days_since_last_eval;
         }
+      });
+
+      selectedMajorRows.forEach(row => {
+        const studentKey = this.createStudentKey(row?.sis_user_id, row?.canvas_user_id);
+        if (!studentKey || studentsWithEmploymentSkills.has(studentKey)) return;
+
+        const record = this.ensureStudentRecord(studentMap, studentKey, row);
+        record.is_no_es_eval_on_record = true;
       });
 
       activityRows
