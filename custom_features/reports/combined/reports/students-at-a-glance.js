@@ -323,7 +323,7 @@ Vue.component('reports-students-at-a-glance', {
       if (!downloadUrl) return this.escapeHtml(text);
 
       const href = this.escapeHtml(downloadUrl);
-      return `<a href="${href}" download style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
+      return `<a href="${href}" download target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
     },
 
     pendingStandingDownloadUrl(row) {
