@@ -68,7 +68,7 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
       new window.ReportColumn(
-        'On Probation', 'Alerted when the student is currently on academic standing.', '9rem', false, 'number',
+        'Academic Standing', 'Current academic standing code.', '9rem', false, 'number',
         row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
         row => this.probationPillStyle(row),
         row => this.boolSort(row?.is_on_probation)
@@ -350,11 +350,9 @@ Vue.component('reports-students-at-a-glance', {
       return Number.isFinite(num) ? num : null;
     },
 
-    createMajorYearKey(programCode, academicYear) {
+    createMajorKey(programCode) {
       const normalizedProgramCode = String(programCode ?? '').trim().toUpperCase();
-      const normalizedYear = this.normalizeMajorYear(academicYear);
-      if (!normalizedProgramCode || !Number.isFinite(normalizedYear)) return '';
-      return `${normalizedProgramCode}::${normalizedYear}`;
+      return normalizedProgramCode;
     },
 
     normalizeMajorRows(rows) {
@@ -577,8 +575,8 @@ Vue.component('reports-students-at-a-glance', {
           majorKeysByStudent.set(studentKey, new Set());
         }
 
-        const majorYearKey = this.createMajorYearKey(row?.major_code, row?.academic_year__major);
-        if (majorYearKey) majorKeysByStudent.get(studentKey).add(majorYearKey);
+        const majorKey = this.createMajorKey(row?.major_code);
+        if (majorKey) majorKeysByStudent.get(studentKey).add(majorKey);
       });
 
       return { canvasToStudentKey, sisToStudentKey, majorKeysByStudent };
@@ -661,11 +659,11 @@ Vue.component('reports-students-at-a-glance', {
         const studentKey = this.resolveStudentKey(row, indexes);
         if (!studentKey) return;
 
-        const rowMajorYearKey = this.createMajorYearKey(row?.program_code, row?.academic_year);
-        if (!rowMajorYearKey) return;
+        const rowMajorKey = this.createMajorKey(row?.program_code);
+        if (!rowMajorKey) return;
 
-        const validMajorYearKeys = indexes.majorKeysByStudent.get(studentKey);
-        if (!validMajorYearKeys || !validMajorYearKeys.has(rowMajorYearKey)) return;
+        const validMajorKeys = indexes.majorKeysByStudent.get(studentKey);
+        if (!validMajorKeys || !validMajorKeys.has(rowMajorKey)) return;
 
         studentsWithEmploymentSkills.add(studentKey);
         const record = this.ensureStudentRecord(studentMap, studentKey, row);
