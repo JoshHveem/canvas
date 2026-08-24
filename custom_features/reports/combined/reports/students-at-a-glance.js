@@ -224,6 +224,10 @@ Vue.component('reports-students-at-a-glance', {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
 
+      if (!row?.is_gte_7_days_since_last_activity) {
+        return this.dayPillHtml(days, this.colors.green);
+      }
+
       const prefill = `${this.getStudentName(row)},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
       const composeUrl = this.composeMessageUrl(row, prefill);
       return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose a submission check-in message', row);
@@ -246,6 +250,11 @@ Vue.component('reports-students-at-a-glance', {
     daysSinceLastEvalHtml(row) {
       const status = this.evaluationStatusText(row);
       if (!status) return '';
+
+      const needsProgressMeeting = Boolean(
+        row?.is_no_es_eval_on_record || row?.is_gte_30_days_since_last_eval
+      );
+      if (!needsProgressMeeting) return this.dayPillHtml(status, this.colors.green);
 
       const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
       const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your ${meetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
@@ -683,8 +692,9 @@ Vue.component('reports-students-at-a-glance', {
           }
         }
 
-        if (Number.isFinite(row.num_days_since_last_eval) && row.num_days_since_last_eval >= 30) {
-          record.is_gte_30_days_since_last_eval = true;
+        if (Number.isFinite(row.num_days_since_last_eval)) {
+          record.is_gte_30_days_since_last_eval = record.is_gte_30_days_since_last_eval
+            || row.num_days_since_last_eval >= 30;
           record.num_days_since_last_eval = Number.isFinite(record.num_days_since_last_eval)
             ? Math.max(record.num_days_since_last_eval, row.num_days_since_last_eval)
             : row.num_days_since_last_eval;
@@ -700,13 +710,14 @@ Vue.component('reports-students-at-a-glance', {
       });
 
       activityRows
-        .filter(row => Number.isFinite(row.num_days_since_last_submission) && row.num_days_since_last_submission >= 7)
+        .filter(row => Number.isFinite(row.num_days_since_last_submission))
         .forEach(row => {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
 
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
-          record.is_gte_7_days_since_last_activity = true;
+          record.is_gte_7_days_since_last_activity = record.is_gte_7_days_since_last_activity
+            || row.num_days_since_last_submission >= 7;
           record.num_days_since_last_activity = Number.isFinite(record.num_days_since_last_activity)
             ? Math.max(record.num_days_since_last_activity, row.num_days_since_last_submission)
             : row.num_days_since_last_submission;
