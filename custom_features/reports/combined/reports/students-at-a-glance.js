@@ -69,7 +69,7 @@ Vue.component('reports-students-at-a-glance', {
       ),
       new window.ReportColumn(
         'Academic Standing', 'Shows Pending Documentation when the expected and current standing codes differ.', '12rem', false, 'string',
-        row => this.escapeHtml(this.academicStandingText(row)),
+        row => this.academicStandingHtml(row),
         row => this.academicStandingPillStyle(row),
         row => this.academicStandingText(row).toLowerCase()
       ),
@@ -315,6 +315,29 @@ Vue.component('reports-students-at-a-glance', {
       const expectedCode = String(row?.academic_standing_code__expected ?? '').trim();
       if (expectedCode && expectedCode !== currentCode) return 'Pending Documentation';
       return currentCode;
+    },
+
+    academicStandingHtml(row) {
+      const text = this.academicStandingText(row);
+      const downloadUrl = this.pendingStandingDownloadUrl(row);
+      if (!downloadUrl) return this.escapeHtml(text);
+
+      const href = this.escapeHtml(downloadUrl);
+      return `<a href="${href}" download style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
+    },
+
+    pendingStandingDownloadUrl(row) {
+      if (this.academicStandingText(row) !== 'Pending Documentation') return '';
+
+      const expectedCode = String(row?.academic_standing_code__expected ?? '').trim().toUpperCase();
+      if (expectedCode.startsWith('P')) {
+        return 'https://bridgetools.dev/canvas/custom_features/reports/combined/forms/616-probation.pdf';
+      }
+      if (expectedCode.startsWith('W')) {
+        return 'https://bridgetools.dev/canvas/custom_features/reports/combined/forms/616-written-warning.pdf';
+      }
+
+      return '';
     },
 
     academicStandingPillStyle(row) {
