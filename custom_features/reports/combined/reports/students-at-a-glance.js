@@ -88,7 +88,7 @@ Vue.component('reports-students-at-a-glance', {
         row => this.pendingInstructorEvalSort(row)
       ),
       new window.ReportColumn(
-        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no employment skills evaluation record matches the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
+        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no prior employment skills evaluation exists for the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
         row => this.daysSinceLastEvalHtml(row),
         null,
         row => this.evaluationStatusSort(row)
@@ -620,7 +620,7 @@ Vue.component('reports-students-at-a-glance', {
     mergeRows({ headerRows, endDateRows, employmentRows, activityRows, selectedMajorRows }) {
       const indexes = this.buildMajorIndexes(selectedMajorRows);
       const studentMap = new Map();
-      const studentsWithEmploymentSkills = new Set();
+      const studentsWithEvaluations = new Set();
 
       headerRows
         .filter(row => row.enrollment_type_code__current === 'CS')
@@ -674,7 +674,6 @@ Vue.component('reports-students-at-a-glance', {
         const validMajorKeys = indexes.majorKeysByStudent.get(studentKey);
         if (!validMajorKeys || !validMajorKeys.has(rowMajorKey)) return;
 
-        studentsWithEmploymentSkills.add(studentKey);
         const record = this.ensureStudentRecord(studentMap, studentKey, row);
         if (row.is_pending_instructor_eval) {
           record.is_pending_instructor_eval = true;
@@ -693,6 +692,7 @@ Vue.component('reports-students-at-a-glance', {
         }
 
         if (Number.isFinite(row.num_days_since_last_eval)) {
+          studentsWithEvaluations.add(studentKey);
           record.is_gte_30_days_since_last_eval = record.is_gte_30_days_since_last_eval
             || row.num_days_since_last_eval >= 30;
           record.num_days_since_last_eval = Number.isFinite(record.num_days_since_last_eval)
@@ -703,7 +703,7 @@ Vue.component('reports-students-at-a-glance', {
 
       selectedMajorRows.forEach(row => {
         const studentKey = this.createStudentKey(row?.sis_user_id, row?.canvas_user_id);
-        if (!studentKey || studentsWithEmploymentSkills.has(studentKey)) return;
+        if (!studentKey || studentsWithEvaluations.has(studentKey)) return;
 
         const record = this.ensureStudentRecord(studentMap, studentKey, row);
         record.is_no_es_eval_on_record = true;
