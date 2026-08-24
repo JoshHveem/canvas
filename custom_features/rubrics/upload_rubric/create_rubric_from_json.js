@@ -14,9 +14,8 @@
   var fileDropHelpId = 'btech_rubric_json_drop_help';
   var fileStatusId = 'btech_rubric_json_file_status';
   var messageId = 'btech_rubric_json_msg';
-  var selectedRubricFileName = '';
-  var selectedRubricText = '';
-  var isReadingRubricFile = false;
+  var selectedRubrics = [];
+  var pendingRubricReads = 0;
   var lastSubmission = null;
   var initTimer = null;
   var pageObserver = null;
@@ -275,6 +274,7 @@
     fileInput.id = fileInputId;
     fileInput.type = 'file';
     fileInput.accept = 'application/json,.json';
+    fileInput.multiple = true;
     fileInput.style.display = 'none';
     fileInput.addEventListener('change', function (event) {
       handleFileSelection(event.target.files);
@@ -286,16 +286,16 @@
     dropZone.className = 'btech-file-drop-zone';
     dropZone.setAttribute('role', 'button');
     dropZone.setAttribute('tabindex', '0');
-    dropZone.setAttribute('aria-label', 'Upload rubric JSON file');
+    dropZone.setAttribute('aria-label', 'Upload rubric JSON files');
 
     var dropTitle = document.createElement('strong');
     dropTitle.id = fileDropTitleId;
-    dropTitle.textContent = 'Drag a JSON file here';
+    dropTitle.textContent = 'Drag JSON files here';
     dropZone.appendChild(dropTitle);
 
     var dropHelp = document.createElement('p');
     dropHelp.id = fileDropHelpId;
-    dropHelp.textContent = 'or browse for a .json file';
+    dropHelp.textContent = 'or browse for one or more .json files';
     dropZone.appendChild(dropHelp);
 
     var browseButton = createPanelButton('Browse Files', 'Button btech-panel-button', function (event) {
@@ -339,7 +339,7 @@
     var fileStatus = document.createElement('div');
     fileStatus.id = fileStatusId;
     fileStatus.className = 'btech-file-status';
-    fileStatus.textContent = 'No file selected.';
+    fileStatus.textContent = 'No files selected.';
     body.appendChild(fileStatus);
 
     var msg = document.createElement('div');
@@ -415,48 +415,92 @@
   }
 
   function handleFileSelection(files) {
+    var list = files ? Array.prototype.slice.call(files) : [];
 
-    if (!files || files.length === 0) {
-      return;
-    }
-    if (files.length > 1) {
-      resetRubricFileSelection('Upload one .json file only.');
-      showMessages(['Please upload one rubric JSON file at a time.'], 'ic-flash-warning');
+    if (list.length === 0) {
       return;
     }
 
-    readRubricFile(files[0]);
+    var accepted = list.filter(isJsonFile);
+    var rejected = list.filter(function (file) { return !isJsonFile(file); });
+
+    if (accepted.length === 0) {
+      resetRubricFileSelection('No valid JSON files selected.');
+      showMessages(['Please upload .json files.'], 'ic-flash-warning');
+      return;
+    }
+
+    readRubricFiles(accepted, rejected);
   }
 
-  function readRubricFile(file) {
+  function readRubricFiles(files, rejected) {
+    selectedRubrics = [];
+    pendingRubricReads = files.length;
 
-    selectedRubricFileName = '';
-    selectedRubricText = '';
+    var failed = [];
 
-    if (!isJsonFile(file)) {
-      resetRubricFileSelection('No valid JSON file selected.');
-      showMessages(['Please upload a .json file.'], 'ic-flash-warning');
-      return;
-    }
-
-    isReadingRubricFile = true;
-    updateFileStatus('Reading ' + file.name + '...');
+    updateFileStatus('Reading ' + files.length + ' file' + (files.length === 1 ? '' : 's') + '...');
     showMessages([], 'ic-flash-warning');
 
-    var reader = new FileReader();
-    reader.onload = function (event) {
-      selectedRubricFileName = file.name;
-      selectedRubricText = String(event.target.result || '');
-      isReadingRubricFile = false;
-      updateDropZoneContent(true, 'File uploaded', file.name);
-      updateFileStatus('Loaded ' + file.name + ' (' + selectedRubricText.length + ' characters).');
-    };
-    reader.onerror = function () {
-      resetRubricFileSelection('Unable to read the selected file.');
-      showMessages(['Unable to read the selected file. Please try again.'], 'ic-flash-warning');
-    };
+    function finishOne() {
+      pendingRubricReads -= 1;
+      if (pendingRubricReads > 0) {
+        return;
+      }
 
-    reader.readAsText(file);
+      selectedRubrics.sort(function (a, b) { return a.index - b.index; });
+
+      var warnings = [];
+      if (rejected && rejected.length > 0) {
+        warnings.push('Skipped ' + rejected.length + ' non-JSON file(s): ' + fileNameList(rejected));
+      }
+      if (failed.length > 0) {
+        warnings.push('Unable to read: ' + failed.join(', '));
+      }
+
+      if (selectedRubrics.length === 0) {
+        resetRubricFileSelection('No files could be read.');
+        showMessages(warnings.concat(['None of the selected files could be read.']), 'ic-flash-warning');
+        return;
+      }
+
+      updateDropZoneContent(true, selectedRubrics.length + ' file' + (selectedRubrics.length === 1 ? '' : 's') + ' uploaded',
+        summarizeNames(selectedRubrics));
+      updateFileStatus('Loaded ' + selectedRubrics.length + ' file' + (selectedRubrics.length === 1 ? '' : 's') + '.');
+
+      if (warnings.length > 0) {
+        showMessages(warnings, 'ic-flash-warning');
+      }
+    }
+
+    files.forEach(function (file, index) {
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        selectedRubrics.push({
+          'index': index,
+          'name': file.name,
+          'text': String(event.target.result || '')
+        });
+        finishOne();
+      };
+      reader.onerror = function () {
+        failed.push(file.name);
+        finishOne();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function fileNameList(files) {
+    return files.map(function (file) { return file.name; }).join(', ');
+  }
+
+  function summarizeNames(entries) {
+    var names = entries.map(function (entry) { return entry.name; });
+    if (names.length <= 3) {
+      return names.join(', ');
+    }
+    return names.slice(0, 3).join(', ') + ' and ' + (names.length - 3) + ' more';
   }
 
   function isJsonFile(file) {
@@ -465,11 +509,10 @@
   }
 
   function resetRubricFileSelection(statusMessage) {
-    selectedRubricFileName = '';
-    selectedRubricText = '';
-    isReadingRubricFile = false;
+    selectedRubrics = [];
+    pendingRubricReads = 0;
     updateDropZoneContent(false, '', '');
-    updateFileStatus(statusMessage || 'No file selected.');
+    updateFileStatus(statusMessage || 'No files selected.');
   }
 
   function updateFileStatus(message) {
@@ -492,10 +535,10 @@
       }
     }
     if (titleEl) {
-      titleEl.textContent = hasFile ? title : 'Drag a JSON file here';
+      titleEl.textContent = hasFile ? title : 'Drag JSON files here';
     }
     if (helpEl) {
-      helpEl.textContent = hasFile ? help : 'or browse for a .json file';
+      helpEl.textContent = hasFile ? help : 'or browse for one or more .json files';
     }
   }
 
@@ -547,51 +590,111 @@
   }
 
   function processDialog() {
-    var submission = collectDialogData();
-    if (!submission) {
+    var submissions = collectDialogSubmissions();
+    if (!submissions) {
       return;
     }
 
-    lastSubmission = submission;
-    dispatchRubricSubmit(submission);
-    showMessages(['Rubric JSON parsed. Saving rubric to Canvas...'], 'ic-flash-success');
-    saveRubric(submission.canvasPayload).done(function () {
-      showMessages(['Rubric saved to Canvas. Reloading page...'], 'ic-flash-success');
-      closeDialog();
-      window.location.reload(true);
-    }).fail(function () {
-      showMessages(['All the information was supplied correctly, but there was an error saving rubric to Canvas.'], 'ic-flash-warning');
-    });
+    lastSubmission = submissions;
+
+    var saved = [];
+    var failures = [];
+
+    function saveNext(i) {
+      if (i >= submissions.length) {
+        finishBatch(saved, failures);
+        return;
+      }
+
+      var submission = submissions[i];
+      showMessages(['Saving ' + (i + 1) + ' of ' + submissions.length + ': ' + submission.title + '...'], 'ic-flash-success');
+      dispatchRubricSubmit(submission);
+
+      saveRubric(submission.canvasPayload).done(function () {
+        saved.push(submission.title);
+      }).fail(function () {
+        failures.push(submission.sourceName + ' (' + submission.title + ')');
+      }).always(function () {
+        saveNext(i + 1);
+      });
+    }
+
+    saveNext(0);
   }
 
-  function collectDialogData() {
+  function finishBatch(saved, failures) {
+    if (failures.length === 0) {
+      showMessages(['Saved ' + saved.length + ' rubric' + (saved.length === 1 ? '' : 's') + ' to Canvas. Reloading page...'], 'ic-flash-success');
+      closeDialog();
+      window.location.reload(true);
+      return;
+    }
+
+    // Leave the panel open on a partial failure so the list stays readable.
+    var messages = ['Saved ' + saved.length + ', failed ' + failures.length + '.'];
+    messages.push('Failed: ' + failures.join(', '));
+    if (saved.length > 0) {
+      messages.push('Reload the page to see the rubrics that did save.');
+    }
+    showMessages(messages, 'ic-flash-warning');
+  }
+
+  function collectDialogSubmissions() {
     var errors = [];
-    var title = '';
-    var text = selectedRubricText ? selectedRubricText.trim() : '';
     var association = getAssociationFromPath();
-    var rubric;
-    var validationErrors;
+    var submissions = [];
 
-
-    if (isReadingRubricFile) {
-      errors.push('The JSON file is still loading. Try Create again in a moment.');
-    } else if (text === '') {
-      errors.push('You must upload a rubric JSON file.');
-    } else {
-      rubric = parseRubricJson(text, errors);
+    if (pendingRubricReads > 0) {
+      showMessages(['The JSON files are still loading. Try Create again in a moment.'], 'ic-flash-warning');
+      return false;
     }
-    if (rubric && title === '') {
-      title = normalizeText(rubric.title);
-    }
-    if (title === '') {
-      errors.push('The rubric JSON needs a title.');
-    }
-    if (rubric) {
-      validationErrors = validateRubricJson(rubric);
-      errors = errors.concat(validationErrors);
+    if (selectedRubrics.length === 0) {
+      showMessages(['You must upload at least one rubric JSON file.'], 'ic-flash-warning');
+      return false;
     }
     if (!association) {
-      errors.push('Unable to determine where to place this rubric.');
+      showMessages(['Unable to determine where to place these rubrics.'], 'ic-flash-warning');
+      return false;
+    }
+
+    for (var i = 0; i < selectedRubrics.length; i++) {
+      var entry = selectedRubrics[i];
+      var text = entry.text ? entry.text.trim() : '';
+      var fileErrors = [];
+      var rubrics = text === '' ? false : parseRubricDocument(text, fileErrors);
+
+      if (rubrics) {
+        for (var j = 0; j < rubrics.length; j++) {
+          var rubric = rubrics[j];
+          var title = normalizeText(rubric.title);
+          var label = rubrics.length > 1 ? entry.name + ' [' + (j + 1) + ']' : entry.name;
+
+          if (title === '') {
+            fileErrors.push('The rubric JSON needs a title.');
+          }
+          fileErrors = fileErrors.concat(validateRubricJson(rubric));
+
+          if (fileErrors.length === 0) {
+            rubric.title = title;
+            submissions.push({
+              'title': title,
+              'sourceName': label,
+              'json': rubric,
+              'sourceText': text,
+              'association': association,
+              'canvasPayload': buildRubricPayload(Object.assign({}, rubric, {
+                'association': association
+              }))
+            });
+          }
+        }
+      } else if (text === '') {
+        fileErrors.push('The file is empty.');
+      }
+
+      for (var k = 0; k < fileErrors.length; k++) {
+        errors.push(entry.name + ': ' + fileErrors[k]);
+      }
     }
 
     if (errors.length > 0) {
@@ -599,17 +702,7 @@
       return false;
     }
 
-    rubric.title = title;
-
-    return {
-      'title': title,
-      'json': rubric,
-      'sourceText': text,
-      'association': association,
-      'canvasPayload': buildRubricPayload(Object.assign({}, rubric, {
-        'association': association
-      }))
-    };
+    return submissions;
   }
 
   function clearDialog() {
@@ -619,7 +712,7 @@
       fileInput.value = '';
     }
 
-    resetRubricFileSelection('No file selected.');
+    resetRubricFileSelection('No files selected.');
     showMessages([], 'ic-flash-warning');
   }
 
@@ -671,6 +764,35 @@
       errors.push('Rubric JSON is not valid: ' + e.message);
       return false;
     }
+  }
+
+  // Accepts either a single rubric object or an array of them, so one file
+  // can carry several rubrics. parseRubricJson keeps its single-object contract.
+  function parseRubricDocument(text, errors) {
+    errors = errors || [];
+
+    var parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      errors.push('Rubric JSON is not valid: ' + e.message);
+      return false;
+    }
+
+    var list = Array.isArray(parsed) ? parsed : [parsed];
+    if (list.length === 0) {
+      errors.push('Rubric JSON array is empty.');
+      return false;
+    }
+
+    for (var i = 0; i < list.length; i++) {
+      if (!list[i] || Array.isArray(list[i]) || typeof list[i] !== 'object') {
+        errors.push('Entry ' + (i + 1) + ' must be a rubric object.');
+        return false;
+      }
+    }
+
+    return list;
   }
 
   function validateRubricJson(rubric) {
@@ -930,11 +1052,15 @@
     'fetchOutcome': fetchOutcome,
     'buildRubricPayload': buildRubricPayload,
     'parseRubricJson': parseRubricJson,
+    'parseRubricDocument': parseRubricDocument,
     'validateRubricJson': validateRubricJson,
     'getAssociationFromPath': getAssociationFromPath,
     'getCsrfToken': getCsrfToken,
-    'getLastSubmission': function () {
+    'getLastSubmissions': function () {
       return lastSubmission;
+    },
+    'getLastSubmission': function () {
+      return Array.isArray(lastSubmission) ? lastSubmission[0] : lastSubmission;
     },
     'saveRubric': saveRubric
   };
