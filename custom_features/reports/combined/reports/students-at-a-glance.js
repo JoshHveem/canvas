@@ -819,7 +819,7 @@ Vue.component('reports-students-at-a-glance', {
           {
             department_code: departmentCode,
             is_active_degree: true,
-            filter: `entry_at<=${this.todayDate()}`
+            entry_at: { op: '<=', value: this.todayDate() }
           },
           { dataset: 'student_majors' }
         ));
