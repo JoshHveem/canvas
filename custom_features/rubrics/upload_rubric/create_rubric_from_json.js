@@ -782,7 +782,7 @@
     var ratings = buildRatings(item.ratings || []);
     var criterion = {
       'description': normalizeText(item.description || item.name || ''),
-      'long_description': normalizeText(item.long_description || item.longDescription || '')
+      'long_description': normalizeMultilineText(item.long_description || item.longDescription || '')
     };
 
     if (item.id) {
@@ -815,7 +815,7 @@
       var item = ratingsInput[i];
       ratings.push({
         'description': normalizeText(item.description || ''),
-        'long_description': normalizeText(item.long_description || item.longDescription || ''),
+        'long_description': normalizeMultilineText(item.long_description || item.longDescription || ''),
         'points': Number(item.points)
       });
     }
@@ -851,6 +851,17 @@
 
   function normalizeText(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  // Same cleanup as normalizeText, but keeps line breaks so multi-line
+  // long_description values (e.g. step lists) survive the import.
+  function normalizeMultilineText(value) {
+    return String(value || '')
+      .replace(/\r\n?/g, '\n')
+      .replace(/[^\S\n]+/g, ' ')
+      .replace(/ *\n */g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   function getSourceUrl() {
