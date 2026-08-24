@@ -251,20 +251,22 @@ Vue.component('reports-students-at-a-glance', {
       const status = this.evaluationStatusText(row);
       if (!status) return '';
 
+      const backgroundColor = this.evaluationPillColor(row);
       const needsProgressMeeting = Boolean(
         row?.is_no_es_eval_on_record || row?.is_gte_30_days_since_last_eval
       );
-      if (!needsProgressMeeting) return this.dayPillHtml(status, this.colors.green);
+      if (!needsProgressMeeting) return this.dayPillHtml(status, backgroundColor);
 
       const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
       const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your ${meetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(status, this.colors.red, composeUrl, 'Compose a progress-meeting message', row);
+      return this.dayPillHtml(status, backgroundColor, composeUrl, 'Compose a progress-meeting message', row);
     },
 
     dayPillHtml(value, backgroundColor, composeUrl = '', description = '', row = {}) {
       const text = this.escapeHtml(value);
-      const style = `background-color:${backgroundColor}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center;`;
+      const textColor = backgroundColor === this.colors.yellow ? this.colors.black : this.colors.white;
+      const style = `background-color:${backgroundColor}; color:${textColor}; display:inline-block; min-width:1.2rem; text-align:center;`;
       if (!composeUrl) return `<span class="btech-pill-text" style="${style}">${text}</span>`;
 
       const studentName = this.escapeHtml(this.getStudentName(row));
@@ -332,6 +334,14 @@ Vue.component('reports-students-at-a-glance', {
     evaluationStatusSort(row) {
       if (row?.is_no_es_eval_on_record) return -1;
       return this.dayCountSort(row?.num_days_since_last_eval);
+    },
+
+    evaluationPillColor(row) {
+      if (row?.is_no_es_eval_on_record) return this.colors.red;
+
+      const days = row?.num_days_since_last_eval;
+      if (Number.isFinite(days) && days >= 25 && days <= 45) return this.colors.yellow;
+      return Number.isFinite(days) && days > 45 ? this.colors.red : this.colors.green;
     },
 
     isCourseComplete(value) {
