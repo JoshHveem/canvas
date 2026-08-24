@@ -312,9 +312,17 @@ Vue.component('reports-students-at-a-glance', {
 
     academicStandingText(row) {
       const currentCode = String(row?.academic_standing_code ?? '').trim();
-      const expectedCode = String(row?.academic_standing_code__expected ?? '').trim();
-      if (expectedCode && expectedCode !== currentCode) return 'Pending Documentation';
+      if (this.isPendingStandingDocumentation(row)) return 'Pending Documentation';
       return currentCode;
+    },
+
+    isPendingStandingDocumentation(row) {
+      const currentCode = String(row?.academic_standing_code ?? '').trim();
+      const expectedCode = String(row?.academic_standing_code__expected ?? '').trim();
+      return Boolean(
+        row?.is_pending_add__academic_standing ||
+        (!currentCode && expectedCode)
+      );
     },
 
     academicStandingHtml(row) {
@@ -730,8 +738,7 @@ Vue.component('reports-students-at-a-glance', {
           record.is_on_probation = record.is_on_probation || Boolean(row.academic_standing_code);
           if (row.academic_standing_code) record.academic_standing_code = row.academic_standing_code;
           const pendingStandingAdd = row.is_pending_add__academic_standing || (
-            Boolean(row.academic_standing_code__expected)
-            && row.academic_standing_code__expected !== row.academic_standing_code
+            !row.academic_standing_code && Boolean(row.academic_standing_code__expected)
           );
           record.is_pending_add__academic_standing = record.is_pending_add__academic_standing || pendingStandingAdd;
           if (row.academic_standing_code__expected) {
