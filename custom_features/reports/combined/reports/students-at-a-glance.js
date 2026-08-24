@@ -68,18 +68,10 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
       new window.ReportColumn(
-        'Academic Standing', 'Current academic standing code.', '9rem', false, 'number',
-        row => row?.is_on_probation ? this.escapeHtml(row?.academic_standing_code || '') : '',
-        row => this.probationPillStyle(row),
-        row => this.boolSort(row?.is_on_probation)
-      ),
-      new window.ReportColumn(
-        'Pending Academic Standing', 'Expected standing code that Student Services still needs to add.', '11rem', false, 'string',
-        row => row?.is_pending_add__academic_standing
-          ? this.escapeHtml(row?.academic_standing_code__expected || 'Pending')
-          : '',
-        row => this.alertPillStyle(row?.is_pending_add__academic_standing),
-        row => this.boolSort(row?.is_pending_add__academic_standing)
+        'Academic Standing', 'Shows Pending Documentation when the expected and current standing codes differ.', '12rem', false, 'string',
+        row => this.escapeHtml(this.academicStandingText(row)),
+        row => this.academicStandingPillStyle(row),
+        row => this.academicStandingText(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
@@ -316,6 +308,21 @@ Vue.component('reports-students-at-a-glance', {
         minWidth: '1.2rem',
         textAlign: 'center'
       };
+    },
+
+    academicStandingText(row) {
+      const currentCode = String(row?.academic_standing_code ?? '').trim();
+      const expectedCode = String(row?.academic_standing_code__expected ?? '').trim();
+      if (expectedCode && expectedCode !== currentCode) return 'Pending Documentation';
+      return currentCode;
+    },
+
+    academicStandingPillStyle(row) {
+      if (this.academicStandingText(row) === 'Pending Documentation') {
+        return this.alertPillStyle(true);
+      }
+
+      return this.probationPillStyle(row);
     },
 
     dayCountText(value) {
@@ -700,7 +707,8 @@ Vue.component('reports-students-at-a-glance', {
           record.is_on_probation = record.is_on_probation || Boolean(row.academic_standing_code);
           if (row.academic_standing_code) record.academic_standing_code = row.academic_standing_code;
           const pendingStandingAdd = row.is_pending_add__academic_standing || (
-            !row.academic_standing_code && Boolean(row.academic_standing_code__expected)
+            Boolean(row.academic_standing_code__expected)
+            && row.academic_standing_code__expected !== row.academic_standing_code
           );
           record.is_pending_add__academic_standing = record.is_pending_add__academic_standing || pendingStandingAdd;
           if (row.academic_standing_code__expected) {
