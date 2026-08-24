@@ -381,8 +381,27 @@ Vue.component('reports-students-at-a-glance', {
         department_code: String(row?.department_code ?? '').trim(),
         major_code: String(row?.major_code ?? '').trim(),
         academic_year__major: this.normalizeMajorYear(row?.academic_year__major),
+        entry_at: String(row?.entry_at ?? '').trim(),
         is_active_degree: Boolean(row?.is_active_degree)
-      })).filter(row => row.is_active_degree);
+      })).filter(row => row.is_active_degree && this.isEntryDateStarted(row.entry_at));
+    },
+
+    isEntryDateStarted(entryAt) {
+      const entryTime = Date.parse(entryAt);
+      return Number.isFinite(entryTime) && entryTime <= Date.now();
+    },
+
+    daysSinceEntryAt(entryAt) {
+      const entryTime = Date.parse(entryAt);
+      if (!Number.isFinite(entryTime)) return null;
+
+      return Math.max(0, Math.floor((Date.now() - entryTime) / 86400000));
+    },
+
+    todayDate() {
+      const now = new Date();
+      const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return localNow.toISOString().slice(0, 10);
     },
 
     normalizeHeaderRows(rows) {
@@ -580,6 +599,8 @@ Vue.component('reports-students-at-a-glance', {
       const canvasToStudentKey = new Map();
       const sisToStudentKey = new Map();
       const majorKeysByStudent = new Map();
+      const daysSinceEntryByStudent = new Map();
+      const daysSinceEntryByStudentMajor = new Map();
 
       (Array.isArray(selectedMajorRows) ? selectedMajorRows : []).forEach(row => {
         const studentKey = this.createStudentKey(row?.sis_user_id, row?.canvas_user_id);
@@ -595,10 +616,42 @@ Vue.component('reports-students-at-a-glance', {
         }
 
         const majorKey = this.createMajorKey(row?.major_code);
-        if (majorKey) majorKeysByStudent.get(studentKey).add(majorKey);
+        const daysSinceEntry = this.daysSinceEntryAt(row?.entry_at);
+        if (Number.isFinite(daysSinceEntry)) {
+          const currentStudentDays = daysSinceEntryByStudent.get(studentKey);
+          daysSinceEntryByStudent.set(studentKey, Number.isFinite(currentStudentDays)
+            ? Math.min(currentStudentDays, daysSinceEntry)
+            : daysSinceEntry);
+        }
+
+        if (majorKey) {
+          majorKeysByStudent.get(studentKey).add(majorKey);
+          if (Number.isFinite(daysSinceEntry)) {
+            const entryKey = `${studentKey}:${majorKey}`;
+            const currentMajorDays = daysSinceEntryByStudentMajor.get(entryKey);
+            daysSinceEntryByStudentMajor.set(entryKey, Number.isFinite(currentMajorDays)
+              ? Math.min(currentMajorDays, daysSinceEntry)
+              : daysSinceEntry);
+          }
+        }
       });
 
-      return { canvasToStudentKey, sisToStudentKey, majorKeysByStudent };
+      return {
+        canvasToStudentKey,
+        sisToStudentKey,
+        majorKeysByStudent,
+        daysSinceEntryByStudent,
+        daysSinceEntryByStudentMajor
+      };
+    },
+
+    capDaysSinceMajorEntry(days, studentKey, majorKey, indexes) {
+      if (!Number.isFinite(days)) return null;
+
+      const entryDays = majorKey
+        ? indexes.daysSinceEntryByStudentMajor.get(`${studentKey}:${majorKey}`)
+        : indexes.daysSinceEntryByStudent.get(studentKey);
+      return Number.isFinite(entryDays) ? Math.min(days, entryDays) : days;
     },
 
     resolveStudentKey(row, indexes) {
@@ -701,13 +754,19 @@ Vue.component('reports-students-at-a-glance', {
           }
         }
 
-        if (Number.isFinite(row.num_days_since_last_eval)) {
+        const daysSinceLastEval = this.capDaysSinceMajorEntry(
+          row.num_days_since_last_eval,
+          studentKey,
+          rowMajorKey,
+          indexes
+        );
+        if (Number.isFinite(daysSinceLastEval)) {
           studentsWithEvaluations.add(studentKey);
           record.is_gte_30_days_since_last_eval = record.is_gte_30_days_since_last_eval
-            || row.num_days_since_last_eval >= 30;
+            || daysSinceLastEval >= 30;
           record.num_days_since_last_eval = Number.isFinite(record.num_days_since_last_eval)
-            ? Math.max(record.num_days_since_last_eval, row.num_days_since_last_eval)
-            : row.num_days_since_last_eval;
+            ? Math.max(record.num_days_since_last_eval, daysSinceLastEval)
+            : daysSinceLastEval;
         }
       });
 
@@ -725,12 +784,18 @@ Vue.component('reports-students-at-a-glance', {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
 
+          const daysSinceLastSubmission = this.capDaysSinceMajorEntry(
+            row.num_days_since_last_submission,
+            studentKey,
+            '',
+            indexes
+          );
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
           record.is_gte_7_days_since_last_activity = record.is_gte_7_days_since_last_activity
-            || row.num_days_since_last_submission >= 7;
+            || daysSinceLastSubmission >= 7;
           record.num_days_since_last_activity = Number.isFinite(record.num_days_since_last_activity)
-            ? Math.max(record.num_days_since_last_activity, row.num_days_since_last_submission)
-            : row.num_days_since_last_submission;
+            ? Math.max(record.num_days_since_last_activity, daysSinceLastSubmission)
+            : daysSinceLastSubmission;
         });
 
       return Array.from(studentMap.values()).filter(row => this.hasAnyAlert(row));
@@ -753,14 +818,15 @@ Vue.component('reports-students-at-a-glance', {
         const selectedMajorRows = this.normalizeMajorRows(await this.fetchReportDataset(
           {
             department_code: departmentCode,
-            is_active_degree: true
+            is_active_degree: true,
+            entry_at_lte: this.todayDate()
           },
           { dataset: 'student_majors' }
         ));
 
         if (!selectedMajorRows.length) {
           this.rows = [];
-          this.loadError = 'No active students found for this department.';
+          this.loadError = 'No active students who have started were found for this department.';
           return;
         }
 
