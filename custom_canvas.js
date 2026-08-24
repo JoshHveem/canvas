@@ -262,6 +262,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // dashboard level reports that need vue
     await $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"));
     feature('reports/automations/report', /^\/automations$/);
+    featureISD('inbox-prefill/inbox-prefill', /^\/conversations$/);
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
@@ -367,6 +368,9 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       if (IS_TEACHER) {
         feature("speed_grader/split_screen", /^\/courses\/[0-9]+\/gradebook\/speed_grader/);
         feature("people_page/instructor_add_remove_guide", /^\/courses\/[0-9]+\/users$/);
+      }
+      if (CURRENT_DEPARTMENT_ID == 3945 && IS_TEACHER) { //PHARMACY
+        feature('department_specific/phrm_import_cartridges', /^\/courses\/[0-9]+(\/modules){0,1}$/);
       }
       if (CURRENT_DEPARTMENT_ID == 3827) { //NURSING
         feature('department_specific/replace_course_code_with_name', /^\/courses\/[0-9]+/);

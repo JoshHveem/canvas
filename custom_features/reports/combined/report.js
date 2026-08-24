@@ -53,6 +53,16 @@
       template: vueString,
 
       data: function () {
+        const reportOrder = [
+          'students',
+          'evaluations',
+          'employment-skills',
+          'outcomes',
+          'instructors',
+          'course-readiness',
+          'syllabi',
+          'admissions'
+        ];
         const reports = [
           {
             value: 'syllabi',
@@ -184,6 +194,13 @@
             title: 'Students Report',
             subMenus: [
               {
+                value: 'at-a-glance',
+                label: 'At a Glance',
+                component: 'reports-students-at-a-glance',
+                dataset: 'student_majors',
+                filters: {}
+              },
+              {
                 value: 'probations',
                 label: 'Probations',
                 component: 'reports-students-probations',
@@ -253,19 +270,19 @@
               }
             ]
           }
-        ];
+        ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
           reportTypes: reports,
           settings: {
-            reportType: 'syllabi',
+            reportType: 'students',
             subMenuByType: {
               syllabi: 'summary',
               'course-readiness': 'department-summary',
               instructors: 'department-summary',
               admissions: 'overview',
               outcomes: 'cpl',
-              students: 'probations',
+              students: 'at-a-glance',
               evaluations: 'course-evals-summary'
             }
           },
@@ -445,6 +462,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/outcomes-cpl-historic.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/employment-skills.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-at-a-glance.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-at-a-glance.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/students-probations.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");

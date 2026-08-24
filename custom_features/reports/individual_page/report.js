@@ -757,21 +757,6 @@
       "https://d3js.org/d3.v6.min.js",
       "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"
     ]);
-    /*
-    //libraries
-    await $.getScript("https://reports.bridgetools.dev/components/icons/people.js");
-    await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.5.0/print.js");
-    //icons
-    await $.getScript("https://reports.bridgetools.dev/components/icons/alert.js");
-    await $.getScript("https://reports.bridgetools.dev/components/icons/distance-approved.js");
-    //components
-    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuStatus.js");
-    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuInfo.js");
-    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuFilters.js");
-    await $.getScript("https://reports.bridgetools.dev/department_report/components/menuSettings.js");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentIndCredits.js");
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js") : SOURCE_URL + "/custom_features/reports/individual_page/components/showStudentHours.js");
-    */
     postLoad();
   } catch (err) {
     console.error(err);

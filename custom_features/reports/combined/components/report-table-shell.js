@@ -55,6 +55,10 @@ Vue.component('report-table-shell', {
         <span class="btech-pill">Rows: {{ rowCount }}</span>
       </div>
 
+      <div v-if="$slots.description" class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">
+        <slot name="description"></slot>
+      </div>
+
       <div v-if="$slots.filters" class="btech-row" style="gap:.75rem; margin-bottom:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap;">
         <slot name="filters"></slot>
       </div>
@@ -79,10 +83,10 @@ Vue.component('report-table-shell', {
             :key="col.name"
             :title="col.description"
             style="display:inline-block; cursor:pointer;"
-            @click="setSortColumn(col.name)"
+            @click="!col.hideHeader && setSortColumn(col.name)"
           >
-            <span><b>{{ col.name }}</b></span>
-            <span style="margin-left:.25rem;">
+            <span v-if="!col.hideHeader"><b>{{ col.name }}</b></span>
+            <span v-if="!col.hideHeader" style="margin-left:.25rem;">
               <svg style="width:.75rem;height:.75rem;" viewBox="0 0 490 490" aria-hidden="true">
                 <g>
                   <polygon :style="{ fill: col.sort_state < 0 ? '#000' : '#E0E0E0' }"
