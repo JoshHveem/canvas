@@ -530,8 +530,8 @@ Vue.component('reports-employment-skills', {
   },
 
   template: `
-  <div @click="onTableClick">
-    <report-table-shell
+  <report-table-shell
+      @click.native="onTableClick"
       :title-html="titleText"
       :table="table"
       :rows="visibleRows"
@@ -540,38 +540,37 @@ Vue.component('reports-employment-skills', {
       loading-text="Loading employment skills submissions..."
       :row-key-fn="(row, index) => [row.canvas_user_id || row.sis_user_id || 'x', row.canvas_course_id || 'y', row.canvas_assignment_id || 'z', row.created_at__self_eval || row.created_at__instructor_eval || index].join(':')"
     >
-      <template #filters>
-        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-          <label class="btech-muted" style="font-size:.75rem;">Year</label>
-          <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
-            <option
-              v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-              :key="optionYear"
-              :value="optionYear"
-            >{{ optionYear }}</option>
-          </select>
-        </div>
+    <template #filters>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Year</label>
+        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
+          <option
+            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+            :key="optionYear"
+            :value="optionYear"
+          >{{ optionYear }}</option>
+        </select>
+      </div>
 
-        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-          <label class="btech-muted" style="font-size:.75rem;">Program</label>
-          <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
-            <option value="">Select a Program</option>
-            <option v-for="option in programOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Program</label>
+        <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
+          <option value="">Select a Program</option>
+          <option v-for="option in programOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
 
-        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-          <label class="btech-muted" style="font-size:.75rem;">Type</label>
-          <select v-model="filters.enrollment_type" v-bind="filterAttrs('enrollment_type')" style="font-size:.75rem; min-width:90px;">
-            <option value="">All</option>
-            <option value="HS">HS</option>
-            <option value="CS">CS</option>
-          </select>
-        </div>
-      </template>
-    </report-table-shell>
-  </div>
+      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+        <label class="btech-muted" style="font-size:.75rem;">Type</label>
+        <select v-model="filters.enrollment_type" v-bind="filterAttrs('enrollment_type')" style="font-size:.75rem; min-width:90px;">
+          <option value="">All</option>
+          <option value="HS">HS</option>
+          <option value="CS">CS</option>
+        </select>
+      </div>
+    </template>
+  </report-table-shell>
   `
 });
