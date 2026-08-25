@@ -19,7 +19,9 @@ Vue.component('reports-employment-skills', {
       table,
       filters: {
         enrollment_type: ''
-      }
+      },
+      gradeOutStateByKey: {},
+      gradedOutByKey: {}
     };
   },
 
@@ -73,6 +75,12 @@ Vue.component('reports-employment-skills', {
         row => this.instructorEvalPillStyle(row),
         row => this.instructorEvalSortValue(row)
       ),
+      new window.ReportColumn(
+        'Grade Out', 'Pushes the instructor evaluation to the grade-out table when an instructor evaluation is on file.', '8rem', false, 'string',
+        row => this.gradeOutButtonHtml(row),
+        null,
+        row => this.gradeOutSortValue(row)
+      ),
     ]);
   },
 
@@ -109,6 +117,95 @@ Vue.component('reports-employment-skills', {
   },
 
   methods: {
+    getGradeOutRowKey(row) {
+      return [
+        String(row?.canvas_user_id ?? '').trim() || 'x',
+        String(row?.canvas_course_id ?? '').trim() || 'y',
+        String(row?.canvas_assignment_id ?? '').trim() || 'z',
+        String(row?.program_code ?? '').trim() || 'p',
+        this.normalizeGradeOutSubmittedAt(row?.created_at__instructor_eval)
+      ].join(':');
+    },
+
+    getGradeOutRecordKey(record) {
+      return [
+        String(record?.canvas_user_id ?? '').trim() || 'x',
+        String(record?.canvas_course_id ?? '').trim() || 'y',
+        String(record?.canvas_assignment_id ?? '').trim() || 'z',
+        String(record?.program_code ?? '').trim() || 'p',
+        this.normalizeGradeOutSubmittedAt(record?.submitted_at)
+      ].join(':');
+    },
+
+    normalizeGradeOutSubmittedAt(value) {
+      const raw = String(value ?? '').trim();
+      const parsed = this.parseDateValue(raw);
+      return parsed ? String(parsed.getTime()) : (raw || 't');
+    },
+
+    getGradeOutState(row) {
+      return this.gradeOutStateByKey[this.getGradeOutRowKey(row)] || '';
+    },
+
+    setGradeOutState(row, state) {
+      this.$set(this.gradeOutStateByKey, this.getGradeOutRowKey(row), String(state || ''));
+    },
+
+    isGradedOut(row) {
+      return Boolean(this.gradedOutByKey[this.getGradeOutRowKey(row)]);
+    },
+
+    markGradedOut(row) {
+      this.$set(this.gradedOutByKey, this.getGradeOutRowKey(row), true);
+    },
+
+    hasInstructorEval(row) {
+      return Boolean(this.parseDateValue(row?.created_at__instructor_eval));
+    },
+
+    canGradeOut(row) {
+      if (!this.hasInstructorEval(row)) return false;
+      if (this.isGradedOut(row)) return false;
+      if (!row?.canvas_user_id || !row?.canvas_course_id || !row?.canvas_assignment_id) return false;
+      if (!String(row?.sis_user_id ?? '').trim()) return false;
+      const state = this.getGradeOutState(row);
+      return state !== 'saving' && state !== 'saved';
+    },
+
+    gradeOutButtonHtml(row) {
+      if (this.isGradedOut(row)) {
+        return `<span style="display:inline-block;background:${this.colors.green};color:${this.colors.white};border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:600;line-height:1.2;">Graded Out</span>`;
+      }
+      if (!this.hasInstructorEval(row)) return '-';
+
+      const state = this.getGradeOutState(row);
+      const disabled = !this.canGradeOut(row);
+      const label = state === 'saving'
+        ? 'Saving...'
+        : 'Grade Out';
+      const bg = '#1f2937';
+      const opacity = disabled ? '0.65' : '1';
+      const cursor = disabled ? 'default' : 'pointer';
+
+      return `
+        <button
+          type="button"
+          class="btech-grade-out-btn"
+          data-grade-out-key="${this.escapeHtml(this.getGradeOutRowKey(row))}"
+          ${disabled ? 'disabled aria-disabled="true"' : ''}
+          style="background:${bg};color:#fff;border:none;border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:600;line-height:1.2;opacity:${opacity};cursor:${cursor};"
+        >${this.escapeHtml(label)}</button>
+      `;
+    },
+
+    gradeOutSortValue(row) {
+      if (!this.hasInstructorEval(row)) return -1;
+      if (this.isGradedOut(row)) return 2;
+      const state = this.getGradeOutState(row);
+      if (state === 'saving') return 1;
+      return 0;
+    },
+
     getEnrollmentTypeCode(row) {
       return String(row?.enrollment_type_code ?? '').trim().toUpperCase();
     },
@@ -219,9 +316,143 @@ Vue.component('reports-employment-skills', {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     },
 
+    buildGradeOutPayload(row) {
+      return {
+        canvas_user_id: Number(row?.canvas_user_id) || null,
+        sis_user_id: String(row?.original_sis_user_id ?? row?.sis_user_id ?? '').trim(),
+        canvas_course_id: Number(row?.canvas_course_id) || null,
+        canvas_assignment_id: Number(row?.canvas_assignment_id) || null,
+        employment_skills_scores: row?.employment_skills_scores && typeof row.employment_skills_scores === 'object'
+          ? row.employment_skills_scores
+          : {},
+        program_code: String(row?.program_code ?? '').trim(),
+        submitted_at: String(row?.created_at__instructor_eval ?? '').trim()
+      };
+    },
+
+    async pushEmploymentSkillsGradeOut(payload = {}) {
+      const authCode = await bridgetools.getCanvasAuthCode();
+
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          url: 'https://reports.bridgetools.dev/api3/student_employment_skills__grade_out',
+          method: 'POST',
+          data: JSON.stringify(payload),
+          contentType: 'application/json',
+          processData: false,
+          headers: {
+            Authorization: `Bearer ${authCode}`,
+            'X-Canvas-User-Id': String(ENV.current_user_id),
+          },
+        })
+          .done(data => resolve(data))
+          .fail((xhr, status, err) => reject({ xhr, status, err }));
+      });
+    },
+
+    getGradeOutErrorMessage(err) {
+      const responseJson = err?.xhr?.responseJSON;
+      const responseText = err?.xhr?.responseText;
+      const message =
+        responseJson?.error ||
+        responseJson?.message ||
+        responseJson?.data?.message ||
+        responseText ||
+        err?.message ||
+        'Failed to push employment skills grade out.';
+
+      return String(message);
+    },
+
+    async onTableClick(event) {
+      const button = event?.target?.closest?.('.btech-grade-out-btn');
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const rowKey = String(button.getAttribute('data-grade-out-key') || '').trim();
+      const row = this.visibleRows.find(candidate => this.getGradeOutRowKey(candidate) === rowKey);
+      if (!row || !this.canGradeOut(row)) return;
+
+      this.setGradeOutState(row, 'saving');
+
+      try {
+        await this.pushEmploymentSkillsGradeOut(this.buildGradeOutPayload(row));
+        this.markGradedOut(row);
+        this.setGradeOutState(row, '');
+      } catch (err) {
+        console.error('Failed pushing employment skills grade out:', err);
+        this.setGradeOutState(row, '');
+        alert(this.getGradeOutErrorMessage(err));
+      }
+    },
+
+    async loadData() {
+      const programCode = String(this.selectedProgramCode || '').trim();
+      if (!programCode) {
+        this.rows = [];
+        this.gradedOutByKey = {};
+        this.loadedProgramName = '';
+        this.loadError = this.getEmptySelectionMessage();
+        return;
+      }
+
+      const requestId = ++this.loadRequestId;
+      try {
+        this.loading = true;
+        this.loadError = '';
+        this.gradeOutStateByKey = {};
+
+        const [rows, gradeOutRows] = await Promise.all([
+          this.fetchReportDataset(
+            this.getRequestFilters(),
+            { dataset: this.getDataset() }
+          ),
+          this.fetchReportDataset(
+            { program_code: programCode },
+            { dataset: 'student_employment_skills__grade_out' }
+          ).catch(error => {
+            console.warn('Failed to load employment skills grade-out records', error);
+            return [];
+          })
+        ]);
+
+        if (requestId !== this.loadRequestId) return;
+
+        const normalizedRows = this.normalizeRows(rows);
+        const hydratedRows = await this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true });
+        if (requestId !== this.loadRequestId) return;
+
+        this.gradedOutByKey = (Array.isArray(gradeOutRows) ? gradeOutRows : []).reduce((recordsByKey, record) => {
+          recordsByKey[this.getGradeOutRecordKey(record)] = true;
+          return recordsByKey;
+        }, {});
+        this.rows = hydratedRows;
+
+        const first = this.rows[0] || {};
+        this.loadedProgramName = String(
+          first?.program_name ??
+          this.programOptions.find(option => option.value === programCode)?.label ??
+          this.getProgramName()
+        ).trim();
+      } catch (e) {
+        console.warn('Failed to load employment skills detail dataset', e);
+        this.rows = [];
+        this.gradedOutByKey = {};
+        this.loadedProgramName = this.programOptions.find(option => option.value === programCode)?.label || this.getProgramName();
+        this.loadError = this.getLoadErrorMessage();
+      } finally {
+        if (requestId === this.loadRequestId) {
+          this.loading = false;
+        }
+      }
+    },
+
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         ...row,
+        original_sis_user_id: String(row?.original_sis_user_id ?? row?.sis_user_id ?? '').trim(),
         sis_user_id: String(row?.sis_user_id ?? '').trim(),
         canvas_user_id: Number(row?.canvas_user_id) || null,
         canvas_course_id: Number(row?.canvas_course_id) || null,
@@ -261,46 +492,48 @@ Vue.component('reports-employment-skills', {
   },
 
   template: `
-  <report-table-shell
-    :title-html="titleText"
-    :table="table"
-    :rows="visibleRows"
-    :loading="loading || loadingPrograms"
-    :load-error="loadError"
-    loading-text="Loading employment skills submissions..."
-    :row-key-fn="(row, index) => [row.canvas_user_id || row.sis_user_id || 'x', row.canvas_course_id || 'y', row.canvas_assignment_id || 'z', row.created_at__self_eval || row.created_at__instructor_eval || index].join(':')"
-  >
-    <template #filters>
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Year</label>
-        <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
-          <option
-            v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
-            :key="optionYear"
-            :value="optionYear"
-          >{{ optionYear }}</option>
-        </select>
-      </div>
+  <div @click="onTableClick">
+    <report-table-shell
+      :title-html="titleText"
+      :table="table"
+      :rows="visibleRows"
+      :loading="loading || loadingPrograms"
+      :load-error="loadError"
+      loading-text="Loading employment skills submissions..."
+      :row-key-fn="(row, index) => [row.canvas_user_id || row.sis_user_id || 'x', row.canvas_course_id || 'y', row.canvas_assignment_id || 'z', row.created_at__self_eval || row.created_at__instructor_eval || index].join(':')"
+    >
+      <template #filters>
+        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+          <label class="btech-muted" style="font-size:.75rem;">Year</label>
+          <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
+            <option
+              v-for="optionYear in Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)"
+              :key="optionYear"
+              :value="optionYear"
+            >{{ optionYear }}</option>
+          </select>
+        </div>
 
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Program</label>
-        <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
-          <option value="">Select a Program</option>
-          <option v-for="option in programOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
+        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+          <label class="btech-muted" style="font-size:.75rem;">Program</label>
+          <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
+            <option value="">Select a Program</option>
+            <option v-for="option in programOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
 
-      <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
-        <label class="btech-muted" style="font-size:.75rem;">Type</label>
-        <select v-model="filters.enrollment_type" v-bind="filterAttrs('enrollment_type')" style="font-size:.75rem; min-width:90px;">
-          <option value="">All</option>
-          <option value="HS">HS</option>
-          <option value="CS">CS</option>
-        </select>
-      </div>
-    </template>
-  </report-table-shell>
+        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+          <label class="btech-muted" style="font-size:.75rem;">Type</label>
+          <select v-model="filters.enrollment_type" v-bind="filterAttrs('enrollment_type')" style="font-size:.75rem; min-width:90px;">
+            <option value="">All</option>
+            <option value="HS">HS</option>
+            <option value="CS">CS</option>
+          </select>
+        </div>
+      </template>
+    </report-table-shell>
+  </div>
   `
 });
