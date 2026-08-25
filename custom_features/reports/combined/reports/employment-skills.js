@@ -355,7 +355,7 @@ Vue.component('reports-employment-skills', {
 
       return new Promise((resolve, reject) => {
         $.ajax({
-          url: 'https://reports.bridgetools.dev/api3/student_employment_skills__grade_out',
+          url: 'https://reports.bridgetools.dev/api3/grade_out/employment_skills',
           method: 'POST',
           data: JSON.stringify(payload),
           contentType: 'application/json',
