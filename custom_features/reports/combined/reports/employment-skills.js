@@ -21,7 +21,8 @@ Vue.component('reports-employment-skills', {
         enrollment_type: ''
       },
       gradeOutStateByKey: {},
-      gradedOutByKey: {}
+      gradedOutByKey: {},
+      majorProgressByStudentKey: {}
     };
   },
 
@@ -76,7 +77,7 @@ Vue.component('reports-employment-skills', {
         row => this.instructorEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Grade Out', 'Pushes the instructor evaluation to the grade-out table when an instructor evaluation is on file.', '8rem', false, 'string',
+        'Grade Out', 'Available for CS students with an instructor evaluation who have earned more than 90% of major credits.', '8rem', false, 'string',
         row => this.gradeOutButtonHtml(row),
         null,
         row => this.gradeOutSortValue(row)
@@ -159,12 +160,29 @@ Vue.component('reports-employment-skills', {
       this.$set(this.gradedOutByKey, this.getGradeOutRowKey(row), true);
     },
 
+    getStudentMajorKeys(row) {
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      const sisUserId = String(row?.original_sis_user_id ?? row?.sis_user_id ?? '').trim();
+      return [
+        canvasUserId ? `canvas:${canvasUserId}` : '',
+        sisUserId ? `sis:${sisUserId}` : ''
+      ].filter(Boolean);
+    },
+
+    isGradeOutEligible(row) {
+      if (this.getEnrollmentTypeCode(row) !== 'CS') return false;
+      return this.getStudentMajorKeys(row).some(key => {
+        return Number(this.majorProgressByStudentKey[key]) > 0.9;
+      });
+    },
+
     hasInstructorEval(row) {
       return Boolean(this.parseDateValue(row?.created_at__instructor_eval));
     },
 
     canGradeOut(row) {
       if (!this.hasInstructorEval(row)) return false;
+      if (!this.isGradeOutEligible(row)) return false;
       if (this.isGradedOut(row)) return false;
       if (!row?.canvas_user_id || !row?.canvas_course_id || !row?.canvas_assignment_id) return false;
       if (!String(row?.sis_user_id ?? '').trim()) return false;
@@ -173,6 +191,7 @@ Vue.component('reports-employment-skills', {
     },
 
     gradeOutButtonHtml(row) {
+      if (!this.isGradeOutEligible(row)) return '-';
       if (this.isGradedOut(row)) {
         return `<span style="display:inline-block;background:${this.colors.green};color:${this.colors.white};border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:600;line-height:1.2;">Graded Out</span>`;
       }
@@ -199,6 +218,7 @@ Vue.component('reports-employment-skills', {
     },
 
     gradeOutSortValue(row) {
+      if (!this.isGradeOutEligible(row)) return -2;
       if (!this.hasInstructorEval(row)) return -1;
       if (this.isGradedOut(row)) return 2;
       const state = this.getGradeOutState(row);
@@ -393,6 +413,7 @@ Vue.component('reports-employment-skills', {
       if (!programCode) {
         this.rows = [];
         this.gradedOutByKey = {};
+        this.majorProgressByStudentKey = {};
         this.loadedProgramName = '';
         this.loadError = this.getEmptySelectionMessage();
         return;
@@ -404,7 +425,7 @@ Vue.component('reports-employment-skills', {
         this.loadError = '';
         this.gradeOutStateByKey = {};
 
-        const [rows, gradeOutRows] = await Promise.all([
+        const [rows, gradeOutRows, majorRows] = await Promise.all([
           this.fetchReportDataset(
             this.getRequestFilters(),
             { dataset: this.getDataset() }
@@ -414,6 +435,13 @@ Vue.component('reports-employment-skills', {
             { dataset: 'student_employment_skills__grade_out' }
           ).catch(error => {
             console.warn('Failed to load employment skills grade-out records', error);
+            return [];
+          }),
+          this.fetchReportDataset(
+            { major_code: programCode, is_active_degree: true },
+            { dataset: 'student_majors' }
+          ).catch(error => {
+            console.warn('Failed to load student major progress for employment skills grade-out', error);
             return [];
           })
         ]);
@@ -428,6 +456,15 @@ Vue.component('reports-employment-skills', {
           recordsByKey[this.getGradeOutRecordKey(record)] = true;
           return recordsByKey;
         }, {});
+        this.majorProgressByStudentKey = (Array.isArray(majorRows) ? majorRows : []).reduce((progressByStudentKey, major) => {
+          const progress = Number(major?.perc_credits_earned);
+          if (!Number.isFinite(progress)) return progressByStudentKey;
+
+          this.getStudentMajorKeys(major).forEach(key => {
+            progressByStudentKey[key] = Math.max(Number(progressByStudentKey[key]) || 0, progress);
+          });
+          return progressByStudentKey;
+        }, {});
         this.rows = hydratedRows;
 
         const first = this.rows[0] || {};
@@ -440,6 +477,7 @@ Vue.component('reports-employment-skills', {
         console.warn('Failed to load employment skills detail dataset', e);
         this.rows = [];
         this.gradedOutByKey = {};
+        this.majorProgressByStudentKey = {};
         this.loadedProgramName = this.programOptions.find(option => option.value === programCode)?.label || this.getProgramName();
         this.loadError = this.getLoadErrorMessage();
       } finally {
