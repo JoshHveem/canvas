@@ -77,7 +77,7 @@ Vue.component('reports-employment-skills', {
         row => this.instructorEvalSortValue(row)
       ),
       new window.ReportColumn(
-        'Grade Out', 'Available for CS students with an instructor evaluation who have earned more than 90% of major credits.', '8rem', false, 'string',
+        'Grade Out', 'Available for CS students with an instructor evaluation who have earned more than 90% of major credits. Pending submissions turn green after processing.', '8rem', false, 'string',
         row => this.gradeOutButtonHtml(row),
         null,
         row => this.gradeOutSortValue(row)
@@ -152,12 +152,28 @@ Vue.component('reports-employment-skills', {
       this.$set(this.gradeOutStateByKey, this.getGradeOutRowKey(row), String(state || ''));
     },
 
-    isGradedOut(row) {
-      return Boolean(this.gradedOutByKey[this.getGradeOutRowKey(row)]);
+    getGradeOutStatus(row) {
+      return this.gradedOutByKey[this.getGradeOutRowKey(row)] || '';
     },
 
-    markGradedOut(row) {
-      this.$set(this.gradedOutByKey, this.getGradeOutRowKey(row), true);
+    hasGradeOutRecord(row) {
+      return Boolean(this.getGradeOutStatus(row));
+    },
+
+    isGradeOutPending(row) {
+      return this.getGradeOutStatus(row) === 'pending';
+    },
+
+    isGradedOut(row) {
+      return this.getGradeOutStatus(row) === 'graded';
+    },
+
+    markGradeOutPending(row) {
+      this.$set(this.gradedOutByKey, this.getGradeOutRowKey(row), 'pending');
+    },
+
+    isGradeOutProcessed(record) {
+      return Boolean(String(record?.processed_at ?? '').trim());
     },
 
     getStudentMajorKeys(row) {
@@ -183,7 +199,7 @@ Vue.component('reports-employment-skills', {
     canGradeOut(row) {
       if (!this.hasInstructorEval(row)) return false;
       if (!this.isGradeOutEligible(row)) return false;
-      if (this.isGradedOut(row)) return false;
+      if (this.hasGradeOutRecord(row)) return false;
       if (!row?.canvas_user_id || !row?.canvas_course_id || !row?.canvas_assignment_id) return false;
       if (!String(row?.sis_user_id ?? '').trim()) return false;
       const state = this.getGradeOutState(row);
@@ -194,6 +210,9 @@ Vue.component('reports-employment-skills', {
       if (!this.isGradeOutEligible(row)) return '-';
       if (this.isGradedOut(row)) {
         return `<span style="display:inline-block;background:${this.colors.green};color:${this.colors.white};border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:600;line-height:1.2;">Graded Out</span>`;
+      }
+      if (this.isGradeOutPending(row)) {
+        return `<span style="display:inline-block;background:${this.colors.yellow};color:${this.colors.black};border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:600;line-height:1.2;">Pending...</span>`;
       }
       if (!this.hasInstructorEval(row)) return '-';
 
@@ -220,7 +239,8 @@ Vue.component('reports-employment-skills', {
     gradeOutSortValue(row) {
       if (!this.isGradeOutEligible(row)) return -2;
       if (!this.hasInstructorEval(row)) return -1;
-      if (this.isGradedOut(row)) return 2;
+      if (this.isGradedOut(row)) return 3;
+      if (this.isGradeOutPending(row)) return 2;
       const state = this.getGradeOutState(row);
       if (state === 'saving') return 1;
       return 0;
@@ -399,7 +419,7 @@ Vue.component('reports-employment-skills', {
 
       try {
         await this.pushEmploymentSkillsGradeOut(this.buildGradeOutPayload(row));
-        this.markGradedOut(row);
+        this.markGradeOutPending(row);
         this.setGradeOutState(row, '');
       } catch (err) {
         console.error('Failed pushing employment skills grade out:', err);
@@ -453,7 +473,9 @@ Vue.component('reports-employment-skills', {
         if (requestId !== this.loadRequestId) return;
 
         this.gradedOutByKey = (Array.isArray(gradeOutRows) ? gradeOutRows : []).reduce((recordsByKey, record) => {
-          recordsByKey[this.getGradeOutRecordKey(record)] = true;
+          recordsByKey[this.getGradeOutRecordKey(record)] = this.isGradeOutProcessed(record)
+            ? 'graded'
+            : 'pending';
           return recordsByKey;
         }, {});
         this.majorProgressByStudentKey = (Array.isArray(majorRows) ? majorRows : []).reduce((progressByStudentKey, major) => {
