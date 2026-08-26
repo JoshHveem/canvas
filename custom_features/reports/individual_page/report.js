@@ -128,8 +128,10 @@
       }`;
 
       const res = await $.post("/api/graphql", { query });
-      const conn = res.data.course[connectionField];
-      allNodes.push(...conn.nodes);
+      const conn = res?.data?.course?.[connectionField];
+      if (!conn) return allNodes;
+
+      allNodes.push(...(conn.nodes || []));
       hasNext = conn.pageInfo.hasNextPage;
       after = conn.pageInfo.endCursor;
     }
@@ -181,7 +183,7 @@
         getAllAssignmentsByGroup(course),
         getAllSubmissions(course, userId)
       ]);
-      const groups = groupRes.data.course.assignmentGroupsConnection.nodes
+      const groups = (groupRes?.data?.course?.assignmentGroupsConnection?.nodes || [])
         .filter(group => group.state === "available");
 
       groups.forEach(group => {
@@ -257,7 +259,7 @@
       try {
         canvasCourses = await bridgetools.req3(
           'reports',
-          { filter: `canvas_course_id=(${courseIds.join(',')})` },
+          { canvas_course_id: `(${courseIds.join(',')})` },
           { dataset: 'canvas_courses' }
         );
       } catch (err) {
