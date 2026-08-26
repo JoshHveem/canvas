@@ -530,9 +530,6 @@
 
         this.refreshIncludedAssignments();
         this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
-        if (hasOverride) {
-          this.estimatedCreditsRequired = creditsRequired;
-        }
       },
 
       async loadTerms() {
@@ -585,12 +582,7 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (nextCreditsRequired !== calculateCreditsRequired(
-          nextEntryAt,
-          nextExitAt,
-          term.concurrent_sections,
-          term.num_weeks__holidays
-        )) {
+        if (nextCreditsRequired !== Number(this.savedTermCreditsRequired)) {
           payload.credits_required__override = nextCreditsRequired;
         }
 
