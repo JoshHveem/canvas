@@ -1028,7 +1028,7 @@
         let sum = 0;
         this.courses.forEach(course => {
           const progress = this.progressBetweenDates[course.course_id];
-          const credits = Number(course.hours) > 0 ? course.hours / 30 : 0;
+          const credits = Number(course.credits);
           if (progress > 0 && credits > 0) {
             sum += Math.round(progress * credits) * 0.01;
           }
@@ -1053,10 +1053,12 @@
       getCreditsCompleted(course) {
         let progress = this.progressBetweenDates[course.course_id];
         let completed = 0;
-        if (progress !== undefined) completed = parseFloat((Math.round(progress * course.hours) * .01).toFixed(2));
+        const credits = Number(course.credits);
+        if (progress !== undefined && credits > 0) {
+          completed = parseFloat((Math.round(progress * credits) * .01).toFixed(2));
+        }
         if (isNaN(completed)) completed = 0;
-        const credits = Math.round((completed / 30) * 100) / 100;
-        return credits;
+        return completed;
       },
 
       buildIncludedAssignmentsForCourse(course, startDate, endDate) {

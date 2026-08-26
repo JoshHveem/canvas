@@ -203,12 +203,11 @@
     }
   }
 
-  function buildHSCourseHours(course) {
-    const hours = COURSE_HOURS?.[course.course_code]?.hours ?? 0;
+  function buildHSGradeCourse(course, canvasCourse) {
+    const credits = Number(canvasCourse?.credits);
     return {
       ...course,
-      hours,
-      credits: hours / 30
+      credits: Number.isFinite(credits) && credits >= 0 ? credits : 0
     };
   }
 
@@ -228,7 +227,7 @@
       return [];
     }
 
-    const courses = Array.from(
+    const enrolledCourses = Array.from(
       enrollments
         .reduce((map, enrollment) => {
           const id = Number(enrollment.canvas_course_id);
@@ -244,12 +243,37 @@
               academic_year: enrollment.academic_year,
               section_name: enrollment.section_name,
             };
-            map.set(key, buildHSCourseHours(course));
+            map.set(key, course);
           }
           return map;
         }, new Map())
         .values()
     );
+
+    let canvasCourses = [];
+    const courseIds = enrolledCourses.map(course => course.id);
+
+    if (courseIds.length) {
+      try {
+        canvasCourses = await bridgetools.req3(
+          'reports',
+          { filter: `canvas_course_id=(${courseIds.join(',')})` },
+          { dataset: 'canvas_courses' }
+        );
+      } catch (err) {
+        console.error('Failed fetching course credits via req3:', err);
+      }
+    }
+
+    const canvasCoursesById = new Map(
+      (Array.isArray(canvasCourses) ? canvasCourses : []).map(course => [
+        String(course.canvas_course_id),
+        course
+      ])
+    );
+    const courses = enrolledCourses.map(course => {
+      return buildHSGradeCourse(course, canvasCoursesById.get(String(course.id)));
+    });
 
     for (let i = 0; i < courses.length; i++) {
       const course = courses[i];
