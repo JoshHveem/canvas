@@ -582,7 +582,10 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (nextCreditsRequired !== Number(this.savedTermCreditsRequired)) {
+        if (
+          this.termCreditsManuallyEdited &&
+          nextCreditsRequired !== Number(this.savedTermCreditsRequired)
+        ) {
           payload.credits_required__override = nextCreditsRequired;
         }
 
