@@ -236,7 +236,7 @@ Vue.component('reports-students-at-a-glance', {
     lastSubmissionHtml(row) {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
-      const label = `${days} ${Number(days) === 1 ? 'day' : 'days'} ago`;
+      const label = `${days} ${Number(days) === 1 ? 'day' : 'days'}`;
 
       if (!row?.is_gte_7_days_since_last_activity) {
         return this.dayPillHtml(label, this.colors.green);
@@ -271,7 +271,7 @@ Vue.component('reports-students-at-a-glance', {
       );
       const label = status === 'X'
         ? status
-        : `${status} ${Number(status) === 1 ? 'day' : 'days'} ago`;
+        : `${status} ${Number(status) === 1 ? 'day' : 'days'}`;
       if (!needsProgressMeeting) return this.dayPillHtml(label, backgroundColor);
 
       const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
