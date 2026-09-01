@@ -79,22 +79,16 @@ Vue.component('reports-students-at-a-glance', {
         sortValue: row => this.submissionHistoryTotal(row)
       }),
       new window.ReportColumn(
-        'Academic Standing', 'Shows Pending Documentation when the expected and current standing codes differ.', '12rem', false, 'string',
+        'Academic Standing', 'Shows Pending Form when the expected and current standing codes differ.', '12rem', false, 'string',
         row => this.academicStandingHtml(row),
         row => this.academicStandingPillStyle(row),
         row => this.academicStandingText(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Pending Instructor Eval', 'Course code linked to the pending instructor evaluation in Canvas SpeedGrader.', '11rem', false, 'string',
-        row => this.pendingInstructorEvalHtml(row),
-        row => this.alertPillStyle(row?.is_pending_instructor_eval),
-        row => this.pendingInstructorEvalSort(row)
-      ),
-      new window.ReportColumn(
-        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
+        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. A pending instructor evaluation takes priority and links to SpeedGrader.', '11rem', false, 'number',
         row => this.lastProgressMeetingHtml(row),
         null,
-        row => this.evaluationStatusSort(row)
+        row => row?.is_pending_instructor_eval ? -1 : this.evaluationStatusSort(row)
       )
     ]);
   },
@@ -262,6 +256,8 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     lastProgressMeetingHtml(row) {
+      if (row?.is_pending_instructor_eval) return this.pendingInstructorEvalHtml(row);
+
       const status = this.evaluationStatusText(row);
       if (!status) return '';
 
@@ -337,7 +333,7 @@ Vue.component('reports-students-at-a-glance', {
 
     academicStandingText(row) {
       const currentCode = String(row?.academic_standing_code ?? '').trim();
-      if (this.isPendingStandingDocumentation(row)) return 'Pending Documentation';
+      if (this.isPendingStandingDocumentation(row)) return 'Pending Form';
       return currentCode;
     },
 
@@ -360,7 +356,7 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     pendingStandingDownloadUrl(row) {
-      if (this.academicStandingText(row) !== 'Pending Documentation') return '';
+      if (this.academicStandingText(row) !== 'Pending Form') return '';
 
       const expectedCode = String(row?.academic_standing_code__expected ?? '').trim().toUpperCase();
       if (expectedCode.startsWith('P')) {
@@ -374,7 +370,7 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     academicStandingPillStyle(row) {
-      if (this.academicStandingText(row) === 'Pending Documentation') {
+      if (this.academicStandingText(row) === 'Pending Form') {
         return this.alertPillStyle(true);
       }
 
@@ -526,25 +522,18 @@ Vue.component('reports-students-at-a-glance', {
       const courses = Array.isArray(row?.pending_instructor_eval_courses)
         ? row.pending_instructor_eval_courses
         : [];
-      if (!courses.length) return row?.is_pending_instructor_eval ? '!' : '';
+      const course = courses[0] || {};
+      const courseId = String(course?.canvas_course_id ?? '').trim();
+      const assignmentId = String(course?.canvas_assignment_id ?? '').trim();
+      const studentId = String(row?.canvas_user_id ?? '').trim();
+      const label = 'Pending Eval';
+      const style = `background-color:${this.colors.red}; color:${this.colors.white}; display:inline-block; min-width:1.2rem; text-align:center; text-decoration:none;`;
+      if (!courseId || !assignmentId || !studentId) {
+        return `<span class="btech-pill-text" style="${style}">${label}</span>`;
+      }
 
-      return courses.map(course => {
-        const label = 'Complete Now';
-        const courseId = String(course?.canvas_course_id ?? '').trim();
-        const assignmentId = String(course?.canvas_assignment_id ?? '').trim();
-        const studentId = String(row?.canvas_user_id ?? '').trim();
-        if (!courseId || !assignmentId || !studentId) return label;
-
-        const url = `/courses/${encodeURIComponent(courseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(studentId)}`;
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${label}</a>`;
-      }).join('<br>');
-    },
-
-    pendingInstructorEvalSort(row) {
-      return (Array.isArray(row?.pending_instructor_eval_courses) ? row.pending_instructor_eval_courses : [])
-        .map(course => String(course?.course_code ?? course?.course_name ?? '').trim())
-        .join(' ')
-        .toLowerCase();
+      const url = `/courses/${encodeURIComponent(courseId)}/gradebook/speed_grader?assignment_id=${encodeURIComponent(assignmentId)}&student_id=${encodeURIComponent(studentId)}`;
+      return `<a class="btech-pill-text" href="${url}" target="_blank" rel="noopener noreferrer" title="Open pending instructor evaluation" aria-label="Open pending instructor evaluation" style="${style}">${label}</a>`;
     },
 
     normalizeCanvasActivityRows(rows) {
