@@ -226,6 +226,9 @@ Vue.component('reports-students-at-a-glance', {
         ? `${daysUntilExit} ${Number(daysUntilExit) === 1 ? 'day' : 'days'}`
         : 'the coming days';
       const progressMeetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
+      const progressMeetingMessage = row?.is_pending_instructor_eval
+        ? 'Thank you for submitting your self evaluation. I would like to meet with you this week to review your progress and set some goals. Please provide some times that work for you this week to meet.'
+        : `It's time to set up your ${progressMeetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
 
       return [
         {
@@ -238,11 +241,11 @@ Vue.component('reports-students-at-a-glance', {
         },
         {
           label: 'Academic Standing',
-          href: this.inboxMessageUrl(row, `${studentName},\n\nI am contacting you about your academic standing. Please complete the required form and reach out if you have any questions.`)
+          href: this.inboxMessageUrl(row, `${studentName},\n\nDue to concerns with your academic progress, I would like to meet to discuss an improvement plan to ensure you meet future progress requirements.`)
         },
         {
           label: 'Schedule a Progress Meeting',
-          href: this.inboxMessageUrl(row, `${studentName},\n\nIt's time to set up your ${progressMeetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`)
+          href: this.inboxMessageUrl(row, `${studentName},\n\n${progressMeetingMessage}`)
         },
         {
           label: 'Blank',
@@ -749,7 +752,6 @@ Vue.component('reports-students-at-a-glance', {
       const studentsWithEvaluations = new Set();
 
       headerRows
-        .filter(row => row.enrollment_type_code__current === 'CS')
         .filter(row =>
           row.academic_standing_code ||
           row.is_pending_add__academic_standing ||
@@ -916,9 +918,7 @@ Vue.component('reports-students-at-a-glance', {
           activityRows
         ] = await Promise.all([
           this.fetchReportDataset(
-            Object.assign({}, userFilters, {
-              enrollment_type_code__current: 'CS'
-            }),
+            userFilters,
             { dataset: 'student_header' }
           ),
           this.fetchReportDataset(
