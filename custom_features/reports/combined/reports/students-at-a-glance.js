@@ -510,10 +510,10 @@ Vue.component('reports-students-at-a-glance', {
 
     normalizeCourseProgress(value) {
       const raw = String(value ?? '').trim();
-      if (!raw) return null;
+      if (!raw) return 0;
 
       const progress = Number(raw);
-      return Number.isFinite(progress) ? progress : null;
+      return Number.isFinite(progress) ? progress : 0;
     },
 
     pendingInstructorEvalHtml(row) {
