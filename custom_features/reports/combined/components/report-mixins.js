@@ -270,13 +270,34 @@ window.ReportMixins = {
         return window.ReportUtils.cloneData(rows);
       },
 
-      async fetchCanvasUserName(canvasUserId) {
+      extractCanvasUserNames(profile) {
+        const explicitFirstName = String(profile?.first_name ?? '').trim();
+        const explicitLastName = String(profile?.last_name ?? '').trim();
+        if (explicitFirstName || explicitLastName) {
+          return { first_name: explicitFirstName, last_name: explicitLastName };
+        }
+
+        const sortableName = String(profile?.sortable_name ?? '').trim();
+        if (sortableName.includes(',')) {
+          const [lastName, ...firstNameParts] = sortableName.split(',');
+          return {
+            first_name: firstNameParts.join(',').trim(),
+            last_name: String(lastName ?? '').trim()
+          };
+        }
+
+        const fullName = String(profile?.name ?? profile?.short_name ?? '').trim();
+        const [firstName = '', ...lastNameParts] = fullName.split(/\s+/).filter(Boolean);
+        return { first_name: firstName, last_name: lastNameParts.join(' ') };
+      },
+
+      async fetchCanvasUserProfile(canvasUserId) {
         const id = String(canvasUserId ?? '').trim();
-        if (!id) return '';
+        if (!id) return { first_name: '', last_name: '' };
 
         const cache = this.getCanvasUserNameCache();
         if (Object.prototype.hasOwnProperty.call(cache, id)) {
-          return String(cache[id] ?? '').trim();
+          return cache[id];
         }
 
         try {
@@ -291,19 +312,13 @@ window.ReportMixins = {
           }
 
           const profile = await response.json();
-          const name = String(
-            profile?.name ??
-            profile?.short_name ??
-            profile?.sortable_name ??
-            ''
-          ).trim();
-
-          cache[id] = name;
-          return name;
+          const names = this.extractCanvasUserNames(profile);
+          cache[id] = names;
+          return names;
         } catch (e) {
           console.warn(`Failed to load Canvas user profile for ${id}`, e);
-          cache[id] = '';
-          return '';
+          cache[id] = { first_name: '', last_name: '' };
+          return cache[id];
         }
       },
 
@@ -323,16 +338,19 @@ window.ReportMixins = {
 
         for (let i = 0; i < pendingIds.length; i += chunkSize) {
           const chunk = pendingIds.slice(i, i + chunkSize);
-          await Promise.all(chunk.map(id => this.fetchCanvasUserName(id)));
+          await Promise.all(chunk.map(id => this.fetchCanvasUserProfile(id)));
         }
 
         return normalizedRows.map(row => {
           const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-          const hydratedName = canvasUserId ? String(cache[canvasUserId] ?? '').trim() : '';
+          const hydratedNames = canvasUserId && cache[canvasUserId]
+            ? cache[canvasUserId]
+            : {};
           return {
             ...row,
             original_sis_user_id: String(row?.original_sis_user_id ?? row?.sis_user_id ?? '').trim(),
-            sis_user_id: hydratedName || String(row?.sis_user_id ?? '').trim()
+            first_name: String(hydratedNames?.first_name ?? row?.first_name ?? '').trim(),
+            last_name: String(hydratedNames?.last_name ?? row?.last_name ?? '').trim()
           };
         });
       }

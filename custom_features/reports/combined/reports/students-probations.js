@@ -10,7 +10,7 @@ Vue.component('reports-students-probations', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('Student Name', colors);
+    const table = window.ReportUtils.createTable('First Name', colors);
 
     return {
       colors,
@@ -24,10 +24,16 @@ Vue.component('reports-students-probations', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Student Name', 'Student name pulled from Canvas.', '14rem', false, 'string',
-        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentName(row)),
+        'First Name', 'Student first name pulled from Canvas.', '10rem', false, 'string',
+        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentFirstName(row)),
         null,
-        row => this.getStudentName(row).toLowerCase()
+        row => this.getStudentFirstName(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Last Name', 'Student last name pulled from Canvas.', '12rem', false, 'string',
+        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentLastName(row)),
+        null,
+        row => this.getStudentLastName(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Enrollment Type', 'Current enrollment type code.', '10rem', false, 'string',
@@ -60,12 +66,16 @@ Vue.component('reports-students-probations', {
       return String(this.reportContext?.dataset || '').trim();
     },
 
-    getStudentName(row) {
-      const studentName = String(row?.sis_user_id ?? '').trim();
-      if (studentName) return studentName;
+    getStudentFirstName(row) {
+      const firstName = String(row?.first_name ?? '').trim();
+      if (firstName) return firstName;
 
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
+    },
+
+    getStudentLastName(row) {
+      return String(row?.last_name ?? '').trim() || '-';
     },
 
     standingPillStyle(row) {

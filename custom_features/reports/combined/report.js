@@ -453,6 +453,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/d3.v7.js") : "https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
 
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-mixins.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-mixins.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/components/submission-history-graph.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/components/submission-history-graph.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-table-shell.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/components/report-table-shell.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-syllabi.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/departments-course-readiness.js");

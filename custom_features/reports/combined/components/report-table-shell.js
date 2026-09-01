@@ -43,6 +43,9 @@ Vue.component('report-table-shell', {
     onRowClick(row, index) {
       if (!this.rowClickable) return;
       this.$emit('row-click', row, index);
+    },
+    getCellComponentProps(column, row) {
+      return typeof column?.cellProps === 'function' ? column.cellProps(row) : {};
     }
   },
 
@@ -117,7 +120,13 @@ Vue.component('report-table-shell', {
               ? 'display:block; overflow:visible; white-space:normal; text-overflow:clip; line-height:1.2rem; padding:.125rem 0;'
               : 'display:inline-block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'"
           >
+            <component
+              v-if="col.cellComponent"
+              :is="col.cellComponent"
+              v-bind="getCellComponentProps(col, row)"
+            ></component>
             <span
+              v-else
               :class="col.style_formula ? 'btech-pill-text' : ''"
               :style="col.wrap
                 ? Object.assign({}, col.get_style(row), { display: 'block', whiteSpace: 'normal' })

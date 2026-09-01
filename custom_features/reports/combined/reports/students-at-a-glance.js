@@ -10,7 +10,7 @@ Vue.component('reports-students-at-a-glance', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('Student Name', colors);
+    const table = window.ReportUtils.createTable('First Name', colors);
 
     return {
       colors,
@@ -32,10 +32,16 @@ Vue.component('reports-students-at-a-glance', {
     this.table.setColumns([
       this.createGenericComposeColumn(),
       new window.ReportColumn(
-        'Student Name', 'Student name pulled from Canvas after load.', '14rem', false, 'string',
-        row => this.anonymous ? 'STUDENT' : this.studentNameLinkHtml(row),
+        'First Name', 'Student first name pulled from Canvas after load.', '10rem', false, 'string',
+        row => this.anonymous ? 'STUDENT' : this.studentFirstNameLinkHtml(row),
         null,
-        row => this.getStudentName(row).toLowerCase()
+        row => this.getStudentFirstName(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Last Name', 'Student last name pulled from Canvas after load.', '12rem', false, 'string',
+        row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentLastName(row)),
+        null,
+        row => this.getStudentLastName(row).toLowerCase()
       ),
       new window.ReportColumn(
         'SIS ID', 'Student information system ID.', '5rem', false, 'string',
@@ -67,6 +73,11 @@ Vue.component('reports-students-at-a-glance', {
         null,
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
+      window.ReportColumnTypes.submissionHistory({
+        history: row => row?.submissions_by_date,
+        days: 30,
+        sortValue: row => this.submissionHistoryTotal(row)
+      }),
       new window.ReportColumn(
         'Academic Standing', 'Shows Pending Documentation when the expected and current standing codes differ.', '12rem', false, 'string',
         row => this.academicStandingHtml(row),
@@ -166,22 +177,32 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     getStudentName(row) {
-      const studentName = String(row?.sis_user_id ?? '').trim();
-      if (studentName) return studentName;
+      const firstName = this.getStudentFirstName(row);
+      const lastName = this.getStudentLastName(row);
+      return [firstName, lastName].filter(name => name && name !== '-').join(' ') || '-';
+    },
+
+    getStudentFirstName(row) {
+      const firstName = String(row?.first_name ?? '').trim();
+      if (firstName) return firstName;
 
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
+    },
+
+    getStudentLastName(row) {
+      return String(row?.last_name ?? '').trim() || '-';
     },
 
     getStudentSisId(row) {
       return String(row?.original_sis_user_id || row?.sis_user_id || '').trim();
     },
 
-    studentNameLinkHtml(row) {
-      const studentName = this.getStudentName(row);
+    studentFirstNameLinkHtml(row) {
+      const firstName = this.getStudentFirstName(row);
       const courseId = String(row?.upcoming_canvas_course_id ?? '').trim();
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      const label = this.escapeHtml(studentName);
+      const label = this.escapeHtml(firstName);
       if (!courseId || !canvasUserId) return label;
 
       const url = `/courses/${encodeURIComponent(courseId)}/users/${encodeURIComponent(canvasUserId)}`;
@@ -526,8 +547,23 @@ Vue.component('reports-students-at-a-glance', {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
-        num_days_since_last_submission: Number(row?.num_days_since_last_submission)
+        num_days_since_last_submission: Number(row?.num_days_since_last_submission),
+        submissions_by_date: row?.submissions_by_date && typeof row.submissions_by_date === 'object'
+          ? row.submissions_by_date
+          : {}
       }));
+    },
+
+    submissionHistoryTotal(row) {
+      const history = row?.submissions_by_date || {};
+      return Object.keys(history)
+        .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
+        .sort()
+        .slice(-30)
+        .reduce((total, date) => {
+          const count = history[date];
+          return total + Math.max(0, Number(count) || 0);
+        }, 0);
     },
 
     async loadDepartmentOptions() {
@@ -623,7 +659,8 @@ Vue.component('reports-students-at-a-glance', {
           upcoming_canvas_course_id: '',
           upcoming_course_name: '',
           upcoming_course_progress: null,
-          num_days_since_last_activity: null
+          num_days_since_last_activity: null,
+          submissions_by_date: {}
         });
       }
 
@@ -817,23 +854,28 @@ Vue.component('reports-students-at-a-glance', {
       });
 
       activityRows
-        .filter(row => Number.isFinite(row.num_days_since_last_submission))
+        .filter(row => Number.isFinite(row.num_days_since_last_submission) || Object.keys(row.submissions_by_date || {}).length)
         .forEach(row => {
           const studentKey = this.resolveStudentKey(row, indexes);
           if (!studentKey) return;
 
-          const daysSinceLastSubmission = this.capDaysSinceMajorEntry(
-            row.num_days_since_last_submission,
-            studentKey,
-            '',
-            indexes
-          );
           const record = this.ensureStudentRecord(studentMap, studentKey, row);
-          record.is_gte_7_days_since_last_activity = record.is_gte_7_days_since_last_activity
-            || daysSinceLastSubmission >= 7;
-          record.num_days_since_last_activity = Number.isFinite(record.num_days_since_last_activity)
-            ? Math.max(record.num_days_since_last_activity, daysSinceLastSubmission)
-            : daysSinceLastSubmission;
+          if (Number.isFinite(row.num_days_since_last_submission)) {
+            const daysSinceLastSubmission = this.capDaysSinceMajorEntry(
+              row.num_days_since_last_submission,
+              studentKey,
+              '',
+              indexes
+            );
+            record.is_gte_7_days_since_last_activity = record.is_gte_7_days_since_last_activity
+              || daysSinceLastSubmission >= 7;
+            record.num_days_since_last_activity = Number.isFinite(record.num_days_since_last_activity)
+              ? Math.max(record.num_days_since_last_activity, daysSinceLastSubmission)
+              : daysSinceLastSubmission;
+          }
+          if (Object.keys(row.submissions_by_date || {}).length) {
+            record.submissions_by_date = row.submissions_by_date;
+          }
         });
 
       return Array.from(studentMap.values()).filter(row => this.hasAnyAlert(row));

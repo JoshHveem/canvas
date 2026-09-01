@@ -12,7 +12,7 @@ Vue.component('reports-employment-skills', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('Student Name', colors);
+    const table = window.ReportUtils.createTable('First Name', colors);
 
     return {
       colors,
@@ -29,10 +29,16 @@ Vue.component('reports-employment-skills', {
   created() {
     this.table.setColumns([
       new window.ReportColumn(
-        'Student Name', 'Student name pulled from Canvas.', '10rem', false, 'string',
-        row => this.studentNameLinkHtml(row),
+        'First Name', 'Student first name pulled from Canvas.', '8rem', false, 'string',
+        row => this.studentFirstNameLinkHtml(row),
         null,
-        row => this.getStudentName(row).toLowerCase()
+        row => this.getStudentFirstName(row).toLowerCase()
+      ),
+      new window.ReportColumn(
+        'Last Name', 'Student last name pulled from Canvas.', '10rem', false, 'string',
+        row => this.escapeHtml(this.getStudentLastName(row)),
+        null,
+        row => this.getStudentLastName(row).toLowerCase()
       ),
       new window.ReportColumn(
         'Program Name', 'Program name.', '8.5rem', false, 'string',
@@ -251,11 +257,21 @@ Vue.component('reports-employment-skills', {
     },
 
     getStudentName(row) {
-      const studentName = String(row?.sis_user_id ?? '').trim();
-      if (studentName) return studentName;
+      const firstName = this.getStudentFirstName(row);
+      const lastName = this.getStudentLastName(row);
+      return [firstName, lastName].filter(name => name && name !== '-').join(' ') || '-';
+    },
+
+    getStudentFirstName(row) {
+      const firstName = String(row?.first_name ?? '').trim();
+      if (firstName) return firstName;
 
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
+    },
+
+    getStudentLastName(row) {
+      return String(row?.last_name ?? '').trim() || '-';
     },
 
     getProgramLabel(row) {
@@ -344,11 +360,11 @@ Vue.component('reports-employment-skills', {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     },
 
-    studentNameLinkHtml(row) {
-      const studentName = this.getStudentName(row);
+    studentFirstNameLinkHtml(row) {
+      const firstName = this.getStudentFirstName(row);
       const canvasCourseId = String(row?.canvas_course_id ?? '').trim();
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      const text = this.escapeHtml(studentName);
+      const text = this.escapeHtml(firstName);
 
       if (!canvasCourseId || !canvasUserId) return text;
 
