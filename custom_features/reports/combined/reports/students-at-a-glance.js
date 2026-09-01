@@ -30,7 +30,10 @@ Vue.component('reports-students-at-a-glance', {
 
   created() {
     this.table.setColumns([
-      this.createGenericComposeColumn(),
+      window.ReportColumnTypes.messageTemplateMenu({
+        templates: row => this.messageTemplates(row),
+        ariaLabel: 'Open student message templates'
+      }),
       new window.ReportColumn(
         'First Name', 'Student first name pulled from Canvas after load.', '7rem', false, 'string',
         row => this.anonymous ? 'STUDENT' : this.studentFirstNameLinkHtml(row),
@@ -203,18 +206,7 @@ Vue.component('reports-students-at-a-glance', {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     },
 
-    createGenericComposeColumn() {
-      const column = new window.ReportColumn(
-        '', 'Compose a blank Canvas Inbox message to this student.', '2rem', false, 'string',
-        row => this.genericComposeHtml(row),
-        null,
-        () => ''
-      );
-      column.hideHeader = true;
-      return column;
-    },
-
-    genericComposeHtml(row) {
+    inboxMessageUrl(row, prefill = '') {
       const canvasUserId = String(row?.canvas_user_id ?? '').trim();
       if (!canvasUserId) return '';
 
@@ -222,9 +214,41 @@ Vue.component('reports-students-at-a-glance', {
         user_id: canvasUserId,
         user_name: this.getStudentName(row)
       });
-      const href = this.escapeHtml(`/conversations?${params.toString()}#filter=type=inbox`);
-      const studentName = this.escapeHtml(this.getStudentName(row));
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a blank message to ${studentName}" aria-label="Compose a blank message to ${studentName}"><i class="icon-compose"></i></a>`;
+      if (prefill) params.set('prefill', prefill);
+      return `/conversations?${params.toString()}#filter=type=inbox`;
+    },
+
+    messageTemplates(row) {
+      const studentName = this.getStudentName(row);
+      const courseName = String(row?.upcoming_course_name ?? '').trim() || 'this course';
+      const daysUntilExit = this.dayCountText(row?.num_days_until_next_end_date);
+      const exitDayLabel = daysUntilExit
+        ? `${daysUntilExit} ${Number(daysUntilExit) === 1 ? 'day' : 'days'}`
+        : 'the coming days';
+      const progressMeetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
+
+      return [
+        {
+          label: 'Upcoming Course End Date',
+          href: this.inboxMessageUrl(row, `${studentName},\n\nI see your defined exit date for ${courseName} is coming up in ${exitDayLabel}. Let's sit down together to discuss a schedule to ensure you can finish the course on time.`)
+        },
+        {
+          label: 'No Recent Submissions',
+          href: this.inboxMessageUrl(row, `${studentName},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`)
+        },
+        {
+          label: 'Academic Standing',
+          href: this.inboxMessageUrl(row, `${studentName},\n\nI am contacting you about your academic standing. Please complete the required form and reach out if you have any questions.`)
+        },
+        {
+          label: 'Schedule a Progress Meeting',
+          href: this.inboxMessageUrl(row, `${studentName},\n\nIt's time to set up your ${progressMeetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`)
+        },
+        {
+          label: 'Blank',
+          href: this.inboxMessageUrl(row)
+        }
+      ];
     },
 
     lastSubmissionHtml(row) {
@@ -236,9 +260,7 @@ Vue.component('reports-students-at-a-glance', {
         return this.dayPillHtml(label, this.colors.green);
       }
 
-      const prefill = `${this.getStudentName(row)},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
-      const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(label, this.colors.red, composeUrl, 'Compose a submission check-in message', row);
+      return this.dayPillHtml(label, this.colors.red);
     },
 
     daysUntilExitHtml(row) {
@@ -248,11 +270,7 @@ Vue.component('reports-students-at-a-glance', {
       const isExitAlert = Boolean(row?.is_lte_7_days_until_next_end_date);
       if (!isExitAlert) return this.dayPillHtml(days, this.colors.green);
 
-      const courseName = String(row?.upcoming_course_name ?? '').trim() || 'this course';
-      const dayLabel = `${days} ${Number(days) === 1 ? 'day' : 'days'}`;
-      const prefill = `${this.getStudentName(row)},\n\nI see your defined exit date for ${courseName} is coming up in ${dayLabel}. Let's sit down together to discuss a schedule to ensure you can finish the course on time.`;
-      const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose an exit-date check-in message', row);
+      return this.dayPillHtml(days, this.colors.red);
     },
 
     lastProgressMeetingHtml(row) {
@@ -270,37 +288,14 @@ Vue.component('reports-students-at-a-glance', {
         : `${status} ${Number(status) === 1 ? 'day' : 'days'}`;
       if (!needsProgressMeeting) return this.dayPillHtml(label, backgroundColor);
 
-      const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
-      const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your ${meetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
-      const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(label, backgroundColor, composeUrl, 'Compose a progress-meeting message', row);
+      return this.dayPillHtml(label, backgroundColor);
     },
 
-    dayPillHtml(value, backgroundColor, composeUrl = '', description = '', row = {}) {
+    dayPillHtml(value, backgroundColor) {
       const text = this.escapeHtml(value);
       const textColor = backgroundColor === this.colors.yellow ? this.colors.black : this.colors.white;
       const style = `background-color:${backgroundColor}; color:${textColor}; display:inline-block; min-width:1.2rem; text-align:center;`;
-      if (!composeUrl) return `<span class="btech-pill-text" style="${style}">${text}</span>`;
-
-      const studentName = this.escapeHtml(this.getStudentName(row));
-      const href = this.escapeHtml(composeUrl);
-      const label = this.escapeHtml(`${description} to ${studentName}`);
-      return `<a class="btech-pill-text" href="${href}" target="_blank" rel="noopener noreferrer" title="${label}" aria-label="${label}" style="${style} text-decoration:none;">${text}</a>`;
-    },
-
-    composeMessageUrl(row, prefill) {
-      const courseId = String(row?.upcoming_canvas_course_id ?? '').trim();
-      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      if (!courseId || !canvasUserId) return '';
-
-      const studentName = this.getStudentName(row);
-      const params = new URLSearchParams({
-        context_id: `course_${courseId}`,
-        user_id: canvasUserId,
-        user_name: studentName,
-        prefill: String(prefill ?? '').trim()
-      });
-      return `/conversations?${params.toString()}#filter=type=inbox&course=course_${encodeURIComponent(courseId)}`;
+      return `<span class="btech-pill-text" style="${style}">${text}</span>`;
     },
 
     alertText(value) {
