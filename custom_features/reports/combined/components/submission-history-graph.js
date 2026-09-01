@@ -61,9 +61,9 @@
             : null;
           const color = value.count <= 0
             ? this.colors.gray
-            : gapDays > 10
+            : gapDays >= 10
               ? this.colors.red
-              : gapDays > 7
+              : gapDays >= 7
                 ? this.colors.yellow
                 : this.colors.green;
           const gapText = value.count <= 0
