@@ -32,13 +32,13 @@ Vue.component('reports-students-at-a-glance', {
     this.table.setColumns([
       this.createGenericComposeColumn(),
       new window.ReportColumn(
-        'First Name', 'Student first name pulled from Canvas after load.', '10rem', false, 'string',
+        'First Name', 'Student first name pulled from Canvas after load.', '7rem', false, 'string',
         row => this.anonymous ? 'STUDENT' : this.studentFirstNameLinkHtml(row),
         null,
         row => this.getStudentFirstName(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Last Name', 'Student last name pulled from Canvas after load.', '12rem', false, 'string',
+        'Last Name', 'Student last name pulled from Canvas after load.', '8rem', false, 'string',
         row => this.anonymous ? 'STUDENT' : this.escapeHtml(this.getStudentLastName(row)),
         null,
         row => this.getStudentLastName(row).toLowerCase()
@@ -68,8 +68,8 @@ Vue.component('reports-students-at-a-glance', {
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
-        'Days Since Last Submission', 'Alerted when the student has not submitted in at least 7 days. The compose icon opens a check-in message to the student.', '11rem', false, 'number',
-        row => this.daysSinceLastSubmissionHtml(row),
+        'Last Submission', 'Days since the student last submitted work. Alerted at 7 days; the compose icon opens a check-in message to the student.', '11rem', false, 'number',
+        row => this.lastSubmissionHtml(row),
         null,
         row => this.dayCountSort(row?.num_days_since_last_activity)
       ),
@@ -91,8 +91,8 @@ Vue.component('reports-students-at-a-glance', {
         row => this.pendingInstructorEvalSort(row)
       ),
       new window.ReportColumn(
-        'Days Since Last Eval', 'Shows days since the last evaluation, or X when no prior employment skills evaluation exists for the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
-        row => this.daysSinceLastEvalHtml(row),
+        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. The compose icon opens a progress-meeting message.', '11rem', false, 'number',
+        row => this.lastProgressMeetingHtml(row),
         null,
         row => this.evaluationStatusSort(row)
       )
@@ -233,17 +233,18 @@ Vue.component('reports-students-at-a-glance', {
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="Compose a blank message to ${studentName}" aria-label="Compose a blank message to ${studentName}"><i class="icon-compose"></i></a>`;
     },
 
-    daysSinceLastSubmissionHtml(row) {
+    lastSubmissionHtml(row) {
       const days = this.dayCountText(row?.num_days_since_last_activity);
       if (!days) return '';
+      const label = `${days} ${Number(days) === 1 ? 'day' : 'days'} ago`;
 
       if (!row?.is_gte_7_days_since_last_activity) {
-        return this.dayPillHtml(days, this.colors.green);
+        return this.dayPillHtml(label, this.colors.green);
       }
 
       const prefill = `${this.getStudentName(row)},\n\nI noticed it has been a few days since your last submission. I wanted to check in. Do you have some time today to meet and talk over the assignment you are currently working on?`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose a submission check-in message', row);
+      return this.dayPillHtml(label, this.colors.red, composeUrl, 'Compose a submission check-in message', row);
     },
 
     daysUntilExitHtml(row) {
@@ -260,7 +261,7 @@ Vue.component('reports-students-at-a-glance', {
       return this.dayPillHtml(days, this.colors.red, composeUrl, 'Compose an exit-date check-in message', row);
     },
 
-    daysSinceLastEvalHtml(row) {
+    lastProgressMeetingHtml(row) {
       const status = this.evaluationStatusText(row);
       if (!status) return '';
 
@@ -268,12 +269,15 @@ Vue.component('reports-students-at-a-glance', {
       const needsProgressMeeting = Boolean(
         row?.is_no_es_eval_on_record || row?.is_gte_30_days_since_last_eval
       );
-      if (!needsProgressMeeting) return this.dayPillHtml(status, backgroundColor);
+      const label = status === 'X'
+        ? status
+        : `${status} ${Number(status) === 1 ? 'day' : 'days'} ago`;
+      if (!needsProgressMeeting) return this.dayPillHtml(label, backgroundColor);
 
       const meetingType = row?.is_no_es_eval_on_record ? 'first' : 'next';
       const prefill = `${this.getStudentName(row)},\n\nIt's time to set up your ${meetingType} progress meeting. Please submit the Progress Meeting Self Evaluation by the end of this week. If you have any questions, please reach out.`;
       const composeUrl = this.composeMessageUrl(row, prefill);
-      return this.dayPillHtml(status, backgroundColor, composeUrl, 'Compose a progress-meeting message', row);
+      return this.dayPillHtml(label, backgroundColor, composeUrl, 'Compose a progress-meeting message', row);
     },
 
     dayPillHtml(value, backgroundColor, composeUrl = '', description = '', row = {}) {
