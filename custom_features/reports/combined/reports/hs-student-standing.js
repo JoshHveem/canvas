@@ -130,7 +130,12 @@ Vue.component('reports-hs-student-standing', {
         canvas_course_id: String(row?.canvas_course_id ?? '').trim(),
         current_score: this.gradeValue(row?.current_score),
         is_active: row?.is_active === true || String(row?.is_active ?? '').trim().toLowerCase() === 'true'
-      })).filter(row => row.is_active && row.current_score !== null && row.current_score < 80);
+      })).filter(row => (
+        row.is_active &&
+        Number(row.canvas_course_id) > 0 &&
+        row.current_score !== null &&
+        row.current_score < 80
+      ));
     },
 
     async loadData() {
