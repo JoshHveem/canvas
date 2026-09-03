@@ -14,6 +14,20 @@ Vue.component('reports-graduation-outlook', {
         { year: '2024–25', endOfYear: 86, atThisPoint: 78 },
         { year: '2025–26', endOfYear: 91, atThisPoint: 84 }
       ],
+      historicEnrollmentRates: [
+        { month: 'July', currentYear: 25, historicAverage: 22 },
+        { month: 'August', currentYear: 23, historicAverage: 24 },
+        { month: 'September', currentYear: 26, historicAverage: 25 },
+        { month: 'October', currentYear: null, historicAverage: 23 },
+        { month: 'November', currentYear: null, historicAverage: 21 },
+        { month: 'December', currentYear: null, historicAverage: 18 },
+        { month: 'January', currentYear: null, historicAverage: 16 },
+        { month: 'February', currentYear: null, historicAverage: 19 },
+        { month: 'March', currentYear: null, historicAverage: 21 },
+        { month: 'April', currentYear: null, historicAverage: 18 },
+        { month: 'May', currentYear: null, historicAverage: 14 },
+        { month: 'June', currentYear: null, historicAverage: 12 }
+      ],
       enrollmentMonths: [
         { month: 'July', new: 8, progressing: 14, inactive: 2, graduated: 0, otherExit: 1 },
         { month: 'August', new: 5, progressing: 14, inactive: 2, graduated: 1, otherExit: 1 },
@@ -48,6 +62,24 @@ Vue.component('reports-graduation-outlook', {
         { key: 'graduated', label: 'Graduated', color: this.colors.black },
         { key: 'otherExit', label: 'Other Exit', color: this.colors.red }
       ];
+    },
+
+    enrollmentRatePoints() {
+      const chartHeight = 128;
+      const chartTop = 18;
+      const chartLeft = 50;
+      const chartWidth = 590;
+      const values = this.historicEnrollmentRates.flatMap(rate => [rate.currentYear, rate.historicAverage])
+        .filter(value => Number.isFinite(value));
+      const maxCount = Math.max(...values, 1);
+      const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+
+      return this.historicEnrollmentRates.map((rate, index) => ({
+        ...rate,
+        x: chartLeft + (index * (chartWidth / (this.historicEnrollmentRates.length - 1))),
+        currentYearY: Number.isFinite(rate.currentYear) ? countToY(rate.currentYear) : null,
+        historicAverageY: countToY(rate.historicAverage)
+      }));
     },
 
     enrollmentBarGroups() {
@@ -136,6 +168,26 @@ Vue.component('reports-graduation-outlook', {
           <circle :cx="point.x" :cy="point.atThisPointY" r="5" :fill="colors.orange || colors.yellow"><title>{{ point.year }} at this point: {{ point.atThisPoint }}%</title></circle>
           <text :x="point.x" y="184" text-anchor="middle" font-size="11" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="199" text-anchor="middle" font-size="10" fill="#64748b">{{ point.atThisPoint }}% / {{ point.endOfYear }}%</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="min-width:42rem; margin-bottom:22px;">
+      <h5 style="margin:0 0:4px; font-size:1rem;">Historic Enrollment Rates</h5>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year’s monthly enrollment to the historic average to see when students normally enter the program.</div>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
+      </div>
+      <svg width="680" height="202" viewBox="0 0 680 202" role="img" aria-label="Placeholder historic enrollment rates from July through June">
+        <line x1="50" y1="18" x2="50" y2="146" stroke="#cbd5e1"></line>
+        <line x1="50" y1="146" x2="640" y2="146" stroke="#cbd5e1"></line>
+        <polyline :points="enrollmentRatePoints.filter(point => point.currentYearY !== null).map(point => point.x + ',' + point.currentYearY).join(' ')" fill="none" :stroke="colors.green" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
+        <polyline :points="enrollmentRatePoints.map(point => point.x + ',' + point.historicAverageY).join(' ')" fill="none" :stroke="colors.black" stroke-width="1.5" stroke-dasharray="2 3"></polyline>
+        <g v-for="point in enrollmentRatePoints" :key="point.month">
+          <circle :cx="point.x" :cy="point.historicAverageY" r="4" :fill="colors.black"><title>{{ point.month }} historic average: {{ point.historicAverage }}</title></circle>
+          <circle v-if="point.currentYearY !== null" :cx="point.x" :cy="point.currentYearY" r="4" :fill="colors.green"><title>{{ point.month }} current year: {{ point.currentYear }}</title></circle>
+          <text :x="point.x" y="163" text-anchor="middle" font-size="9" fill="#334155">{{ point.month }}</text>
         </g>
       </svg>
     </section>
