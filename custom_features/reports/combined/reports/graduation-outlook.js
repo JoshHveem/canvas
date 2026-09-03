@@ -6,7 +6,8 @@ Vue.component('reports-graduation-outlook', {
       summary: {
         activeStudents: 26,
         graduatesToDate: 14,
-        projectedGraduates: 26
+        projectedGraduates: 26,
+        projectedGraduationRate: 62
       },
       summaryChanges: {
         activeStudents: 8,
@@ -137,6 +138,16 @@ Vue.component('reports-graduation-outlook', {
       return `${magnitude}% ${Number(change) >= 0 ? 'increase' : 'decrease'} from last year`;
     },
 
+    projectedGraduationRateStyle() {
+      return {
+        backgroundColor: this.summary.projectedGraduationRate > 50 ? this.colors.green : this.colors.red,
+        color: this.colors.white,
+        display: 'inline-block',
+        padding: '.1rem .5rem',
+        borderRadius: '999px'
+      };
+    },
+
     enrollmentTotal(month) {
       return ['new', 'progressing', 'inactive', 'graduated', 'otherExit']
         .reduce((total, key) => total + (Number(month?.[key]) || 0), 0);
@@ -152,7 +163,7 @@ Vue.component('reports-graduation-outlook', {
     </div>
     <div class="btech-muted" style="font-size:.8rem; margin-bottom:16px;">Live enrollment and graduation data will replace these sample values.</div>
 
-    <div style="display:grid; grid-template-columns:repeat(3, minmax(11rem, 1fr)); gap:12px; min-width:42rem; margin-bottom:20px;">
+    <div style="display:grid; grid-template-columns:repeat(4, minmax(11rem, 1fr)); gap:12px; min-width:54rem; margin-bottom:20px;">
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
         <div class="btech-muted" style="font-size:.8rem;">Active Students</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.activeStudents }}</div>
@@ -167,6 +178,10 @@ Vue.component('reports-graduation-outlook', {
         <div class="btech-muted" style="font-size:.8rem;">Total Projected Graduates</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.projectedGraduates }}</div>
         <div :style="{ color:trendColor(summaryChanges.projectedGraduates), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.projectedGraduates) }} {{ trendText(summaryChanges.projectedGraduates) }}</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
+        <div class="btech-muted" style="font-size:.8rem;">Projected Graduation Rate</div>
+        <div style="font-size:1.8rem; font-weight:700; margin-top:4px;"><span :style="projectedGraduationRateStyle()">{{ summary.projectedGraduationRate }}%</span></div>
       </div>
     </div>
 
