@@ -185,7 +185,8 @@ Vue.component('reports-graduation-outlook', {
       </div>
     </div>
 
-    <section style="min-width:42rem; margin-bottom:22px;">
+    <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
+    <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Historic Graduation Rates</h5>
       <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Each year compares the final graduation rate with the rate at this same point in the year.</div>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
@@ -208,9 +209,9 @@ Vue.component('reports-graduation-outlook', {
       </svg>
     </section>
 
-    <section style="min-width:42rem; margin-bottom:22px;">
+    <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Historic Enrollment Rates</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year’s monthly enrollment to the historic average to see when students normally enter the program.</div>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year's monthly enrollment to the historic average to see when students normally enter the program.</div>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
@@ -228,7 +229,7 @@ Vue.component('reports-graduation-outlook', {
       </svg>
     </section>
 
-    <section style="min-width:42rem;">
+    <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
       <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly totals are stacked by current student status. October includes five projected graduates.</div>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
@@ -244,6 +245,7 @@ Vue.component('reports-graduation-outlook', {
         </g>
       </svg>
     </section>
+    </div>
   </div>
   `
 });
