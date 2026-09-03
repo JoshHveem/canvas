@@ -8,6 +8,11 @@ Vue.component('reports-graduation-outlook', {
         graduatesToDate: 14,
         projectedGraduates: 12
       },
+      summaryChanges: {
+        activeStudents: 8,
+        graduatesToDate: -6,
+        projectedGraduates: 12
+      },
       historicRates: [
         { year: '2022–23', endOfYear: 84, atThisPoint: 76 },
         { year: '2023–24', endOfYear: 88, atThisPoint: 80 },
@@ -119,6 +124,19 @@ Vue.component('reports-graduation-outlook', {
   },
 
   methods: {
+    trendArrow(change) {
+      return Number(change) >= 0 ? '↑' : '↓';
+    },
+
+    trendColor(change) {
+      return Number(change) >= 0 ? this.colors.green : this.colors.red;
+    },
+
+    trendText(change) {
+      const magnitude = Math.abs(Number(change) || 0);
+      return `${magnitude}% ${Number(change) >= 0 ? 'increase' : 'decrease'} from last year`;
+    },
+
     enrollmentTotal(month) {
       return ['new', 'progressing', 'inactive', 'graduated', 'otherExit']
         .reduce((total, key) => total + (Number(month?.[key]) || 0), 0);
@@ -138,14 +156,17 @@ Vue.component('reports-graduation-outlook', {
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
         <div class="btech-muted" style="font-size:.8rem;">Active Students</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.activeStudents }}</div>
+        <div :style="{ color:trendColor(summaryChanges.activeStudents), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.activeStudents) }} {{ trendText(summaryChanges.activeStudents) }}</div>
       </div>
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
         <div class="btech-muted" style="font-size:.8rem;">Graduates to Date <span style="white-space:nowrap;">(this academic year)</span></div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.graduatesToDate }}</div>
+        <div :style="{ color:trendColor(summaryChanges.graduatesToDate), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.graduatesToDate) }} {{ trendText(summaryChanges.graduatesToDate) }}</div>
       </div>
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
         <div class="btech-muted" style="font-size:.8rem;">Projected Graduates</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.projectedGraduates }}</div>
+        <div :style="{ color:trendColor(summaryChanges.projectedGraduates), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.projectedGraduates) }} {{ trendText(summaryChanges.projectedGraduates) }}</div>
       </div>
     </div>
 
