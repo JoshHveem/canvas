@@ -6,7 +6,7 @@ Vue.component('reports-graduation-outlook', {
       summary: {
         activeStudents: 26,
         graduatesToDate: 14,
-        projectedGraduates: 12
+        projectedGraduates: 26
       },
       summaryChanges: {
         activeStudents: 8,
@@ -164,7 +164,7 @@ Vue.component('reports-graduation-outlook', {
         <div :style="{ color:trendColor(summaryChanges.graduatesToDate), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.graduatesToDate) }} {{ trendText(summaryChanges.graduatesToDate) }}</div>
       </div>
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
-        <div class="btech-muted" style="font-size:.8rem;">Projected Graduates</div>
+        <div class="btech-muted" style="font-size:.8rem;">Total Projected Graduates</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.projectedGraduates }}</div>
         <div :style="{ color:trendColor(summaryChanges.projectedGraduates), fontSize:'.8rem', fontWeight:'600' }">{{ trendArrow(summaryChanges.projectedGraduates) }} {{ trendText(summaryChanges.projectedGraduates) }}</div>
       </div>
