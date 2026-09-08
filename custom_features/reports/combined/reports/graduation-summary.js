@@ -21,7 +21,9 @@ Vue.component('reports-graduation-summary', {
     this.table.setColumns([
       new window.ReportColumn('Program', 'Active program.', '15rem', false, 'string', row => this.escapeHtml(row.program_name), null, row => row.program_name.toLowerCase()),
       new window.ReportColumn('Campus', 'Campus offering the program.', '10rem', false, 'string', row => this.escapeHtml(row.campus_name), null, row => row.campus_name.toLowerCase()),
+      new window.ReportColumn('Current Graduates', 'Actual graduates to date for this academic year.', '8rem', false, 'number', row => this.wholeNumber(row.num_students__graduate), null, row => this.sortNumber(row.num_students__graduate)),
       new window.ReportColumn('Grad Rate to Date', 'Actual graduation rate to date for this academic year.', '8rem', false, 'number', row => this.percent(row.perc_students__graduate), row => this.actualRateStyle(row), row => this.sortNumber(row.perc_students__graduate)),
+      new window.ReportColumn('Projected Graduates', '80% projected end-of-year graduate range.', '10rem', false, 'number', row => this.projectedGraduateRangeText(row), null, row => this.sortNumber(row.num_students__graduate__projected)),
       new window.ReportColumn('Projected Grad Rate', 'Projected graduation rate and its 80% forecast range. Pill color indicates the forecast interpretation.', '13rem', false, 'number', row => this.projectedRateText(row), row => this.statusStyle(row), row => this.triageSort(row)),
       new window.ReportColumn('Trend Since July', 'Change in projected graduation rate since July.', '9rem', false, 'number', row => this.trendText(row), row => this.trendStyle(row), row => this.sortNumber(row.change_perc_students__graduate__projected__since_july))
     ]);
@@ -109,6 +111,11 @@ Vue.component('reports-graduation-summary', {
       const value = `${this.percent(row.perc_students__graduate__projected__low_80)}–${this.percent(row.perc_students__graduate__projected__high_80)}`;
       const details = `${this.statusText(row)}. Method: ${String(row.projection_method__historic || 'unavailable')}. 90% range: ${this.percent(row.perc_students__graduate__projected__low_90)}–${this.percent(row.perc_students__graduate__projected__high_90)}.`;
       return `<span title="${this.escapeHtml(details)}">${value}</span>`;
+    },
+
+    projectedGraduateRangeText(row) {
+      if (!this.isValidatedForecast(row)) return 'Insufficient evidence';
+      return `${this.wholeNumber(row.num_students__graduate__projected__low_80)}–${this.wholeNumber(row.num_students__graduate__projected__high_80)}`;
     },
 
     trendText(row) {
