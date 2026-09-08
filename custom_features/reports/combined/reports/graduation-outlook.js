@@ -73,34 +73,40 @@ Vue.component('reports-graduation-outlook', {
       return Boolean(projection && projection.projection_method__historic === 'size_matched' && Number(projection.num_academic_years__historic__size_matched) > 0);
     },
 
-    historicGraduationRates() {
-      const projection = this.selectedProjection;
-      const currentAcademicMonth = this.currentAcademicMonth();
-      if (!projection) return [];
-      return this.monthlyRows
-        .filter(row => Number(row.academic_year) < Number(projection.academic_year))
-        .filter(row => Number(row.academic_year_month) === currentAcademicMonth)
-        .map(row => ({
-          year: `${row.academic_year}-${String(Number(row.academic_year) + 1).slice(-2)}`,
-          endOfYear: this.numberValue(row.perc_students__graduate__actual),
-          atThisPoint: this.numberValue(row.perc_students__graduate__to_month)
-        }))
-        .filter(row => row.endOfYear !== null && row.atThisPoint !== null)
-        .sort((a, b) => a.year.localeCompare(b.year));
-    },
-
-    ratePoints() {
+    graduationOutlookPoints() {
       const chartHeight = 144;
       const chartTop = 18;
       const chartLeft = 58;
       const chartWidth = 570;
-      const rateToY = rate => chartTop + ((100 - rate) / 100) * chartHeight;
-      return this.historicGraduationRates.map((rate, index) => ({
-        ...rate,
-        x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(this.historicGraduationRates.length, 1))),
-        endOfYearY: rateToY(rate.endOfYear * 100),
-        atThisPointY: rateToY(rate.atThisPoint * 100)
-      }));
+      const projection = this.selectedProjection;
+      const currentAcademicMonth = this.currentAcademicMonth();
+      const months = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+      const rowsByMonth = this.monthlyRows.reduce((map, row) => {
+        if (Number(row.academic_year) === Number(projection?.academic_year)) {
+          map[Number(row.academic_year_month)] = row;
+        }
+        return map;
+      }, {});
+      const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
+
+      return months.map((month, index) => {
+        const academicMonth = index + 1;
+        const rate = academicMonth <= currentAcademicMonth
+          ? this.numberValue(rowsByMonth[academicMonth]?.perc_students__graduate__projected__baseline)
+          : null;
+        return {
+          month,
+          rate,
+          x: chartLeft + (index * (chartWidth / (months.length - 1))),
+          y: rate === null ? null : rateToY(rate)
+        };
+      });
+    },
+
+    graduationTargetY() {
+      const chartHeight = 144;
+      const chartTop = 18;
+      return chartTop + ((100 - 60) / 100) * chartHeight;
     },
 
     enrollmentLegend() {
@@ -410,36 +416,35 @@ Vue.component('reports-graduation-outlook', {
 
     <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Historic Graduation Rates</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Each historic year compares its final graduation rate with the rate at this same point in the academic year.</div>
+      <h5 style="margin:0 0:4px; font-size:1rem;">Graduation Outlook Trend</h5>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Track how this academic year's projected graduation rate changes as new information becomes available.</div>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span><i style="display:inline-block; width:.65rem; height:.65rem; border-radius:50%; background:#111827;"></i> End of year</span>
-        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:(colors.orange || colors.yellow) }"></i> At this point in year</span>
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Projected graduation rate</span>
+        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
       </div>
-      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Placeholder historic graduation rates">
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
         <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
         <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
         <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
         <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <g v-for="point in ratePoints" :key="point.year">
-          <line :x1="point.x" :x2="point.x" :y1="point.endOfYearY" :y2="point.atThisPointY" stroke="#94a3b8" stroke-dasharray="3 3"></line>
-          <circle :cx="point.x" :cy="point.endOfYearY" r="5" :fill="colors.black"><title>{{ point.year }} end of year: {{ percent(point.endOfYear) }}</title></circle>
-          <circle :cx="point.x" :cy="point.atThisPointY" r="5" :fill="colors.orange || colors.yellow"><title>{{ point.year }} at this point: {{ percent(point.atThisPoint) }}</title></circle>
-          <text :x="point.x" y="184" text-anchor="middle" font-size="11" fill="#334155">{{ point.year }}</text>
-          <text :x="point.x" y="199" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.atThisPoint) }} / {{ percent(point.endOfYear) }}</text>
+        <polyline :points="graduationOutlookPoints.filter(point => point.y !== null).map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.green" stroke-width="2"></polyline>
+        <g v-for="point in graduationOutlookPoints" :key="point.month">
+          <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="colors.green"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}</title></circle>
+          <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
         </g>
       </svg>
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Historic Enrollment Rates</h5>
+      <h5 style="margin:0 0:4px; font-size:1rem;">Active Enrollment vs Historic Average</h5>
       <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year's active enrollment to the historic average to see when students normally enter the program.</div>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
       </div>
-      <svg width="680" height="202" viewBox="0 0 680 202" role="img" aria-label="Placeholder historic enrollment rates from July through June">
+      <svg width="680" height="202" viewBox="0 0 680 202" role="img" aria-label="Active enrollment compared with the historic average from July through June">
         <line x1="50" y1="18" x2="50" y2="146" stroke="#cbd5e1"></line>
         <line x1="50" y1="146" x2="640" y2="146" stroke="#cbd5e1"></line>
         <polyline :points="enrollmentRatePoints.filter(point => point.currentYearY !== null).map(point => point.x + ',' + point.currentYearY).join(' ')" fill="none" :stroke="colors.green" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
