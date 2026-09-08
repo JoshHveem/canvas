@@ -23,9 +23,7 @@ Vue.component('reports-graduation-summary', {
       new window.ReportColumn('Campus', 'Campus offering the program.', '10rem', false, 'string', row => this.escapeHtml(row.campus_name), null, row => row.campus_name.toLowerCase()),
       new window.ReportColumn('Grad Rate to Date', 'Actual graduation rate to date for this academic year.', '8rem', false, 'number', row => this.percent(row.perc_students__graduate), row => this.actualRateStyle(row), row => this.sortNumber(row.perc_students__graduate)),
       new window.ReportColumn('Projected Grad Rate', 'Projected graduation rate and its 80% forecast range. Pill color indicates the forecast interpretation.', '13rem', false, 'number', row => this.projectedRateText(row), row => this.statusStyle(row), row => this.triageSort(row)),
-      new window.ReportColumn('Trend Since July', 'Change in projected graduation rate since July.', '9rem', false, 'number', row => this.trendText(row), row => this.trendStyle(row), row => this.sortNumber(row.change_perc_students__graduate__projected__since_july)),
-      new window.ReportColumn('Projected Graduates / Exiters', 'Projected end-of-year graduate and exiter counts.', '11rem', false, 'number', row => this.projectedCountsText(row), null, row => this.sortNumber(row.num_students__graduate__projected)),
-      new window.ReportColumn('Graduates Short of 60% Target', 'Projected graduates needed to reach 60% of projected exiters.', '12rem', false, 'number', row => this.shortfallText(row), row => this.shortfallStyle(row), row => this.shortfallSort(row))
+      new window.ReportColumn('Trend Since July', 'Change in projected graduation rate since July.', '9rem', false, 'number', row => this.trendText(row), row => this.trendStyle(row), row => this.sortNumber(row.change_perc_students__graduate__projected__since_july))
     ]);
   },
 
@@ -89,6 +87,7 @@ Vue.component('reports-graduation-summary', {
       if (score <= -2) return { backgroundColor: this.colors.red, color: this.colors.white };
       if (score < 0) return { backgroundColor: this.colors.orange || this.colors.yellow, color: this.colors.black };
       if (score === 0) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      if (score === 1) return { backgroundColor: this.colors.yellowGreen, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
     },
 
@@ -107,7 +106,7 @@ Vue.component('reports-graduation-summary', {
 
     projectedRateText(row) {
       if (!this.isValidatedForecast(row)) return 'Insufficient evidence';
-      const value = `${this.percent(row.perc_students__graduate__projected)} (${this.percent(row.perc_students__graduate__projected__low_80)}–${this.percent(row.perc_students__graduate__projected__high_80)})`;
+      const value = `${this.percent(row.perc_students__graduate__projected__low_80)}–${this.percent(row.perc_students__graduate__projected__high_80)}`;
       const details = `${this.statusText(row)}. Method: ${String(row.projection_method__historic || 'unavailable')}. 90% range: ${this.percent(row.perc_students__graduate__projected__low_90)}–${this.percent(row.perc_students__graduate__projected__high_90)}.`;
       return `<span title="${this.escapeHtml(details)}">${value}</span>`;
     },
