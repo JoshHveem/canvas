@@ -125,7 +125,13 @@ Vue.component('reports-graduation-outlook', {
         map[`${row.academic_year}:${row.academic_year_month}`] = row;
         return map;
       }, {});
-      const historicRows = this.monthlyRows.filter(row => projection && Number(row.academic_year) < Number(projection.academic_year));
+      const selectedAcademicYear = Number(projection?.academic_year);
+      const historicRows = this.monthlyRows.filter(row => {
+        const academicYear = Number(row.academic_year);
+        return Number.isFinite(selectedAcademicYear)
+          && academicYear < selectedAcademicYear
+          && academicYear >= selectedAcademicYear - 3;
+      });
       const rates = months.map((month, index) => {
         const academicMonth = index + 1;
         const historicValues = historicRows
