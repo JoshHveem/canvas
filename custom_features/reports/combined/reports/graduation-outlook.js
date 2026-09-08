@@ -438,8 +438,8 @@ Vue.component('reports-graduation-outlook', {
         <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
         <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <polyline :points="graduationOutlookPoints.filter(point => point.y !== null).map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.black" stroke-width="2"></polyline>
-        <g v-for="point in graduationOutlookPoints" :key="point.month">
+        <g v-for="(point, index) in graduationOutlookPoints" :key="point.month">
+          <line v-if="index > 0 && point.y !== null && graduationOutlookPoints[index - 1].y !== null" :x1="graduationOutlookPoints[index - 1].x" :y1="graduationOutlookPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
           <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior month)' : point.movement < 0 ? ' (down from prior month)' : '' }}</title></circle>
           <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
         </g>
