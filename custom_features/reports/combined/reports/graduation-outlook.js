@@ -146,12 +146,23 @@ Vue.component('reports-graduation-outlook', {
         })
         .filter(point => point.rate !== null);
       const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
+      let previousRate = null;
 
-      return rates.map((point, index) => ({
-        ...point,
-        x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(rates.length, 1))),
-        y: rateToY(point.rate)
-      }));
+      return rates.map((point, index) => {
+        const movement = previousRate === null ? 0 : Math.sign(point.rate - previousRate);
+        const isBelowRequirement = point.rate < 0.6;
+        let color = this.colors.black;
+        if (movement < 0) color = isBelowRequirement ? this.colors.red : this.colors.yellow;
+        if (movement > 0) color = isBelowRequirement ? this.colors.yellow : this.colors.green;
+        previousRate = point.rate;
+        return {
+          ...point,
+          movement,
+          color,
+          x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(rates.length, 1))),
+          y: rateToY(point.rate)
+        };
+      });
     },
 
     enrollmentLegend() {
@@ -485,15 +496,20 @@ Vue.component('reports-graduation-outlook', {
     <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
       <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Final actual graduation rate for each completed academic year.</div>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
+        <span>Point color shows the year-to-year change relative to the 60% requirement.</span>
+        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
+      </div>
       <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduation rates">
         <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
         <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
         <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
         <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <polyline :points="historicEndOfYearGraduationPoints.map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.black" stroke-width="2"></polyline>
-        <g v-for="point in historicEndOfYearGraduationPoints" :key="point.year">
-          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="colors.black"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}</title></circle>
+        <g v-for="(point, index) in historicEndOfYearGraduationPoints" :key="point.year">
+          <line v-if="index > 0" :x1="historicEndOfYearGraduationPoints[index - 1].x" :y1="historicEndOfYearGraduationPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
           <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
         </g>
