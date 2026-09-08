@@ -186,6 +186,12 @@ Vue.component('reports-graduation-outlook', {
       return `+${format((highValue - center) * scale)} / -${format((center - lowValue) * scale)}${isRate ? ' pts' : ''}`;
     },
 
+    rangeValues(low, high, formatter) {
+      const lowText = formatter(low);
+      const highText = formatter(high);
+      return lowText === '-' || highText === '-' ? 'Insufficient history' : `${lowText} - ${highText}`;
+    },
+
     rateChangeText(value, sinceJuly = false) {
       const change = this.numberValue(value);
       if (change === null) return '';
@@ -204,6 +210,14 @@ Vue.component('reports-graduation-outlook', {
       const score = this.numberValue(value);
       const color = score === null || score === 0 ? this.colors.yellow : score > 0 ? this.colors.green : this.colors.red;
       return { backgroundColor: color, color: color === this.colors.yellow ? this.colors.black : this.colors.white, display: 'inline-block', padding: '.1rem .5rem', borderRadius: '999px' };
+    },
+
+    outlookColor(value) {
+      const score = this.numberValue(value);
+      if (score === null) return this.colors.black;
+      if (score > 0) return this.colors.green;
+      if (score < 0) return this.colors.red;
+      return this.colors.yellow;
     },
 
     rateStyle(value) {
@@ -288,10 +302,12 @@ Vue.component('reports-graduation-outlook', {
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
     <template v-else-if="selectedProjection">
     <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ projectionLabel(selectedProjection) }} - {{ selectedProjection.academic_year }}</div>
-    <div style="display:grid; grid-template-columns:repeat(3, minmax(14rem, 1fr)); gap:12px; min-width:48rem; margin-bottom:20px;">
-      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Exiters</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? asymmetricRange(selectedProjection.num_students__exiter__projected, selectedProjection.num_students__exiter__projected__low_80, selectedProjection.num_students__exiter__projected__high_80) : 'Insufficient history' }}</div></div>
-      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduates</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__graduate__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? asymmetricRange(selectedProjection.num_students__graduate__projected, selectedProjection.num_students__graduate__projected__low_80, selectedProjection.num_students__graduate__projected__high_80) : 'Insufficient history' }}</div></div>
-      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduation Rate</div><div style="font-size:1.8rem; font-weight:700; margin-top:4px; color:#111827;">{{ percent(selectedProjection.perc_students__graduate__projected) }} <span class="btech-muted" style="font-size:.8rem; font-weight:600; white-space:nowrap;">{{ hasValidatedForecast ? asymmetricRange(selectedProjection.perc_students__graduate__projected, selectedProjection.perc_students__graduate__projected__low_80, selectedProjection.perc_students__graduate__projected__high_80, true) : 'Insufficient history' }}</span></div><div v-if="hasValidatedForecast" style="margin-top:8px;"><span :style="outlookStyle(selectedProjection.score_graduation_projection_strength)">{{ outlookText(selectedProjection.score_graduation_projection_strength) }}</span><span v-if="rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true)" class="btech-muted" style="font-size:.75rem; margin-left:6px;">{{ rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true) }}</span></div><div v-else class="btech-muted" style="font-size:.8rem; margin-top:8px;">Insufficient history</div></div>
+    <div style="display:grid; grid-template-columns:repeat(5, minmax(11rem, 1fr)); gap:12px; min-width:62rem; margin-bottom:20px;">
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Exiters to Date</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter) }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Exiters</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? rangeValues(selectedProjection.num_students__exiter__projected__low_80, selectedProjection.num_students__exiter__projected__high_80, wholeNumber) : 'Insufficient history' }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Graduates to Date</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__graduate) }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduates</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__graduate__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? rangeValues(selectedProjection.num_students__graduate__projected__low_80, selectedProjection.num_students__graduate__projected__high_80, wholeNumber) : 'Insufficient history' }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduation Rate</div><div :style="{ fontSize:'1.8rem', fontWeight:'700', marginTop:'4px', color:(hasValidatedForecast ? outlookColor(selectedProjection.score_graduation_projection_strength) : colors.black) }">{{ percent(selectedProjection.perc_students__graduate__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? rangeValues(selectedProjection.perc_students__graduate__projected__low_80, selectedProjection.perc_students__graduate__projected__high_80, percent) : 'Insufficient history' }}</div><div v-if="hasValidatedForecast && rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true)" class="btech-muted" style="font-size:.75rem; margin-top:6px;">{{ rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true) }}</div></div>
     </div>
 
     <div v-if="false" style="display:grid; grid-template-columns:repeat(4, minmax(11rem, 1fr)); gap:12px; min-width:54rem; margin-bottom:20px;">
