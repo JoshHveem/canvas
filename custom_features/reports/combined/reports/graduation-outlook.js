@@ -172,6 +172,8 @@ Vue.component('reports-graduation-outlook', {
         const academicMonth = index + 1;
         const row = rowsByMonth[academicMonth];
         const isProjected = academicMonth > currentAcademicMonth;
+        const projectedActive = this.numberValue(row?.num_students__active__projected);
+        const historicAverageActive = this.numberValue(row?.num_students__active__month_start__historic_average);
         return {
           month,
           isProjected,
@@ -180,7 +182,7 @@ Vue.component('reports-graduation-outlook', {
           inactive: isProjected ? 0 : this.numberValue(row?.num_students__inactive) || 0,
           graduated: isProjected ? 0 : this.numberValue(row?.num_students__graduate) || 0,
           otherExit: isProjected ? 0 : this.numberValue(row?.num_students__other_exit) || 0,
-          projectedActive: isProjected ? this.numberValue(row?.num_students__active__projected) || 0 : 0,
+          projectedActive: isProjected ? (projectedActive ?? historicAverageActive ?? 0) : 0,
           projectedGraduates: isProjected ? this.numberValue(row?.num_students__graduate__projected) || 0 : 0
         };
       });
