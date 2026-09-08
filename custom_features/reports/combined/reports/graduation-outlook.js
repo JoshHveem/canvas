@@ -45,14 +45,6 @@ Vue.component('reports-graduation-outlook', {
         { month: 'May', currentYear: null, historicAverage: 14 },
         { month: 'June', currentYear: null, historicAverage: 12 }
       ],
-      enrollmentMonths: [
-        { month: 'July', new: 8, progressing: 14, inactive: 2, graduated: 0, otherExit: 1 },
-        { month: 'August', new: 5, progressing: 14, inactive: 2, graduated: 1, otherExit: 1 },
-        { month: 'September', new: 6, progressing: 16, inactive: 2, graduated: 1, otherExit: 1 },
-        { month: 'October', new: 3, progressing: 11, inactive: 1, graduated: 5, otherExit: 1, projectedGraduates: 5 },
-        { month: 'November', new: 1, progressing: 10, inactive: 3, graduated: 3, otherExit: 1 },
-        { month: 'December', new: 0, progressing: 2, inactive: 1, graduated: 1, otherExit: 1 }
-      ]
     };
   },
 
@@ -165,13 +157,42 @@ Vue.component('reports-graduation-outlook', {
       });
     },
 
+    enrollmentMonths() {
+      const projection = this.selectedProjection;
+      const currentAcademicMonth = this.currentAcademicMonth();
+      const months = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+      const rowsByMonth = this.monthlyRows.reduce((map, row) => {
+        if (Number(row.academic_year) === Number(projection?.academic_year)) {
+          map[Number(row.academic_year_month)] = row;
+        }
+        return map;
+      }, {});
+
+      return months.map((month, index) => {
+        const academicMonth = index + 1;
+        const row = rowsByMonth[academicMonth];
+        const isProjected = academicMonth > currentAcademicMonth;
+        return {
+          month,
+          isProjected,
+          new: isProjected ? 0 : this.numberValue(row?.num_students__new) || 0,
+          progressing: isProjected ? 0 : this.numberValue(row?.num_students__progressing) || 0,
+          inactive: isProjected ? 0 : this.numberValue(row?.num_students__inactive) || 0,
+          graduated: isProjected ? 0 : this.numberValue(row?.num_students__graduate) || 0,
+          otherExit: isProjected ? 0 : this.numberValue(row?.num_students__other_exit) || 0,
+          projectedActive: isProjected ? this.numberValue(row?.num_students__active__month_start__historic_average) || 0 : 0
+        };
+      });
+    },
+
     enrollmentLegend() {
       return [
         { key: 'new', label: 'New', color: this.colors.orange || this.colors.yellow },
         { key: 'progressing', label: 'Progressing', color: this.colors.green },
         { key: 'inactive', label: 'Inactive', color: this.colors.yellow },
         { key: 'graduated', label: 'Graduated', color: this.colors.black },
-        { key: 'otherExit', label: 'Other Exit', color: this.colors.red }
+        { key: 'otherExit', label: 'Other Exit', color: this.colors.red },
+        { key: 'projectedActive', label: 'Projected Active', color: this.colors.gray }
       ];
     },
 
@@ -223,9 +244,12 @@ Vue.component('reports-graduation-outlook', {
     enrollmentBarGroups() {
       const chartHeight = 178;
       const baseline = 222;
-      const chartLeft = 66;
-      const groupWidth = 66;
-      const groupGap = 30;
+      const chartLeft = 56;
+      const chartWidth = 584;
+      const groupWidth = Math.min(48, Math.max(24, (chartWidth / this.enrollmentMonths.length) * 0.7));
+      const groupGap = this.enrollmentMonths.length > 1
+        ? (chartWidth - (groupWidth * this.enrollmentMonths.length)) / (this.enrollmentMonths.length - 1)
+        : 0;
       const maxTotal = Math.max(...this.enrollmentMonths.map(month => this.enrollmentTotal(month)), 1);
 
       return this.enrollmentMonths.map((month, index) => {
@@ -412,7 +436,7 @@ Vue.component('reports-graduation-outlook', {
     },
 
     enrollmentTotal(month) {
-      return ['new', 'progressing', 'inactive', 'graduated', 'otherExit']
+      return ['new', 'progressing', 'inactive', 'graduated', 'otherExit', 'projectedActive']
         .reduce((total, key) => total + (Number(month?.[key]) || 0), 0);
     }
   },
@@ -538,11 +562,11 @@ Vue.component('reports-graduation-outlook', {
 
     <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Placeholder: the monthly status breakdown has not yet been supplied.</div>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active enrollment based on the historic average.</div>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
         <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color }"></i> {{ item.label }}</span>
       </div>
-      <svg width="680" height="278" viewBox="0 0 680 278" role="img" aria-label="Placeholder monthly enrollment and graduation projection">
+      <svg width="680" height="278" viewBox="0 0 680 278" role="img" aria-label="Monthly enrollment status and projected active enrollment">
         <line x1="52" y1="222.5" x2="650" y2="222.5" stroke="#cbd5e1"></line>
         <g v-for="group in enrollmentBarGroups" :key="group.month">
           <rect v-for="segment in group.segments" :key="segment.key" :x="segment.x" :y="segment.y" :width="segment.width" :height="segment.height" :fill="segment.color"><title>{{ group.month }}: {{ segment.label }} {{ segment.count }}</title></rect>
