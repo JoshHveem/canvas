@@ -183,6 +183,16 @@ Vue.component('reports-graduation-summary', {
         const statusDifference = this.statusSort(a) - this.statusSort(b);
         if (statusDifference !== 0) return statusDifference;
         return this.shortfallSort(b) - this.shortfallSort(a);
+        });
+    },
+
+    emitDrill(row) {
+      this.$emit('drill-report', {
+        report: 'graduation',
+        subMenu: 'overview',
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: String(row?.program_name ?? '').trim(),
+        campus_code: String(row?.campus_code ?? '').trim()
       });
     },
 
@@ -216,6 +226,8 @@ Vue.component('reports-graduation-summary', {
     :load-error="loadError"
     loading-text="Loading active program projections..."
     :row-key-fn="(row, index) => [row.program_code, row.campus_code, row.academic_year, index].join(':')"
+    :row-clickable="true"
+    @row-click="emitDrill"
   >
     <template #description>
       Active on-campus programs for the current academic year, ordered from greatest projected concern to least. Projection ranges are 80% ranges; details remain available in the program overview.

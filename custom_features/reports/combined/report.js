@@ -231,7 +231,7 @@
               },
               {
                 value: 'overview',
-                label: 'Overview',
+                label: 'Program',
                 component: 'reports-graduation-outlook',
                 dataset: 'programs_graduates_projections',
                 filters: {}

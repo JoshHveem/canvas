@@ -381,6 +381,17 @@ Vue.component('reports-graduation-outlook', {
       }));
     },
 
+    selectProjectionFromContext() {
+      const programCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
+      const campusCode = String(this.getSharedFilterValue('campus_code', this.reportContext?.routeFilters?.campusCode) ?? '').trim();
+      const match = this.projectionOptions.find(row => (
+        String(row.program_code ?? '').trim() === programCode
+        && (!campusCode || String(row.campus_code ?? '').trim() === campusCode)
+      ));
+      if (match && match.key !== this.selectedProjectionKey) this.selectedProjectionKey = match.key;
+      return Boolean(match);
+    },
+
     currentAcademicMonth() {
       return ((new Date().getMonth() + 6) % 12) + 1;
     },
@@ -406,7 +417,7 @@ Vue.component('reports-graduation-outlook', {
         this.loadError = '';
         this.projections = this.normalizeProjections(await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }));
         if (!this.projectionOptions.length) this.loadError = 'No on-campus program projections are available for the current academic year.';
-        else if (!this.projectionOptions.some(row => row.key === this.selectedProjectionKey)) this.selectedProjectionKey = this.projectionOptions[0].key;
+        else if (!this.selectProjectionFromContext() && !this.projectionOptions.some(row => row.key === this.selectedProjectionKey)) this.selectedProjectionKey = this.projectionOptions[0].key;
         await this.loadMonthlyData();
       } catch (error) {
         console.warn('Failed to load graduation projections', error);
@@ -452,6 +463,9 @@ Vue.component('reports-graduation-outlook', {
   watch: {
     selectedProjectionKey() {
       this.loadMonthlyData();
+    },
+    reportContext() {
+      this.selectProjectionFromContext();
     }
   },
 
