@@ -118,6 +118,42 @@ Vue.component('reports-graduation-outlook', {
       return chartTop + ((100 - 60) / 100) * chartHeight;
     },
 
+    historicEndOfYearGraduationPoints() {
+      const chartHeight = 144;
+      const chartTop = 18;
+      const chartLeft = 58;
+      const chartWidth = 570;
+      const selectedAcademicYear = Number(this.selectedProjection?.academic_year);
+      const rowsByYear = this.monthlyRows.reduce((map, row) => {
+        const academicYear = Number(row.academic_year);
+        if (academicYear < selectedAcademicYear && this.numberValue(row.perc_students__graduate__actual) !== null) {
+          if (!map[academicYear]) map[academicYear] = [];
+          map[academicYear].push(row);
+        }
+        return map;
+      }, {});
+      const rates = Object.keys(rowsByYear)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map(academicYear => {
+          const rows = rowsByYear[academicYear];
+          const finalRow = rows.find(row => Number(row.academic_year_month) === 12)
+            || rows.slice().sort((a, b) => Number(b.academic_year_month) - Number(a.academic_year_month))[0];
+          return {
+            year: `${academicYear}-${String(academicYear + 1).slice(-2)}`,
+            rate: this.numberValue(finalRow.perc_students__graduate__actual)
+          };
+        })
+        .filter(point => point.rate !== null);
+      const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
+
+      return rates.map((point, index) => ({
+        ...point,
+        x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(rates.length, 1))),
+        y: rateToY(point.rate)
+      }));
+    },
+
     enrollmentLegend() {
       return [
         { key: 'new', label: 'New', color: this.colors.orange || this.colors.yellow },
@@ -442,6 +478,24 @@ Vue.component('reports-graduation-outlook', {
           <line v-if="index > 0 && point.y !== null && graduationOutlookPoints[index - 1].y !== null" :x1="graduationOutlookPoints[index - 1].x" :y1="graduationOutlookPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
           <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior month)' : point.movement < 0 ? ' (down from prior month)' : '' }}</title></circle>
           <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:4px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Final actual graduation rate for each completed academic year.</div>
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduation rates">
+        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
+        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
+        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
+        <polyline :points="historicEndOfYearGraduationPoints.map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.black" stroke-width="2"></polyline>
+        <g v-for="point in historicEndOfYearGraduationPoints" :key="point.year">
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="colors.black"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}</title></circle>
+          <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
+          <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
         </g>
       </svg>
     </section>
