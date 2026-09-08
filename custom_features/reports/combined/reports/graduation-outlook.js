@@ -180,7 +180,8 @@ Vue.component('reports-graduation-outlook', {
           inactive: isProjected ? 0 : this.numberValue(row?.num_students__inactive) || 0,
           graduated: isProjected ? 0 : this.numberValue(row?.num_students__graduate) || 0,
           otherExit: isProjected ? 0 : this.numberValue(row?.num_students__other_exit) || 0,
-          projectedActive: isProjected ? this.numberValue(row?.num_students__active__month_start__historic_average) || 0 : 0
+          projectedActive: isProjected ? this.numberValue(row?.num_students__active__projected) || 0 : 0,
+          projectedGraduates: isProjected ? this.numberValue(row?.num_students__graduate__projected) || 0 : 0
         };
       });
     },
@@ -192,7 +193,8 @@ Vue.component('reports-graduation-outlook', {
         { key: 'inactive', label: 'Inactive', color: this.colors.yellow },
         { key: 'graduated', label: 'Graduated', color: this.colors.black },
         { key: 'otherExit', label: 'Other Exit', color: this.colors.red },
-        { key: 'projectedActive', label: 'Projected Active', color: this.colors.gray }
+        { key: 'projectedActive', label: 'Projected Active', color: this.colors.gray },
+        { key: 'projectedGraduates', label: 'Projected Graduates', color: this.colors.black }
       ];
     },
 
@@ -436,7 +438,7 @@ Vue.component('reports-graduation-outlook', {
     },
 
     enrollmentTotal(month) {
-      return ['new', 'progressing', 'inactive', 'graduated', 'otherExit', 'projectedActive']
+      return ['new', 'progressing', 'inactive', 'graduated', 'otherExit', 'projectedActive', 'projectedGraduates']
         .reduce((total, key) => total + (Number(month?.[key]) || 0), 0);
     }
   },
@@ -562,7 +564,7 @@ Vue.component('reports-graduation-outlook', {
 
     <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active enrollment based on the historic average.</div>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active students and graduates.</div>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
         <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color }"></i> {{ item.label }}</span>
       </div>
