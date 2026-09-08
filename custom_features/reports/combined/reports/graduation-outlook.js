@@ -190,13 +190,13 @@ Vue.component('reports-graduation-outlook', {
 
     enrollmentLegend() {
       return [
-        { key: 'new', label: 'New', color: this.colors.orange || this.colors.yellow },
-        { key: 'progressing', label: 'Progressing', color: this.colors.green },
+        { key: 'new', label: 'New', color: this.colors.blue },
+        { key: 'progressing', label: 'Progressing', color: this.colors.cyan },
         { key: 'inactive', label: 'Inactive', color: this.colors.yellow },
-        { key: 'graduated', label: 'Graduated', color: this.colors.black },
+        { key: 'graduated', label: 'Graduated', color: this.colors.green },
         { key: 'otherExit', label: 'Other Exit', color: this.colors.red },
-        { key: 'projectedActive', label: 'Projected Active', color: this.colors.gray },
-        { key: 'projectedGraduates', label: 'Projected Graduates', color: this.colors.black }
+        { key: 'projectedActive', label: 'Projected Active', color: this.colors.cyan, opacity: 0.5 },
+        { key: 'projectedGraduates', label: 'Projected Graduates', color: this.colors.green, opacity: 0.5 }
       ];
     },
 
@@ -566,17 +566,16 @@ Vue.component('reports-graduation-outlook', {
 
     <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active students and graduates.</div>
+      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active students and graduates at 50% opacity.</div>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
-        <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color }"></i> {{ item.label }}</span>
+        <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color, opacity:item.opacity || 1 }"></i> {{ item.label }}</span>
       </div>
       <svg width="680" height="278" viewBox="0 0 680 278" role="img" aria-label="Monthly enrollment status and projected active enrollment">
         <line x1="52" y1="222.5" x2="650" y2="222.5" stroke="#cbd5e1"></line>
         <g v-for="group in enrollmentBarGroups" :key="group.month">
-          <rect v-for="segment in group.segments" :key="segment.key" :x="segment.x" :y="segment.y" :width="segment.width" :height="segment.height" :fill="segment.color"><title>{{ group.month }}: {{ segment.label }} {{ segment.count }}</title></rect>
+          <rect v-for="segment in group.segments" :key="segment.key" :x="segment.x" :y="segment.y" :width="segment.width" :height="segment.height" :fill="segment.color" :fill-opacity="segment.opacity || 1"><title>{{ group.month }}: {{ segment.label }} {{ segment.count }}</title></rect>
           <text :x="group.labelX" :y="group.totalY" text-anchor="middle" font-size="11" fill="#111827">{{ group.total }}</text>
           <text :x="group.labelX" y="240" text-anchor="middle" font-size="11" fill="#334155">{{ group.month }}</text>
-          <text v-if="group.projectedGraduates" :x="group.labelX" y="257" text-anchor="middle" font-size="10" :fill="colors.green">{{ group.projectedGraduates }} projected graduates</text>
         </g>
       </svg>
     </section>
