@@ -88,15 +88,24 @@ Vue.component('reports-graduation-outlook', {
         return map;
       }, {});
       const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
+      let previousRate = null;
 
       return months.map((month, index) => {
         const academicMonth = index + 1;
         const rate = academicMonth <= currentAcademicMonth
           ? this.numberValue(rowsByMonth[academicMonth]?.perc_students__graduate__projected__baseline)
           : null;
+        const movement = rate === null || previousRate === null ? 0 : Math.sign(rate - previousRate);
+        const isBelowRequirement = rate !== null && rate < 0.6;
+        let color = this.colors.black;
+        if (movement < 0) color = isBelowRequirement ? this.colors.red : this.colors.yellow;
+        if (movement > 0) color = isBelowRequirement ? this.colors.yellow : this.colors.green;
+        if (rate !== null) previousRate = rate;
         return {
           month,
           rate,
+          movement,
+          color,
           x: chartLeft + (index * (chartWidth / (months.length - 1))),
           y: rate === null ? null : rateToY(rate)
         };
@@ -419,7 +428,7 @@ Vue.component('reports-graduation-outlook', {
       <h5 style="margin:0 0:4px; font-size:1rem;">Graduation Outlook Trend</h5>
       <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Track how this academic year's projected graduation rate changes as new information becomes available.</div>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Projected graduation rate</span>
+        <span>Point color shows whether the forecast is improving or declining relative to the 60% requirement.</span>
         <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
       </div>
       <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
@@ -429,9 +438,9 @@ Vue.component('reports-graduation-outlook', {
         <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
         <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <polyline :points="graduationOutlookPoints.filter(point => point.y !== null).map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.green" stroke-width="2"></polyline>
+        <polyline :points="graduationOutlookPoints.filter(point => point.y !== null).map(point => point.x + ',' + point.y).join(' ')" fill="none" :stroke="colors.black" stroke-width="2"></polyline>
         <g v-for="point in graduationOutlookPoints" :key="point.month">
-          <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="colors.green"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}</title></circle>
+          <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior month)' : point.movement < 0 ? ' (down from prior month)' : '' }}</title></circle>
           <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
         </g>
       </svg>
