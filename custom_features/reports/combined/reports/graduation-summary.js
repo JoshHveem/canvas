@@ -7,7 +7,7 @@ Vue.component('reports-graduation-summary', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    const table = window.ReportUtils.createTable('Projection Status', colors);
+    const table = window.ReportUtils.createTable('Projected Grad Rate', colors);
     return {
       colors,
       table,
@@ -21,13 +21,11 @@ Vue.component('reports-graduation-summary', {
     this.table.setColumns([
       new window.ReportColumn('Program', 'Active program.', '15rem', false, 'string', row => this.escapeHtml(row.program_name), null, row => row.program_name.toLowerCase()),
       new window.ReportColumn('Campus', 'Campus offering the program.', '10rem', false, 'string', row => this.escapeHtml(row.campus_name), null, row => row.campus_name.toLowerCase()),
-      new window.ReportColumn('Grad Rate to Date', 'Actual graduation rate to date for this academic year.', '8rem', false, 'number', row => this.percent(row.perc_students__graduate), null, row => this.sortNumber(row.perc_students__graduate)),
-      new window.ReportColumn('Projected Grad Rate', 'Projected graduation rate and its 80% forecast range.', '13rem', false, 'number', row => this.projectedRateText(row), null, row => this.sortNumber(row.perc_students__graduate__projected)),
-      new window.ReportColumn('Projection Status', 'Forecast interpretation based on the projection strength score.', '10rem', false, 'number', row => this.escapeHtml(this.statusText(row)), row => this.statusStyle(row), row => this.statusSort(row)),
+      new window.ReportColumn('Grad Rate to Date', 'Actual graduation rate to date for this academic year.', '8rem', false, 'number', row => this.percent(row.perc_students__graduate), row => this.actualRateStyle(row), row => this.sortNumber(row.perc_students__graduate)),
+      new window.ReportColumn('Projected Grad Rate', 'Projected graduation rate and its 80% forecast range. Pill color indicates the forecast interpretation.', '13rem', false, 'number', row => this.projectedRateText(row), row => this.statusStyle(row), row => this.triageSort(row)),
       new window.ReportColumn('Trend Since July', 'Change in projected graduation rate since July.', '9rem', false, 'number', row => this.trendText(row), row => this.trendStyle(row), row => this.sortNumber(row.change_perc_students__graduate__projected__since_july)),
       new window.ReportColumn('Projected Graduates / Exiters', 'Projected end-of-year graduate and exiter counts.', '11rem', false, 'number', row => this.projectedCountsText(row), null, row => this.sortNumber(row.num_students__graduate__projected)),
-      new window.ReportColumn('Graduates Short of 60% Target', 'Projected graduates needed to reach 60% of projected exiters.', '12rem', false, 'number', row => this.shortfallText(row), row => this.shortfallStyle(row), row => this.shortfallSort(row)),
-      new window.ReportColumn('Active Enrollment vs Historic', 'Current active enrollment compared with the average at this point in the prior three academic years.', '11rem', false, 'string', row => this.enrollmentComparisonText(row), row => this.enrollmentComparisonStyle(row), row => this.enrollmentComparisonSort(row))
+      new window.ReportColumn('Graduates Short of 60% Target', 'Projected graduates needed to reach 60% of projected exiters.', '12rem', false, 'number', row => this.shortfallText(row), row => this.shortfallStyle(row), row => this.shortfallSort(row))
     ]);
   },
 
@@ -94,10 +92,23 @@ Vue.component('reports-graduation-summary', {
       return { backgroundColor: this.colors.green, color: this.colors.white };
     },
 
+    actualRateStyle(row) {
+      const rate = this.numberValue(row.perc_students__graduate);
+      if (rate === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      if (rate < 0.6) return { backgroundColor: this.colors.red, color: this.colors.white };
+      if (rate < 0.7) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.green, color: this.colors.white };
+    },
+
+    triageSort(row) {
+      const shortfall = this.graduateShortfall(row);
+      return (this.statusSort(row) * 100000) - (shortfall === null ? -1 : shortfall);
+    },
+
     projectedRateText(row) {
       if (!this.isValidatedForecast(row)) return 'Insufficient evidence';
       const value = `${this.percent(row.perc_students__graduate__projected)} (${this.percent(row.perc_students__graduate__projected__low_80)}–${this.percent(row.perc_students__graduate__projected__high_80)})`;
-      const details = `Method: ${String(row.projection_method__historic || 'unavailable')}. 90% range: ${this.percent(row.perc_students__graduate__projected__low_90)}–${this.percent(row.perc_students__graduate__projected__high_90)}.`;
+      const details = `${this.statusText(row)}. Method: ${String(row.projection_method__historic || 'unavailable')}. 90% range: ${this.percent(row.perc_students__graduate__projected__low_90)}–${this.percent(row.perc_students__graduate__projected__high_90)}.`;
       return `<span title="${this.escapeHtml(details)}">${value}</span>`;
     },
 
@@ -152,72 +163,17 @@ Vue.component('reports-graduation-summary', {
       return shortfall === null ? -1 : shortfall;
     },
 
-    enrollmentComparison(row) {
-      const current = this.numberValue(row.current_active_enrollment);
-      const historic = this.numberValue(row.historic_active_average);
-      if (current === null || historic === null || historic <= 0) return null;
-      return (current - historic) / historic;
-    },
-
-    enrollmentComparisonText(row) {
-      const comparison = this.enrollmentComparison(row);
-      if (comparison === null) return 'No historic data';
-      const label = comparison > 0.1 ? 'Above avg' : (comparison < -0.1 ? 'Below avg' : 'Near avg');
-      return `<span title="${this.wholeNumber(row.current_active_enrollment)} active vs ${this.wholeNumber(row.historic_active_average)} historic average">${label}</span>`;
-    },
-
-    enrollmentComparisonStyle(row) {
-      const comparison = this.enrollmentComparison(row);
-      if (comparison === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
-      if (comparison > 0.1) return { backgroundColor: this.colors.green, color: this.colors.white };
-      if (comparison < -0.1) return { backgroundColor: this.colors.red, color: this.colors.white };
-      return { backgroundColor: this.colors.yellow, color: this.colors.black };
-    },
-
-    enrollmentComparisonSort(row) {
-      const comparison = this.enrollmentComparison(row);
-      return comparison === null ? -2 : comparison;
-    },
-
-    currentAcademicMonth() {
-      return ((new Date().getMonth() + 6) % 12) + 1;
-    },
-
-    buildRows(projections, monthlyRows) {
+    buildRows(projections) {
       const selectedAcademicYear = new Date().getFullYear();
-      const activePrograms = (Array.isArray(projections) ? projections : [])
+      return (Array.isArray(projections) ? projections : [])
         .filter(row => row?.is_on_campus && String(row?.program_name ?? '').trim())
-        .filter(row => Number(row.academic_year) === selectedAcademicYear);
-      const currentAcademicMonth = this.currentAcademicMonth();
-
-      return activePrograms.map(row => {
-        const programCode = String(row.program_code ?? '').trim();
-        const campusCode = String(row.campus_code ?? '').trim();
-        const matchingRows = (Array.isArray(monthlyRows) ? monthlyRows : []).filter(monthly => (
-          String(monthly?.program_code ?? '').trim() === programCode
-          && String(monthly?.campus_code ?? '').trim() === campusCode
-        ));
-        const currentRow = matchingRows.find(monthly => (
-          Number(monthly.academic_year) === selectedAcademicYear
-          && Number(monthly.academic_year_month) === currentAcademicMonth
-        ));
-        const historicActive = matchingRows
-          .filter(monthly => Number(monthly.academic_year_month) === currentAcademicMonth)
-          .filter(monthly => Number(monthly.academic_year) < selectedAcademicYear && Number(monthly.academic_year) >= selectedAcademicYear - 3)
-          .map(monthly => this.numberValue(monthly.num_students__active))
-          .filter(value => value !== null);
-        const currentActive = this.numberValue(currentRow?.num_students__active);
-        const historicAverage = historicActive.length
-          ? historicActive.reduce((sum, value) => sum + value, 0) / historicActive.length
-          : null;
-        return {
+        .filter(row => Number(row.academic_year) === selectedAcademicYear)
+        .map(row => ({
           ...row,
           program_name: String(row.program_name ?? '').trim(),
-          campus_name: String(row.campus_name ?? row.campus_code ?? '').trim(),
-          current_active_enrollment: currentActive,
-          historic_active_average: historicAverage
-        };
-      }).sort((a, b) => {
+          campus_name: String(row.campus_name ?? row.campus_code ?? '').trim()
+        }))
+        .sort((a, b) => {
         const statusDifference = this.statusSort(a) - this.statusSort(b);
         if (statusDifference !== 0) return statusDifference;
         return this.shortfallSort(b) - this.shortfallSort(a);
@@ -228,11 +184,8 @@ Vue.component('reports-graduation-summary', {
       try {
         this.loading = true;
         this.loadError = '';
-        const [projections, monthlyRows] = await Promise.all([
-          this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }),
-          this.fetchReportDataset({}, { dataset: 'programs_graduates_monthly' })
-        ]);
-        this.rows = this.buildRows(projections, monthlyRows);
+        const projections = await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' });
+        this.rows = this.buildRows(projections);
         if (!this.rows.length) this.loadError = 'No active on-campus program projections are available for the current academic year.';
       } catch (error) {
         console.warn('Failed to load graduation summary', error);
