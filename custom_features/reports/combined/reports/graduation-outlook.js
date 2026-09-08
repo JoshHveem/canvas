@@ -1,8 +1,18 @@
 Vue.component('reports-graduation-outlook', {
+  mixins: [window.ReportMixins.formatting],
+
+  props: {
+    reportContext: { type: Object, default: () => ({}) }
+  },
+
   data() {
     const colors = window.ReportUtils.createColors();
     return {
       colors,
+      projections: [],
+      selectedProjectionKey: '',
+      loading: false,
+      loadError: '',
       summary: {
         activeStudents: 26,
         graduatesToDate: 14,
@@ -46,6 +56,22 @@ Vue.component('reports-graduation-outlook', {
   },
 
   computed: {
+    projectionOptions() {
+      const currentYear = new Date().getFullYear();
+      const eligible = this.projections.filter(row => row.is_on_campus && row.program_name);
+      const current = eligible.filter(row => Number(row.academic_year) === currentYear);
+      return (current.length ? current : eligible).sort((a, b) => this.projectionLabel(a).localeCompare(this.projectionLabel(b)));
+    },
+
+    selectedProjection() {
+      return this.projectionOptions.find(row => row.key === this.selectedProjectionKey) || this.projectionOptions[0] || null;
+    },
+
+    hasValidatedForecast() {
+      const projection = this.selectedProjection;
+      return Boolean(projection && projection.projection_method__historic === 'size_matched' && Number(projection.num_academic_years__historic__size_matched) > 0);
+    },
+
     ratePoints() {
       const chartHeight = 144;
       const chartTop = 18;
@@ -125,6 +151,87 @@ Vue.component('reports-graduation-outlook', {
   },
 
   methods: {
+    projectionLabel(row) {
+      return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - ');
+    },
+
+    numberValue(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    },
+
+    wholeNumber(value) {
+      const number = this.numberValue(value);
+      return number === null ? '-' : Math.round(number).toLocaleString();
+    },
+
+    percent(value) {
+      const number = this.numberValue(value);
+      return number === null ? '-' : `${(number * 100).toFixed(1)}%`;
+    },
+
+    rangeText(low, high, formatter) {
+      const lowText = formatter(low);
+      const highText = formatter(high);
+      return lowText === '-' || highText === '-' ? 'Insufficient history' : `80% range: ${lowText}-${highText}`;
+    },
+
+    rateChangeText(value, sinceJuly = false) {
+      const change = this.numberValue(value);
+      if (change === null) return '';
+      const arrow = change >= 0 ? '\u2191' : '\u2193';
+      const previousMonth = sinceJuly ? 'July' : new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleString('en-US', { month: 'long' });
+      return `${arrow} ${Math.abs(change * 100).toFixed(1)} pts since ${previousMonth}`;
+    },
+
+    outlookText(value) {
+      const labels = { '-2': 'Strong concern', '-1': 'At risk', '0': 'Uncertain', '1': 'Likely on track', '2': 'Strongly on track' };
+      const score = this.numberValue(value);
+      return score === null || !Object.prototype.hasOwnProperty.call(labels, String(score)) ? 'Insufficient history' : `${score > 0 ? '+' : ''}${score} ${labels[String(score)]}`;
+    },
+
+    outlookStyle(value) {
+      const score = this.numberValue(value);
+      const color = score === null || score === 0 ? this.colors.yellow : score > 0 ? this.colors.green : this.colors.red;
+      return { backgroundColor: color, color: color === this.colors.yellow ? this.colors.black : this.colors.white, display: 'inline-block', padding: '.1rem .5rem', borderRadius: '999px' };
+    },
+
+    rateStyle(value) {
+      const rate = this.numberValue(value);
+      return { backgroundColor: rate !== null && rate > 0.5 ? this.colors.green : this.colors.red, color: this.colors.white, display: 'inline-block', padding: '.1rem .5rem', borderRadius: '999px' };
+    },
+
+    projectionDetails(projection) {
+      return `Method: ${projection?.projection_method__historic || 'unavailable'}. 90% projected graduate range: ${this.wholeNumber(projection?.num_students__graduate__projected__low_90)}-${this.wholeNumber(projection?.num_students__graduate__projected__high_90)}. 90% projected exiter range: ${this.wholeNumber(projection?.num_students__exiter__projected__low_90)}-${this.wholeNumber(projection?.num_students__exiter__projected__high_90)}. 90% graduate-rate range: ${this.percent(projection?.perc_students__graduate__projected__low_90)}-${this.percent(projection?.perc_students__graduate__projected__high_90)}.`;
+    },
+
+    normalizeProjections(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        ...row,
+        key: [row?.program_code, row?.campus_code, row?.academic_year].map(value => String(value ?? '').trim()).join('|'),
+        program_name: String(row?.program_name ?? '').trim(),
+        campus_name: String(row?.campus_name ?? '').trim(),
+        campus_code: String(row?.campus_code ?? '').trim(),
+        is_on_campus: row?.is_on_campus === true || String(row?.is_on_campus ?? '').trim().toLowerCase() === 'true',
+        projection_method__historic: String(row?.projection_method__historic ?? '').trim().toLowerCase()
+      }));
+    },
+
+    async loadData() {
+      try {
+        this.loading = true;
+        this.loadError = '';
+        this.projections = this.normalizeProjections(await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }));
+        if (!this.projectionOptions.length) this.loadError = 'No on-campus program projections are available for the current academic year.';
+        else if (!this.projectionOptions.some(row => row.key === this.selectedProjectionKey)) this.selectedProjectionKey = this.projectionOptions[0].key;
+      } catch (error) {
+        console.warn('Failed to load graduation projections', error);
+        this.loadError = 'Unable to load graduation projections.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
     trendArrow(change) {
       return Number(change) >= 0 ? '↑' : '↓';
     },
@@ -154,16 +261,31 @@ Vue.component('reports-graduation-outlook', {
     }
   },
 
+  mounted() {
+    this.loadData();
+  },
+
   template: `
   <div class="btech-card btech-theme" style="padding:16px; margin-top:12px; overflow:auto;">
     <div class="btech-row" style="align-items:center; margin-bottom:4px;">
       <h4 class="btech-card-title" style="margin:0;">Graduation Outlook</h4>
       <div style="flex:1;"></div>
-      <span class="btech-pill">Placeholder data</span>
+      <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ projectionLabel(projection) }}</option></select>
     </div>
-    <div class="btech-muted" style="font-size:.8rem; margin-bottom:16px;">Live enrollment and graduation data will replace these sample values.</div>
+    <div class="btech-muted" style="font-size:.8rem; margin-bottom:16px;">Projection cards use live program data. The charts below remain placeholders until their datasets are available.</div>
 
-    <div style="display:grid; grid-template-columns:repeat(4, minmax(11rem, 1fr)); gap:12px; min-width:54rem; margin-bottom:20px;">
+    <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
+    <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
+    <template v-else-if="selectedProjection">
+    <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ projectionLabel(selectedProjection) }} - {{ selectedProjection.academic_year }}</div>
+    <div style="display:grid; grid-template-columns:repeat(4, minmax(12rem, 1fr)); gap:12px; min-width:58rem; margin-bottom:20px;">
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Exiters</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? rangeText(selectedProjection.num_students__exiter__projected__low_80, selectedProjection.num_students__exiter__projected__high_80, wholeNumber) : 'Insufficient history' }}</div><div class="btech-muted" style="font-size:.75rem; margin-top:4px;">Actual exiters to date: {{ wholeNumber(selectedProjection.num_students__exiter) }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduates</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__graduate__projected) }}</div><div class="btech-muted" style="font-size:.8rem;">{{ hasValidatedForecast ? rangeText(selectedProjection.num_students__graduate__projected__low_80, selectedProjection.num_students__graduate__projected__high_80, wholeNumber) : 'Insufficient history' }}</div><div class="btech-muted" style="font-size:.75rem; margin-top:4px;">Actual graduates to date: {{ wholeNumber(selectedProjection.num_students__graduate) }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Graduation Rate</div><div style="font-size:1.8rem; font-weight:700; margin-top:4px;"><span :style="rateStyle(selectedProjection.perc_students__graduate__projected)">{{ percent(selectedProjection.perc_students__graduate__projected) }}</span></div><div class="btech-muted" style="font-size:.8rem; margin-top:5px;">{{ hasValidatedForecast ? rangeText(selectedProjection.perc_students__graduate__projected__low_80, selectedProjection.perc_students__graduate__projected__high_80, percent) : 'Insufficient history' }}</div><div v-if="rateChangeText(selectedProjection.change_perc_students__graduate__projected__month)" :style="{ color:numberValue(selectedProjection.change_perc_students__graduate__projected__month) >= 0 ? colors.green : colors.red, fontSize:'.75rem', fontWeight:'600', marginTop:'4px' }">{{ rateChangeText(selectedProjection.change_perc_students__graduate__projected__month) }}</div></div>
+      <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Graduation Outlook</div><div v-if="hasValidatedForecast" style="font-size:1.15rem; font-weight:700; margin-top:8px;"><span :style="outlookStyle(selectedProjection.score_graduation_projection_strength)">{{ outlookText(selectedProjection.score_graduation_projection_strength) }}</span></div><div v-else style="font-size:1rem; font-weight:700; margin-top:10px;">Insufficient history</div><div v-if="hasValidatedForecast && rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true)" class="btech-muted" style="font-size:.75rem; margin-top:8px;">{{ rateChangeText(selectedProjection.change_perc_students__graduate__projected__since_july, true) }}</div></div>
+    </div>
+
+    <div v-if="false" style="display:grid; grid-template-columns:repeat(4, minmax(11rem, 1fr)); gap:12px; min-width:54rem; margin-bottom:20px;">
       <div style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;">
         <div class="btech-muted" style="font-size:.8rem;">Active Students</div>
         <div style="font-size:1.8rem; font-weight:700; color:#111827;">{{ summary.activeStudents }}</div>
@@ -246,6 +368,7 @@ Vue.component('reports-graduation-outlook', {
       </svg>
     </section>
     </div>
+    </template>
   </div>
   `
 });
