@@ -14,7 +14,7 @@ Vue.component('reports-students-prospective', {
       programs: [],
       selectedProgramName: '',
       minimumProgramProgressPercent: 0,
-      maximumYearsSinceActivity: '',
+      minimumLastActivityAcademicYear: this.currentAcademicYear() - 4,
       hasLoadedPrograms: false,
       loading: false,
       loadError: ''
@@ -28,9 +28,8 @@ Vue.component('reports-students-prospective', {
       new window.ReportColumn('Former HS', 'Whether the student is a former high-school student who never enrolled.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_former_hs_student_never_enrolled, 'Former high-school student'), null, row => this.boolSort(row.is_former_hs_student_never_enrolled)),
       new window.ReportColumn('Current HS', 'Whether the student is currently enrolled in high school.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_active_hs_student, 'Current high-school student'), null, row => this.boolSort(row.is_active_hs_student)),
       new window.ReportColumn('Other Program', 'Whether the student is currently enrolled in another program.', '9rem', false, 'boolean', row => this.checkmarkHtml(row.is_current_student__other_program, 'Enrolled in another program'), null, row => this.boolSort(row.is_current_student__other_program)),
-      new window.ReportColumn('Last Activity', 'Most recent recorded activity date.', '10rem', false, 'date', row => this.dateText(row.last_activity_at), null, row => this.dateSort(row.last_activity_at)),
-      new window.ReportColumn('HS Program Progress', 'Program progress earned while in high school.', '11rem', false, 'number', row => this.percent(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs)),
-      new window.ReportColumn('HS Credits Remaining', 'Credits remaining in the program from the student’s high-school record.', '11rem', false, 'number', row => this.decimal(row.num_credits__program_remaining__hs), null, row => this.sortNumber(row.num_credits__program_remaining__hs))
+      new window.ReportColumn('Last Activity', 'Academic year containing the most recent recorded activity.', '9rem', false, 'number', row => this.academicYearText(row.last_activity_at), null, row => this.academicYearSort(row.last_activity_at)),
+      new window.ReportColumn('Program Progress', 'Student progress through the program.', '13rem', false, 'number', row => this.progressHtml(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs))
     ]);
   },
 
@@ -52,6 +51,14 @@ Vue.component('reports-students-prospective', {
       return this.isWaitlistReport ? 'Waitlisted Students' : 'Prospective Students';
     },
 
+    lastActivityYearMinimum() {
+      return this.currentAcademicYear() - 4;
+    },
+
+    lastActivityYearMaximum() {
+      return this.currentAcademicYear();
+    },
+
     visibleRows() {
       this.table.setRows(this.filteredRows);
       return this.table.getSortedRows();
@@ -59,19 +66,23 @@ Vue.component('reports-students-prospective', {
 
     filteredRows() {
       const minProgress = Math.max(0, this.numberValue(this.minimumProgramProgressPercent) || 0) / 100;
-      const maxYears = this.numberValue(this.maximumYearsSinceActivity);
+      const minLastActivityYear = this.numberValue(this.minimumLastActivityAcademicYear) || this.lastActivityYearMinimum;
 
       return this.rows.filter(row => {
         const progress = this.numberValue(row.perc_program__completed__hs) || 0;
         if (progress < minProgress) return false;
-        if (maxYears === null || maxYears < 0) return true;
-        const years = this.yearsSinceLastActivity(row.last_activity_at);
-        return years !== null && years <= maxYears;
+        const activityYear = this.lastActivityAcademicYear(row.last_activity_at);
+        return activityYear !== null && activityYear >= minLastActivityYear;
       });
     }
   },
 
   methods: {
+    currentAcademicYear() {
+      const today = new Date();
+      return today.getFullYear() - (today.getMonth() < 6 ? 1 : 0);
+    },
+
     numberValue(value) {
       const number = Number(value);
       return Number.isFinite(number) ? number : null;
@@ -106,9 +117,28 @@ Vue.component('reports-students-prospective', {
       return this.dateValue(value) ?? Number.POSITIVE_INFINITY;
     },
 
-    yearsSinceLastActivity(value) {
+    lastActivityAcademicYear(value) {
       const time = this.dateValue(value);
-      return time === null ? null : Math.max(0, (Date.now() - time) / (365.25 * 86400000));
+      if (time === null) return null;
+      const date = new Date(time);
+      return date.getFullYear() - (date.getMonth() < 6 ? 1 : 0);
+    },
+
+    academicYearText(value) {
+      const year = this.lastActivityAcademicYear(value);
+      return year === null ? '—' : String(year);
+    },
+
+    academicYearSort(value) {
+      return this.lastActivityAcademicYear(value) ?? Number.POSITIVE_INFINITY;
+    },
+
+    progressHtml(value) {
+      const progress = this.numberValue(value);
+      if (progress === null) return '—';
+      const percent = Math.max(0, Math.min(100, progress * 100));
+      const label = `${percent.toFixed(1)}% complete`;
+      return `<span style="display:block;min-width:11rem;padding-right:.5rem;"><span style="position:relative;display:block;height:.65rem;background:#e5e7eb;border-radius:999px;overflow:hidden;" role="progressbar" aria-label="Program progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="position:absolute;left:0;width:${percent}%;top:0;bottom:0;background:#2563eb;"></span></span><span style="display:block;margin-top:.15rem;color:#374151;font-size:.7rem;line-height:1rem;">${label}</span></span>`;
     },
 
     dateText(value) {
@@ -257,8 +287,8 @@ Vue.component('reports-students-prospective', {
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-min-progress">Min. progress</label>
       <input id="prospective-students-min-progress" v-model="minimumProgramProgressPercent" type="number" min="0" max="100" step="1" aria-label="Minimum high-school program progress percentage" style="width:5rem;font-size:.75rem;">
       <span class="btech-muted" style="font-size:.75rem;">%</span>
-      <label style="font-size:.75rem;font-weight:600;" for="prospective-students-max-activity-years">Max. years since activity</label>
-      <input id="prospective-students-max-activity-years" v-model="maximumYearsSinceActivity" type="number" min="0" step=".25" placeholder="Any" aria-label="Maximum years since last activity" style="width:5rem;font-size:.75rem;">
+      <label style="font-size:.75rem;font-weight:600;" for="prospective-students-last-activity">Last activity: {{ minimumLastActivityAcademicYear }} onward</label>
+      <input id="prospective-students-last-activity" v-model.number="minimumLastActivityAcademicYear" type="range" :min="lastActivityYearMinimum" :max="lastActivityYearMaximum" step="1" aria-label="Minimum academic year of last activity" style="width:9rem;">
     </template>
   </report-table-shell>
   `
