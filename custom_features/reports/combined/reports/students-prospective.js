@@ -11,7 +11,9 @@ Vue.component('reports-students-prospective', {
       colors,
       table: window.ReportUtils.createTable('Outreach Priority', colors),
       rows: [],
-      selectedProgramKey: '',
+      programs: [],
+      selectedProgramName: '',
+      hasLoadedPrograms: false,
       loading: false,
       loadError: ''
     };
@@ -34,20 +36,16 @@ Vue.component('reports-students-prospective', {
 
   computed: {
     programOptions() {
-      return Array.from(new Map(this.rows
-        .filter(row => row.program_code || row.program_name)
-        .map(row => [this.programKey(row), { key: this.programKey(row), label: row.program_name || row.program_code || 'Unknown program' }]))
+      const currentYear = new Date().getFullYear();
+      const currentPrograms = this.programs.filter(row => Number(row.academic_year) === currentYear && row.is_on_campus && row.program_name);
+      return Array.from(new Map(currentPrograms
+        .map(row => [row.program_name, { value: row.program_name, label: row.program_name }]))
         .values())
         .sort((a, b) => a.label.localeCompare(b.label));
     },
 
-    filteredRows() {
-      if (!this.selectedProgramKey) return this.rows;
-      return this.rows.filter(row => this.programKey(row) === this.selectedProgramKey);
-    },
-
     visibleRows() {
-      this.table.setRows(this.filteredRows);
+      this.table.setRows(this.rows);
       return this.table.getSortedRows();
     }
   },
@@ -64,10 +62,6 @@ Vue.component('reports-students-prospective', {
 
     studentName(row) {
       return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`;
-    },
-
-    programKey(row) {
-      return [String(row?.program_code ?? '').trim(), String(row?.program_name ?? '').trim()].join('|');
     },
 
     priorityText(value) {
@@ -144,17 +138,48 @@ Vue.component('reports-students-prospective', {
       }));
     },
 
+    normalizePrograms(rows) {
+      return (Array.isArray(rows) ? rows : []).map(row => ({
+        program_code: String(row?.program_code ?? '').trim(),
+        program_name: String(row?.program_name ?? '').trim(),
+        academic_year: Number(row?.academic_year),
+        is_on_campus: this.booleanValue(row?.is_on_campus)
+      }));
+    },
+
+    selectProgramFromContext() {
+      const contextProgramName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
+      const selected = this.programOptions.some(program => program.value === contextProgramName)
+        ? contextProgramName
+        : this.programOptions.some(program => program.value === this.selectedProgramName)
+          ? this.selectedProgramName
+          : this.programOptions[0]?.value || '';
+      this.selectedProgramName = selected;
+    },
+
+    async loadProspectiveStudents() {
+      if (!this.selectedProgramName) {
+        this.rows = [];
+        return;
+      }
+      const rows = await this.fetchReportDataset(
+        { academic_year: new Date().getFullYear(), program_name: this.selectedProgramName },
+        { dataset: 'program_student_prospective' }
+      );
+      this.rows = this.normalizeRows(rows);
+      if (!this.rows.length) this.loadError = 'No prospective students are available for this program in the current academic year.';
+    },
+
     async loadData() {
       try {
         this.loading = true;
         this.loadError = '';
-        const rows = await this.fetchReportDataset(
-          { academic_year: new Date().getFullYear() },
-          { dataset: 'program_student_prospective' }
-        );
-        this.rows = this.normalizeRows(rows);
-        if (!this.selectedProgramKey && this.programOptions.length) this.selectedProgramKey = this.programOptions[0].key;
-        if (!this.rows.length) this.loadError = 'No prospective students are available for the current academic year.';
+        const programs = await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' });
+        this.programs = this.normalizePrograms(programs);
+        this.selectProgramFromContext();
+        if (!this.selectedProgramName) this.loadError = 'No on-campus programs are available for the current academic year.';
+        else await this.loadProspectiveStudents();
+        this.hasLoadedPrograms = true;
       } catch (error) {
         console.warn('Failed to load prospective students', error);
         this.rows = [];
@@ -167,6 +192,24 @@ Vue.component('reports-students-prospective', {
 
   mounted() {
     this.loadData();
+  },
+
+  watch: {
+    selectedProgramName() {
+      if (!this.hasLoadedPrograms) return;
+      this.loading = true;
+      this.loadError = '';
+      this.loadProspectiveStudents()
+        .catch(error => {
+          console.warn('Failed to load prospective students', error);
+          this.rows = [];
+          this.loadError = 'Unable to load prospective students.';
+        })
+        .finally(() => { this.loading = false; });
+    },
+    reportContext() {
+      this.selectProgramFromContext();
+    }
   },
 
   template: `
@@ -184,8 +227,8 @@ Vue.component('reports-students-prospective', {
     </template>
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-program">Program</label>
-      <select id="prospective-students-program" v-model="selectedProgramKey" aria-label="Filter prospective students by program" style="min-width:18rem;max-width:28rem;font-size:.75rem;">
-        <option v-for="program in programOptions" :key="program.key" :value="program.key">{{ program.label }}</option>
+      <select id="prospective-students-program" v-model="selectedProgramName" aria-label="Filter prospective students by program" style="min-width:18rem;max-width:28rem;font-size:.75rem;">
+        <option v-for="program in programOptions" :key="program.value" :value="program.value">{{ program.label }}</option>
       </select>
     </template>
   </report-table-shell>
