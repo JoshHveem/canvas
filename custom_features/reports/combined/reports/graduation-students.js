@@ -9,14 +9,14 @@ Vue.component('reports-graduation-students', {
 
   created() {
     this.activeTable.setColumns([
-      this.studentColumn(), this.sisIdColumn(), this.programColumn(), this.campusColumn(),
+      this.studentColumn(), this.sisIdColumn(),
       this.dateColumn('Target Exit', 'Program target exit date.', 'exit_at__target'),
       this.dateColumn('Projected Exit', 'Projected exit date based on the student\'s current pace.', 'exit_at__projected'),
       new window.ReportColumn('Pace Multiplier', 'Current pace divided by the pace required to meet the target exit date.', '9rem', false, 'number', row => this.paceText(row.progress_pace_multiplier), row => this.paceStyle(row.progress_pace_multiplier), row => this.sortNumber(row.progress_pace_multiplier)),
       new window.ReportColumn('Program Progress', 'Blue is current program progress. Red shows the progress needed today to meet the target exit date when the student is behind pace.', '13rem', false, 'number', row => this.progressHtml(row), null, row => this.sortNumber(row.progress__program))
     ]);
     this.exitedTable.setColumns([
-      this.studentColumn(), this.sisIdColumn(), this.programColumn(), this.campusColumn(),
+      this.studentColumn(), this.sisIdColumn(),
       this.dateColumn('Exit Date', 'Actual student exit date.', 'exit_at'),
       new window.ReportColumn('Graduate', 'Whether the exited student counted as a graduate.', '8rem', false, 'boolean', row => this.boolText(row.is_graduate), row => this.boolPillStyle(row.is_graduate), row => this.boolSort(row.is_graduate)),
       new window.ReportColumn('Completer', 'Whether the student completed the program.', '8rem', false, 'boolean', row => this.boolText(row.is_completer), row => this.boolPillStyle(row.is_completer), row => this.boolSort(row.is_completer))
@@ -38,8 +38,6 @@ Vue.component('reports-graduation-students', {
   methods: {
     studentColumn() { return new window.ReportColumn('Student', 'Student name from Canvas.', '14rem', false, 'string', row => this.escapeHtml(this.studentName(row)), null, row => this.studentName(row).toLowerCase()); },
     sisIdColumn() { return new window.ReportColumn('SIS ID', 'Student information system ID.', '8rem', false, 'string', row => this.escapeHtml(row.sis_user_id || '—'), null, row => String(row.sis_user_id || '').toLowerCase()); },
-    programColumn() { return new window.ReportColumn('Program', 'Student program.', '16rem', false, 'string', row => this.escapeHtml(row.program_name || row.program_code || '—'), null, row => String(row.program_name || row.program_code || '').toLowerCase()); },
-    campusColumn() { return new window.ReportColumn('Campus', 'Campus code.', '6rem', false, 'string', row => this.escapeHtml(row.campus_code || '—'), null, row => String(row.campus_code || '').toLowerCase()); },
     dateColumn(name, description, field) { return new window.ReportColumn(name, description, '9rem', false, 'date', row => this.dateText(row[field]), null, row => this.dateSort(row[field])); },
     programLabel(row) { return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - '); },
     studentName(row) { return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`; },
@@ -78,7 +76,20 @@ Vue.component('reports-graduation-students', {
       this.selectedProgramKey = match?.key || (this.programOptions.some(row => row.key === this.selectedProgramKey) ? this.selectedProgramKey : this.programOptions[0]?.key || '');
     },
     normalizeRows(rows) {
-      return (Array.isArray(rows) ? rows : []).map(row => ({ ...row, sis_user_id: String(row?.sis_user_id ?? '').trim(), canvas_user_id: String(row?.canvas_user_id ?? '').trim(), program_code: String(row?.program_code ?? '').trim(), program_name: String(row?.program_name ?? '').trim(), campus_code: String(row?.campus_code ?? '').trim(), is_exited: this.booleanValue(row?.is_exited), is_graduate: this.booleanValue(row?.is_graduate), is_completer: this.booleanValue(row?.is_completer) }));
+      return (Array.isArray(rows) ? rows : []).map(row => {
+        const sisUserId = String(row?.sis_user_id ?? '').trim();
+        return {
+          ...row,
+          sis_user_id: sisUserId,
+          canvas_user_id: String(row?.canvas_user_id ?? '').trim(),
+          program_code: String(row?.program_code ?? '').trim(),
+          program_name: String(row?.program_name ?? '').trim(),
+          campus_code: String(row?.campus_code ?? '').trim(),
+          is_exited: this.booleanValue(row?.is_exited),
+          is_graduate: this.booleanValue(row?.is_graduate),
+          is_completer: this.booleanValue(row?.is_completer)
+        };
+      });
     },
     async loadCompletionData() {
       const program = this.selectedProgram;
@@ -116,11 +127,11 @@ Vue.component('reports-graduation-students', {
 
   template: `
   <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0;overflow:auto;">
-    <report-table-shell title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
+    <report-table-shell title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')" style="flex:2 1 0;height:auto;">
       <template #description>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</template>
       <template #filters><label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label><select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select></template>
     </report-table-shell>
-    <report-table-shell title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
+    <report-table-shell title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')" style="flex:1 1 0;height:auto;">
       <template #description>Current academic-year exits for the selected program, including whether each student counted as a graduate.</template>
     </report-table-shell>
   </div>`
