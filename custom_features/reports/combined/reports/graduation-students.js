@@ -88,9 +88,9 @@ Vue.component('reports-graduation-students', {
         projectedGraduateCount,
         rate,
         segments: [
-          { key: 'actual-graduates', value: baseline.actualGraduateCount, color: '#1e3a8a', opacity: 1, label: 'Actual graduates' },
-          { key: 'projected-graduates', value: identifiedProjectedGraduateCount, color: '#2563eb', opacity: .72, label: 'Projected graduates by academic-year end date' },
-          { key: 'predicted-graduates', value: predictedGraduateCount, color: '#2563eb', opacity: .32, label: 'Predicted graduates' },
+          { key: 'actual-graduates', value: baseline.actualGraduateCount, color: this.colors.green, opacity: 1, label: 'Actual graduates' },
+          { key: 'projected-graduates', value: identifiedProjectedGraduateCount, color: this.colors.green, opacity: .72, label: 'Projected graduates by academic-year end date' },
+          { key: 'predicted-graduates', value: predictedGraduateCount, color: this.colors.green, opacity: .32, label: 'Predicted graduates' },
           { key: 'actual-non-graduates', value: baseline.actualNonGraduateCount, color: '#9ca3af', opacity: 1, label: 'Actual exited, not graduated' },
           { key: 'predicted-exits', value: predictedExitCount, color: '#d1d5db', opacity: 1, label: 'Predicted exits' }
         ].filter(segment => segment.value > 0)
@@ -247,9 +247,9 @@ Vue.component('reports-graduation-students', {
             </div>
             <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#111827;" title="60% graduation-rate target"></div>
           </div>
-          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, marginRight:'3px' }"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, opacity:.72, marginRight:'3px' }"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
           <div v-if="projectionBreakdown" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;">
-            <i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;"></i>
+            <i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, opacity:.32 }"></i>
             <label for="graduation-students-predicted-graduates">Total graduates</label>
             <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" :min="projectionBaseline ? projectionBaseline.actualGraduateCount : 0" :max="projectionBaseline ? Math.max(projectionBaseline.actualGraduateCount, scenarioPredictedExitCount - projectionBaseline.actualNonGraduateCount) : scenarioPredictedExitCount" step="1" aria-label="Scenario total graduates" style="width:4.5rem;font-size:.75rem;">
             <i style="display:inline-block;width:8px;height:8px;background:#d1d5db;"></i>
