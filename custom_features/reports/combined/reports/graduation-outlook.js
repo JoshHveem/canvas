@@ -176,11 +176,9 @@ Vue.component('reports-graduation-outlook', {
         .sort((a, b) => a - b)
         .map(academicYear => {
           const rows = rowsByYear[academicYear];
-          const finalRow = rows.find(row => Number(row.academic_year_month) === 12)
-            || rows.slice().sort((a, b) => Number(b.academic_year_month) - Number(a.academic_year_month))[0];
           return {
             year: `${academicYear}-${String(academicYear + 1).slice(-2)}`,
-            count: this.numberValue(finalRow.num_students__graduate)
+            count: rows.reduce((total, row) => total + (this.numberValue(row.num_students__graduate) || 0), 0)
           };
         })
         .filter(point => point.count !== null);
