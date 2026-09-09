@@ -24,7 +24,9 @@ Vue.component('reports-students-prospective', {
       new window.ReportColumn('Student', 'Prospective student name.', '14rem', false, 'string', row => this.escapeHtml(this.studentName(row)), null, row => this.studentName(row).toLowerCase()),
       new window.ReportColumn('Email', 'Student email address.', '17rem', false, 'string', row => this.emailHtml(row.email_address), null, row => String(row.email_address || '').toLowerCase()),
       new window.ReportColumn('Program', 'Prospective program.', '15rem', false, 'string', row => this.escapeHtml(row.program_name || row.program_code || '—'), null, row => String(row.program_name || row.program_code || '').toLowerCase()),
-      new window.ReportColumn('Exited HS', 'Whether the student has exited high school.', '7rem', false, 'boolean', row => this.highSchoolExitHtml(row), null, row => this.hasHighSchoolExit(row) ? 1 : 0),
+      new window.ReportColumn('Former HS', 'Whether the student is a former high-school student who never enrolled.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_former_hs_student_never_enrolled, 'Former high-school student'), null, row => this.boolSort(row.is_former_hs_student_never_enrolled)),
+      new window.ReportColumn('Current HS', 'Whether the student is currently enrolled in high school.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_active_hs_student, 'Current high-school student'), null, row => this.boolSort(row.is_active_hs_student)),
+      new window.ReportColumn('Other Program', 'Whether the student is currently enrolled in another program.', '9rem', false, 'boolean', row => this.checkmarkHtml(row.is_current_student__other_program, 'Enrolled in another program'), null, row => this.boolSort(row.is_current_student__other_program)),
       new window.ReportColumn('HS Program Progress', 'Program progress earned while in high school.', '11rem', false, 'number', row => this.percent(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs)),
       new window.ReportColumn('HS Credits Remaining', 'Credits remaining in the program from the student’s high-school record.', '11rem', false, 'number', row => this.decimal(row.num_credits__program_remaining__hs), null, row => this.sortNumber(row.num_credits__program_remaining__hs))
     ]);
@@ -68,12 +70,8 @@ Vue.component('reports-students-prospective', {
       return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`;
     },
 
-    hasHighSchoolExit(row) {
-      return this.dateValue(row?.exit_at__hs_latest) !== null;
-    },
-
-    highSchoolExitHtml(row) {
-      return this.hasHighSchoolExit(row) ? '<span style="color:#15803d;font-size:1rem;" aria-label="Exited high school">✓</span>' : '';
+    checkmarkHtml(value, label) {
+      return value ? `<span style="color:#15803d;font-size:1rem;" aria-label="${this.escapeHtml(label)}">✓</span>` : '';
     },
 
     emailHtml(value) {
@@ -126,7 +124,8 @@ Vue.component('reports-students-prospective', {
         candidacy_stage_code: String(row?.candidacy_stage_code ?? '').trim(),
         is_waitlisted: this.booleanValue(row?.is_waitlisted),
         is_active_hs_student: this.booleanValue(row?.is_active_hs_student),
-        is_former_hs_student_never_enrolled: this.booleanValue(row?.is_former_hs_student_never_enrolled)
+        is_former_hs_student_never_enrolled: this.booleanValue(row?.is_former_hs_student_never_enrolled),
+        is_current_student__other_program: this.booleanValue(row?.is_current_student__other_program)
       }));
     },
 
