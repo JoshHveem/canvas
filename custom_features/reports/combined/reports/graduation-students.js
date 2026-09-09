@@ -57,25 +57,28 @@ Vue.component('reports-graduation-students', {
         predictedGraduateCount,
         actualNonGraduateCount,
         predictedExitCount,
-        predictedExitTotal: predictedGraduateCount + predictedExitCount
+        projectedGraduateTotal: projectedGraduateCount,
+        projectedExiterTotal: totalExiters
       };
     },
     scenarioPredictedGraduateCount: {
-      get() { return this.nonNegativeNumber(this.predictedGraduateOverride) ?? this.projectionBaseline?.predictedGraduateCount ?? 0; },
+      get() { return this.nonNegativeNumber(this.predictedGraduateOverride) ?? this.projectionBaseline?.projectedGraduateTotal ?? 0; },
       set(value) { this.predictedGraduateOverride = this.nonNegativeNumber(value); }
     },
     scenarioPredictedExitCount: {
-      get() { return this.nonNegativeNumber(this.predictedExitOverride) ?? this.projectionBaseline?.predictedExitTotal ?? 0; },
+      get() { return this.nonNegativeNumber(this.predictedExitOverride) ?? this.projectionBaseline?.projectedExiterTotal ?? 0; },
       set(value) { this.predictedExitOverride = this.nonNegativeNumber(value); }
     },
     projectionBreakdown() {
       const baseline = this.projectionBaseline;
       if (!baseline) return null;
-      const predictedGraduateCount = this.scenarioPredictedGraduateCount;
-      const predictedExitTotal = this.scenarioPredictedExitCount;
-      const predictedExitCount = Math.max(0, predictedExitTotal - predictedGraduateCount);
-      const projectedGraduateCount = baseline.actualGraduateCount + baseline.identifiedProjectedGraduateCount + predictedGraduateCount;
-      const totalExiters = baseline.actualExiters + baseline.identifiedProjectedGraduateCount + predictedExitTotal;
+      const totalExiters = Math.max(baseline.actualExiters, this.scenarioPredictedExitCount);
+      const maximumGraduateCount = Math.max(baseline.actualGraduateCount, totalExiters - baseline.actualNonGraduateCount);
+      const projectedGraduateCount = Math.min(maximumGraduateCount, Math.max(baseline.actualGraduateCount, this.scenarioPredictedGraduateCount));
+      const remainingProjectedGraduates = projectedGraduateCount - baseline.actualGraduateCount;
+      const identifiedProjectedGraduateCount = Math.min(baseline.identifiedProjectedGraduateCount, remainingProjectedGraduates);
+      const predictedGraduateCount = Math.max(0, remainingProjectedGraduates - identifiedProjectedGraduateCount);
+      const predictedExitCount = Math.max(0, totalExiters - baseline.actualExiters - identifiedProjectedGraduateCount - predictedGraduateCount);
       const rate = totalExiters ? projectedGraduateCount / totalExiters : null;
 
       return {
@@ -86,7 +89,7 @@ Vue.component('reports-graduation-students', {
         rate,
         segments: [
           { key: 'actual-graduates', value: baseline.actualGraduateCount, color: '#1e3a8a', opacity: 1, label: 'Actual graduates' },
-          { key: 'projected-graduates', value: baseline.identifiedProjectedGraduateCount, color: '#2563eb', opacity: .72, label: 'Projected graduates by academic-year end date' },
+          { key: 'projected-graduates', value: identifiedProjectedGraduateCount, color: '#2563eb', opacity: .72, label: 'Projected graduates by academic-year end date' },
           { key: 'predicted-graduates', value: predictedGraduateCount, color: '#2563eb', opacity: .32, label: 'Predicted graduates' },
           { key: 'actual-non-graduates', value: baseline.actualNonGraduateCount, color: '#9ca3af', opacity: 1, label: 'Actual exited, not graduated' },
           { key: 'predicted-exits', value: predictedExitCount, color: '#d1d5db', opacity: 1, label: 'Predicted exits' }
@@ -247,11 +250,11 @@ Vue.component('reports-graduation-students', {
           <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
           <div v-if="projectionBreakdown" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;">
             <i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;"></i>
-            <label for="graduation-students-predicted-graduates">Predicted graduates</label>
-            <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" min="0" :max="scenarioPredictedExitCount" step="1" aria-label="Scenario predicted graduates" style="width:4.5rem;font-size:.75rem;">
+            <label for="graduation-students-predicted-graduates">Total graduates</label>
+            <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" :min="projectionBaseline ? projectionBaseline.actualGraduateCount : 0" :max="projectionBaseline ? Math.max(projectionBaseline.actualGraduateCount, scenarioPredictedExitCount - projectionBaseline.actualNonGraduateCount) : scenarioPredictedExitCount" step="1" aria-label="Scenario total graduates" style="width:4.5rem;font-size:.75rem;">
             <i style="display:inline-block;width:8px;height:8px;background:#d1d5db;"></i>
-            <label for="graduation-students-predicted-exits">Predicted exits</label>
-            <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" :min="scenarioPredictedGraduateCount" step="1" aria-label="Scenario predicted exits" style="width:4.5rem;font-size:.75rem;">
+            <label for="graduation-students-predicted-exits">Total exits</label>
+            <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" :min="projectionBaseline ? projectionBaseline.actualExiters : 0" step="1" aria-label="Scenario total exits" style="width:4.5rem;font-size:.75rem;">
             <button type="button" @click="resetScenario" style="font-size:.75rem;">Reset</button>
           </div>
         </div>
