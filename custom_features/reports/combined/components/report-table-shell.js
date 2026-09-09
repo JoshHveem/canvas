@@ -7,7 +7,8 @@ Vue.component('report-table-shell', {
     loadError: { type: String, default: '' },
     loadingText: { type: String, default: 'Loading...' },
     rowKeyFn: { type: Function, default: null },
-    rowClickable: { type: Boolean, default: false }
+    rowClickable: { type: Boolean, default: false },
+    embedded: { type: Boolean, default: false }
   },
 
   data() {
@@ -25,6 +26,18 @@ Vue.component('report-table-shell', {
     },
     visibleColumns() {
       return this.table?.getVisibleColumns ? this.table.getVisibleColumns() : [];
+    },
+    shellStyle() {
+      return {
+        padding: '12px',
+        marginTop: this.embedded ? '0' : '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: '1 1 auto',
+        minHeight: '0',
+        height: this.embedded ? 'auto' : '100%',
+        overflow: 'hidden'
+      };
     }
   },
 
@@ -50,7 +63,7 @@ Vue.component('report-table-shell', {
   },
 
   template: `
-  <div class="btech-card btech-theme" style="padding:12px; margin-top:12px; display:flex; flex-direction:column; flex:1 1 auto; min-height:0; height:100%; overflow:hidden;">
+  <div class="btech-card btech-theme" :style="shellStyle">
     <div style="flex:0 0 auto; background:#fff; padding-bottom:8px;">
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
         <h4 class="btech-card-title" style="margin:0;" v-html="titleHtml"></h4>
