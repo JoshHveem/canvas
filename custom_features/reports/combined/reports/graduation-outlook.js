@@ -311,6 +311,51 @@ Vue.component('reports-graduation-outlook', {
       }));
     },
 
+    startRatePoints() {
+      const chartHeight = 128;
+      const chartTop = 18;
+      const chartLeft = 50;
+      const chartWidth = 590;
+      const projection = this.selectedProjection;
+      const currentAcademicMonth = this.currentAcademicMonth();
+      const months = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+      const rowsByYearMonth = this.monthlyRows.reduce((map, row) => {
+        map[`${row.academic_year}:${row.academic_year_month}`] = row;
+        return map;
+      }, {});
+      const selectedAcademicYear = Number(projection?.academic_year);
+      const historicRows = this.monthlyRows.filter(row => {
+        const academicYear = Number(row.academic_year);
+        return Number.isFinite(selectedAcademicYear)
+          && academicYear < selectedAcademicYear
+          && academicYear >= selectedAcademicYear - 3;
+      });
+      const rates = months.map((month, index) => {
+        const academicMonth = index + 1;
+        const historicValues = historicRows
+          .filter(row => Number(row.academic_year_month) === academicMonth)
+          .map(row => this.numberValue(row.num_students__new))
+          .filter(value => value !== null);
+        const currentRow = projection ? rowsByYearMonth[`${projection.academic_year}:${academicMonth}`] : null;
+        return {
+          month,
+          currentYear: academicMonth <= currentAcademicMonth ? this.numberValue(currentRow?.num_students__new) : null,
+          historicAverage: historicValues.length ? historicValues.reduce((sum, value) => sum + value, 0) / historicValues.length : null
+        };
+      });
+      const values = rates.flatMap(rate => [rate.currentYear, rate.historicAverage])
+        .filter(value => Number.isFinite(value));
+      const maxCount = Math.max(...values, 1);
+      const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+
+      return rates.map((rate, index) => ({
+        ...rate,
+        x: chartLeft + (index * (chartWidth / (rates.length - 1))),
+        currentYearY: Number.isFinite(rate.currentYear) ? countToY(rate.currentYear) : null,
+        historicAverageY: Number.isFinite(rate.historicAverage) ? countToY(rate.historicAverage) : null
+      }));
+    },
+
     enrollmentBarGroups() {
       const chartHeight = 178;
       const baseline = 222;
@@ -659,6 +704,25 @@ Vue.component('reports-graduation-outlook', {
         <g v-for="point in enrollmentRatePoints" :key="point.month">
           <circle v-if="point.historicAverageY !== null" :cx="point.x" :cy="point.historicAverageY" r="4" :fill="colors.black"><title>{{ point.month }} historic average: {{ point.historicAverage }}</title></circle>
           <circle v-if="point.currentYearY !== null" :cx="point.x" :cy="point.currentYearY" r="4" :fill="colors.green"><title>{{ point.month }} current year: {{ point.currentYear }}</title></circle>
+          <text :x="point.x" y="163" text-anchor="middle" font-size="9" fill="#334155">{{ point.month }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Program Starts vs Historic Average</h5>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
+      </div>
+      <svg width="680" height="202" viewBox="0 0 680 202" role="img" aria-label="Program starts compared with the historic average from July through June">
+        <line x1="50" y1="18" x2="50" y2="146" stroke="#cbd5e1"></line>
+        <line x1="50" y1="146" x2="640" y2="146" stroke="#cbd5e1"></line>
+        <polyline :points="startRatePoints.filter(point => point.currentYearY !== null).map(point => point.x + ',' + point.currentYearY).join(' ')" fill="none" :stroke="colors.green" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
+        <polyline :points="startRatePoints.filter(point => point.historicAverageY !== null).map(point => point.x + ',' + point.historicAverageY).join(' ')" fill="none" :stroke="colors.black" stroke-width="1.5" stroke-dasharray="2 3"></polyline>
+        <g v-for="point in startRatePoints" :key="point.month">
+          <circle v-if="point.historicAverageY !== null" :cx="point.x" :cy="point.historicAverageY" r="4" :fill="colors.black"><title>{{ point.month }} historic average starts: {{ point.historicAverage.toFixed(1) }}</title></circle>
+          <circle v-if="point.currentYearY !== null" :cx="point.x" :cy="point.currentYearY" r="4" :fill="colors.green"><title>{{ point.month }} current-year starts: {{ point.currentYear }}</title></circle>
           <text :x="point.x" y="163" text-anchor="middle" font-size="9" fill="#334155">{{ point.month }}</text>
         </g>
       </svg>
