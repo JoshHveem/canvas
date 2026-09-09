@@ -214,15 +214,6 @@
                 component: 'reports-hs-student-standing',
                 dataset: 'student_courses',
                 filters: {}
-              },
-              {
-                value: 'prospective',
-                label: 'Prospective',
-                component: 'reports-students-prospective',
-                dataset: 'program_student_prospective',
-                filters: {
-                  academic_year: { source: 'current_year' }
-                }
               }
             ]
           },
@@ -250,6 +241,15 @@
                 label: 'Students',
                 component: 'reports-graduation-students',
                 dataset: 'program_student_completion',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
+                value: 'prospective',
+                label: 'Prospective',
+                component: 'reports-students-prospective',
+                dataset: 'program_student_prospective',
                 filters: {
                   academic_year: { source: 'current_year' }
                 }

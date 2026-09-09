@@ -153,6 +153,7 @@ Vue.component('reports-students-prospective', {
           { dataset: 'program_student_prospective' }
         );
         this.rows = this.normalizeRows(rows);
+        if (!this.selectedProgramKey && this.programOptions.length) this.selectedProgramKey = this.programOptions[0].key;
         if (!this.rows.length) this.loadError = 'No prospective students are available for the current academic year.';
       } catch (error) {
         console.warn('Failed to load prospective students', error);
@@ -184,7 +185,6 @@ Vue.component('reports-students-prospective', {
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-program">Program</label>
       <select id="prospective-students-program" v-model="selectedProgramKey" aria-label="Filter prospective students by program" style="min-width:18rem;max-width:28rem;font-size:.75rem;">
-        <option value="">All programs</option>
         <option v-for="program in programOptions" :key="program.key" :value="program.key">{{ program.label }}</option>
       </select>
     </template>
