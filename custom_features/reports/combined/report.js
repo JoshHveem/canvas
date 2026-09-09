@@ -329,7 +329,7 @@
         ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
-          reportTypes: reports,
+          reportTypes: IS_ME ? reports : reports.filter(report => report.value !== 'graduation'),
           settings: {
             reportType: 'students',
             subMenuByType: {

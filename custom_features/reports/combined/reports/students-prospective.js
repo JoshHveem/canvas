@@ -9,7 +9,7 @@ Vue.component('reports-students-prospective', {
     const colors = window.ReportUtils.createColors();
     return {
       colors,
-      table: window.ReportUtils.createTable('Outreach Priority', colors),
+      table: window.ReportUtils.createTable('Student', colors),
       rows: [],
       programs: [],
       selectedProgramName: '',
@@ -21,14 +21,10 @@ Vue.component('reports-students-prospective', {
 
   created() {
     this.table.setColumns([
-      new window.ReportColumn('Outreach Priority', 'Outreach priority from the prospective-student dataset.', '8rem', false, 'number', row => this.priorityText(row.outreach_priority), null, row => this.sortNumber(row.outreach_priority)),
       new window.ReportColumn('Student', 'Prospective student name.', '14rem', false, 'string', row => this.escapeHtml(this.studentName(row)), null, row => this.studentName(row).toLowerCase()),
       new window.ReportColumn('Email', 'Student email address.', '17rem', false, 'string', row => this.emailHtml(row.email_address), null, row => String(row.email_address || '').toLowerCase()),
       new window.ReportColumn('Program', 'Prospective program.', '15rem', false, 'string', row => this.escapeHtml(row.program_name || row.program_code || '—'), null, row => String(row.program_name || row.program_code || '').toLowerCase()),
-      new window.ReportColumn('Outreach Reason', 'Reason the student is included in the outreach list.', '16rem', false, 'string', row => this.escapeHtml(this.reasonText(row.outreach_reason)), null, row => this.reasonText(row.outreach_reason).toLowerCase()),
-      new window.ReportColumn('Candidacy Stage', 'Most recent candidacy stage.', '12rem', false, 'string', row => this.escapeHtml(this.titleText(row.candidacy_stage_code) || '—'), null, row => String(row.candidacy_stage_code || '').toLowerCase()),
-      new window.ReportColumn('HS Status', 'Relevant high-school status.', '13rem', false, 'string', row => this.escapeHtml(this.hsStatus(row)), null, row => this.hsStatus(row).toLowerCase()),
-      new window.ReportColumn('HS Exit', 'Most recent high-school exit date.', '9rem', false, 'date', row => this.dateText(row.exit_at__hs_latest), null, row => this.dateSort(row.exit_at__hs_latest)),
+      new window.ReportColumn('Exited HS', 'Whether the student has exited high school.', '7rem', false, 'boolean', row => this.highSchoolExitHtml(row), null, row => this.hasHighSchoolExit(row) ? 1 : 0),
       new window.ReportColumn('HS Program Progress', 'Program progress earned while in high school.', '11rem', false, 'number', row => this.percent(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs)),
       new window.ReportColumn('HS Credits Remaining', 'Credits remaining in the program from the student’s high-school record.', '11rem', false, 'number', row => this.decimal(row.num_credits__program_remaining__hs), null, row => this.sortNumber(row.num_credits__program_remaining__hs))
     ]);
@@ -72,24 +68,12 @@ Vue.component('reports-students-prospective', {
       return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`;
     },
 
-    priorityText(value) {
-      const priority = this.numberValue(value);
-      return priority === null ? '—' : String(Math.round(priority));
+    hasHighSchoolExit(row) {
+      return this.dateValue(row?.exit_at__hs_latest) !== null;
     },
 
-    reasonText(value) {
-      return this.titleText(value) || '—';
-    },
-
-    titleText(value) {
-      return String(value ?? '').trim().replace(/[_-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase());
-    },
-
-    hsStatus(row) {
-      if (row.is_waitlisted) return 'Waitlisted';
-      if (row.is_active_hs_student) return 'Active HS student';
-      if (row.is_former_hs_student_never_enrolled) return 'Former HS student';
-      return 'Prospective';
+    highSchoolExitHtml(row) {
+      return this.hasHighSchoolExit(row) ? '<span style="color:#15803d;font-size:1rem;" aria-label="Exited high school">✓</span>' : '';
     },
 
     emailHtml(value) {
@@ -243,7 +227,7 @@ Vue.component('reports-students-prospective', {
     :row-key-fn="(row, index) => row.canvas_user_id || row.sis_user_id || index"
   >
     <template #description>
-      Current academic-year {{ isWaitlistReport ? 'waitlisted' : 'prospective' }} students, ordered by outreach priority.
+      Current academic-year {{ isWaitlistReport ? 'waitlisted' : 'prospective' }} students.
     </template>
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-program">Program</label>
