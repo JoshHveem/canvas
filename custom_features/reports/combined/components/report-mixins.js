@@ -297,7 +297,11 @@ window.ReportMixins = {
 
         const cache = this.getCanvasUserNameCache();
         if (Object.prototype.hasOwnProperty.call(cache, id)) {
-          return cache[id];
+          const cachedNames = cache[id];
+          if (String(cachedNames?.first_name ?? '').trim() || String(cachedNames?.last_name ?? '').trim()) {
+            return cachedNames;
+          }
+          delete cache[id];
         }
 
         try {
@@ -313,12 +317,16 @@ window.ReportMixins = {
 
           const profile = await response.json();
           const names = this.extractCanvasUserNames(profile);
-          cache[id] = names;
+          if (names.first_name || names.last_name) {
+            cache[id] = names;
+          } else {
+            console.warn(`Canvas user profile for ${id} did not include a usable name`);
+          }
           return names;
         } catch (e) {
           console.warn(`Failed to load Canvas user profile for ${id}`, e);
-          cache[id] = { first_name: '', last_name: '' };
-          return cache[id];
+          delete cache[id];
+          return { first_name: '', last_name: '' };
         }
       },
 

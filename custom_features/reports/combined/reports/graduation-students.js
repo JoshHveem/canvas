@@ -11,7 +11,7 @@ Vue.component('reports-graduation-students', {
     this.activeTable.setColumns([
       this.studentColumn(), this.sisIdColumn(),
       this.dateColumn('Target Exit', 'Program target exit date.', 'exit_at__target'),
-      this.dateColumn('Projected Exit', 'Projected exit date based on the student\'s current pace.', 'exit_at__projected'),
+      new window.ReportColumn('Projected Exit', 'Projected exit date based on the student\'s current pace. Green: by June 30 of the academic year end; yellow: by July 31; red: later.', '9rem', false, 'date', row => this.dateText(row.exit_at__projected), row => this.projectedExitStyle(row), row => this.dateSort(row.exit_at__projected)),
       new window.ReportColumn('Pace Multiplier', 'Current pace divided by the pace required to meet the target exit date.', '9rem', false, 'number', row => this.paceText(row.progress_pace_multiplier), row => this.paceStyle(row.progress_pace_multiplier), row => this.sortNumber(row.progress_pace_multiplier)),
       new window.ReportColumn('Program Progress', 'Blue is current program progress. Red shows the progress needed today to meet the target exit date when the student is behind pace.', '13rem', false, 'number', row => this.progressHtml(row), null, row => this.sortNumber(row.progress__program))
     ]);
@@ -33,24 +33,39 @@ Vue.component('reports-graduation-students', {
     selectedProgram() { return this.programOptions.find(row => row.key === this.selectedProgramKey) || this.programOptions[0] || null; },
     visibleActiveRows() { this.activeTable.setRows(this.activeRows); return this.activeTable.getSortedRows(); },
     visibleExitedRows() { this.exitedTable.setRows(this.exitedRows); return this.exitedTable.getSortedRows(); },
-    graduationBarSegments() {
-      const actualGraduates = this.exitedRows.filter(row => row.is_graduate);
-      const projectedGraduates = this.activeRows.filter(row => this.isProjectedGraduate(row));
-      const nonGraduates = this.exitedRows.filter(row => !row.is_graduate);
-      return [
-        ...actualGraduates.map((row, index) => ({ key: `actual:${row.sis_user_id}:${index}`, type: 'actual', title: `${this.studentName(row)} — graduated` })),
-        ...projectedGraduates.map((row, index) => ({ key: `projected:${row.sis_user_id}:${index}`, type: 'projected', title: `${this.studentName(row)} — projected graduate` })),
-        ...nonGraduates.map((row, index) => ({ key: `non-graduate:${row.sis_user_id}:${index}`, type: 'non-graduate', title: `${this.studentName(row)} — exited without graduating` }))
-      ];
-    },
-    projectedGraduationRate() {
-      const segments = this.graduationBarSegments;
-      if (!segments.length) return null;
-      const graduates = segments.filter(segment => segment.type !== 'non-graduate').length;
-      return graduates / segments.length;
-    },
-    projectedGraduateCount() {
-      return this.graduationBarSegments.filter(segment => segment.type === 'projected').length;
+    projectionBreakdown() {
+      const projection = this.selectedProgram;
+      const actualExiters = this.numberValue(projection?.num_students__exiter);
+      const projectedExiters = this.numberValue(projection?.num_students__exiter__projected);
+      const actualGraduates = this.numberValue(projection?.num_students__graduate);
+      const projectedGraduates = this.numberValue(projection?.num_students__graduate__projected);
+      if ([actualExiters, projectedExiters, actualGraduates, projectedGraduates].some(value => value === null)) return null;
+
+      const totalExiters = Math.max(projectedExiters, actualExiters, 0);
+      const actualGraduateCount = Math.min(Math.max(actualGraduates, 0), actualExiters, totalExiters);
+      const enrolledCompleters = this.activeRows.filter(row => row.is_completer && !row.is_graduate).length;
+      const projectedGraduateCount = Math.min(Math.max(projectedGraduates, actualGraduateCount), totalExiters);
+      const pendingGraduateCount = Math.max(0, projectedGraduateCount - actualGraduateCount);
+      const enrolledGraduateCount = Math.min(enrolledCompleters, pendingGraduateCount);
+      const speculativeGraduateCount = Math.max(0, pendingGraduateCount - enrolledGraduateCount);
+      const actualNonGraduateCount = Math.max(0, actualExiters - actualGraduateCount);
+      const assumedNonGraduateExitCount = Math.max(0, totalExiters - actualExiters - enrolledGraduateCount - speculativeGraduateCount);
+      const rate = this.numberValue(projection?.perc_students__graduate__projected) ?? (totalExiters ? projectedGraduateCount / totalExiters : null);
+
+      return {
+        actualExiters,
+        assumedExiters: Math.max(0, totalExiters - actualExiters),
+        totalExiters,
+        projectedGraduateCount,
+        rate,
+        segments: [
+          { key: 'actual-graduates', value: actualGraduateCount, color: '#1e3a8a', opacity: 1, label: 'Actual graduates' },
+          { key: 'actual-non-graduates', value: actualNonGraduateCount, color: '#9ca3af', opacity: 1, label: 'Actual exited, not graduated' },
+          { key: 'enrolled-graduates', value: enrolledGraduateCount, color: '#2563eb', opacity: .72, label: 'Enrolled completers, not yet graduated' },
+          { key: 'speculative-graduates', value: speculativeGraduateCount, color: '#2563eb', opacity: .32, label: 'Speculative projected graduates' },
+          { key: 'assumed-non-graduate-exits', value: assumedNonGraduateExitCount, color: '#d1d5db', opacity: 1, label: 'Assumed exits, not projected to graduate' }
+        ].filter(segment => segment.value > 0)
+      };
     }
   },
 
@@ -62,8 +77,24 @@ Vue.component('reports-graduation-students', {
     studentName(row) { return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`; },
     numberValue(value) { const number = Number(value); return Number.isFinite(number) ? number : null; },
     sortNumber(value) { return this.numberValue(value) ?? Number.POSITIVE_INFINITY; },
-    dateSort(value) { const time = Date.parse(value); return Number.isFinite(time) ? time : Number.POSITIVE_INFINITY; },
-    dateText(value) { const time = Date.parse(value); return Number.isFinite(time) ? new Date(time).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'; },
+    dateValue(value) {
+      const dateOnly = String(value ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])).getTime();
+      const time = Date.parse(value);
+      return Number.isFinite(time) ? time : null;
+    },
+    dateSort(value) { return this.dateValue(value) ?? Number.POSITIVE_INFINITY; },
+    dateText(value) { const time = this.dateValue(value); return time === null ? '—' : new Date(time).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); },
+    projectedExitStyle(row) {
+      const projectedExit = this.dateValue(row?.exit_at__projected);
+      const academicYear = Number(row?.academic_year);
+      if (!Number.isFinite(projectedExit) || !Number.isFinite(academicYear)) return { backgroundColor: this.colors.gray, color: this.colors.black };
+      const academicYearEnd = new Date(academicYear + 1, 5, 30).getTime();
+      const gracePeriodEnd = new Date(academicYear + 1, 6, 31, 23, 59, 59, 999).getTime();
+      if (projectedExit <= academicYearEnd) return { backgroundColor: this.colors.green, color: this.colors.white };
+      if (projectedExit <= gracePeriodEnd) return { backgroundColor: this.colors.yellow, color: this.colors.black };
+      return { backgroundColor: this.colors.red, color: this.colors.white };
+    },
     paceText(value) { const number = this.numberValue(value); return number === null || number === 0 ? '—' : `${number.toFixed(2)}×`; },
     paceStyle(value) {
       const number = this.numberValue(value);
@@ -72,9 +103,9 @@ Vue.component('reports-graduation-students', {
       if (number < 1) return { backgroundColor: this.colors.yellow, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
     },
-    isProjectedGraduate(row) {
-      const chance = this.numberValue(row?.chance_to_graduate ?? row?.chance_to_complete);
-      return chance !== null && chance >= 0.8;
+    projectionSegmentValue(key) {
+      const segment = this.projectionBreakdown?.segments.find(candidate => candidate.key === key);
+      return segment ? segment.value : 0;
     },
     progressHtml(row) {
       const progress = this.numberValue(row.progress__program);
@@ -154,14 +185,14 @@ Vue.component('reports-graduation-students', {
       <template #description>
         <div>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</div>
         <div style="margin-top:10px;max-width:100%;">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:4px;color:#374151;"><strong style="font-size:.78rem;">Projected graduation rate</strong><span style="font-size:.75rem;">{{ projectedGraduationRate === null ? 'No exits or projected graduates' : (projectedGraduationRate * 100).toFixed(1) + '% (' + projectedGraduateCount + ' projected)' }}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:4px;color:#374151;"><strong style="font-size:.78rem;">Projected graduation rate</strong><span style="font-size:.75rem;">{{ projectionBreakdown === null || projectionBreakdown.rate === null ? 'Insufficient projection data' : (projectionBreakdown.rate * 100).toFixed(1) + '% (' + projectionBreakdown.projectedGraduateCount.toFixed(1) + ' / ' + projectionBreakdown.totalExiters.toFixed(1) + ')' }}</span></div>
           <div style="position:relative;height:18px;border-radius:4px;overflow:hidden;background:#e5e7eb;">
-            <div v-if="graduationBarSegments.length" style="position:absolute;inset:0;display:flex;">
-              <span v-for="segment in graduationBarSegments" :key="segment.key" :title="segment.title" :style="{ flex:'1 1 0', backgroundColor: segment.type === 'actual' ? '#1e3a8a' : (segment.type === 'projected' ? '#2563eb' : '#9ca3af'), opacity: segment.type === 'projected' ? .42 : 1, borderRight:'1px solid rgba(255,255,255,.75)' }"></span>
+            <div v-if="projectionBreakdown && projectionBreakdown.segments.length" style="position:absolute;inset:0;display:flex;">
+              <span v-for="segment in projectionBreakdown.segments" :key="segment.key" :title="segment.label + ': ' + segment.value.toFixed(1)" :style="{ flex: segment.value + ' 1 0', backgroundColor: segment.color, opacity: segment.opacity, borderRight:'1px solid rgba(255,255,255,.75)' }"></span>
             </div>
             <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#111827;" title="60% graduation-rate target"></div>
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Graduated</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.42;margin-right:3px;"></i>Projected graduate</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Exited, not graduated</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span>Actual exits: {{ projectionBreakdown.actualExiters.toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Enrolled completers: {{ projectionSegmentValue('enrolled-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;margin-right:3px;"></i>Speculative graduates: {{ projectionSegmentValue('speculative-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exited, not graduated: {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#d1d5db;margin-right:3px;"></i>Assumed exits: {{ projectionBreakdown.assumedExiters.toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
         </div>
       </template>
       <template #filters><label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label><select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select></template>
