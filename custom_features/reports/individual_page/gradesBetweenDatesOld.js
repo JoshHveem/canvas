@@ -560,10 +560,16 @@
         const studentId = String(this.userId || "");
         if (!studentId) return [];
 
-        return window.loadIndividualReportHSGradeCourses(studentId, ({ message, progress }) => {
+        const courses = await window.loadIndividualReportHSGradeCourses(studentId, ({ message, progress }) => {
           this.loadingMessage = message;
           this.loadingProgress = progress;
         });
+
+        // Keep the legacy report's hour calculations while using Canvas course credits as the source.
+        return courses.map(course => ({
+          ...course,
+          hours: Number.isFinite(Number(course.credits)) ? Number(course.credits) * 30 : 0
+        }));
       },
 
       updateDatesToSelectedTerm() {
