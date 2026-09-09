@@ -476,8 +476,6 @@ Vue.component('reports-graduation-outlook', {
       <div style="flex:1;"></div>
       <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ projectionLabel(projection) }}</option></select>
     </div>
-    <div class="btech-muted" style="font-size:.8rem; margin-bottom:16px;">Projection cards and the first two charts use live program data. The stacked status chart remains a placeholder.</div>
-
     <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
     <template v-else-if="selectedProjection">
@@ -514,10 +512,8 @@ Vue.component('reports-graduation-outlook', {
 
     <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Graduation Outlook Trend</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Track how this academic year's projected graduation rate changes as new information becomes available.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Graduation Outlook Trend</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span>Point color shows whether the forecast is improving or declining relative to the 60% requirement.</span>
         <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
       </div>
       <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
@@ -536,10 +532,8 @@ Vue.component('reports-graduation-outlook', {
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Final actual graduation rate for each completed academic year.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span>Point color shows the year-to-year change relative to the 60% requirement.</span>
         <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
       </div>
       <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduation rates">
@@ -559,8 +553,7 @@ Vue.component('reports-graduation-outlook', {
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Active Enrollment vs Historic Average</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year's active enrollment to the historic average to see when students normally enter the program.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Active Enrollment vs Historic Average</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
@@ -579,8 +572,7 @@ Vue.component('reports-graduation-outlook', {
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active students and graduates at 50% opacity.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
         <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color, opacity:item.opacity || 1 }"></i> {{ item.label }}</span>
       </div>
