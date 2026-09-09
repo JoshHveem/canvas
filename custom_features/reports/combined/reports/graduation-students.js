@@ -100,7 +100,11 @@ Vue.component('reports-graduation-students', {
     programLabel(row) { return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - '); },
     studentName(row) { return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`; },
     numberValue(value) { const number = Number(value); return Number.isFinite(number) ? number : null; },
-    nonNegativeNumber(value) { const number = this.numberValue(value); return number === null ? null : Math.max(0, number); },
+    nonNegativeNumber(value) {
+      if (value === null || value === undefined || String(value).trim() === '') return null;
+      const number = this.numberValue(value);
+      return number === null ? null : Math.max(0, number);
+    },
     sortNumber(value) { return this.numberValue(value) ?? Number.POSITIVE_INFINITY; },
     resetScenario() { this.predictedGraduateOverride = null; this.predictedExitOverride = null; },
     dateValue(value) {
@@ -236,7 +240,7 @@ Vue.component('reports-graduation-students', {
             <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" min="0" step="1" aria-label="Scenario predicted graduates" style="width:4.5rem;font-size:.75rem;">
             <label for="graduation-students-predicted-exits">Predicted exits</label>
             <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" min="0" step="1" aria-label="Scenario predicted exits" style="width:4.5rem;font-size:.75rem;">
-            <button type="button" @click="resetScenario" style="font-size:.75rem;">Reset</button>
+            <button type="button" @click="resetScenario" style="font-size:.75rem;">Use database values</button>
             <span class="btech-muted" style="font-size:.7rem;">Changes are for this view only.</span>
           </div>
         </div>
