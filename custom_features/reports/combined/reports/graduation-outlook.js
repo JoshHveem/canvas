@@ -137,6 +137,14 @@ Vue.component('reports-graduation-outlook', {
           };
         })
         .filter(point => point.rate !== null);
+      const currentProjectedRate = this.numberValue(this.selectedProjection?.perc_students__graduate__projected);
+      if (currentProjectedRate !== null) {
+        rates.push({
+          year: `${selectedAcademicYear}-${String(selectedAcademicYear + 1).slice(-2)}`,
+          rate: currentProjectedRate,
+          isProjected: true
+        });
+      }
       const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
       let previousRate = null;
 
@@ -176,12 +184,23 @@ Vue.component('reports-graduation-outlook', {
         .sort((a, b) => a - b)
         .map(academicYear => {
           const rows = rowsByYear[academicYear];
+          const finalRow = rows.find(row => Number(row.academic_year_month) === 12)
+            || rows.slice().sort((a, b) => Number(b.academic_year_month) - Number(a.academic_year_month))[0];
           return {
             year: `${academicYear}-${String(academicYear + 1).slice(-2)}`,
-            count: rows.reduce((total, row) => total + (this.numberValue(row.num_students__graduate) || 0), 0)
+            count: this.numberValue(finalRow.num_students__graduate__actual)
+              ?? this.numberValue(finalRow.num_students__graduate__to_month)
           };
         })
         .filter(point => point.count !== null);
+      const currentProjectedCount = this.numberValue(this.selectedProjection?.num_students__graduate__projected);
+      if (currentProjectedCount !== null) {
+        graduates.push({
+          year: `${selectedAcademicYear}-${String(selectedAcademicYear + 1).slice(-2)}`,
+          count: currentProjectedCount,
+          isProjected: true
+        });
+      }
       const maxCount = Math.max(...graduates.map(point => point.count), 1);
       const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
       let previousCount = null;
@@ -582,7 +601,7 @@ Vue.component('reports-graduation-outlook', {
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
         <g v-for="(point, index) in historicEndOfYearGraduationPoints" :key="point.year">
           <line v-if="index > 0" :x1="historicEndOfYearGraduationPoints[index - 1].x" :y1="historicEndOfYearGraduationPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
-          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} {{ point.isProjected ? 'projected' : 'final' }} graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
           <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
         </g>
@@ -599,7 +618,7 @@ Vue.component('reports-graduation-outlook', {
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0</text>
         <g v-for="(point, index) in historicEndOfYearGraduatePoints" :key="point.year">
           <line v-if="index > 0" :x1="historicEndOfYearGraduatePoints[index - 1].x" :y1="historicEndOfYearGraduatePoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
-          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduates: {{ wholeNumber(point.count) }}{{ point.change === null ? '' : point.change > 0 ? ' (up ' + wholeNumber(point.change) + ')' : point.change < 0 ? ' (down ' + wholeNumber(Math.abs(point.change)) + ')' : ' (unchanged)' }}</title></circle>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} {{ point.isProjected ? 'projected' : 'final' }} graduates: {{ wholeNumber(point.count) }}{{ point.change === null ? '' : point.change > 0 ? ' (up ' + wholeNumber(point.change) + ')' : point.change < 0 ? ' (down ' + wholeNumber(Math.abs(point.change)) + ')' : ' (unchanged)' }}</title></circle>
           <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ wholeNumber(point.count) }}</text>
         </g>
