@@ -56,7 +56,8 @@ Vue.component('reports-graduation-students', {
         identifiedProjectedGraduateCount,
         predictedGraduateCount,
         actualNonGraduateCount,
-        predictedExitCount
+        predictedExitCount,
+        predictedExitTotal: predictedGraduateCount + predictedExitCount
       };
     },
     scenarioPredictedGraduateCount: {
@@ -64,16 +65,17 @@ Vue.component('reports-graduation-students', {
       set(value) { this.predictedGraduateOverride = this.nonNegativeNumber(value); }
     },
     scenarioPredictedExitCount: {
-      get() { return this.nonNegativeNumber(this.predictedExitOverride) ?? this.projectionBaseline?.predictedExitCount ?? 0; },
+      get() { return this.nonNegativeNumber(this.predictedExitOverride) ?? this.projectionBaseline?.predictedExitTotal ?? 0; },
       set(value) { this.predictedExitOverride = this.nonNegativeNumber(value); }
     },
     projectionBreakdown() {
       const baseline = this.projectionBaseline;
       if (!baseline) return null;
       const predictedGraduateCount = this.scenarioPredictedGraduateCount;
-      const predictedExitCount = this.scenarioPredictedExitCount;
+      const predictedExitTotal = this.scenarioPredictedExitCount;
+      const predictedExitCount = Math.max(0, predictedExitTotal - predictedGraduateCount);
       const projectedGraduateCount = baseline.actualGraduateCount + baseline.identifiedProjectedGraduateCount + predictedGraduateCount;
-      const totalExiters = baseline.actualExiters + baseline.identifiedProjectedGraduateCount + predictedGraduateCount + predictedExitCount;
+      const totalExiters = baseline.actualExiters + baseline.identifiedProjectedGraduateCount + predictedExitTotal;
       const rate = totalExiters ? projectedGraduateCount / totalExiters : null;
 
       return {
@@ -246,10 +248,10 @@ Vue.component('reports-graduation-students', {
           <div v-if="projectionBreakdown" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;">
             <i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;"></i>
             <label for="graduation-students-predicted-graduates">Predicted graduates</label>
-            <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" min="0" step="1" aria-label="Scenario predicted graduates" style="width:4.5rem;font-size:.75rem;">
+            <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" min="0" :max="scenarioPredictedExitCount" step="1" aria-label="Scenario predicted graduates" style="width:4.5rem;font-size:.75rem;">
             <i style="display:inline-block;width:8px;height:8px;background:#d1d5db;"></i>
             <label for="graduation-students-predicted-exits">Predicted exits</label>
-            <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" min="0" step="1" aria-label="Scenario predicted exits" style="width:4.5rem;font-size:.75rem;">
+            <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" :min="scenarioPredictedGraduateCount" step="1" aria-label="Scenario predicted exits" style="width:4.5rem;font-size:.75rem;">
             <button type="button" @click="resetScenario" style="font-size:.75rem;">Reset</button>
           </div>
         </div>
