@@ -246,6 +246,15 @@
                 }
               },
               {
+                value: 'waitlist',
+                label: 'Waitlist',
+                component: 'reports-students-prospective',
+                dataset: 'program_student_prospective',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
+              },
+              {
                 value: 'prospective',
                 label: 'Prospective',
                 component: 'reports-students-prospective',

@@ -44,6 +44,14 @@ Vue.component('reports-students-prospective', {
         .sort((a, b) => a.label.localeCompare(b.label));
     },
 
+    isWaitlistReport() {
+      return String(this.reportContext?.subMenu ?? '').trim() === 'waitlist';
+    },
+
+    reportTitle() {
+      return this.isWaitlistReport ? 'Waitlisted Students' : 'Prospective Students';
+    },
+
     visibleRows() {
       this.table.setRows(this.rows);
       return this.table.getSortedRows();
@@ -163,11 +171,11 @@ Vue.component('reports-students-prospective', {
         return;
       }
       const rows = await this.fetchReportDataset(
-        { academic_year: new Date().getFullYear(), program_name: this.selectedProgramName },
+        { academic_year: new Date().getFullYear(), program_name: this.selectedProgramName, is_waitlisted: this.isWaitlistReport },
         { dataset: 'program_student_prospective' }
       );
-      this.rows = this.normalizeRows(rows);
-      if (!this.rows.length) this.loadError = 'No prospective students are available for this program in the current academic year.';
+      this.rows = this.normalizeRows(rows).filter(row => row.is_waitlisted === this.isWaitlistReport);
+      if (!this.rows.length) this.loadError = `No ${this.isWaitlistReport ? 'waitlisted' : 'prospective'} students are available for this program in the current academic year.`;
     },
 
     async loadData() {
@@ -208,13 +216,25 @@ Vue.component('reports-students-prospective', {
         .finally(() => { this.loading = false; });
     },
     reportContext() {
+      const previousProgramName = this.selectedProgramName;
       this.selectProgramFromContext();
+      if (this.hasLoadedPrograms && previousProgramName === this.selectedProgramName) {
+        this.loading = true;
+        this.loadError = '';
+        this.loadProspectiveStudents()
+          .catch(error => {
+            console.warn('Failed to load prospective students', error);
+            this.rows = [];
+            this.loadError = 'Unable to load prospective students.';
+          })
+          .finally(() => { this.loading = false; });
+      }
     }
   },
 
   template: `
   <report-table-shell
-    title-html="Prospective Students"
+    :title-html="reportTitle"
     :table="table"
     :rows="visibleRows"
     :loading="loading"
@@ -223,7 +243,7 @@ Vue.component('reports-students-prospective', {
     :row-key-fn="(row, index) => row.canvas_user_id || row.sis_user_id || index"
   >
     <template #description>
-      Current academic-year prospective students, ordered by outreach priority.
+      Current academic-year {{ isWaitlistReport ? 'waitlisted' : 'prospective' }} students, ordered by outreach priority.
     </template>
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-program">Program</label>
