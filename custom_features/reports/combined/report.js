@@ -235,6 +235,15 @@
                 component: 'reports-graduation-outlook',
                 dataset: 'programs_graduates_projections',
                 filters: {}
+              },
+              {
+                value: 'students',
+                label: 'Students',
+                component: 'reports-graduation-students',
+                dataset: 'program_student_completion',
+                filters: {
+                  academic_year: { source: 'current_year' }
+                }
               }
             ]
           },
@@ -498,6 +507,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/hs-student-standing.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/hs-student-standing.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-outlook.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-outlook.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-summary.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-students.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-students.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js");
