@@ -32,7 +32,26 @@ Vue.component('reports-graduation-students', {
     },
     selectedProgram() { return this.programOptions.find(row => row.key === this.selectedProgramKey) || this.programOptions[0] || null; },
     visibleActiveRows() { this.activeTable.setRows(this.activeRows); return this.activeTable.getSortedRows(); },
-    visibleExitedRows() { this.exitedTable.setRows(this.exitedRows); return this.exitedTable.getSortedRows(); }
+    visibleExitedRows() { this.exitedTable.setRows(this.exitedRows); return this.exitedTable.getSortedRows(); },
+    graduationBarSegments() {
+      const actualGraduates = this.exitedRows.filter(row => row.is_graduate);
+      const projectedGraduates = this.activeRows.filter(row => this.isProjectedGraduate(row));
+      const nonGraduates = this.exitedRows.filter(row => !row.is_graduate);
+      return [
+        ...actualGraduates.map((row, index) => ({ key: `actual:${row.sis_user_id}:${index}`, type: 'actual', title: `${this.studentName(row)} — graduated` })),
+        ...projectedGraduates.map((row, index) => ({ key: `projected:${row.sis_user_id}:${index}`, type: 'projected', title: `${this.studentName(row)} — projected graduate` })),
+        ...nonGraduates.map((row, index) => ({ key: `non-graduate:${row.sis_user_id}:${index}`, type: 'non-graduate', title: `${this.studentName(row)} — exited without graduating` }))
+      ];
+    },
+    projectedGraduationRate() {
+      const segments = this.graduationBarSegments;
+      if (!segments.length) return null;
+      const graduates = segments.filter(segment => segment.type !== 'non-graduate').length;
+      return graduates / segments.length;
+    },
+    projectedGraduateCount() {
+      return this.graduationBarSegments.filter(segment => segment.type === 'projected').length;
+    }
   },
 
   methods: {
@@ -52,6 +71,10 @@ Vue.component('reports-graduation-students', {
       if (number < 0.9) return { backgroundColor: this.colors.red, color: this.colors.white };
       if (number < 1) return { backgroundColor: this.colors.yellow, color: this.colors.black };
       return { backgroundColor: this.colors.green, color: this.colors.white };
+    },
+    isProjectedGraduate(row) {
+      const chance = this.numberValue(row?.chance_to_graduate ?? row?.chance_to_complete);
+      return chance !== null && chance >= 0.8;
     },
     progressHtml(row) {
       const progress = this.numberValue(row.progress__program);
@@ -128,7 +151,19 @@ Vue.component('reports-graduation-students', {
   template: `
   <div style="display:grid;grid-template-rows:minmax(0, 2fr) minmax(0, 1fr);gap:12px;flex:1 1 auto;height:100%;min-height:0;overflow:hidden;">
     <report-table-shell :embedded="true" title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
-      <template #description>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</template>
+      <template #description>
+        <div>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</div>
+        <div style="margin-top:10px;max-width:100%;">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:4px;color:#374151;"><strong style="font-size:.78rem;">Projected graduation rate</strong><span style="font-size:.75rem;">{{ projectedGraduationRate === null ? 'No exits or projected graduates' : (projectedGraduationRate * 100).toFixed(1) + '% (' + projectedGraduateCount + ' projected)' }}</span></div>
+          <div style="position:relative;height:18px;border-radius:4px;overflow:hidden;background:#e5e7eb;">
+            <div v-if="graduationBarSegments.length" style="position:absolute;inset:0;display:flex;">
+              <span v-for="segment in graduationBarSegments" :key="segment.key" :title="segment.title" :style="{ flex:'1 1 0', backgroundColor: segment.type === 'actual' ? '#1e3a8a' : (segment.type === 'projected' ? '#2563eb' : '#9ca3af'), opacity: segment.type === 'projected' ? .42 : 1, borderRight:'1px solid rgba(255,255,255,.75)' }"></span>
+            </div>
+            <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#111827;" title="60% graduation-rate target"></div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Graduated</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.42;margin-right:3px;"></i>Projected graduate</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Exited, not graduated</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+        </div>
+      </template>
       <template #filters><label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label><select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select></template>
     </report-table-shell>
     <report-table-shell :embedded="true" title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
