@@ -157,6 +157,47 @@ Vue.component('reports-graduation-outlook', {
       });
     },
 
+    historicEndOfYearGraduatePoints() {
+      const chartHeight = 144;
+      const chartTop = 18;
+      const chartLeft = 58;
+      const chartWidth = 570;
+      const selectedAcademicYear = Number(this.selectedProjection?.academic_year);
+      const rowsByYear = this.monthlyRows.reduce((map, row) => {
+        const academicYear = Number(row.academic_year);
+        if (academicYear < selectedAcademicYear && this.numberValue(row.num_students__graduate) !== null) {
+          if (!map[academicYear]) map[academicYear] = [];
+          map[academicYear].push(row);
+        }
+        return map;
+      }, {});
+      const graduates = Object.keys(rowsByYear)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map(academicYear => {
+          const rows = rowsByYear[academicYear];
+          const finalRow = rows.find(row => Number(row.academic_year_month) === 12)
+            || rows.slice().sort((a, b) => Number(b.academic_year_month) - Number(a.academic_year_month))[0];
+          return {
+            year: `${academicYear}-${String(academicYear + 1).slice(-2)}`,
+            count: this.numberValue(finalRow.num_students__graduate)
+          };
+        })
+        .filter(point => point.count !== null);
+      const maxCount = Math.max(...graduates.map(point => point.count), 1);
+      const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+
+      return graduates.map((point, index) => ({
+        ...point,
+        x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(graduates.length, 1))),
+        y: countToY(point.count)
+      }));
+    },
+
+    historicEndOfYearGraduateMaximum() {
+      return Math.max(...this.historicEndOfYearGraduatePoints.map(point => point.count), 1);
+    },
+
     enrollmentMonths() {
       const projection = this.selectedProjection;
       const currentAcademicMonth = this.currentAcademicMonth();
@@ -558,6 +599,23 @@ Vue.component('reports-graduation-outlook', {
           <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
           <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Historic End-of-Year Graduates</h5>
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduate counts">
+        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">{{ historicEndOfYearGraduateMaximum }}</text>
+        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">{{ Math.round(historicEndOfYearGraduateMaximum / 2) }}</text>
+        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0</text>
+        <g v-for="(point, index) in historicEndOfYearGraduatePoints" :key="point.year">
+          <line v-if="index > 0" :x1="historicEndOfYearGraduatePoints[index - 1].x" :y1="historicEndOfYearGraduatePoints[index - 1].y" :x2="point.x" :y2="point.y" stroke="#2563eb" stroke-width="2"></line>
+          <circle :cx="point.x" :cy="point.y" r="4.5" fill="#2563eb"><title>{{ point.year }} final graduates: {{ wholeNumber(point.count) }}</title></circle>
+          <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
+          <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ wholeNumber(point.count) }}</text>
         </g>
       </svg>
     </section>
