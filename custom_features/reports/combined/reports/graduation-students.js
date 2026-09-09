@@ -126,13 +126,17 @@ Vue.component('reports-graduation-students', {
   },
 
   template: `
-  <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0;overflow:auto;">
-    <report-table-shell title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')" style="flex:2 1 28rem;height:auto;min-height:28rem;">
+  <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 auto;height:100%;min-height:0;overflow:hidden;">
+    <div style="display:flex;flex:2 1 0;min-height:0;overflow:hidden;">
+    <report-table-shell title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
       <template #description>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</template>
       <template #filters><label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label><select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select></template>
     </report-table-shell>
-    <report-table-shell title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')" style="flex:1 1 14rem;height:auto;min-height:14rem;">
+    </div>
+    <div style="display:flex;flex:1 1 0;min-height:0;overflow:hidden;">
+    <report-table-shell title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
       <template #description>Current academic-year exits for the selected program, including whether each student counted as a graduate.</template>
     </report-table-shell>
+    </div>
   </div>`
 });
