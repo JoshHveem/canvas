@@ -24,7 +24,7 @@ Vue.component('reports-students-prospective', {
 
   created() {
     this.table.setColumns([
-      new window.ReportColumn('Student', 'Prospective student name.', '14rem', false, 'string', row => this.escapeHtml(this.studentName(row)), null, row => this.studentName(row).toLowerCase()),
+      new window.ReportColumn('Student', 'Prospective student name. Opens the student report.', '14rem', false, 'string', row => this.studentNameLinkHtml(row), null, row => this.studentName(row).toLowerCase()),
       new window.ReportColumn('Email', 'Student email address.', '17rem', false, 'string', row => this.emailHtml(row.email_address), null, row => String(row.email_address || '').toLowerCase()),
       new window.ReportColumn('Former HS', 'Whether the student is a former high-school student who never enrolled.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_former_hs_student_never_enrolled, 'Former high-school student'), null, row => this.boolSort(row.is_former_hs_student_never_enrolled)),
       new window.ReportColumn('Current HS', 'Whether the student is currently enrolled in high school.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_active_hs_student, 'Current high-school student'), null, row => this.boolSort(row.is_active_hs_student)),
@@ -95,6 +95,14 @@ Vue.component('reports-students-prospective', {
 
     studentName(row) {
       return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`;
+    },
+
+    studentNameLinkHtml(row) {
+      const name = this.escapeHtml(this.studentName(row));
+      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
+      if (!canvasUserId) return name;
+      const url = `/users/${encodeURIComponent(canvasUserId)}`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`;
     },
 
     checkmarkHtml(value, label) {
