@@ -29,7 +29,7 @@ Vue.component('reports-students-prospective', {
       new window.ReportColumn('Current HS', 'Whether the student is currently enrolled in high school.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_active_hs_student, 'Current high-school student'), null, row => this.boolSort(row.is_active_hs_student)),
       new window.ReportColumn('Other Program', 'Whether the student is currently enrolled in another program.', '9rem', false, 'boolean', row => this.checkmarkHtml(row.is_current_student__other_program, 'Enrolled in another program'), null, row => this.boolSort(row.is_current_student__other_program)),
       new window.ReportColumn('Last Activity', 'Academic year containing the most recent recorded activity.', '9rem', false, 'number', row => this.academicYearText(row.last_activity_at), null, row => this.academicYearSort(row.last_activity_at)),
-      new window.ReportColumn('Program Progress', 'Student progress through the program.', '13rem', false, 'number', row => this.progressHtml(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs))
+      new window.ReportColumn('Program Progress', 'Student progress through the program.', '13rem', false, 'number', row => this.progressHtml(row.perc_program__completed), null, row => this.sortNumber(row.perc_program__completed))
     ]);
   },
 
@@ -69,7 +69,7 @@ Vue.component('reports-students-prospective', {
       const minLastActivityYear = this.numberValue(this.minimumLastActivityAcademicYear) || this.lastActivityYearMinimum;
 
       return this.rows.filter(row => {
-        const progress = this.numberValue(row.perc_program__completed__hs) || 0;
+        const progress = this.numberValue(row.perc_program__completed) || 0;
         if (progress < minProgress) return false;
         const activityYear = this.lastActivityAcademicYear(row.last_activity_at);
         return activityYear !== null && activityYear >= minLastActivityYear;
@@ -176,6 +176,7 @@ Vue.component('reports-students-prospective', {
         is_active_hs_student: this.booleanValue(row?.is_active_hs_student),
         is_former_hs_student_never_enrolled: this.booleanValue(row?.is_former_hs_student_never_enrolled),
         is_current_student__other_program: this.booleanValue(row?.is_current_student__other_program),
+        perc_program__completed: this.numberValue(row?.perc_program__completed),
         last_activity_at: String(row?.last_activity_at ?? '').trim()
       }));
     },
