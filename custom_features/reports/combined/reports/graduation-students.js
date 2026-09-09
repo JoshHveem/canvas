@@ -242,15 +242,15 @@ Vue.component('reports-graduation-students', {
             </div>
             <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#111827;" title="60% graduation-rate target"></div>
           </div>
-          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;margin-right:3px;"></i>Predicted graduates: {{ projectionSegmentValue('predicted-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#d1d5db;margin-right:3px;"></i>Predicted exits: {{ projectionSegmentValue('predicted-exits').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
           <div v-if="projectionBreakdown" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;">
-            <strong style="font-size:.75rem;">Scenario:</strong>
+            <i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;"></i>
             <label for="graduation-students-predicted-graduates">Predicted graduates</label>
             <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" min="0" step="1" aria-label="Scenario predicted graduates" style="width:4.5rem;font-size:.75rem;">
+            <i style="display:inline-block;width:8px;height:8px;background:#d1d5db;"></i>
             <label for="graduation-students-predicted-exits">Predicted exits</label>
             <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" min="0" step="1" aria-label="Scenario predicted exits" style="width:4.5rem;font-size:.75rem;">
-            <button type="button" @click="resetScenario" style="font-size:.75rem;">Use database values</button>
-            <span class="btech-muted" style="font-size:.7rem;">Changes are for this view only.</span>
+            <button type="button" @click="resetScenario" style="font-size:.75rem;">Reset</button>
           </div>
         </div>
       </template>
