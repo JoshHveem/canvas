@@ -184,12 +184,20 @@ Vue.component('reports-graduation-outlook', {
         .filter(point => point.count !== null);
       const maxCount = Math.max(...graduates.map(point => point.count), 1);
       const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+      let previousCount = null;
 
-      return graduates.map((point, index) => ({
-        ...point,
-        x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(graduates.length, 1))),
-        y: countToY(point.count)
-      }));
+      return graduates.map((point, index) => {
+        const change = previousCount === null ? null : point.count - previousCount;
+        const color = change === null ? this.colors.black : Math.abs(change) < 5 ? this.colors.yellow : change > 0 ? this.colors.green : this.colors.red;
+        previousCount = point.count;
+        return {
+          ...point,
+          change,
+          color,
+          x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(graduates.length, 1))),
+          y: countToY(point.count)
+        };
+      });
     },
 
     historicEndOfYearGraduateMaximum() {
@@ -561,26 +569,6 @@ Vue.component('reports-graduation-outlook', {
 
     <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:6px; font-size:1rem;">Graduation Outlook Trend</h5>
-      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
-      </div>
-      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
-        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
-        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
-        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
-        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
-        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
-        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <g v-for="(point, index) in graduationOutlookPoints" :key="point.month">
-          <line v-if="index > 0 && point.y !== null && graduationOutlookPoints[index - 1].y !== null" :x1="graduationOutlookPoints[index - 1].x" :y1="graduationOutlookPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
-          <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior month)' : point.movement < 0 ? ' (down from prior month)' : '' }}</title></circle>
-          <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
-        </g>
-      </svg>
-    </section>
-
-    <section style="flex:1 1 42rem; min-width:42rem;">
       <h5 style="margin:0 0:6px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
@@ -610,10 +598,30 @@ Vue.component('reports-graduation-outlook', {
         <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">{{ Math.round(historicEndOfYearGraduateMaximum / 2) }}</text>
         <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0</text>
         <g v-for="(point, index) in historicEndOfYearGraduatePoints" :key="point.year">
-          <line v-if="index > 0" :x1="historicEndOfYearGraduatePoints[index - 1].x" :y1="historicEndOfYearGraduatePoints[index - 1].y" :x2="point.x" :y2="point.y" stroke="#2563eb" stroke-width="2"></line>
-          <circle :cx="point.x" :cy="point.y" r="4.5" fill="#2563eb"><title>{{ point.year }} final graduates: {{ wholeNumber(point.count) }}</title></circle>
+          <line v-if="index > 0" :x1="historicEndOfYearGraduatePoints[index - 1].x" :y1="historicEndOfYearGraduatePoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduates: {{ wholeNumber(point.count) }}{{ point.change === null ? '' : point.change > 0 ? ' (up ' + wholeNumber(point.change) + ')' : point.change < 0 ? ' (down ' + wholeNumber(Math.abs(point.change)) + ')' : ' (unchanged)' }}</title></circle>
           <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
           <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ wholeNumber(point.count) }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Graduation Outlook Trend</h5>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
+        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
+      </div>
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
+        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
+        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
+        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
+        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
+        <g v-for="(point, index) in graduationOutlookPoints" :key="point.month">
+          <line v-if="index > 0 && point.y !== null && graduationOutlookPoints[index - 1].y !== null" :x1="graduationOutlookPoints[index - 1].x" :y1="graduationOutlookPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
+          <circle v-if="point.y !== null" :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.month }} projected graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior month)' : point.movement < 0 ? ' (down from prior month)' : '' }}</title></circle>
+          <text :x="point.x" y="179" text-anchor="middle" font-size="9" fill="#334155">{{ point.month.slice(0, 3) }}</text>
         </g>
       </svg>
     </section>
