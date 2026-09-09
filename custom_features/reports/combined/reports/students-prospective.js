@@ -13,6 +13,8 @@ Vue.component('reports-students-prospective', {
       rows: [],
       programs: [],
       selectedProgramName: '',
+      minimumProgramProgressPercent: 0,
+      maximumYearsSinceActivity: '',
       hasLoadedPrograms: false,
       loading: false,
       loadError: ''
@@ -26,6 +28,7 @@ Vue.component('reports-students-prospective', {
       new window.ReportColumn('Former HS', 'Whether the student is a former high-school student who never enrolled.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_former_hs_student_never_enrolled, 'Former high-school student'), null, row => this.boolSort(row.is_former_hs_student_never_enrolled)),
       new window.ReportColumn('Current HS', 'Whether the student is currently enrolled in high school.', '7rem', false, 'boolean', row => this.checkmarkHtml(row.is_active_hs_student, 'Current high-school student'), null, row => this.boolSort(row.is_active_hs_student)),
       new window.ReportColumn('Other Program', 'Whether the student is currently enrolled in another program.', '9rem', false, 'boolean', row => this.checkmarkHtml(row.is_current_student__other_program, 'Enrolled in another program'), null, row => this.boolSort(row.is_current_student__other_program)),
+      new window.ReportColumn('Last Activity', 'Most recent recorded activity date.', '10rem', false, 'date', row => this.dateText(row.last_activity_at), null, row => this.dateSort(row.last_activity_at)),
       new window.ReportColumn('HS Program Progress', 'Program progress earned while in high school.', '11rem', false, 'number', row => this.percent(row.perc_program__completed__hs), null, row => this.sortNumber(row.perc_program__completed__hs)),
       new window.ReportColumn('HS Credits Remaining', 'Credits remaining in the program from the student’s high-school record.', '11rem', false, 'number', row => this.decimal(row.num_credits__program_remaining__hs), null, row => this.sortNumber(row.num_credits__program_remaining__hs))
     ]);
@@ -50,8 +53,21 @@ Vue.component('reports-students-prospective', {
     },
 
     visibleRows() {
-      this.table.setRows(this.rows);
+      this.table.setRows(this.filteredRows);
       return this.table.getSortedRows();
+    },
+
+    filteredRows() {
+      const minProgress = Math.max(0, this.numberValue(this.minimumProgramProgressPercent) || 0) / 100;
+      const maxYears = this.numberValue(this.maximumYearsSinceActivity);
+
+      return this.rows.filter(row => {
+        const progress = this.numberValue(row.perc_program__completed__hs) || 0;
+        if (progress < minProgress) return false;
+        if (maxYears === null || maxYears < 0) return true;
+        const years = this.yearsSinceLastActivity(row.last_activity_at);
+        return years !== null && years <= maxYears;
+      });
     }
   },
 
@@ -90,6 +106,11 @@ Vue.component('reports-students-prospective', {
       return this.dateValue(value) ?? Number.POSITIVE_INFINITY;
     },
 
+    yearsSinceLastActivity(value) {
+      const time = this.dateValue(value);
+      return time === null ? null : Math.max(0, (Date.now() - time) / (365.25 * 86400000));
+    },
+
     dateText(value) {
       const time = this.dateValue(value);
       return time === null ? '—' : new Date(time).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
@@ -124,7 +145,8 @@ Vue.component('reports-students-prospective', {
         is_waitlisted: this.booleanValue(row?.is_waitlisted),
         is_active_hs_student: this.booleanValue(row?.is_active_hs_student),
         is_former_hs_student_never_enrolled: this.booleanValue(row?.is_former_hs_student_never_enrolled),
-        is_current_student__other_program: this.booleanValue(row?.is_current_student__other_program)
+        is_current_student__other_program: this.booleanValue(row?.is_current_student__other_program),
+        last_activity_at: String(row?.last_activity_at ?? '').trim()
       }));
     },
 
@@ -232,6 +254,11 @@ Vue.component('reports-students-prospective', {
       <select id="prospective-students-program" v-model="selectedProgramName" aria-label="Filter prospective students by program" style="min-width:18rem;max-width:28rem;font-size:.75rem;">
         <option v-for="program in programOptions" :key="program.value" :value="program.value">{{ program.label }}</option>
       </select>
+      <label style="font-size:.75rem;font-weight:600;" for="prospective-students-min-progress">Min. progress</label>
+      <input id="prospective-students-min-progress" v-model="minimumProgramProgressPercent" type="number" min="0" max="100" step="1" aria-label="Minimum high-school program progress percentage" style="width:5rem;font-size:.75rem;">
+      <span class="btech-muted" style="font-size:.75rem;">%</span>
+      <label style="font-size:.75rem;font-weight:600;" for="prospective-students-max-activity-years">Max. years since activity</label>
+      <input id="prospective-students-max-activity-years" v-model="maximumYearsSinceActivity" type="number" min="0" step=".25" placeholder="Any" aria-label="Maximum years since last activity" style="width:5rem;font-size:.75rem;">
     </template>
   </report-table-shell>
   `
