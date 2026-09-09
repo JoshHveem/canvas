@@ -384,12 +384,21 @@ Vue.component('reports-graduation-outlook', {
     selectProjectionFromContext() {
       const programCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
       const campusCode = String(this.getSharedFilterValue('campus_code', this.reportContext?.routeFilters?.campusCode) ?? '').trim();
+      const programName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
       const match = this.projectionOptions.find(row => (
         String(row.program_code ?? '').trim() === programCode
         && (!campusCode || String(row.campus_code ?? '').trim() === campusCode)
-      ));
+      )) || this.projectionOptions.find(row => String(row.program_name ?? '').trim() === programName);
       if (match && match.key !== this.selectedProjectionKey) this.selectedProjectionKey = match.key;
       return Boolean(match);
+    },
+
+    syncSelectedProjectionToSharedFilters() {
+      const projection = this.selectedProjection;
+      if (!projection) return;
+      this.setSharedFilterValue('program_code', String(projection.program_code ?? '').trim());
+      this.setSharedFilterValue('campus_code', String(projection.campus_code ?? '').trim());
+      this.setSharedFilterValue('program_name', String(projection.program_name ?? '').trim());
     },
 
     currentAcademicMonth() {
@@ -462,6 +471,7 @@ Vue.component('reports-graduation-outlook', {
 
   watch: {
     selectedProjectionKey() {
+      this.syncSelectedProjectionToSharedFilters();
       this.loadMonthlyData();
     },
     reportContext() {

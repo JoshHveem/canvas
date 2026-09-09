@@ -162,8 +162,17 @@ Vue.component('reports-graduation-students', {
     selectProgramFromContext() {
       const programCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
       const campusCode = String(this.getSharedFilterValue('campus_code', this.reportContext?.routeFilters?.campusCode) ?? '').trim();
-      const match = this.programOptions.find(row => String(row.program_code ?? '').trim() === programCode && (!campusCode || String(row.campus_code ?? '').trim() === campusCode));
+      const programName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
+      const match = this.programOptions.find(row => String(row.program_code ?? '').trim() === programCode && (!campusCode || String(row.campus_code ?? '').trim() === campusCode))
+        || this.programOptions.find(row => String(row.program_name ?? '').trim() === programName);
       this.selectedProgramKey = match?.key || (this.programOptions.some(row => row.key === this.selectedProgramKey) ? this.selectedProgramKey : this.programOptions[0]?.key || '');
+    },
+    syncSelectedProgramToSharedFilters() {
+      const program = this.selectedProgram;
+      if (!program) return;
+      this.setSharedFilterValue('program_code', String(program.program_code ?? '').trim());
+      this.setSharedFilterValue('campus_code', String(program.campus_code ?? '').trim());
+      this.setSharedFilterValue('program_name', String(program.program_name ?? '').trim());
     },
     normalizeRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => {
@@ -211,7 +220,7 @@ Vue.component('reports-graduation-students', {
 
   mounted() { this.loadData(); },
   watch: {
-    selectedProgramKey() { this.resetScenario(); if (this.hasLoadedProjections) this.loadCompletionData(); },
+    selectedProgramKey() { this.resetScenario(); this.syncSelectedProgramToSharedFilters(); if (this.hasLoadedProjections) this.loadCompletionData(); },
     reportContext() { this.selectProgramFromContext(); }
   },
 

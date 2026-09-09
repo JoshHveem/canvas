@@ -15,6 +15,7 @@ Vue.component('reports-students-prospective', {
       selectedProgramName: '',
       minimumProgramProgressPercent: 0,
       minimumLastActivityAcademicYear: this.currentAcademicYear() - 4,
+      loadedWaitlistMode: null,
       hasLoadedPrograms: false,
       loading: false,
       loadError: ''
@@ -200,6 +201,12 @@ Vue.component('reports-students-prospective', {
       this.selectedProgramName = selected;
     },
 
+    syncSelectedProgramToSharedFilters() {
+      this.setSharedFilterValue('program_name', this.selectedProgramName);
+      this.setSharedFilterValue('program_code', '');
+      this.setSharedFilterValue('campus_code', '');
+    },
+
     async loadProspectiveStudents() {
       if (!this.selectedProgramName) {
         this.rows = [];
@@ -210,6 +217,7 @@ Vue.component('reports-students-prospective', {
         { dataset: 'program_student_prospective' }
       );
       this.rows = this.normalizeRows(rows).filter(row => row.is_waitlisted === this.isWaitlistReport);
+      this.loadedWaitlistMode = this.isWaitlistReport;
       if (!this.rows.length) this.loadError = `No ${this.isWaitlistReport ? 'waitlisted' : 'prospective'} students are available for this program in the current academic year.`;
     },
 
@@ -240,6 +248,7 @@ Vue.component('reports-students-prospective', {
   watch: {
     selectedProgramName() {
       if (!this.hasLoadedPrograms) return;
+      this.syncSelectedProgramToSharedFilters();
       this.loading = true;
       this.loadError = '';
       this.loadProspectiveStudents()
@@ -253,7 +262,7 @@ Vue.component('reports-students-prospective', {
     reportContext() {
       const previousProgramName = this.selectedProgramName;
       this.selectProgramFromContext();
-      if (this.hasLoadedPrograms && previousProgramName === this.selectedProgramName) {
+      if (this.hasLoadedPrograms && previousProgramName === this.selectedProgramName && this.loadedWaitlistMode !== this.isWaitlistReport) {
         this.loading = true;
         this.loadError = '';
         this.loadProspectiveStudents()
