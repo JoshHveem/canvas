@@ -763,29 +763,12 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
           <p data-isd-hub-resource-description style="margin: 18px 0 0; font-size: 17px; color: #4b5563;">${escapeHtml(description)}</p>
         </div>
         <div style="padding: 0 4px;">
-          [insert video]
-        </div>
-        <div style="margin-top: 30px; padding: 0 4px;">
-          <h3 style="margin: 0 0 10px; font-family: Georgia,'Times New Roman',serif; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
-          <p style="margin: 0; font-size: 16px; color: #4b5563;">&nbsp;</p>
+          [Resource use instructions]
         </div>
         <div style="margin-top: 28px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e6b8ba;">
-          <div style="background: #b20b0f; color: #ffffff; padding: 12px 18px; font-family: Georgia,'Times New Roman',serif; font-size: 18px;">Before You Apply This</div>
+          <div style="background: #b20b0f; color: #ffffff; padding: 12px 18px; font-family: Georgia,'Times New Roman',serif; font-size: 18px;">Notice</div>
           <div style="padding: 18px 20px;">
-            <div style="display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px;">
-              <div>
-                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Plan</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Identify the learning goal and decide where this resource fits in your course.</p>
-              </div>
-              <div>
-                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Adapt</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Adjust the example or process to match your learners, content, and teaching context.</p>
-              </div>
-              <div>
-                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Review</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Check clarity, accessibility, and alignment before sharing it with students.</p>
-              </div>
-            </div>
+            <p style="margin: 0; font-size: 14px; color: #4b5563;">&nbsp;</p>
           </div>
         </div>
         <div style="margin-top: 28px; background: #ffffff; border: 1px solid #e6e8ec; border-radius: 14px; padding: 20px 22px;">
