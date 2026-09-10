@@ -1,63 +1,38 @@
 /*
-  AI Hub
+  ISD Hub
 
-  Live Canvas feature for the AI Hub course.
+  Live Canvas feature for the ISD Hub course.
 */
-window.AIHubConfig = Object.assign({}, window.AIHubConfig || {}, {
+window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
   courseId: "632661"
 });
-window.AIHubStatus = {
-  connected: true,
-  loadedAt: new Date().toISOString(),
-  mounted: false,
-  reason: "loading"
-};
 
 (function () {
-  const status = window.AIHubStatus;
-  status.path = window.location.pathname;
-  status.isTeacher = Boolean(window.IS_TEACHER);
-
-  if (!status.isTeacher) {
-    status.reason = "not_teacher";
-    return;
-  }
-
-  const HUB_CONFIG = window.AIHubConfig;
+  const HUB_CONFIG = window.ISDHubConfig;
   const KEEP_TABS = ["Home", "People", "Announcements"];
-  const EDIT_TAB_ATTRIBUTE = "data-ai-hub-edit-tab";
-  const HOME_EDIT_TABS = [
-    { id: "ai-hub-edit-events-link", label: "Edit Calendar", editor: "events" },
-    { id: "ai-hub-edit-courses-link", label: "Edit Courses", editor: "courses" }
+  const EDIT_TAB_ATTRIBUTE = "data-isd-hub-edit-tab";
+  const EDIT_TABS = [
+    { id: "custom-edit-events-link", label: "Edit Events", editor: "events" },
+    { id: "custom-edit-courses-link", label: "Edit Courses", editor: "courses" },
+    { id: "custom-edit-resources-link", label: "Edit Resources", editor: "resources" }
   ];
-  const TOOLBOX_EDIT_TABS = [
-    { id: "ai-hub-edit-resources-link", label: "Edit Resources", editor: "resources" }
-  ];
-  const TOGGLE_BUTTON_ID = "ai-hub-toggle-tabs-button";
-  const HIDDEN_TAB_ATTRIBUTE = "data-ai-hub-hidden-tab";
-  const PREVIOUS_DISPLAY_ATTRIBUTE = "data-ai-hub-previous-display";
+  const TOGGLE_BUTTON_ID = "custom-toggle-tabs-button";
+  const HIDDEN_TAB_ATTRIBUTE = "data-isd-hub-hidden-tab";
+  const PREVIOUS_DISPLAY_ATTRIBUTE = "data-isd-hub-previous-display";
   const HEADER_BAR_SELECTOR = ".header-bar-outer-container";
-  const HIDDEN_HEADER_ATTRIBUTE = "data-ai-hub-hidden-header";
-  const POPUP_BACKDROP_ID = "ai-hub-editor-backdrop";
-  const POPUP_PANEL_ID = "ai-hub-editor-panel";
-  const DATA_PAGE_URL = "ai-hub-json";
-  const LEGACY_DATA_PAGE_URLS = ["json"];
-  const DATA_PAGE_TITLE = "AI Hub JSON";
-  const TOOLBOX_PAGE_URL = "tool-box";
-  const RESOURCE_MODULE_NAMES = ["AI Tools and Resources", "AI Tools and Resources Module"];
-  const DATA_ELEMENT_ID = "ai-hub-json-data";
-  const HUB_SECTION_ATTRIBUTE = "data-ai-hub-section";
-  const HUB_PAGE_BACKUP_PREFIX = "ai-hub-page-backup";
-  const EVENTS_GRID_COLUMNS = "repeat(auto-fit,minmax(190px,1fr))";
-  const EVENTS_GRID_GAP = "14px";
+  const HIDDEN_HEADER_ATTRIBUTE = "data-isd-hub-hidden-header";
+  const POPUP_BACKDROP_ID = "isd-hub-editor-backdrop";
+  const POPUP_PANEL_ID = "isd-hub-editor-panel";
+  const DATA_PAGE_URL = "json";
+  const DATA_ELEMENT_ID = "isd-hub-json-data";
+  const HUB_SECTION_ATTRIBUTE = "data-isd-hub-section";
+  const HUB_PAGE_BACKUP_PREFIX = "isd-hub-page-backup";
   const EVENT_TITLE_MAX_LENGTH = 40;
   const COURSE_TITLE_MAX_LENGTH = 40;
   const COURSE_DESCRIPTION_MAX_LENGTH = 80;
   const RESOURCE_TITLE_MAX_LENGTH = 40;
   const RESOURCE_DESCRIPTION_MAX_LENGTH = 150;
-  const RESOURCE_CATEGORY_MAX_LENGTH = 28;
-  const RESOURCE_DETAIL_MAX_LENGTH = 18;
-  const RESOURCE_DEFAULT_ICON = "🤖";
+  const RESOURCE_DEFAULT_ICON = "📄";
   const COURSE_DEFAULT_ICON = "📚";
   const COURSE_ICON_BY_KEY = {
     chart: "📊",
@@ -86,12 +61,11 @@ window.AIHubStatus = {
     live_cohort: "Live Cohort",
     self_paced: "Self-Paced"
   };
-  let activeDataPageUrl = DATA_PAGE_URL;
 
   function getCourseId() {
     const courseId = String(HUB_CONFIG.courseId || "").trim();
     if (!courseId) {
-      throw new Error("AI Hub course id is missing. Set window.AIHubConfig.courseId before running.");
+      throw new Error("ISD Hub course id is missing. Set window.ISDHubConfig.courseId before running.");
     }
     return courseId;
   }
@@ -100,27 +74,8 @@ window.AIHubStatus = {
     return "/courses/" + getCourseId();
   }
 
-  function isAiHubHomePath() {
-    return new RegExp("^" + getCoursePath() + "/?$").test(window.location.pathname);
-  }
-
-  function isAiHubToolboxPath() {
-    return getCurrentHubPageUrl() === TOOLBOX_PAGE_URL
-      || new RegExp("^" + getCoursePath() + "/pages/" + TOOLBOX_PAGE_URL + "/?$").test(window.location.pathname);
-  }
-
-  function isAiHubCoursePath() {
-    return new RegExp("^" + getCoursePath() + "(?:/|$)").test(window.location.pathname);
-  }
-
-  function getActiveEditTabs() {
-    if (isAiHubToolboxPath()) return TOOLBOX_EDIT_TABS;
-    if (isAiHubHomePath()) return HOME_EDIT_TABS;
-    return [];
-  }
-
-  function getDataPageApiUrl(pageUrl) {
-    return "/api/v1/courses/" + getCourseId() + "/pages/" + encodeURIComponent(pageUrl || activeDataPageUrl || DATA_PAGE_URL);
+  function getDataPageApiUrl() {
+    return "/api/v1/courses/" + getCourseId() + "/pages/" + encodeURIComponent(DATA_PAGE_URL);
   }
 
   function getPageApiUrl(pageUrl) {
@@ -129,23 +84,6 @@ window.AIHubStatus = {
 
   function getPagesApiUrl() {
     return "/api/v1/courses/" + getCourseId() + "/pages";
-  }
-
-  function getDataPageCandidateUrls() {
-    const urls = [activeDataPageUrl, DATA_PAGE_URL].concat(LEGACY_DATA_PAGE_URLS);
-    return urls.filter((pageUrl, index) => pageUrl && urls.indexOf(pageUrl) === index);
-  }
-
-  function setActiveDataPageUrl(pageUrl) {
-    if (pageUrl) activeDataPageUrl = pageUrl;
-  }
-
-  function getModulesApiUrl() {
-    return "/api/v1/courses/" + getCourseId() + "/modules";
-  }
-
-  function getModuleItemsApiUrl(moduleId) {
-    return "/api/v1/courses/" + getCourseId() + "/modules/" + encodeURIComponent(moduleId) + "/items";
   }
 
   function getCurrentHubPageUrl() {
@@ -171,9 +109,9 @@ window.AIHubStatus = {
       version: 1,
       events: [
         {
-          id: "evt_ai_prompting_lab",
-          title: "AI Prompting Lab",
-          event_date: "2026-08-12",
+          id: "evt_learning_objectives",
+          title: "Designing Effective Learning Objectives",
+          event_date: "2025-05-21",
           start_time: "10:00",
           location_type: "online",
           location_label: "Online (Zoom)",
@@ -184,9 +122,9 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "evt_ai_policy_syllabus",
-          title: "AI Policy & Syllabus Statements",
-          event_date: "2026-08-19",
+          id: "evt_canvas_essentials",
+          title: "Canvas Essentials for Instructors",
+          event_date: "2025-05-28",
           start_time: "14:00",
           location_type: "online",
           location_label: "Online (Zoom)",
@@ -197,9 +135,9 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "evt_feedback_workflows",
-          title: "Automating Feedback Workflows",
-          event_date: "2026-08-26",
+          id: "evt_ai_responsibly",
+          title: "Using AI Responsibly in Teaching",
+          event_date: "2025-06-04",
           start_time: "11:00",
           location_type: "online",
           location_label: "Online (Zoom)",
@@ -210,9 +148,9 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "evt_responsible_ai_office_hours",
-          title: "Responsible AI Office Hours",
-          event_date: "2026-09-02",
+          id: "evt_assessment_strategies",
+          title: "Assessment Strategies That Work",
+          event_date: "2025-06-11",
           start_time: "13:00",
           location_type: "online",
           location_label: "Online (Zoom)",
@@ -225,10 +163,10 @@ window.AIHubStatus = {
       ],
       courses: [
         {
-          id: "course_ai_foundations",
-          icon_key: "robot",
-          title: "AI Foundations for Educators",
-          description: "Core concepts for using AI confidently and responsibly.",
+          id: "course_instructional_design_foundations",
+          icon_key: "computer",
+          title: "Instructional Design Foundations",
+          description: "The core principles of designing effective learning experiences.",
           format: "self_paced",
           course_url: "REPLACE-WITH-COURSE-LINK-1",
           sort_order: 1,
@@ -236,10 +174,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "course_prompting_course_design",
+          id: "course_designing_engaging_activities",
           icon_key: "puzzle",
-          title: "Prompting for Course Design",
-          description: "Draft outcomes, activities, examples, and rubrics faster.",
+          title: "Designing Engaging Activities",
+          description: "Create active learning experiences that stick.",
           format: "self_paced",
           course_url: "REPLACE-WITH-COURSE-LINK-2",
           sort_order: 2,
@@ -247,10 +185,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "course_responsible_ai_teaching",
+          id: "course_assessment_feedback",
           icon_key: "chart",
-          title: "Responsible AI in Teaching",
-          description: "Set clear expectations and reduce academic integrity risk.",
+          title: "Assessment & Feedback",
+          description: "Design assessments that drive learning.",
           format: "self_paced",
           course_url: "REPLACE-WITH-COURSE-LINK-3",
           sort_order: 3,
@@ -258,10 +196,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "course_ai_feedback_workflows",
+          id: "course_inclusive_course_design",
           icon_key: "people",
-          title: "AI Feedback Workflows",
-          description: "Use AI to draft feedback while keeping instructor judgment central.",
+          title: "Inclusive Course Design",
+          description: "Build accessible and inclusive learning environments.",
           format: "self_paced",
           course_url: "REPLACE-WITH-COURSE-LINK-4",
           sort_order: 4,
@@ -269,10 +207,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "course_ai_accessibility",
-          icon_key: "checklist",
-          title: "AI Tools for Accessibility",
-          description: "Improve readability, captions, alt text, and learner support.",
+          id: "course_ai_adoption",
+          icon_key: "robot",
+          title: "AI Adoption",
+          description: "Practical, responsible ways to bring AI into your teaching and workflow.",
           format: "self_paced",
           course_url: "REPLACE-WITH-COURSE-LINK-5",
           sort_order: 5,
@@ -282,12 +220,10 @@ window.AIHubStatus = {
       ],
       resources: [
         {
-          id: "resource_ai_policy_template",
+          id: "resource_syllabus_template",
           icon_key: "document",
-          category: "Policy",
-          detail: "Template",
-          title: "AI Use Policy Template",
-          description: "Editable language for setting expectations around AI use.",
+          title: "Syllabus Template",
+          description: "Editable syllabus template aligned to best practices.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-1",
           action_label: "Download",
           sort_order: 1,
@@ -295,12 +231,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "resource_prompt_library",
+          id: "resource_course_design_checklist",
           icon_key: "checklist",
-          category: "Prompting",
-          detail: "Library",
-          title: "Prompt Library",
-          description: "Reusable prompts for planning, teaching, assessment, and feedback.",
+          title: "Course Design Checklist",
+          description: "A checklist to guide your course development.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-2",
           action_label: "Download",
           sort_order: 2,
@@ -308,12 +242,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "resource_ai_assignment_checklist",
+          id: "resource_universal_design_guide",
           icon_key: "play",
-          category: "Assignments",
-          detail: "Checklist",
-          title: "AI Assignment Checklist",
-          description: "Review assignments for AI clarity, usefulness, and integrity.",
+          title: "Universal Design Guide",
+          description: "Practical tips for designing for all learners.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-3",
           action_label: "View Guide",
           sort_order: 3,
@@ -321,12 +253,10 @@ window.AIHubStatus = {
           updated_at: now
         },
         {
-          id: "resource_tool_evaluation_guide",
+          id: "resource_feedback_strategies",
           icon_key: "comment",
-          category: "Tools",
-          detail: "Guide",
-          title: "Tool Evaluation Guide",
-          description: "Compare AI tools for privacy, accessibility, cost, and fit.",
+          title: "Feedback Strategies",
+          description: "A quick reference for providing meaningful feedback.",
           resource_url: "REPLACE-WITH-RESOURCE-LINK-4",
           action_label: "View Resource",
           sort_order: 4,
@@ -362,29 +292,6 @@ window.AIHubStatus = {
 
   function renderDataPageBody(data) {
     return `<pre id="${DATA_ELEMENT_ID}">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
-  }
-
-  function getDataPagePayload(data, pageUrl) {
-    return {
-      wiki_page: {
-        url: pageUrl || activeDataPageUrl || DATA_PAGE_URL,
-        title: DATA_PAGE_TITLE,
-        editing_roles: "teachers",
-        published: false,
-        hide_from_students: true,
-        front_page: false,
-        body: renderDataPageBody(data),
-        set_assignment: "0",
-        assignment: {
-          set_assignment: "0",
-          publishable: true,
-          hidden: false,
-          unpublishable: true
-        },
-        notify_of_update: "0",
-        student_planner_checkbox: false
-      }
-    };
   }
 
   function parseDateInput(value) {
@@ -436,53 +343,18 @@ window.AIHubStatus = {
     return root.querySelector(getManagedSectionSelector("events")) || findSectionByHeading(root, "Upcoming Events");
   }
 
-  function applyEventsGridLayout(root) {
-    const section = findEventsSection(root);
-    if (!section) return false;
-
-    const grid = Array.from(section.querySelectorAll("div")).find(element => {
-      const style = element.getAttribute("style") || "";
-      return /display\s*:\s*grid/i.test(style) && /grid-template-columns/i.test(style);
-    });
-    if (!grid) return false;
-
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = EVENTS_GRID_COLUMNS;
-    grid.style.gap = EVENTS_GRID_GAP;
-    grid.style.justifyContent = "";
-    return true;
-  }
-
   function findCoursesSection(root) {
     return root.querySelector(getManagedSectionSelector("courses")) || findSectionByHeading(root, "Explore Courses");
   }
 
-  function findToolboxResourcesSection(root) {
-    const headings = Array.from(root.querySelectorAll("h2"));
-    const heading = headings.find(item => {
-      const text = item.textContent.trim().replace(/\s+/g, " ");
-      return text === "Micro-Trainings & Resources" || text === "AI Mini-Trainings";
-    });
-    const shell = heading?.parentElement?.parentElement
-      || Array.from(root.querySelectorAll("div")).find(item => {
-        const text = item.textContent || "";
-        return /AI Toolbox/i.test(text) && /Micro-Trainings|AI Mini-Trainings/i.test(text);
-      });
-    if (!shell) return null;
-
-    const headingWrap = heading?.parentElement || null;
-    const directSection = Array.from(shell.children)
-      .find(child => child !== headingWrap && child.querySelector("a[href]"));
-    if (directSection) return directSection;
-
-    const cardGrid = shell.querySelector("div[style*='grid'][style*='minmax']");
-    return cardGrid?.parentElement || null;
+  function findResourcesSection(root) {
+    return root.querySelector(getManagedSectionSelector("resources")) || findSectionByHeading(root, "Featured Resources");
   }
 
-  function findResourcesSection(root) {
-    return root.querySelector(getManagedSectionSelector("resources"))
-      || findToolboxResourcesSection(root)
-      || findSectionByHeading(root, "Featured Resources");
+  function getEventsViewAllUrl(section) {
+    const viewAllLink = Array.from(section.querySelectorAll("a[href]"))
+      .find(link => /view all events/i.test(link.textContent || ""));
+    return viewAllLink?.getAttribute("href") || "REPLACE-WITH-ALL-EVENTS-LINK";
   }
 
   function getCoursesViewAllUrl(section) {
@@ -533,33 +405,6 @@ window.AIHubStatus = {
     return actionType === "download" ? "Download" : "View Resource";
   }
 
-  function getResourceHref(resourceRecord) {
-    const actionType = getResourceActionType(resourceRecord);
-    return actionType === "canvas_page"
-      ? resourceRecord.page_url || resourceRecord.html_url || "#"
-      : resourceRecord.resource_url || "#";
-  }
-
-  function getResourceMetaText(resourceRecord) {
-    const category = limitText(resourceRecord.category || resourceRecord.topic || "", RESOURCE_CATEGORY_MAX_LENGTH);
-    const detail = limitText(resourceRecord.detail || resourceRecord.duration || "", RESOURCE_DETAIL_MAX_LENGTH);
-    if (category && detail) return category + " - " + detail;
-    if (category) return category;
-    if (detail) return detail;
-    return getResourceActionLabel(resourceRecord);
-  }
-
-  function getResourceMetaLine(resourceRecord) {
-    const category = limitText(resourceRecord.category || resourceRecord.topic || "", RESOURCE_CATEGORY_MAX_LENGTH);
-    const detail = limitText(resourceRecord.detail || resourceRecord.duration || "", RESOURCE_DETAIL_MAX_LENGTH);
-    if (category && detail) return escapeHtml(category) + " &middot; " + escapeHtml(detail);
-    return escapeHtml(getResourceMetaText(resourceRecord));
-  }
-
-  function getResourceCardActionText(resourceRecord) {
-    return getResourceActionType(resourceRecord) === "download" ? "Download resource" : "Open resource";
-  }
-
   function renderEventCard(eventRecord) {
     const title = eventRecord.title || "Untitled Event";
     const monthLabel = getShortMonth(eventRecord.event_date) || "TBD";
@@ -570,13 +415,13 @@ window.AIHubStatus = {
     return `
       <div style="background: #ffffff; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec;">
         <div style="display: inline-block; align-self: flex-start; border-radius: 8px; padding: 6px 12px; text-align: center; line-height: 1.1; margin-bottom: 14px; border: 1px solid #e6e8ec;">
-          <div style="font-size: 11px; color: #1d4ed8;">${escapeHtml(monthLabel)}</div>
+          <div style="font-size: 11px; color: #b20b0f;">${escapeHtml(monthLabel)}</div>
           <div style="font-size: 22px; color: #000000;">${escapeHtml(dayLabel)}</div>
         </div>
         <h3 style="margin: 0 0 12px; font-size: 16px; color: #000000; line-height: 1.25;">${escapeHtml(title)}</h3>
         <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;"><span aria-hidden="true">&#128336;&nbsp;</span> ${getEventDateLine(eventRecord)}</div>
         <div style="font-size: 13px; color: #6b7280; margin-bottom: 18px;"><span aria-hidden="true">&#128205;&nbsp;</span> ${escapeHtml(locationLabel)}</div>
-        <a style="margin-top: auto; display: block; text-align: center; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 10px; border-radius: 8px; border: 1.5px solid #000000;" href="${escapeAttribute(bookingUrl)}" target="_blank" aria-label="Register for ${escapeAttribute(title)}" rel="noopener">Register</a>
+        <a style="margin-top: auto; display: block; text-align: center; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; padding: 10px; border-radius: 8px; border: 1.5px solid #000000;" href="${escapeAttribute(bookingUrl)}" target="_blank" aria-label="Register for ${escapeAttribute(title)}" rel="noopener">Register</a>
       </div>
     `;
   }
@@ -593,7 +438,7 @@ window.AIHubStatus = {
         <div style="width: 52px; height: 52px; border-radius: 50%; background: #eeeeef; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; font-size: 23px;" aria-hidden="true">${escapeHtml(icon)}</div>
         <h3 style="margin: 0 0 8px; font-size: 16px; line-height: 1.25;"><a style="color: #000000; text-decoration: underline;" href="${escapeAttribute(courseUrl)}">${escapeHtml(title)}</a></h3>
         <div style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">${escapeHtml(description)}</div>
-        <div style="font-size: 12px; color: #1d4ed8;"><span aria-hidden="true">&#128336;&nbsp;</span> ${escapeHtml(formatLabel)}</div>
+        <div style="font-size: 12px; color: #b20b0f;"><span aria-hidden="true">&#128336;&nbsp;</span> ${escapeHtml(formatLabel)}</div>
       </div>
     `;
   }
@@ -602,33 +447,37 @@ window.AIHubStatus = {
     const title = resourceRecord.title || "Untitled Resource";
     const description = resourceRecord.description || "";
     const icon = getResourceIcon(resourceRecord);
-    const metaLine = getResourceMetaLine(resourceRecord);
-    const actionLabel = getResourceCardActionText(resourceRecord);
-    const href = getResourceHref(resourceRecord);
+    const actionLabel = getResourceActionLabel(resourceRecord);
+    const actionType = getResourceActionType(resourceRecord);
+    const href = actionType === "canvas_page"
+      ? resourceRecord.page_url || resourceRecord.html_url || "#"
+      : resourceRecord.resource_url || "#";
+    const arrow = actionLabel === "Download" ? "&#11015;" : "&rarr;";
 
     return `
-      <div style="display: flex; flex-direction: column; min-height: 270px; color: #111827; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; overflow: hidden;">
-        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 118px; background: #eff6ff; color: #1d4ed8; font-size: 46px; line-height: 1; border-bottom: 1px solid #dbe3f0;" role="img" aria-label="${escapeAttribute(title + " image placeholder")}">${escapeHtml(icon)}</div>
-        <span style="display: block; padding: 16px 16px 0; font-size: 12px; color: #1d4ed8; text-transform: uppercase; font-weight: bold;">${metaLine}</span>
-        <strong style="display: block; padding: 8px 16px 0; font-size: 19px; line-height: 1.2; color: #000000;">${escapeHtml(title)}</strong>
-        <span style="display: block; padding: 8px 16px 0; font-size: 14px; color: #4b5563;">${escapeHtml(description)}</span>
-        <a style="display: block; margin-top: auto; padding: 16px; color: #1d4ed8; font-size: 14px; font-weight: bold; text-decoration: none;" href="${escapeAttribute(href)}" aria-label="${escapeAttribute(actionLabel + " " + title)}">${escapeHtml(actionLabel)} <span aria-hidden="true">&rarr;</span></a>
+      <div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec;">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #eeeeef; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px;" aria-hidden="true">${escapeHtml(icon)}</div>
+        <h3 style="margin: 0 0 8px; font-size: 16px; color: #000000; line-height: 1.25;">${escapeHtml(title)}</h3>
+        <p style="margin: 0 0 16px; font-size: 13px; color: #6b7280;">${escapeHtml(description)}</p>
+        <a style="margin-top: auto; color: #b20b0f; font-size: 14px; text-decoration: underline;" href="${escapeAttribute(href)}" aria-label="${escapeAttribute(actionLabel + " " + title)}">${escapeHtml(actionLabel)} <span aria-hidden="true">${arrow}</span></a>
       </div>
     `;
   }
 
-  function renderEventsSection(events) {
+  function renderEventsSection(events, options) {
     const activeEvents = sortEventsByDate(events || []).filter(eventRecord => eventRecord.status !== "archived");
+    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-EVENTS-LINK";
     const cardsHtml = activeEvents.length
       ? activeEvents.map(renderEventCard).join("")
       : `<div style="background: #ffffff; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No upcoming events are scheduled yet.</div>`;
 
     return `
       <div ${HUB_SECTION_ATTRIBUTE}="events" style="margin-top: 52px;">
-        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 28px; color: #000000;">Upcoming Events</h2>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Upcoming Events</h2>
+          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all events <span aria-hidden="true">&rarr;</span></a>
         </div>
-        <div style="display: grid; grid-template-columns: ${EVENTS_GRID_COLUMNS}; gap: ${EVENTS_GRID_GAP};">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
       </div>
@@ -645,7 +494,7 @@ window.AIHubStatus = {
     return `
       <div ${HUB_SECTION_ATTRIBUTE}="courses" style="margin-top: 52px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: 700; font-size: 28px; color: #000000;">Explore Courses</h2>
+          <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Explore Courses</h2>
           <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all courses <span aria-hidden="true">&rarr;</span></a>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
@@ -657,71 +506,19 @@ window.AIHubStatus = {
 
   function renderResourcesSection(resources, options) {
     const sortedResources = sortBySortOrder(resources || []);
+    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-RESOURCES-LINK";
     const cardsHtml = sortedResources.length
       ? sortedResources.map(renderResourceCard).join("")
-      : `<div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No resources have been added yet.</div>`;
+      : `<div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No featured resources have been added yet.</div>`;
 
     return `
-      <div ${HUB_SECTION_ATTRIBUTE}="resources" style="padding: 20px; background: #f8fafc; border: 1px solid #dbe3f0; border-radius: 16px;">
-        <div style="display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px;">
+      <div ${HUB_SECTION_ATTRIBUTE}="resources" style="margin-top: 52px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Featured Resources</h2>
+          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all resources <span aria-hidden="true">&rarr;</span></a>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
           ${cardsHtml}
-        </div>
-      </div>
-    `;
-  }
-
-  function renderToolboxPageBody(data) {
-    const normalizedData = normalizeHubData(data);
-
-    return `
-      <div style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
-        <div style="padding: 0 4px 34px;">
-          <div style="display: inline-block; color: #1d4ed8; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">AI Toolbox</div>
-          <h2 style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">Micro-Trainings &amp; Resources</h2>
-          <p style="margin: 18px 0 0; font-size: 17px; max-width: 680px; color: #4b5563;">Pick a short training and jump into a specific AI skill, workflow, or teaching move.</p>
-        </div>
-        ${renderResourcesSection(normalizedData.resources, {})}
-      </div>
-    `;
-  }
-
-  function renderHubPageBody(data) {
-    const normalizedData = normalizeHubData(data);
-
-    return `
-      <div data-ai-hub-section="shell" style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
-        <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: center; padding: 0 4px 52px;">
-          <div style="flex: 1 1 340px;">
-            <h2 style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; margin: 0; font-size: 46px; line-height: 1.08; color: #000000;">Use AI with Purpose<br /><span style="color: #1d4ed8;">Learn. Build. Create.</span></h2>
-            <p style="margin: 18px 0 28px; font-size: 17px; max-width: 470px; color: #4b5563;">Your central hub for AI tools, training, resources, and project support across teaching, learning, course design, and daily work.</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 12px;"><a style="display: inline-block; background: #1d4ed8; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 13px 24px; border-radius: 8px;" href="https://btech.instructure.com/courses/632661/pages/contact">Get Help with AI: Contact ISD</a></div>
-          </div>
-          <div style="flex: 1 1 340px;"><img style="display: block; width: 100%; min-height: 300px; border-radius: 18px; border: 1px solid #e5e7eb;" src="https://btech.instructure.com/courses/611213/files/123202821/preview" alt="People collaborating around course and technology planning" data-api-endpoint="https://btech.instructure.com/api/v1/courses/611213/files/123202821" data-api-returntype="File" /></div>
-        </div>
-        <div style="margin-top: 0;">
-          <h2 style="margin: 0 0 18px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 28px; color: #000000;">Choose Your AI Path</h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 18px;">
-            <div style="background: #ffffff; border: 1px solid #e6e8ec; border-radius: 16px; padding: 26px; display: flex; flex-direction: column;">
-              <div style="font-size: 12px; color: #1d4ed8; text-transform: uppercase; margin-bottom: 8px;"><strong>Start here</strong></div>
-              <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 24px; color: #000000; line-height: 1.2;">AI Basics Course</h3>
-              <p style="margin: 0 0 20px; font-size: 15px; color: #4b5563;">A guided start-to-finish course for learning AI foundations in chronological order and completing the full pathway.</p>
-              <a style="margin-top: auto; display: inline-block; align-self: flex-start; background: #1d4ed8; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 20px; border-radius: 8px;" href="https://btech.instructure.com/courses/632661/modules">Start the Journey</a>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e6e8ec; border-radius: 16px; padding: 26px; display: flex; flex-direction: column;">
-              <div style="font-size: 12px; color: #1d4ed8; text-transform: uppercase; margin-bottom: 8px;"><strong>Toolbox</strong></div>
-              <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 24px; color: #000000; line-height: 1.2;">Micro-Trainings &amp; Resources</h3>
-              <p style="margin: 0 0 20px; font-size: 15px; color: #4b5563;">Short, one-off trainings and resources for specific AI skills, tools, classroom uses, and workflow ideas.</p>
-              <a style="margin-top: auto; display: inline-block; align-self: flex-start; background: #000000; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 20px; border-radius: 8px;" href="https://btech.instructure.com/courses/632661/pages/tool-box">Open the Toolbox</a>
-            </div>
-          </div>
-        </div>
-        ${renderEventsSection(normalizedData.events, {})}
-        <div style="margin-top: 48px; margin-bottom: 8px; background: #1d4ed8; border-radius: 16px; padding: 32px 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between;">
-          <div style="flex: 1 1 320px;">
-            <h2 style="margin: 0 0 8px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight: bold; font-size: 26px; color: #ffffff;">Need help with an AI project?</h2>
-            <div style="font-size: 15px; color: rgba(255,255,255,0.88); max-width: 620px;">ISD can help you plan responsible AI use, choose tools, build workflows, design learning activities, and think through project guardrails.</div>
-          </div>
-          <span style="color: #1d4ed8;"><a style="display: inline-block; background: #ffffff; color: #1d4ed8; text-decoration: none; font-size: 15px; font-weight: bold; padding: 13px 24px; border-radius: 8px;" href="https://btech.instructure.com/courses/632661/pages/contact">Get Help with AI: Contact ISD</a></span>
         </div>
       </div>
     `;
@@ -736,7 +533,9 @@ window.AIHubStatus = {
     }
 
     const template = doc.createElement("template");
-    template.innerHTML = renderEventsSection(normalizeHubData(data).events).trim();
+    template.innerHTML = renderEventsSection(normalizeHubData(data).events, {
+      viewAllUrl: getEventsViewAllUrl(currentSection)
+    }).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return doc.body.innerHTML;
@@ -764,11 +563,13 @@ window.AIHubStatus = {
     const currentSection = findResourcesSection(doc);
 
     if (!currentSection) {
-      throw new Error('Could not find the toolbox resources section in the current AI Hub page body.');
+      throw new Error('Could not find the "Featured Resources" section in the current hub page body.');
     }
 
     const template = doc.createElement("template");
-    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {}).trim();
+    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {
+      viewAllUrl: getResourcesViewAllUrl(currentSection)
+    }).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return doc.body.innerHTML;
@@ -779,7 +580,9 @@ window.AIHubStatus = {
     if (!currentSection) return false;
 
     const template = document.createElement("template");
-    template.innerHTML = renderEventsSection(normalizeHubData(data).events).trim();
+    template.innerHTML = renderEventsSection(normalizeHubData(data).events, {
+      viewAllUrl: getEventsViewAllUrl(currentSection)
+    }).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return true;
@@ -790,7 +593,9 @@ window.AIHubStatus = {
     if (!currentSection) return false;
 
     const template = document.createElement("template");
-    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {}).trim();
+    template.innerHTML = renderResourcesSection(normalizeHubData(data).resources, {
+      viewAllUrl: getResourcesViewAllUrl(currentSection)
+    }).trim();
 
     currentSection.replaceWith(template.content.firstElementChild);
     return true;
@@ -809,27 +614,6 @@ window.AIHubStatus = {
     return true;
   }
 
-  function replaceRenderedSectionInBody(body, data, sectionName) {
-    if (sectionName === "courses") return replaceCoursesSectionInBody(body, data);
-    if (sectionName === "resources") return replaceResourcesSectionInBody(body, data);
-    return replaceEventsSectionInBody(body, data);
-  }
-
-  function replaceRenderedSectionInCurrentDom(data, sectionName) {
-    if (sectionName === "courses") return replaceCoursesSectionInCurrentDom(data);
-    if (sectionName === "resources") return replaceResourcesSectionInCurrentDom(data);
-    return replaceEventsSectionInCurrentDom(data);
-  }
-
-  function getCurrentRenderedSectionName() {
-    return isAiHubToolboxPath() ? "resources" : "events";
-  }
-
-  function isToolboxPageBody(body) {
-    const text = new DOMParser().parseFromString(body || "", "text/html").body.textContent || "";
-    return /AI Toolbox/i.test(text) && /Micro-Trainings|AI Mini-Trainings/i.test(text);
-  }
-
   function readDataFromPageBody(body) {
     const doc = new DOMParser().parseFromString(body || "", "text/html");
     const dataElement = doc.getElementById(DATA_ELEMENT_ID);
@@ -842,13 +626,13 @@ window.AIHubStatus = {
     try {
       return Object.assign(getDefaultHubData(), JSON.parse(raw));
     } catch (error) {
-      console.warn("AI Hub JSON page could not be parsed. Using default data.", error);
+      console.warn("ISD Hub JSON page could not be parsed. Using default data.", error);
       return getDefaultHubData();
     }
   }
 
-  async function fetchDataPageAtUrl(pageUrl) {
-    const response = await fetch(getDataPageApiUrl(pageUrl), {
+  async function fetchDataPage() {
+    const response = await fetch(getDataPageApiUrl(), {
       method: "GET",
       credentials: "include",
       headers: {
@@ -856,40 +640,11 @@ window.AIHubStatus = {
       }
     });
 
-    if (response.ok) {
-      const page = await response.json();
-      setActiveDataPageUrl(page.url || pageUrl);
-      return page;
+    if (!response.ok) {
+      throw new Error("Could not fetch JSON data page. Status: " + response.status);
     }
 
-    const error = new Error("Could not fetch JSON data page /pages/" + pageUrl + ". Status: " + response.status);
-    error.status = response.status;
-    error.pageUrl = pageUrl;
-    throw error;
-  }
-
-  async function fetchDataPage() {
-    const errors = [];
-
-    for (const pageUrl of getDataPageCandidateUrls()) {
-      try {
-        return await fetchDataPageAtUrl(pageUrl);
-      } catch (error) {
-        error.pageUrl = error.pageUrl || pageUrl;
-        errors.push(error);
-        if (![403, 404].includes(error.status)) break;
-      }
-    }
-
-    const statusSummary = errors
-      .map(error => "/pages/" + error.pageUrl + " -> " + (error.status || "request failed"))
-      .join("; ");
-    const hasPermissionError = errors.some(error => error.status === 403);
-    const guidance = hasPermissionError
-      ? " Canvas denied access. Confirm the AI Hub JSON page exists at /pages/" + DATA_PAGE_URL + " and that your Canvas role can read and edit course pages."
-      : " Confirm the AI Hub JSON page exists at /pages/" + DATA_PAGE_URL + ".";
-
-    throw new Error("Could not fetch AI Hub JSON data page. Tried " + statusSummary + "." + guidance);
+    return response.json();
   }
 
   async function loadHubData() {
@@ -906,32 +661,37 @@ window.AIHubStatus = {
     const csrfToken = getCsrfToken();
     if (csrfToken) headers["x-csrf-token"] = csrfToken;
 
-    const pageUrl = activeDataPageUrl || DATA_PAGE_URL;
-    const payload = getDataPagePayload(data, pageUrl);
-    let response = await fetch(getDataPageApiUrl(pageUrl), {
+    const response = await fetch(getDataPageApiUrl(), {
       method: "PUT",
       credentials: "include",
       headers,
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        wiki_page: {
+          url: DATA_PAGE_URL,
+          title: "JSON",
+          editing_roles: "teachers",
+          published: false,
+          hide_from_students: true,
+          front_page: false,
+          body: renderDataPageBody(data),
+          set_assignment: "0",
+          assignment: {
+            set_assignment: "0",
+            publishable: true,
+            hidden: false,
+            unpublishable: true
+          },
+          notify_of_update: "0",
+          student_planner_checkbox: false
+        }
+      })
     });
-
-    if (response.status === 404) {
-      setActiveDataPageUrl(DATA_PAGE_URL);
-      response = await fetch(getPagesApiUrl(), {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: JSON.stringify(getDataPagePayload(data, DATA_PAGE_URL))
-      });
-    }
 
     if (!response.ok) {
       throw new Error("Could not save JSON data page. Status: " + response.status + ". " + await response.text());
     }
 
-    const savedPage = await response.json();
-    setActiveDataPageUrl(savedPage.url || pageUrl);
-    return savedPage;
+    return response.json();
   }
 
   async function fetchCanvasPage(pageUrl) {
@@ -950,184 +710,11 @@ window.AIHubStatus = {
     return response.json();
   }
 
-  function getNextPageUrl(response) {
-    const linkHeader = response.headers.get("Link") || "";
-    const nextLink = linkHeader.split(",").find(part => /rel="?next"?/i.test(part));
-    const match = nextLink ? nextLink.match(/<([^>]+)>/) : null;
-    return match ? match[1] : "";
-  }
-
-  async function fetchPaginatedJson(startUrl, errorLabel) {
-    let nextUrl = startUrl;
-    const records = [];
-
-    while (nextUrl) {
-      const response = await fetch(nextUrl, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "accept": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(errorLabel + ". Status: " + response.status);
-      }
-
-      const pageRecords = await response.json();
-      records.push(...(Array.isArray(pageRecords) ? pageRecords : [pageRecords]));
-      nextUrl = getNextPageUrl(response);
-    }
-
-    return records;
-  }
-
-  function normalizeResourceModuleName(moduleName) {
-    return String(moduleName || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .replace(/\s+module$/, "");
-  }
-
-  async function fetchCourseModules() {
-    return fetchPaginatedJson(getModulesApiUrl() + "?per_page=100", "Could not fetch course modules");
-  }
-
-  async function fetchModuleItems(moduleId) {
-    return fetchPaginatedJson(getModuleItemsApiUrl(moduleId) + "?per_page=100", "Could not fetch module items");
-  }
-
-  async function createResourceModule() {
-    const headers = {
-      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
-      "content-type": "application/json",
-      "x-requested-with": "XMLHttpRequest"
-    };
-    const csrfToken = getCsrfToken();
-    if (csrfToken) headers["x-csrf-token"] = csrfToken;
-
-    const response = await fetch(getModulesApiUrl(), {
-      method: "POST",
-      mode: "cors",
-      credentials: "include",
-      headers,
-      referrer: window.location.origin + getCoursePath() + "/modules",
-      body: JSON.stringify({
-        module: {
-          name: RESOURCE_MODULE_NAMES[0],
-          position: 999
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Could not create the " + RESOURCE_MODULE_NAMES[0] + " module. Status: " + response.status + ". " + await response.text());
-    }
-
-    return response.json();
-  }
-
-  async function findOrCreateResourceModule() {
-    const targetNames = RESOURCE_MODULE_NAMES.map(normalizeResourceModuleName);
-    const modules = await fetchCourseModules();
-    const resourceModule = modules.find(moduleRecord => targetNames.includes(normalizeResourceModuleName(moduleRecord.name)));
-
-    return resourceModule || createResourceModule();
-  }
-
-  function moduleItemMatchesResourcePage(moduleItem, resourceRecord, page) {
-    if (moduleItem?.type !== "Page") return false;
-
-    const pageSlug = page?.url || getResourcePageSlug(resourceRecord);
-    const pageId = String(page?.page_id || page?.id || resourceRecord?.page_id || "");
-    const itemPageSlug = moduleItem.page_url || "";
-    const itemContentId = String(moduleItem.content_id || "");
-
-    return Boolean(pageSlug && itemPageSlug === pageSlug)
-      || Boolean(pageId && itemContentId === pageId);
-  }
-
-  async function updateResourceModuleItemTitle(moduleId, moduleItem, title) {
-    if (!moduleItem?.id || moduleItem.title === title) return moduleItem;
-
-    const headers = {
-      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
-      "content-type": "application/json",
-      "x-requested-with": "XMLHttpRequest"
-    };
-    const csrfToken = getCsrfToken();
-    if (csrfToken) headers["x-csrf-token"] = csrfToken;
-
-    const response = await fetch(getModuleItemsApiUrl(moduleId) + "/" + encodeURIComponent(moduleItem.id), {
-      method: "PUT",
-      mode: "cors",
-      credentials: "include",
-      headers,
-      referrer: window.location.origin + getCoursePath() + "/modules",
-      body: JSON.stringify({
-        module_item: {
-          title
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Could not update the resource module item title. Status: " + response.status + ". " + await response.text());
-    }
-
-    return response.json();
-  }
-
-  async function ensureResourcePageInModule(resourceRecord, page) {
-    const pageSlug = page?.url || getResourcePageSlug(resourceRecord);
-    if (!pageSlug) {
-      throw new Error("Could not add resource to module because the Canvas page slug is missing.");
-    }
-
-    const resourceModule = await findOrCreateResourceModule();
-    const moduleItems = await fetchModuleItems(resourceModule.id);
-    const existingItem = moduleItems.find(moduleItem => moduleItemMatchesResourcePage(moduleItem, resourceRecord, page));
-    const title = resourceRecord.title || page?.title || "Resource";
-    if (existingItem) return updateResourceModuleItemTitle(resourceModule.id, existingItem, title);
-
-    const headers = {
-      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
-      "content-type": "application/json",
-      "x-requested-with": "XMLHttpRequest"
-    };
-    const csrfToken = getCsrfToken();
-    if (csrfToken) headers["x-csrf-token"] = csrfToken;
-
-    const response = await fetch(getModuleItemsApiUrl(resourceModule.id), {
-      method: "POST",
-      mode: "cors",
-      credentials: "include",
-      headers,
-      referrer: window.location.origin + getCoursePath() + "/modules",
-      body: JSON.stringify({
-        module_item: {
-          title,
-          type: "Page",
-          page_url: pageSlug,
-          indent: 0,
-          position: 999
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Could not add resource page to the " + RESOURCE_MODULE_NAMES[0] + " module. Status: " + response.status + ". " + await response.text());
-    }
-
-    return response.json();
-  }
-
   function saveLocalPageBackup(pageUrl, body) {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const key = HUB_PAGE_BACKUP_PREFIX + ":" + getCourseId() + ":" + pageUrl + ":" + stamp;
     localStorage.setItem(key, body || "");
-    console.log("AI Hub page backup saved:", key);
+    console.log("ISD Hub page backup saved:", key);
     return key;
   }
 
@@ -1166,66 +753,10 @@ window.AIHubStatus = {
     return response.json();
   }
 
-  function replaceCurrentPageBodyInDom(updatedBody) {
-    const target = document.querySelector("#wiki_page_show .user_content")
-      || document.querySelector(".show-content")
-      || document.querySelector("#content .user_content")
-      || document.querySelector(".user_content");
-
-    if (target) {
-      target.innerHTML = updatedBody;
-    }
-  }
-
   function renderResourcePageBody(resourceRecord) {
-    const title = resourceRecord.title || "Resource";
-    const description = resourceRecord.description || "A short AI toolbox resource.";
-    const metaLine = getResourceMetaText(resourceRecord);
-    const backHref = getCoursePath() + "/pages/" + TOOLBOX_PAGE_URL;
-
     return `
-      <div data-ai-hub-resource-page="true" style="max-width: 1000px; margin: 0 auto; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
-        <div style="padding: 0 4px 24px;">
-          <a style="display: inline-block; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; padding: 11px 18px; border-radius: 8px;" href="${escapeAttribute(backHref)}">&larr; Back to resources</a>
-        </div>
-        <div style="padding: 0 4px 28px;">
-          <div data-ai-hub-resource-meta style="display: inline-block; color: #1d4ed8; font-size: 12px; margin-bottom: 10px;">${escapeHtml(metaLine)}</div>
-          <h2 data-ai-hub-resource-title style="font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
-          <p data-ai-hub-resource-description style="margin: 18px 0 0; font-size: 17px; color: #4b5563;">${escapeHtml(description)}</p>
-        </div>
-        <div style="padding: 0 4px;">
-          [insert video]
-        </div>
-        <div style="margin-top: 30px; padding: 0 4px;">
-          <h3 style="margin: 0 0 10px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
-          <p style="margin: 0; font-size: 16px; color: #4b5563;">&nbsp;</p>
-        </div>
-        <div style="margin-top: 28px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #bfdbfe;">
-          <div style="background: #1d4ed8; color: #ffffff; padding: 12px 18px; font-family: 'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size: 16px;">Before You Apply This</div>
-          <div style="padding: 18px 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 22px;">
-              <div>
-                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Safe</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Do not enter private, sensitive, student, or protected information into AI tools.</p>
-              </div>
-              <div>
-                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Appropriate</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Use AI for planning, drafting, practice, and feedback support while keeping instructor expertise central.</p>
-              </div>
-              <div>
-                <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">Transparent</div>
-                <p style="margin: 0; font-size: 14px; color: #4b5563;">Be clear with learners or colleagues when AI helped shape materials, feedback, examples, or decisions.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 28px; background: #ffffff; border: 1px solid #dbe3f0; border-radius: 14px; padding: 20px 22px;">
-          <div style="display: inline-block; background: #e0efff; color: #1d4ed8; border-radius: 8px; padding: 5px 10px; font-size: 12px; margin-bottom: 12px;">Resources</div>
-          <ul style="margin: 0; padding-left: 22px; font-size: 15px; color: #4b5563;">
-            <li><a style="color: #1d4ed8; text-decoration: underline;" href="#">Example resource link</a></li>
-          </ul>
-        </div>
-      </div>
+      <h2>${escapeHtml(resourceRecord.title || "Resource")}</h2>
+      <p>${escapeHtml(resourceRecord.description || "")}</p>
     `;
   }
 
@@ -1234,26 +765,7 @@ window.AIHubStatus = {
     const descriptionHtml = `<p>${escapeHtml(resourceRecord.description || "")}</p>`;
     let body = String(existingBody || "").trim();
 
-    if (!body) return renderResourcePageBody(resourceRecord).trim();
-
-    if (/^<h2\b[^>]*>[\s\S]*?<\/h2>\s*<p\b[^>]*>[\s\S]*?<\/p>$/i.test(body)) {
-      return renderResourcePageBody(resourceRecord).trim();
-    }
-
-    const doc = new DOMParser().parseFromString(body, "text/html");
-    const managedPage = doc.querySelector("[data-ai-hub-resource-page]");
-
-    if (managedPage) {
-      const titleElement = managedPage.querySelector("[data-ai-hub-resource-title]");
-      const descriptionElement = managedPage.querySelector("[data-ai-hub-resource-description]");
-      const metaElement = managedPage.querySelector("[data-ai-hub-resource-meta]");
-
-      if (titleElement) titleElement.textContent = resourceRecord.title || "Resource";
-      if (descriptionElement) descriptionElement.textContent = resourceRecord.description || "A short AI toolbox resource.";
-      if (metaElement) metaElement.textContent = getResourceMetaText(resourceRecord);
-
-      return doc.body.innerHTML.trim();
-    }
+    if (!body) return titleHtml + "\n" + descriptionHtml;
 
     if (/<h2\b[^>]*>[\s\S]*?<\/h2>/i.test(body)) {
       body = body.replace(/<h2\b[^>]*>[\s\S]*?<\/h2>/i, titleHtml);
@@ -1291,7 +803,6 @@ window.AIHubStatus = {
           editor: "rce",
           block_editor_attributes: null,
           publishable: true,
-          published: true,
           deletable: true,
           title: resourceRecord.title || "New Resource",
           body: renderResourcePageBody(resourceRecord),
@@ -1354,7 +865,6 @@ window.AIHubStatus = {
       url: pageUrl,
       title: resourceRecord.title || page.title || "Resource",
       body: updateResourcePageBody(page.body, resourceRecord),
-      published: true,
       notify_of_update: "0",
       student_planner_checkbox: false
     });
@@ -1372,45 +882,6 @@ window.AIHubStatus = {
 
     if (!response.ok) {
       throw new Error("Could not update resource Canvas page. Status: " + response.status + ". " + await response.text());
-    }
-
-    return response.json();
-  }
-
-  async function unpublishCanvasResourcePage(resourceRecord) {
-    const pageSlug = getResourcePageSlug(resourceRecord);
-    if (!pageSlug) return null;
-
-    const page = await fetchCanvasPage(pageSlug);
-    const headers = {
-      "accept": "application/json, text/javascript, application/json+canvas-string-ids, */*; q=0.01",
-      "content-type": "application/json",
-      "x-requested-with": "XMLHttpRequest"
-    };
-    const csrfToken = getCsrfToken();
-    if (csrfToken) headers["x-csrf-token"] = csrfToken;
-
-    const pageUrl = page.url || pageSlug;
-    const wikiPage = Object.assign({}, page, {
-      url: pageUrl,
-      published: false,
-      notify_of_update: "0",
-      student_planner_checkbox: false
-    });
-
-    const response = await fetch(getPageApiUrl(pageUrl), {
-      method: "PUT",
-      mode: "cors",
-      credentials: "include",
-      headers,
-      referrer: window.location.origin + getCoursePath() + "/pages/" + pageUrl + "/edit",
-      body: JSON.stringify({
-        wiki_page: wikiPage
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Could not unpublish linked resource page. Status: " + response.status + ". " + await response.text());
     }
 
     return response.json();
@@ -1436,9 +907,8 @@ window.AIHubStatus = {
     }
   }
 
-  async function saveRenderedHubPage(data, sectionName) {
+  async function saveRenderedHubPage(data) {
     const pageUrl = getCurrentHubPageUrl();
-    const renderedSectionName = sectionName || getCurrentRenderedSectionName();
 
     if (!pageUrl) {
       throw new Error("Could not determine the current Canvas page URL.");
@@ -1450,39 +920,23 @@ window.AIHubStatus = {
 
     const page = await fetchCanvasPage(pageUrl);
     const normalizedData = normalizeHubData(data);
-    let usedFullPageFallback = false;
-    let updatedBody = "";
-
-    try {
-      updatedBody = replaceRenderedSectionInBody(page.body, normalizedData, renderedSectionName);
-    } catch (error) {
-      const canUseToolboxFallback = renderedSectionName === "resources"
-        && (isAiHubToolboxPath() || isToolboxPageBody(page.body) || /tool/i.test(pageUrl));
-      if (!canUseToolboxFallback) {
-        throw error;
-      }
-
-      usedFullPageFallback = true;
-      updatedBody = renderToolboxPageBody(normalizedData).trim();
-      console.warn("AI Hub toolbox resources section was not found. Replacing the toolbox page body instead.", error);
-    }
-
+    let updatedBody = replaceEventsSectionInBody(page.body, normalizedData);
+    updatedBody = replaceCoursesSectionInBody(updatedBody, normalizedData);
+    updatedBody = replaceResourcesSectionInBody(updatedBody, normalizedData);
     const backupKey = saveLocalPageBackup(pageUrl, page.body);
     const savedPage = await saveCanvasPageBody(page, updatedBody);
-    if (usedFullPageFallback) {
-      replaceCurrentPageBodyInDom(updatedBody);
-    } else {
-      replaceRenderedSectionInCurrentDom(normalizedData, renderedSectionName);
-    }
-    console.log("AI Hub visible page saved:", pageUrl, "Backup:", backupKey);
+    replaceEventsSectionInCurrentDom(normalizedData);
+    replaceCoursesSectionInCurrentDom(normalizedData);
+    replaceResourcesSectionInCurrentDom(normalizedData);
+    console.log("ISD Hub visible page saved:", pageUrl, "Backup:", backupKey);
     return savedPage;
   }
 
-  async function saveHubDataAndRenderedPage(data, sectionName) {
+  async function saveHubDataAndRenderedPage(data) {
     await saveHubData(data);
 
     try {
-      await saveRenderedHubPage(data, sectionName);
+      await saveRenderedHubPage(data);
     } catch (error) {
       throw new Error("JSON page saved, but visible hub page update failed. " + error.message);
     }
@@ -1491,42 +945,12 @@ window.AIHubStatus = {
   }
 
   async function seedHubDataPage() {
-    const ok = window.confirm("Replace /pages/" + DATA_PAGE_URL + " with starter AI Hub JSON data?");
+    const ok = window.confirm("Replace /pages/" + DATA_PAGE_URL + " with starter ISD Hub JSON data?");
     if (!ok) return null;
 
     const data = getStarterHubData();
     await saveHubData(data);
     return data;
-  }
-
-  async function seedCurrentHubPage() {
-    const pageUrl = getCurrentHubPageUrl();
-
-    if (!pageUrl) {
-      throw new Error("Could not determine the current Canvas page URL.");
-    }
-
-    if (pageUrl === DATA_PAGE_URL) {
-      throw new Error("Open the visible AI Hub page before seeding the page layout.");
-    }
-
-    const layoutLabel = isAiHubToolboxPath() ? "starter AI Toolbox layout" : "starter AI Hub layout";
-    const ok = window.confirm("Replace the current Canvas page body with the " + layoutLabel + " and save starter JSON to /pages/" + DATA_PAGE_URL + "?");
-    if (!ok) return null;
-
-    const data = getStarterHubData();
-    await saveHubData(data);
-
-    const page = await fetchCanvasPage(pageUrl);
-    const updatedBody = isAiHubToolboxPath()
-      ? renderToolboxPageBody(data).trim()
-      : renderHubPageBody(data).trim();
-    const backupKey = saveLocalPageBackup(pageUrl, page.body);
-    const savedPage = await saveCanvasPageBody(page, updatedBody);
-    replaceCurrentPageBodyInDom(updatedBody);
-
-    console.log("AI Hub starter page saved:", pageUrl, "Backup:", backupKey);
-    return { data, savedPage, backupKey };
   }
 
   function createId(prefix) {
@@ -1633,7 +1057,7 @@ window.AIHubStatus = {
     }
 
     sortAndRenumberEventsByDate(normalizedData);
-    await saveHubDataAndRenderedPage(normalizedData, "events");
+    await saveHubDataAndRenderedPage(normalizedData);
     return eventRecord;
   }
 
@@ -1641,7 +1065,7 @@ window.AIHubStatus = {
     const data = normalizeHubData(await loadHubData());
     data.events = data.events.filter(item => item.id !== eventId);
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data, "events");
+    await saveHubDataAndRenderedPage(data);
     return data.events;
   }
 
@@ -1653,7 +1077,7 @@ window.AIHubStatus = {
     eventRecord.status = status;
     eventRecord.updated_at = new Date().toISOString();
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data, "events");
+    await saveHubDataAndRenderedPage(data);
     return eventRecord;
   }
 
@@ -1670,7 +1094,7 @@ window.AIHubStatus = {
     data.events[currentIndex] = data.events[nextIndex];
     data.events[nextIndex] = moved;
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data, "events");
+    await saveHubDataAndRenderedPage(data);
     return data.events;
   }
 
@@ -1692,7 +1116,7 @@ window.AIHubStatus = {
 
     data.events = reorderedEvents.concat(unorderedEvents);
     sortAndRenumberEventsByDate(data);
-    await saveHubDataAndRenderedPage(data, "events");
+    await saveHubDataAndRenderedPage(data);
     return data.events;
   }
 
@@ -1737,7 +1161,7 @@ window.AIHubStatus = {
     }
 
     renumberCourses(data);
-    await saveHubDataAndRenderedPage(data, "courses");
+    await saveHubDataAndRenderedPage(data);
     return courseRecord;
   }
 
@@ -1749,7 +1173,7 @@ window.AIHubStatus = {
     const data = normalizeHubData(await loadHubData());
     data.courses = data.courses.filter(item => item.id !== courseId);
     renumberCourses(data);
-    await saveHubDataAndRenderedPage(data, "courses");
+    await saveHubDataAndRenderedPage(data);
     return data.courses;
   }
 
@@ -1759,18 +1183,12 @@ window.AIHubStatus = {
 
   function buildResourceRecord(formResourceData, existingResource) {
     const now = new Date().toISOString();
-    const actionType = normalizeResourceActionType(formResourceData.action_type || "canvas_page", formResourceData.action_label);
+    const actionType = normalizeResourceActionType(formResourceData.action_type, formResourceData.action_label);
     const actionLabel = actionType === "download" ? "Download" : "View Resource";
-    const hasCategory = Object.prototype.hasOwnProperty.call(formResourceData, "category");
-    const hasDetail = Object.prototype.hasOwnProperty.call(formResourceData, "detail");
-    const category = hasCategory ? formResourceData.category : (existingResource?.category || existingResource?.topic);
-    const detail = hasDetail ? formResourceData.detail : (existingResource?.detail || existingResource?.duration);
 
     return Object.assign({}, existingResource || {}, {
       id: existingResource?.id || createId("resource"),
       icon: normalizeResourceIcon(formResourceData.icon || existingResource?.icon || existingResource?.icon_key),
-      category: limitText(category, RESOURCE_CATEGORY_MAX_LENGTH),
-      detail: limitText(detail, RESOURCE_DETAIL_MAX_LENGTH),
       title: limitText(formResourceData.title, RESOURCE_TITLE_MAX_LENGTH),
       description: limitText(formResourceData.description, RESOURCE_DESCRIPTION_MAX_LENGTH),
       action_type: actionType,
@@ -1795,13 +1213,11 @@ window.AIHubStatus = {
     const existingIndex = data.resources.findIndex(item => item.id === resourceId);
     const existingResource = existingIndex >= 0 ? data.resources[existingIndex] : null;
     const resourceRecord = buildResourceRecord(formResourceData, existingResource);
-    let resourcePage = null;
 
     if (resourceRecord.action_type === "canvas_page") {
       const page = getResourcePageSlug(resourceRecord)
         ? await updateCanvasResourcePage(resourceRecord)
         : await createCanvasResourcePage(resourceRecord);
-      resourcePage = page;
       resourceRecord.page_id = page.page_id || page.id || resourceRecord.page_id || "";
       resourceRecord.page_slug = page.url || resourceRecord.page_slug || "";
       resourceRecord.page_url = page.html_url || (page.url ? getCoursePath() + "/pages/" + page.url : resourceRecord.page_url || "");
@@ -1815,20 +1231,7 @@ window.AIHubStatus = {
     }
 
     renumberResources(data);
-    await saveHubDataAndRenderedPage(data, "resources");
-
-    if (resourceRecord.action_type === "canvas_page") {
-      try {
-        await ensureResourcePageInModule(resourceRecord, resourcePage);
-      } catch (moduleError) {
-        console.warn("AI Hub resource page was saved, but module item creation failed.", moduleError);
-        Object.defineProperty(resourceRecord, "module_item_warning", {
-          value: moduleError.message,
-          enumerable: false
-        });
-      }
-    }
-
+    await saveHubDataAndRenderedPage(data);
     return resourceRecord;
   }
 
@@ -1838,29 +1241,10 @@ window.AIHubStatus = {
 
   async function deleteResourceFromHubData(resourceId) {
     const data = normalizeHubData(await loadHubData());
-    const resourceRecord = data.resources.find(item => item.id === resourceId);
-    const result = {
-      resources: [],
-      page_unpublished: false,
-      page_unpublish_warning: ""
-    };
-
     data.resources = data.resources.filter(item => item.id !== resourceId);
     renumberResources(data);
-    await saveHubDataAndRenderedPage(data, "resources");
-    result.resources = data.resources;
-
-    if (resourceRecord && getResourceActionType(resourceRecord) === "canvas_page" && getResourcePageSlug(resourceRecord)) {
-      try {
-        await unpublishCanvasResourcePage(resourceRecord);
-        result.page_unpublished = true;
-      } catch (unpublishError) {
-        console.warn("AI Hub resource card was deleted, but linked page unpublish failed.", unpublishError);
-        result.page_unpublish_warning = unpublishError.message;
-      }
-    }
-
-    return result;
+    await saveHubDataAndRenderedPage(data);
+    return data.resources;
   }
 
   function hideHeaderBar() {
@@ -1911,7 +1295,7 @@ window.AIHubStatus = {
   }
 
   function addEditTabs(nav) {
-    getActiveEditTabs().forEach(tabData => {
+    EDIT_TABS.forEach(tabData => {
       if (document.getElementById(tabData.id)) return;
 
       const li = document.createElement("li");
@@ -1940,7 +1324,7 @@ window.AIHubStatus = {
           openResourcesEditor();
           return;
         }
-        console.log("AI Hub editor tab selected:", tabData.editor);
+        console.log("ISD Hub editor tab selected:", tabData.editor);
       });
 
       nav.appendChild(li);
@@ -1987,7 +1371,7 @@ window.AIHubStatus = {
         id="${POPUP_PANEL_ID}"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ai-hub-events-title"
+        aria-labelledby="isd-hub-events-title"
         style="
           width: min(1160px, 100%);
           max-height: min(860px, calc(100vh - 48px));
@@ -1997,7 +1381,7 @@ window.AIHubStatus = {
           border: 1px solid #e6e8ec;
           border-radius: 18px;
           box-shadow: 0 28px 80px rgba(0,0,0,0.24);
-          font-family: 'Inter','Segoe UI',Roboto,Arial,sans-serif;
+          font-family: 'Lato','Segoe UI',Arial,sans-serif;
           opacity: 0;
           transform: translateY(18px) scale(0.98);
           transition: opacity 180ms ease, transform 180ms ease;
@@ -2005,8 +1389,8 @@ window.AIHubStatus = {
       >
         <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid #eceff3; background:#ffffff;">
           <div>
-            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:4px;">AI Hub</div>
-            <h2 id="ai-hub-events-title" style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:26px; line-height:1.12; color:#000000;">Edit Calendar</h2>
+            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:4px;">ISD Hub</div>
+            <h2 id="isd-hub-events-title" style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.12; color:#000000;">Edit Events</h2>
             <div style="font-size:12px; color:#6b7280; margin-top:5px;">Loaded from /courses/${getCourseId()}/pages/${DATA_PAGE_URL}</div>
           </div>
           <button type="button" data-action="close-popup" aria-label="Close" style="width:38px; height:38px; border:1px solid #d8dde5; border-radius:50%; background:#ffffff; cursor:pointer; font-size:21px; line-height:1; color:#111827;">&times;</button>
@@ -2017,8 +1401,8 @@ window.AIHubStatus = {
             <section style="border:1px solid #eceff3; border-radius:18px; background:#ffffff; padding:22px; box-shadow:0 16px 36px rgba(15,23,42,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px;">
                 <div>
-                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:5px;">Event date</div>
-                  <h3 data-calendar-title style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:24px; line-height:1.12; color:#000000;"></h3>
+                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:5px;">Event date</div>
+                  <h3 data-calendar-title style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1.12; color:#000000;"></h3>
                   <div data-selected-date-output style="font-size:12px; color:#6b7280; margin-top:8px;">No date selected</div>
                 </div>
                 <div style="display:flex; gap:8px;">
@@ -2032,13 +1416,13 @@ window.AIHubStatus = {
             <section style="border:1px solid #eceff3; border-radius:18px; background:#ffffff; padding:22px; box-shadow:0 16px 36px rgba(15,23,42,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px;">
                 <div>
-                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:5px;">Event details</div>
-                  <h3 data-ai-hub-event-form-title style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:22px; line-height:1.12; color:#000000;">Add Event</h3>
+                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:5px;">Event details</div>
+                  <h3 data-isd-hub-event-form-title style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:22px; line-height:1.12; color:#000000;">Add Event</h3>
                 </div>
                 <button type="button" data-action="clear-event-form" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:8px 12px; cursor:pointer; font-size:13px;">New</button>
               </div>
 
-              <form data-ai-hub-events-form>
+              <form data-isd-hub-events-form>
                 <input name="id" type="hidden" />
                 <div style="display:grid; grid-template-columns:1fr; gap:14px;">
                   <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
@@ -2092,7 +1476,7 @@ window.AIHubStatus = {
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:18px; margin-top:18px; border-top:1px solid #eceff3;">
                   <button type="button" data-action="close-popup" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:10px 16px; cursor:pointer; font-size:14px;">Close</button>
-                  <button type="submit" style="border:1px solid #1d4ed8; background:#1d4ed8; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Event</button>
+                  <button type="submit" style="border:1px solid #b20b0f; background:#b20b0f; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Event</button>
                 </div>
               </form>
             </section>
@@ -2102,32 +1486,32 @@ window.AIHubStatus = {
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
               <div>
                 <h3 style="margin:0; font-size:16px; color:#111827;">Event Cards</h3>
-                <div data-ai-hub-events-help style="font-size:12px; color:#6b7280; margin-top:3px;">Active cards save in date and time order.</div>
+                <div data-isd-hub-events-help style="font-size:12px; color:#6b7280; margin-top:3px;">Active cards save in date and time order.</div>
               </div>
               <button type="button" data-action="refresh-events" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:7px 10px; cursor:pointer;">Refresh</button>
             </div>
-            <div data-ai-hub-events-tabs style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+            <div data-isd-hub-events-tabs style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
               <button type="button" data-action="set-events-list-view" data-view="active" style="border:1px solid #111827; background:#111827; color:#ffffff; border-radius:6px; padding:7px 11px; cursor:pointer;">Active</button>
               <button type="button" data-action="set-events-list-view" data-view="archive" style="border:1px solid #cbd5e1; background:#ffffff; color:#111827; border-radius:6px; padding:7px 11px; cursor:pointer;">Archive</button>
             </div>
-            <div data-ai-hub-events-list style="display:grid; grid-template-columns:repeat(auto-fill, 240px); gap:16px; justify-content:start;">
+            <div data-isd-hub-events-list style="display:grid; grid-template-columns:repeat(auto-fill, 240px); gap:16px; justify-content:start;">
               <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px; background:#ffffff; color:#6b7280;">Loading events...</div>
             </div>
           </section>
 
-          <div data-ai-hub-event-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
+          <div data-isd-hub-event-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
         </div>
       </div>
     `;
 
-    const form = backdrop.querySelector("[data-ai-hub-events-form]");
-    const list = backdrop.querySelector("[data-ai-hub-events-list]");
+    const form = backdrop.querySelector("[data-isd-hub-events-form]");
+    const list = backdrop.querySelector("[data-isd-hub-events-list]");
     const calendarTitle = backdrop.querySelector("[data-calendar-title]");
     const calendarGrid = backdrop.querySelector("[data-calendar-grid]");
-    const output = backdrop.querySelector("[data-ai-hub-event-output]");
-    const formTitle = backdrop.querySelector("[data-ai-hub-event-form-title]");
-    const eventTabs = backdrop.querySelector("[data-ai-hub-events-tabs]");
-    const eventHelp = backdrop.querySelector("[data-ai-hub-events-help]");
+    const output = backdrop.querySelector("[data-isd-hub-event-output]");
+    const formTitle = backdrop.querySelector("[data-isd-hub-event-form-title]");
+    const eventTabs = backdrop.querySelector("[data-isd-hub-events-tabs]");
+    const eventHelp = backdrop.querySelector("[data-isd-hub-events-help]");
     const selectedDateOutput = backdrop.querySelector("[data-selected-date-output]");
     const titleCount = backdrop.querySelector("[data-title-count]");
     let calendarDate = new Date();
@@ -2144,7 +1528,7 @@ window.AIHubStatus = {
     function updateTitleCount() {
       const length = form.elements.title.value.length;
       titleCount.textContent = `${length} / ${EVENT_TITLE_MAX_LENGTH}`;
-      titleCount.style.color = length >= EVENT_TITLE_MAX_LENGTH ? "#1d4ed8" : "#6b7280";
+      titleCount.style.color = length >= EVENT_TITLE_MAX_LENGTH ? "#b20b0f" : "#6b7280";
     }
 
     function clearForm() {
@@ -2305,11 +1689,11 @@ window.AIHubStatus = {
               font-size: 13px;
               font-weight: ${isSelected || isToday ? "bold" : "normal"};
               color: ${isSelected ? "#ffffff" : (inMonth ? "#111827" : "#c2c8d2")};
-              background: ${isSelected ? "#1d4ed8" : "#ffffff"};
-              border: 1px solid ${isSelected ? "#1d4ed8" : (isToday ? "#1d4ed8" : "transparent")};
+              background: ${isSelected ? "#b20b0f" : "#ffffff"};
+              border: 1px solid ${isSelected ? "#b20b0f" : (isToday ? "#b20b0f" : "transparent")};
               box-shadow: ${isSelected ? "0 10px 22px rgba(178,11,15,0.24)" : "none"};
             ">${cellDate.getDate()}</span>
-            ${hasEvents ? `<span aria-hidden="true" style="display:block; width:6px; height:6px; border-radius:50%; background:#1d4ed8; margin:5px auto 0;"></span>` : `<span aria-hidden="true" style="display:block; width:6px; height:6px; margin:5px auto 0;"></span>`}
+            ${hasEvents ? `<span aria-hidden="true" style="display:block; width:6px; height:6px; border-radius:50%; background:#b20b0f; margin:5px auto 0;"></span>` : `<span aria-hidden="true" style="display:block; width:6px; height:6px; margin:5px auto 0;"></span>`}
           </button>
         `);
       }
@@ -2364,7 +1748,7 @@ window.AIHubStatus = {
             <div style="background:#ffffff; border-radius:14px; padding:18px; display:flex; flex-direction:column; border:1px solid #e6e8ec; min-height:220px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
                 <div style="display:inline-block; align-self:flex-start; border-radius:8px; padding:6px 12px; text-align:center; line-height:1.1; margin-bottom:14px; border:1px solid #e6e8ec;">
-                  <div style="font-size:11px; color:#1d4ed8;">${escapeHtml(monthLabel)}</div>
+                  <div style="font-size:11px; color:#b20b0f;">${escapeHtml(monthLabel)}</div>
                   <div style="font-size:22px; color:#000000;">${escapeHtml(dayLabel)}</div>
                 </div>
                 <span style="font-size:11px; border:1px solid ${isArchived ? "#d1d5db" : "#bbf7d0"}; background:${isArchived ? "#f3f4f6" : "#f0fdf4"}; color:${isArchived ? "#374151" : "#166534"}; border-radius:999px; padding:3px 7px;">${statusLabel}</span>
@@ -2470,7 +1854,7 @@ window.AIHubStatus = {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
         const savedEvent = await saveEventToHubData(eventData.id || null, eventData);
-        console.log("AI Hub event saved to JSON page and visible hub page:", savedEvent);
+        console.log("ISD Hub event saved to JSON page and visible hub page:", savedEvent);
         clearForm();
         await refreshEvents();
         setMessage("Event saved to JSON and hub page.", false);
@@ -2583,7 +1967,7 @@ window.AIHubStatus = {
         id="${POPUP_PANEL_ID}"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ai-hub-courses-title"
+        aria-labelledby="isd-hub-courses-title"
         style="
           width: min(1160px, 100%);
           max-height: min(860px, calc(100vh - 48px));
@@ -2593,7 +1977,7 @@ window.AIHubStatus = {
           border: 1px solid #e6e8ec;
           border-radius: 18px;
           box-shadow: 0 28px 80px rgba(0,0,0,0.24);
-          font-family: 'Inter','Segoe UI',Roboto,Arial,sans-serif;
+          font-family: 'Lato','Segoe UI',Arial,sans-serif;
           opacity: 0;
           transform: translateY(18px) scale(0.98);
           transition: opacity 180ms ease, transform 180ms ease;
@@ -2601,8 +1985,8 @@ window.AIHubStatus = {
       >
         <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid #eceff3; background:#ffffff;">
           <div>
-            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:4px;">AI Hub</div>
-            <h2 id="ai-hub-courses-title" style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:26px; line-height:1.12; color:#000000;">Edit Courses</h2>
+            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:4px;">ISD Hub</div>
+            <h2 id="isd-hub-courses-title" style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.12; color:#000000;">Edit Courses</h2>
             <div style="font-size:12px; color:#6b7280; margin-top:5px;">Loaded from /courses/${getCourseId()}/pages/${DATA_PAGE_URL}</div>
           </div>
           <button type="button" data-action="close-popup" aria-label="Close" style="width:38px; height:38px; border:1px solid #d8dde5; border-radius:50%; background:#ffffff; cursor:pointer; font-size:21px; line-height:1; color:#111827;">&times;</button>
@@ -2613,13 +1997,13 @@ window.AIHubStatus = {
             <section style="border:1px solid #eceff3; border-radius:18px; background:#ffffff; padding:22px 26px 22px 22px; box-shadow:0 16px 36px rgba(15,23,42,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px;">
                 <div>
-                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:5px;">Course details</div>
-                  <h3 data-ai-hub-course-form-title style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:22px; line-height:1.12; color:#000000;">Add Course</h3>
+                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:5px;">Course details</div>
+                  <h3 data-isd-hub-course-form-title style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:22px; line-height:1.12; color:#000000;">Add Course</h3>
                 </div>
                 <button type="button" data-action="clear-course-form" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:8px 12px; cursor:pointer; font-size:13px;">New</button>
               </div>
 
-              <form data-ai-hub-courses-form>
+              <form data-isd-hub-courses-form>
                 <input name="id" type="hidden" />
 
                 <div style="display:grid; grid-template-columns:1fr; gap:14px;">
@@ -2666,7 +2050,7 @@ window.AIHubStatus = {
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:18px; margin-top:18px; border-top:1px solid #eceff3;">
                   <button type="button" data-action="close-popup" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:10px 16px; cursor:pointer; font-size:14px;">Close</button>
-                  <button type="submit" style="border:1px solid #1d4ed8; background:#1d4ed8; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Course</button>
+                  <button type="submit" style="border:1px solid #b20b0f; background:#b20b0f; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Course</button>
                 </div>
               </form>
             </section>
@@ -2680,21 +2064,21 @@ window.AIHubStatus = {
                 <button type="button" data-action="refresh-courses" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:7px 10px; cursor:pointer;">Refresh</button>
               </div>
 
-              <div data-ai-hub-courses-list style="display:grid; grid-template-columns:repeat(auto-fill, 220px); gap:16px; justify-content:start; max-width:692px;">
+              <div data-isd-hub-courses-list style="display:grid; grid-template-columns:repeat(auto-fill, 220px); gap:16px; justify-content:start; max-width:692px;">
                 <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px; background:#ffffff; color:#6b7280;">Loading courses...</div>
               </div>
             </section>
           </div>
 
-          <div data-ai-hub-course-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
+          <div data-isd-hub-course-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
         </div>
       </div>
     `;
 
-    const form = backdrop.querySelector("[data-ai-hub-courses-form]");
-    const list = backdrop.querySelector("[data-ai-hub-courses-list]");
-    const output = backdrop.querySelector("[data-ai-hub-course-output]");
-    const formTitle = backdrop.querySelector("[data-ai-hub-course-form-title]");
+    const form = backdrop.querySelector("[data-isd-hub-courses-form]");
+    const list = backdrop.querySelector("[data-isd-hub-courses-list]");
+    const output = backdrop.querySelector("[data-isd-hub-course-output]");
+    const formTitle = backdrop.querySelector("[data-isd-hub-course-form-title]");
     const titleCount = backdrop.querySelector("[data-course-title-count]");
     const descriptionCount = backdrop.querySelector("[data-course-description-count]");
 
@@ -2710,8 +2094,8 @@ window.AIHubStatus = {
       const descriptionLength = form.elements.description.value.length;
       titleCount.textContent = `${titleLength} / ${COURSE_TITLE_MAX_LENGTH}`;
       descriptionCount.textContent = `${descriptionLength} / ${COURSE_DESCRIPTION_MAX_LENGTH}`;
-      titleCount.style.color = titleLength >= COURSE_TITLE_MAX_LENGTH ? "#1d4ed8" : "#6b7280";
-      descriptionCount.style.color = descriptionLength >= COURSE_DESCRIPTION_MAX_LENGTH ? "#1d4ed8" : "#6b7280";
+      titleCount.style.color = titleLength >= COURSE_TITLE_MAX_LENGTH ? "#b20b0f" : "#6b7280";
+      descriptionCount.style.color = descriptionLength >= COURSE_DESCRIPTION_MAX_LENGTH ? "#b20b0f" : "#6b7280";
     }
 
     function sanitizeIconInput(useDefault) {
@@ -2752,7 +2136,7 @@ window.AIHubStatus = {
             <div style="width:52px; height:52px; border-radius:50%; background:#eeeeef; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; font-size:23px;" aria-hidden="true">${escapeHtml(icon)}</div>
             <h3 style="margin:0 0 8px; font-size:16px; line-height:1.25; color:#000000;">${escapeHtml(title)}</h3>
             <div style="font-size:13px; color:#6b7280; margin-bottom:12px;">${escapeHtml(description)}</div>
-            <div style="font-size:12px; color:#1d4ed8; margin-top:auto;">${escapeHtml(formatLabel)}</div>
+            <div style="font-size:12px; color:#b20b0f; margin-top:auto;">${escapeHtml(formatLabel)}</div>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
             <button type="button" data-action="edit-course" data-course-id="${escapeAttribute(courseRecord.id)}" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:5px 8px; cursor:pointer;">Edit</button>
@@ -2830,7 +2214,7 @@ window.AIHubStatus = {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
         const savedCourse = await saveCourseToHubData(courseData.id || null, courseData);
-        console.log("AI Hub course saved to JSON page and visible hub page:", savedCourse);
+        console.log("ISD Hub course saved to JSON page and visible hub page:", savedCourse);
         clearForm();
         await refreshCourses();
         setMessage("Course saved to JSON and hub page.", false);
@@ -2891,7 +2275,7 @@ window.AIHubStatus = {
         id="${POPUP_PANEL_ID}"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ai-hub-resources-title"
+        aria-labelledby="isd-hub-resources-title"
         style="
           width: min(1160px, 100%);
           max-height: min(860px, calc(100vh - 48px));
@@ -2901,7 +2285,7 @@ window.AIHubStatus = {
           border: 1px solid #e6e8ec;
           border-radius: 18px;
           box-shadow: 0 28px 80px rgba(0,0,0,0.24);
-          font-family: 'Inter','Segoe UI',Roboto,Arial,sans-serif;
+          font-family: 'Lato','Segoe UI',Arial,sans-serif;
           opacity: 0;
           transform: translateY(18px) scale(0.98);
           transition: opacity 180ms ease, transform 180ms ease;
@@ -2909,8 +2293,8 @@ window.AIHubStatus = {
       >
         <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid #eceff3; background:#ffffff;">
           <div>
-            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:4px;">AI Hub</div>
-            <h2 id="ai-hub-resources-title" style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:26px; line-height:1.12; color:#000000;">Edit Resources</h2>
+            <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:4px;">ISD Hub</div>
+            <h2 id="isd-hub-resources-title" style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.12; color:#000000;">Edit Resources</h2>
             <div style="font-size:12px; color:#6b7280; margin-top:5px;">Loaded from /courses/${getCourseId()}/pages/${DATA_PAGE_URL}</div>
           </div>
           <button type="button" data-action="close-popup" aria-label="Close" style="width:38px; height:38px; border:1px solid #d8dde5; border-radius:50%; background:#ffffff; cursor:pointer; font-size:21px; line-height:1; color:#111827;">&times;</button>
@@ -2921,13 +2305,13 @@ window.AIHubStatus = {
             <section style="border:1px solid #eceff3; border-radius:18px; background:#ffffff; padding:22px 26px 22px 22px; box-shadow:0 16px 36px rgba(15,23,42,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px;">
                 <div>
-                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#1d4ed8; margin-bottom:5px;">Resource details</div>
-                  <h3 data-ai-hub-resource-form-title style="margin:0; font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:22px; line-height:1.12; color:#000000;">Add Resource</h3>
+                  <div style="font-size:11px; letter-spacing:0; text-transform:uppercase; color:#b20b0f; margin-bottom:5px;">Resource details</div>
+                  <h3 data-isd-hub-resource-form-title style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:22px; line-height:1.12; color:#000000;">Add Resource</h3>
                 </div>
                 <button type="button" data-action="clear-resource-form" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:8px 12px; cursor:pointer; font-size:13px;">New</button>
               </div>
 
-              <form data-ai-hub-resources-form>
+              <form data-isd-hub-resources-form>
                 <input name="id" type="hidden" />
 
                 <div style="display:grid; grid-template-columns:1fr; gap:14px;">
@@ -2941,18 +2325,6 @@ window.AIHubStatus = {
                       </span>
                     </span>
                   </label>
-
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
-                      Category
-                      <input name="category" type="text" maxlength="${RESOURCE_CATEGORY_MAX_LENGTH}" placeholder="Prompting" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;" />
-                    </label>
-
-                    <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
-                      Detail
-                      <input name="detail" type="text" maxlength="${RESOURCE_DETAIL_MAX_LENGTH}" placeholder="10 min" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;" />
-                    </label>
-                  </div>
 
                   <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
                     <span style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -2973,8 +2345,8 @@ window.AIHubStatus = {
                   <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#4b5563;">
                     Action
                     <select name="action_type" style="box-sizing:border-box; width:100%; border:1px solid #d8dde5; border-radius:12px; padding:12px 13px; font-size:14px; background:#fbfbfc; color:#111827;">
-                      <option value="canvas_page">Canvas Page</option>
                       <option value="download">Download</option>
+                      <option value="canvas_page">Canvas Page</option>
                       <option value="external_link">External Link</option>
                     </select>
                   </label>
@@ -2988,7 +2360,7 @@ window.AIHubStatus = {
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:18px; margin-top:18px; border-top:1px solid #eceff3;">
                   <button type="button" data-action="close-popup" style="border:1px solid #d8dde5; background:#ffffff; color:#111827; border-radius:999px; padding:10px 16px; cursor:pointer; font-size:14px;">Close</button>
-                  <button type="submit" style="border:1px solid #1d4ed8; background:#1d4ed8; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Resource</button>
+                  <button type="submit" style="border:1px solid #b20b0f; background:#b20b0f; color:#ffffff; border-radius:999px; padding:10px 18px; cursor:pointer; font-size:14px;">Save Resource</button>
                 </div>
               </form>
             </section>
@@ -3002,21 +2374,21 @@ window.AIHubStatus = {
                 <button type="button" data-action="refresh-resources" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:7px 10px; cursor:pointer;">Refresh</button>
               </div>
 
-              <div data-ai-hub-resources-list style="display:grid; grid-template-columns:repeat(auto-fill, 220px); gap:16px; justify-content:start; max-width:692px;">
+              <div data-isd-hub-resources-list style="display:grid; grid-template-columns:repeat(auto-fill, 220px); gap:16px; justify-content:start; max-width:692px;">
                 <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px; background:#ffffff; color:#6b7280;">Loading resources...</div>
               </div>
             </section>
           </div>
 
-          <div data-ai-hub-resource-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
+          <div data-isd-hub-resource-output style="display:none; margin-top:14px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; padding:10px; font-size:13px; white-space:pre-wrap;"></div>
         </div>
       </div>
     `;
 
-    const form = backdrop.querySelector("[data-ai-hub-resources-form]");
-    const list = backdrop.querySelector("[data-ai-hub-resources-list]");
-    const output = backdrop.querySelector("[data-ai-hub-resource-output]");
-    const formTitle = backdrop.querySelector("[data-ai-hub-resource-form-title]");
+    const form = backdrop.querySelector("[data-isd-hub-resources-form]");
+    const list = backdrop.querySelector("[data-isd-hub-resources-list]");
+    const output = backdrop.querySelector("[data-isd-hub-resource-output]");
+    const formTitle = backdrop.querySelector("[data-isd-hub-resource-form-title]");
     const titleCount = backdrop.querySelector("[data-resource-title-count]");
     const descriptionCount = backdrop.querySelector("[data-resource-description-count]");
     const urlWrap = backdrop.querySelector("[data-resource-url-wrap]");
@@ -3035,8 +2407,8 @@ window.AIHubStatus = {
       const descriptionLength = form.elements.description.value.length;
       titleCount.textContent = `${titleLength} / ${RESOURCE_TITLE_MAX_LENGTH}`;
       descriptionCount.textContent = `${descriptionLength} / ${RESOURCE_DESCRIPTION_MAX_LENGTH}`;
-      titleCount.style.color = titleLength >= RESOURCE_TITLE_MAX_LENGTH ? "#1d4ed8" : "#6b7280";
-      descriptionCount.style.color = descriptionLength >= RESOURCE_DESCRIPTION_MAX_LENGTH ? "#1d4ed8" : "#6b7280";
+      titleCount.style.color = titleLength >= RESOURCE_TITLE_MAX_LENGTH ? "#b20b0f" : "#6b7280";
+      descriptionCount.style.color = descriptionLength >= RESOURCE_DESCRIPTION_MAX_LENGTH ? "#b20b0f" : "#6b7280";
     }
 
     function sanitizeIconInput(useDefault) {
@@ -3065,7 +2437,6 @@ window.AIHubStatus = {
       form.reset();
       form.elements.id.value = "";
       form.elements.icon.value = RESOURCE_DEFAULT_ICON;
-      form.elements.action_type.value = "canvas_page";
       formTitle.textContent = "Add Resource";
       output.style.display = "none";
       updateActionFields();
@@ -3075,8 +2446,6 @@ window.AIHubStatus = {
     function fillForm(resourceRecord) {
       form.elements.id.value = resourceRecord.id || "";
       form.elements.icon.value = getResourceIcon(resourceRecord);
-      form.elements.category.value = limitText(resourceRecord.category || resourceRecord.topic, RESOURCE_CATEGORY_MAX_LENGTH);
-      form.elements.detail.value = limitText(resourceRecord.detail || resourceRecord.duration, RESOURCE_DETAIL_MAX_LENGTH);
       form.elements.title.value = limitText(resourceRecord.title, RESOURCE_TITLE_MAX_LENGTH);
       form.elements.description.value = limitText(resourceRecord.description, RESOURCE_DESCRIPTION_MAX_LENGTH);
       form.elements.action_type.value = getResourceActionType(resourceRecord);
@@ -3091,19 +2460,16 @@ window.AIHubStatus = {
       const icon = getResourceIcon(resourceRecord);
       const title = resourceRecord.title || "Untitled Resource";
       const description = resourceRecord.description || "";
-      const metaLine = getResourceMetaLine(resourceRecord);
-      const actionLabel = getResourceCardActionText(resourceRecord);
+      const actionLabel = getResourceActionLabel(resourceRecord);
       const createdPage = resourceRecord.page_url && getResourceActionType(resourceRecord) === "canvas_page";
-      const statusLine = createdPage ? "Canvas page created" : actionLabel;
 
       return `
         <div data-resource-card data-resource-id="${escapeAttribute(resourceRecord.id)}">
-          <div style="display:flex; flex-direction:column; min-height:270px; color:#111827; background:#ffffff; border:1px solid #dbe3f0; border-radius:14px; overflow:hidden;">
-            <div style="display:flex; align-items:center; justify-content:center; width:100%; height:96px; background:#eff6ff; color:#1d4ed8; font-size:40px; line-height:1; border-bottom:1px solid #dbe3f0;" aria-hidden="true">${escapeHtml(icon)}</div>
-            <span style="display:block; padding:14px 16px 0; font-size:12px; color:#1d4ed8; text-transform:uppercase; font-weight:bold;">${metaLine}</span>
-            <strong style="display:block; padding:8px 16px 0; font-size:18px; line-height:1.2; color:#000000;">${escapeHtml(title)}</strong>
-            <span style="display:block; padding:8px 16px 0; font-size:14px; color:#4b5563;">${escapeHtml(description)}</span>
-            <div style="display:block; margin-top:auto; padding:16px; color:#1d4ed8; font-size:14px; font-weight:bold;">${escapeHtml(statusLine)} <span aria-hidden="true">&rarr;</span></div>
+          <div style="background:#ffffff; border-radius:14px; padding:18px; border:1px solid #e6e8ec; min-height:220px; display:flex; flex-direction:column;">
+            <div style="width:44px; height:44px; border-radius:10px; background:#eeeeef; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px;" aria-hidden="true">${escapeHtml(icon)}</div>
+            <h3 style="margin:0 0 8px; font-size:16px; line-height:1.25; color:#000000;">${escapeHtml(title)}</h3>
+            <div style="font-size:13px; color:#6b7280; margin-bottom:12px;">${escapeHtml(description)}</div>
+            <div style="font-size:12px; color:#b20b0f; margin-top:auto;">${escapeHtml(actionLabel)}${createdPage ? " page created" : ""}</div>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
             <button type="button" data-action="edit-resource" data-resource-id="${escapeAttribute(resourceRecord.id)}" style="border:1px solid #cbd5e1; background:#ffffff; border-radius:6px; padding:5px 8px; cursor:pointer;">Edit</button>
@@ -3158,29 +2524,15 @@ window.AIHubStatus = {
         }
 
         if (action === "delete-resource") {
-          const ok = window.confirm("Delete this resource card? The linked Canvas page will be kept and unpublished.");
+          const ok = window.confirm("Delete this resource card? This will not delete any Canvas page that was already created.");
           if (!ok) return;
-          const deleteResult = await deleteResourceFromHubData(actionButton.getAttribute("data-resource-id"));
+          await deleteResourceFromHubData(actionButton.getAttribute("data-resource-id"));
           clearForm();
           await refreshResources();
-          if (deleteResult.page_unpublish_warning) {
-            setMessage("Resource card deleted, but linked page could not be unpublished:\n" + deleteResult.page_unpublish_warning, true);
-          } else if (deleteResult.page_unpublished) {
-            setMessage("Resource card deleted. Linked Canvas page was unpublished.", false);
-          } else {
-            setMessage("Resource deleted.", false);
-          }
+          setMessage("Resource deleted.", false);
         }
       } catch (error) {
         console.error(error);
-        if (action === "delete-resource") {
-          try {
-            clearForm();
-            await refreshResources();
-          } catch (refreshError) {
-            console.error(refreshError);
-          }
-        }
         setMessage("Action failed:\n" + error.message, true);
       }
     });
@@ -3200,13 +2552,7 @@ window.AIHubStatus = {
         submitButton.disabled = true;
         submitButton.textContent = resourceData.action_type === "canvas_page" ? "Creating page..." : "Saving...";
         const savedResource = await saveResourceToHubData(resourceData.id || null, resourceData);
-        console.log("AI Hub resource saved to JSON page and visible hub page:", savedResource);
-        if (savedResource.module_item_warning) {
-          await refreshResources();
-          setMessage("Resource saved, but module add failed:\n" + savedResource.module_item_warning, true);
-          return;
-        }
-
+        console.log("ISD Hub resource saved to JSON page and visible hub page:", savedResource);
         const editUrl = getResourcePageEditUrl(savedResource);
         if (savedResource.action_type === "canvas_page" && editUrl) {
           setMessage("Resource saved. Opening the Canvas page editor...", false);
@@ -3219,11 +2565,6 @@ window.AIHubStatus = {
         setMessage("Resource saved to JSON and hub page.", false);
       } catch (error) {
         console.error(error);
-        try {
-          await refreshResources();
-        } catch (refreshError) {
-          console.error(refreshError);
-        }
         setMessage("Save failed:\n" + error.message, true);
       } finally {
         submitButton.disabled = false;
@@ -3238,7 +2579,6 @@ window.AIHubStatus = {
     form.elements.icon.addEventListener("blur", () => sanitizeIconInput(true));
     form.elements.icon.addEventListener("focus", () => form.elements.icon.select());
     form.elements.icon.addEventListener("click", () => form.elements.icon.select());
-    form.elements.action_type.value = "canvas_page";
     updateActionFields();
     updateTextCounts();
 
@@ -3291,42 +2631,22 @@ window.AIHubStatus = {
     nav.appendChild(li);
   }
 
-  status.courseId = getCourseId();
-  status.coursePath = isAiHubCoursePath();
-  status.homePath = isAiHubHomePath();
-  status.toolboxPath = isAiHubToolboxPath();
-
-  if (status.coursePath) {
+  if (window.location.pathname.includes(getCoursePath())) {
     const nav = document.querySelector("#section-tabs");
-    status.hasSectionTabs = Boolean(nav);
-    if (!nav) {
-      status.reason = "missing_section_tabs";
-      return;
-    }
+    if (!nav) return;
 
     hideHeaderBar();
     hideCourseTabs();
     addEditTabs(nav);
     addToggleButton(nav);
-    if (isAiHubHomePath()) applyEventsGridLayout(document);
-    status.mounted = true;
-    status.reason = "mounted";
-    status.editCalendar = Boolean(document.getElementById("ai-hub-edit-events-link"));
-    status.editResources = Boolean(document.getElementById("ai-hub-edit-resources-link"));
-    status.restoreTabs = Boolean(document.getElementById(TOGGLE_BUTTON_ID));
-  } else {
-    status.reason = "not_ai_hub_course";
   }
 
-  window.AIHubData = {
+  window.ISDHubData = {
     addEventToHubData,
     addCourseToHubData,
     addResourceToHubData,
     createCanvasResourcePage,
-    createResourceModule,
-    ensureResourcePageInModule,
     updateCanvasResourcePage,
-    unpublishCanvasResourcePage,
     deleteCourseFromHubData,
     deleteEventFromHubData,
     deleteResourceFromHubData,
@@ -3339,9 +2659,6 @@ window.AIHubStatus = {
     replaceEventsSectionInBody,
     replaceCoursesSectionInBody,
     replaceResourcesSectionInBody,
-    renderHubPageBody,
-    renderResourcePageBody,
-    renderToolboxPageBody,
     renderCoursesSection,
     renderEventsSection,
     renderResourcesSection,
@@ -3354,7 +2671,6 @@ window.AIHubStatus = {
     saveResourceToHubData,
     saveRenderedHubPage,
     setEventStatusInHubData,
-    seedCurrentHubPage,
     seedHubDataPage,
     sortEventsByDate
   };
