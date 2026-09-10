@@ -748,9 +748,53 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
   }
 
   function renderResourcePageBody(resourceRecord) {
+    const title = resourceRecord.title || "Resource";
+    const description = resourceRecord.description || "An instructional design resource from the ISD Hub.";
+    const backHref = getCoursePath();
+
     return `
-      <h2>${escapeHtml(resourceRecord.title || "Resource")}</h2>
-      <p>${escapeHtml(resourceRecord.description || "")}</p>
+      <div data-isd-hub-resource-page="true" style="max-width: 1000px; margin: 0 auto; font-family: 'Lato','Segoe UI',Helvetica,Arial,sans-serif; color: #4b5563; line-height: 1.55;">
+        <div style="padding: 0 4px 24px;">
+          <a style="display: inline-block; background: #000000; color: #ffffff; text-decoration: none; font-size: 14px; padding: 11px 18px; border-radius: 8px;" href="${escapeAttribute(backHref)}">&larr; Back to ISD Hub</a>
+        </div>
+        <div style="padding: 0 4px 28px;">
+          <div style="display: inline-block; color: #b20b0f; font-size: 12px; margin-bottom: 10px;">ISD Hub Resource</div>
+          <h2 data-isd-hub-resource-title style="font-family: Georgia,'Times New Roman',serif; margin: 0; font-size: 42px; line-height: 1.08; color: #000000;">${escapeHtml(title)}</h2>
+          <p data-isd-hub-resource-description style="margin: 18px 0 0; font-size: 17px; color: #4b5563;">${escapeHtml(description)}</p>
+        </div>
+        <div style="padding: 0 4px;">
+          [insert video]
+        </div>
+        <div style="margin-top: 30px; padding: 0 4px;">
+          <h3 style="margin: 0 0 10px; font-family: Georgia,'Times New Roman',serif; font-size: 24px; line-height: 1.2; color: #000000;">Recap</h3>
+          <p style="margin: 0; font-size: 16px; color: #4b5563;">&nbsp;</p>
+        </div>
+        <div style="margin-top: 28px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e6b8ba;">
+          <div style="background: #b20b0f; color: #ffffff; padding: 12px 18px; font-family: Georgia,'Times New Roman',serif; font-size: 18px;">Before You Apply This</div>
+          <div style="padding: 18px 20px;">
+            <div style="display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px;">
+              <div>
+                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Plan</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Identify the learning goal and decide where this resource fits in your course.</p>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Adapt</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Adjust the example or process to match your learners, content, and teaching context.</p>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: #b20b0f; margin-bottom: 6px;">Review</div>
+                <p style="margin: 0; font-size: 14px; color: #4b5563;">Check clarity, accessibility, and alignment before sharing it with students.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 28px; background: #ffffff; border: 1px solid #e6e8ec; border-radius: 14px; padding: 20px 22px;">
+          <div style="display: inline-block; background: #f8e8e8; color: #b20b0f; border-radius: 8px; padding: 5px 10px; font-size: 12px; margin-bottom: 12px;">Resources</div>
+          <ul style="margin: 0; padding-left: 22px; font-size: 15px; color: #4b5563;">
+            <li><a style="color: #b20b0f; text-decoration: underline;" href="#">Example resource link</a></li>
+          </ul>
+        </div>
+      </div>
     `;
   }
 
@@ -759,7 +803,24 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
     const descriptionHtml = `<p>${escapeHtml(resourceRecord.description || "")}</p>`;
     let body = String(existingBody || "").trim();
 
-    if (!body) return titleHtml + "\n" + descriptionHtml;
+    if (!body) return renderResourcePageBody(resourceRecord).trim();
+
+    if (/^<h2\b[^>]*>[\s\S]*?<\/h2>\s*<p\b[^>]*>[\s\S]*?<\/p>$/i.test(body)) {
+      return renderResourcePageBody(resourceRecord).trim();
+    }
+
+    const doc = new DOMParser().parseFromString(body, "text/html");
+    const managedPage = doc.querySelector("[data-isd-hub-resource-page]");
+
+    if (managedPage) {
+      const titleElement = managedPage.querySelector("[data-isd-hub-resource-title]");
+      const descriptionElement = managedPage.querySelector("[data-isd-hub-resource-description]");
+
+      if (titleElement) titleElement.textContent = resourceRecord.title || "Resource";
+      if (descriptionElement) descriptionElement.textContent = resourceRecord.description || "An instructional design resource from the ISD Hub.";
+
+      return doc.body.innerHTML.trim();
+    }
 
     if (/<h2\b[^>]*>[\s\S]*?<\/h2>/i.test(body)) {
       body = body.replace(/<h2\b[^>]*>[\s\S]*?<\/h2>/i, titleHtml);
