@@ -27,7 +27,8 @@ window.AIHubStatus = {
   const KEEP_TABS = ["Home", "People", "Announcements"];
   const EDIT_TAB_ATTRIBUTE = "data-ai-hub-edit-tab";
   const HOME_EDIT_TABS = [
-    { id: "ai-hub-edit-events-link", label: "Edit Calendar", editor: "events" }
+    { id: "ai-hub-edit-events-link", label: "Edit Calendar", editor: "events" },
+    { id: "ai-hub-edit-courses-link", label: "Edit Courses", editor: "courses" }
   ];
   const TOOLBOX_EDIT_TABS = [
     { id: "ai-hub-edit-resources-link", label: "Edit Resources", editor: "resources" }
