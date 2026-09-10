@@ -466,7 +466,6 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
   function renderEventsSection(events, options) {
     const activeEvents = sortEventsByDate(events || []).filter(eventRecord => eventRecord.status !== "archived");
-    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-EVENTS-LINK";
     const cardsHtml = activeEvents.length
       ? activeEvents.map(renderEventCard).join("")
       : `<div style="background: #ffffff; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No upcoming events are scheduled yet.</div>`;
@@ -475,9 +474,8 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
       <div ${HUB_SECTION_ATTRIBUTE}="events" style="margin-top: 52px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Upcoming Events</h2>
-          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all events <span aria-hidden="true">&rarr;</span></a>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
       </div>
@@ -486,7 +484,6 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
   function renderCoursesSection(courses, options) {
     const sortedCourses = sortBySortOrder(courses || []);
-    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-COURSES-LINK";
     const cardsHtml = sortedCourses.length
       ? sortedCourses.map(renderCourseCard).join("")
       : `<div style="background: #ffffff; border-radius: 14px; padding: 22px 16px; text-align: center; border: 1px solid #e6e8ec; color: #6b7280;">No courses have been added yet.</div>`;
@@ -495,9 +492,8 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
       <div ${HUB_SECTION_ATTRIBUTE}="courses" style="margin-top: 52px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Explore Courses</h2>
-          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all courses <span aria-hidden="true">&rarr;</span></a>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
       </div>
@@ -506,7 +502,6 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
   function renderResourcesSection(resources, options) {
     const sortedResources = sortBySortOrder(resources || []);
-    const viewAllUrl = options?.viewAllUrl || "REPLACE-WITH-ALL-RESOURCES-LINK";
     const cardsHtml = sortedResources.length
       ? sortedResources.map(renderResourceCard).join("")
       : `<div style="background: #ffffff; border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; border: 1px solid #e6e8ec; color: #6b7280;">No featured resources have been added yet.</div>`;
@@ -515,9 +510,8 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
       <div ${HUB_SECTION_ATTRIBUTE}="resources" style="margin-top: 52px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; font-family: Georgia,'Times New Roman',serif; font-size: 28px; color: #000000;">Featured Resources</h2>
-          <a style="color: #000000; text-decoration: underline; font-size: 14px;" href="${escapeAttribute(viewAllUrl)}">View all resources <span aria-hidden="true">&rarr;</span></a>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px;">
           ${cardsHtml}
         </div>
       </div>
