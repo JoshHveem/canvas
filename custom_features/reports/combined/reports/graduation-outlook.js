@@ -137,6 +137,14 @@ Vue.component('reports-graduation-outlook', {
           };
         })
         .filter(point => point.rate !== null);
+      const currentProjectedRate = this.numberValue(this.selectedProjection?.perc_students__graduate__projected);
+      if (currentProjectedRate !== null) {
+        rates.push({
+          year: `${selectedAcademicYear}-${String(selectedAcademicYear + 1).slice(-2)}`,
+          rate: currentProjectedRate,
+          isProjected: true
+        });
+      }
       const rateToY = rate => chartTop + ((100 - (rate * 100)) / 100) * chartHeight;
       let previousRate = null;
 
@@ -155,6 +163,64 @@ Vue.component('reports-graduation-outlook', {
           y: rateToY(point.rate)
         };
       });
+    },
+
+    historicEndOfYearGraduatePoints() {
+      const chartHeight = 144;
+      const chartTop = 18;
+      const chartLeft = 58;
+      const chartWidth = 570;
+      const selectedAcademicYear = Number(this.selectedProjection?.academic_year);
+      const rowsByYear = this.monthlyRows.reduce((map, row) => {
+        const academicYear = Number(row.academic_year);
+        if (academicYear < selectedAcademicYear && this.numberValue(row.num_students__graduate) !== null) {
+          if (!map[academicYear]) map[academicYear] = [];
+          map[academicYear].push(row);
+        }
+        return map;
+      }, {});
+      const graduates = Object.keys(rowsByYear)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map(academicYear => {
+          const rows = rowsByYear[academicYear];
+          const finalRow = rows.find(row => Number(row.academic_year_month) === 12)
+            || rows.slice().sort((a, b) => Number(b.academic_year_month) - Number(a.academic_year_month))[0];
+          return {
+            year: `${academicYear}-${String(academicYear + 1).slice(-2)}`,
+            count: this.numberValue(finalRow.num_students__graduate__actual)
+              ?? this.numberValue(finalRow.num_students__graduate__to_month)
+          };
+        })
+        .filter(point => point.count !== null);
+      const currentProjectedCount = this.numberValue(this.selectedProjection?.num_students__graduate__projected);
+      if (currentProjectedCount !== null) {
+        graduates.push({
+          year: `${selectedAcademicYear}-${String(selectedAcademicYear + 1).slice(-2)}`,
+          count: currentProjectedCount,
+          isProjected: true
+        });
+      }
+      const maxCount = Math.max(...graduates.map(point => point.count), 1);
+      const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+      let previousCount = null;
+
+      return graduates.map((point, index) => {
+        const change = previousCount === null ? null : point.count - previousCount;
+        const color = change === null ? this.colors.black : Math.abs(change) < 5 ? this.colors.yellow : change > 0 ? this.colors.green : this.colors.red;
+        previousCount = point.count;
+        return {
+          ...point,
+          change,
+          color,
+          x: chartLeft + ((index + 0.5) * (chartWidth / Math.max(graduates.length, 1))),
+          y: countToY(point.count)
+        };
+      });
+    },
+
+    historicEndOfYearGraduateMaximum() {
+      return Math.max(...this.historicEndOfYearGraduatePoints.map(point => point.count), 1);
     },
 
     enrollmentMonths() {
@@ -229,6 +295,51 @@ Vue.component('reports-graduation-outlook', {
         return {
           month,
           currentYear: academicMonth <= currentAcademicMonth ? this.numberValue(currentRow?.num_students__active) : null,
+          historicAverage: historicValues.length ? historicValues.reduce((sum, value) => sum + value, 0) / historicValues.length : null
+        };
+      });
+      const values = rates.flatMap(rate => [rate.currentYear, rate.historicAverage])
+        .filter(value => Number.isFinite(value));
+      const maxCount = Math.max(...values, 1);
+      const countToY = count => chartTop + ((maxCount - count) / maxCount) * chartHeight;
+
+      return rates.map((rate, index) => ({
+        ...rate,
+        x: chartLeft + (index * (chartWidth / (rates.length - 1))),
+        currentYearY: Number.isFinite(rate.currentYear) ? countToY(rate.currentYear) : null,
+        historicAverageY: Number.isFinite(rate.historicAverage) ? countToY(rate.historicAverage) : null
+      }));
+    },
+
+    startRatePoints() {
+      const chartHeight = 128;
+      const chartTop = 18;
+      const chartLeft = 50;
+      const chartWidth = 590;
+      const projection = this.selectedProjection;
+      const currentAcademicMonth = this.currentAcademicMonth();
+      const months = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+      const rowsByYearMonth = this.monthlyRows.reduce((map, row) => {
+        map[`${row.academic_year}:${row.academic_year_month}`] = row;
+        return map;
+      }, {});
+      const selectedAcademicYear = Number(projection?.academic_year);
+      const historicRows = this.monthlyRows.filter(row => {
+        const academicYear = Number(row.academic_year);
+        return Number.isFinite(selectedAcademicYear)
+          && academicYear < selectedAcademicYear
+          && academicYear >= selectedAcademicYear - 3;
+      });
+      const rates = months.map((month, index) => {
+        const academicMonth = index + 1;
+        const historicValues = historicRows
+          .filter(row => Number(row.academic_year_month) === academicMonth)
+          .map(row => this.numberValue(row.num_students__new))
+          .filter(value => value !== null);
+        const currentRow = projection ? rowsByYearMonth[`${projection.academic_year}:${academicMonth}`] : null;
+        return {
+          month,
+          currentYear: academicMonth <= currentAcademicMonth ? this.numberValue(currentRow?.num_students__new) : null,
           historicAverage: historicValues.length ? historicValues.reduce((sum, value) => sum + value, 0) / historicValues.length : null
         };
       });
@@ -384,12 +495,21 @@ Vue.component('reports-graduation-outlook', {
     selectProjectionFromContext() {
       const programCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
       const campusCode = String(this.getSharedFilterValue('campus_code', this.reportContext?.routeFilters?.campusCode) ?? '').trim();
+      const programName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
       const match = this.projectionOptions.find(row => (
         String(row.program_code ?? '').trim() === programCode
         && (!campusCode || String(row.campus_code ?? '').trim() === campusCode)
-      ));
+      )) || this.projectionOptions.find(row => String(row.program_name ?? '').trim() === programName);
       if (match && match.key !== this.selectedProjectionKey) this.selectedProjectionKey = match.key;
       return Boolean(match);
+    },
+
+    syncSelectedProjectionToSharedFilters() {
+      const projection = this.selectedProjection;
+      if (!projection) return;
+      this.setSharedFilterValue('program_code', String(projection.program_code ?? '').trim());
+      this.setSharedFilterValue('campus_code', String(projection.campus_code ?? '').trim());
+      this.setSharedFilterValue('program_name', String(projection.program_name ?? '').trim());
     },
 
     currentAcademicMonth() {
@@ -462,6 +582,7 @@ Vue.component('reports-graduation-outlook', {
 
   watch: {
     selectedProjectionKey() {
+      this.syncSelectedProjectionToSharedFilters();
       this.loadMonthlyData();
     },
     reportContext() {
@@ -476,8 +597,6 @@ Vue.component('reports-graduation-outlook', {
       <div style="flex:1;"></div>
       <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ projectionLabel(projection) }}</option></select>
     </div>
-    <div class="btech-muted" style="font-size:.8rem; margin-bottom:16px;">Projection cards and the first two charts use live program data. The stacked status chart remains a placeholder.</div>
-
     <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
     <template v-else-if="selectedProjection">
@@ -514,10 +633,46 @@ Vue.component('reports-graduation-outlook', {
 
     <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Graduation Outlook Trend</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Track how this academic year's projected graduation rate changes as new information becomes available.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span>Point color shows whether the forecast is improving or declining relative to the 60% requirement.</span>
+        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
+      </div>
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduation rates">
+        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
+        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
+        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
+        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
+        <g v-for="(point, index) in historicEndOfYearGraduationPoints" :key="point.year">
+          <line v-if="index > 0" :x1="historicEndOfYearGraduationPoints[index - 1].x" :y1="historicEndOfYearGraduationPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} {{ point.isProjected ? 'projected' : 'final' }} graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
+          <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
+          <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Historic End-of-Year Graduates</h5>
+      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduate counts">
+        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
+        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
+        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">{{ historicEndOfYearGraduateMaximum }}</text>
+        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">{{ Math.round(historicEndOfYearGraduateMaximum / 2) }}</text>
+        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0</text>
+        <g v-for="(point, index) in historicEndOfYearGraduatePoints" :key="point.year">
+          <line v-if="index > 0" :x1="historicEndOfYearGraduatePoints[index - 1].x" :y1="historicEndOfYearGraduatePoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
+          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} {{ point.isProjected ? 'projected' : 'final' }} graduates: {{ wholeNumber(point.count) }}{{ point.change === null ? '' : point.change > 0 ? ' (up ' + wholeNumber(point.change) + ')' : point.change < 0 ? ' (down ' + wholeNumber(Math.abs(point.change)) + ')' : ' (unchanged)' }}</title></circle>
+          <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
+          <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ wholeNumber(point.count) }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Graduation Outlook Trend</h5>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
       </div>
       <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Projected graduation-rate trend from July through June">
@@ -536,31 +691,7 @@ Vue.component('reports-graduation-outlook', {
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Historic End-of-Year Graduation Rate</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Final actual graduation rate for each completed academic year.</div>
-      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
-        <span>Point color shows the year-to-year change relative to the 60% requirement.</span>
-        <span><i style="display:inline-block; width:1rem; border-top:2px dashed #dc2626; vertical-align:middle;"></i> 60% requirement</span>
-      </div>
-      <svg width="680" height="212" viewBox="0 0 680 212" role="img" aria-label="Historic end-of-year graduation rates">
-        <line x1="58" y1="18" x2="58" y2="162" stroke="#cbd5e1"></line>
-        <line x1="58" y1="162" x2="628" y2="162" stroke="#cbd5e1"></line>
-        <line x1="58" x2="628" :y1="graduationTargetY" :y2="graduationTargetY" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"></line>
-        <text x="49" y="22" text-anchor="end" font-size="10" fill="#64748b">100%</text>
-        <text x="49" y="94" text-anchor="end" font-size="10" fill="#64748b">50%</text>
-        <text x="49" y="166" text-anchor="end" font-size="10" fill="#64748b">0%</text>
-        <g v-for="(point, index) in historicEndOfYearGraduationPoints" :key="point.year">
-          <line v-if="index > 0" :x1="historicEndOfYearGraduationPoints[index - 1].x" :y1="historicEndOfYearGraduationPoints[index - 1].y" :x2="point.x" :y2="point.y" :stroke="point.color" stroke-width="2"></line>
-          <circle :cx="point.x" :cy="point.y" r="4.5" :fill="point.color"><title>{{ point.year }} final graduation rate: {{ percent(point.rate) }}{{ point.movement > 0 ? ' (up from prior year)' : point.movement < 0 ? ' (down from prior year)' : '' }}</title></circle>
-          <text :x="point.x" y="181" text-anchor="middle" font-size="10" fill="#334155">{{ point.year }}</text>
-          <text :x="point.x" y="196" text-anchor="middle" font-size="10" fill="#64748b">{{ percent(point.rate) }}</text>
-        </g>
-      </svg>
-    </section>
-
-    <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Active Enrollment vs Historic Average</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Compare this year's active enrollment to the historic average to see when students normally enter the program.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Active Enrollment vs Historic Average</h5>
       <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
         <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
@@ -579,8 +710,26 @@ Vue.component('reports-graduation-outlook', {
     </section>
 
     <section style="flex:1 1 42rem; min-width:42rem;">
-      <h5 style="margin:0 0:4px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
-      <div class="btech-muted" style="font-size:.8rem; margin-bottom:8px;">Monthly student status through the current month, followed by projected active students and graduates at 50% opacity.</div>
+      <h5 style="margin:0 0:6px; font-size:1rem;">Program Starts vs Historic Average</h5>
+      <div style="display:flex; gap:14px; align-items:center; font-size:.8rem; margin-bottom:4px;">
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.green }"></i> Current year</span>
+        <span><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', borderRadius:'50%', background:colors.black }"></i> Historic average</span>
+      </div>
+      <svg width="680" height="202" viewBox="0 0 680 202" role="img" aria-label="Program starts compared with the historic average from July through June">
+        <line x1="50" y1="18" x2="50" y2="146" stroke="#cbd5e1"></line>
+        <line x1="50" y1="146" x2="640" y2="146" stroke="#cbd5e1"></line>
+        <polyline :points="startRatePoints.filter(point => point.currentYearY !== null).map(point => point.x + ',' + point.currentYearY).join(' ')" fill="none" :stroke="colors.green" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
+        <polyline :points="startRatePoints.filter(point => point.historicAverageY !== null).map(point => point.x + ',' + point.historicAverageY).join(' ')" fill="none" :stroke="colors.black" stroke-width="1.5" stroke-dasharray="2 3"></polyline>
+        <g v-for="point in startRatePoints" :key="point.month">
+          <circle v-if="point.historicAverageY !== null" :cx="point.x" :cy="point.historicAverageY" r="4" :fill="colors.black"><title>{{ point.month }} historic average starts: {{ point.historicAverage.toFixed(1) }}</title></circle>
+          <circle v-if="point.currentYearY !== null" :cx="point.x" :cy="point.currentYearY" r="4" :fill="colors.green"><title>{{ point.month }} current-year starts: {{ point.currentYear }}</title></circle>
+          <text :x="point.x" y="163" text-anchor="middle" font-size="9" fill="#334155">{{ point.month }}</text>
+        </g>
+      </svg>
+    </section>
+
+    <section style="flex:1 1 42rem; min-width:42rem;">
+      <h5 style="margin:0 0:6px; font-size:1rem;">Current Academic Year Enrollment and Graduation Projection</h5>
       <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:.8rem; margin-bottom:4px;">
         <span v-for="item in enrollmentLegend" :key="item.key"><i :style="{ display:'inline-block', width:'.65rem', height:'.65rem', background:item.color, opacity:item.opacity || 1 }"></i> {{ item.label }}</span>
       </div>

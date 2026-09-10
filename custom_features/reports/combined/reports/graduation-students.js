@@ -4,7 +4,7 @@ Vue.component('reports-graduation-students', {
 
   data() {
     const colors = window.ReportUtils.createColors();
-    return { colors, activeTable: window.ReportUtils.createTable('Projected Exit', colors), exitedTable: window.ReportUtils.createTable('Exit Date', colors), projections: [], selectedProgramKey: '', hasLoadedProjections: false, activeRows: [], exitedRows: [], loading: false, loadError: '' };
+    return { colors, activeTable: window.ReportUtils.createTable('Projected Exit', colors), exitedTable: window.ReportUtils.createTable('Exit Date', colors), projections: [], selectedProgramKey: '', predictedGraduateOverride: null, predictedExitOverride: null, hasLoadedProjections: false, activeRows: [], exitedRows: [], loading: false, loadError: '' };
   },
 
   created() {
@@ -33,7 +33,7 @@ Vue.component('reports-graduation-students', {
     selectedProgram() { return this.programOptions.find(row => row.key === this.selectedProgramKey) || this.programOptions[0] || null; },
     visibleActiveRows() { this.activeTable.setRows(this.activeRows); return this.activeTable.getSortedRows(); },
     visibleExitedRows() { this.exitedTable.setRows(this.exitedRows); return this.exitedTable.getSortedRows(); },
-    projectionBreakdown() {
+    projectionBaseline() {
       const projection = this.selectedProgram;
       const actualExiters = this.numberValue(projection?.num_students__exiter);
       const projectedExiters = this.numberValue(projection?.num_students__exiter__projected);
@@ -50,19 +50,48 @@ Vue.component('reports-graduation-students', {
       const predictedGraduateCount = Math.max(0, pendingGraduateCount - identifiedProjectedGraduateCount);
       const actualNonGraduateCount = Math.max(0, actualExiters - actualGraduateCount);
       const predictedExitCount = Math.max(0, totalExiters - actualExiters - identifiedProjectedGraduateCount - predictedGraduateCount);
-      const rate = this.numberValue(projection?.perc_students__graduate__projected) ?? (totalExiters ? projectedGraduateCount / totalExiters : null);
-
       return {
         actualExiters,
-        assumedExiters: Math.max(0, totalExiters - actualExiters),
+        actualGraduateCount,
+        identifiedProjectedGraduateCount,
+        predictedGraduateCount,
+        actualNonGraduateCount,
+        predictedExitCount,
+        projectedGraduateTotal: projectedGraduateCount,
+        projectedExiterTotal: totalExiters
+      };
+    },
+    scenarioPredictedGraduateCount: {
+      get() { return this.nonNegativeNumber(this.predictedGraduateOverride) ?? this.projectionBaseline?.projectedGraduateTotal ?? 0; },
+      set(value) { this.predictedGraduateOverride = this.nonNegativeNumber(value); }
+    },
+    scenarioPredictedExitCount: {
+      get() { return this.nonNegativeNumber(this.predictedExitOverride) ?? this.projectionBaseline?.projectedExiterTotal ?? 0; },
+      set(value) { this.predictedExitOverride = this.nonNegativeNumber(value); }
+    },
+    projectionBreakdown() {
+      const baseline = this.projectionBaseline;
+      if (!baseline) return null;
+      const totalExiters = Math.max(baseline.actualExiters, this.scenarioPredictedExitCount);
+      const maximumGraduateCount = Math.max(baseline.actualGraduateCount, totalExiters - baseline.actualNonGraduateCount);
+      const projectedGraduateCount = Math.min(maximumGraduateCount, Math.max(baseline.actualGraduateCount, this.scenarioPredictedGraduateCount));
+      const remainingProjectedGraduates = projectedGraduateCount - baseline.actualGraduateCount;
+      const identifiedProjectedGraduateCount = Math.min(baseline.identifiedProjectedGraduateCount, remainingProjectedGraduates);
+      const predictedGraduateCount = Math.max(0, remainingProjectedGraduates - identifiedProjectedGraduateCount);
+      const predictedExitCount = Math.max(0, totalExiters - baseline.actualExiters - identifiedProjectedGraduateCount - predictedGraduateCount);
+      const rate = totalExiters ? projectedGraduateCount / totalExiters : null;
+
+      return {
+        actualExiters: baseline.actualExiters,
+        assumedExiters: Math.max(0, totalExiters - baseline.actualExiters),
         totalExiters,
         projectedGraduateCount,
         rate,
         segments: [
-          { key: 'actual-graduates', value: actualGraduateCount, color: '#1e3a8a', opacity: 1, label: 'Actual graduates' },
-          { key: 'projected-graduates', value: identifiedProjectedGraduateCount, color: '#2563eb', opacity: .72, label: 'Projected graduates by academic-year end date' },
-          { key: 'predicted-graduates', value: predictedGraduateCount, color: '#2563eb', opacity: .32, label: 'Predicted graduates' },
-          { key: 'actual-non-graduates', value: actualNonGraduateCount, color: '#9ca3af', opacity: 1, label: 'Actual exited, not graduated' },
+          { key: 'actual-graduates', value: baseline.actualGraduateCount, color: this.colors.green, opacity: 1, label: 'Actual graduates' },
+          { key: 'projected-graduates', value: identifiedProjectedGraduateCount, color: this.colors.green, opacity: .72, label: 'Projected graduates by academic-year end date' },
+          { key: 'predicted-graduates', value: predictedGraduateCount, color: this.colors.green, opacity: .32, label: 'Predicted graduates' },
+          { key: 'actual-non-graduates', value: baseline.actualNonGraduateCount, color: '#9ca3af', opacity: 1, label: 'Actual exited, not graduated' },
           { key: 'predicted-exits', value: predictedExitCount, color: '#d1d5db', opacity: 1, label: 'Predicted exits' }
         ].filter(segment => segment.value > 0)
       };
@@ -76,7 +105,13 @@ Vue.component('reports-graduation-students', {
     programLabel(row) { return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - '); },
     studentName(row) { return [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || `Canvas User ${row.canvas_user_id || row.sis_user_id || '—'}`; },
     numberValue(value) { const number = Number(value); return Number.isFinite(number) ? number : null; },
+    nonNegativeNumber(value) {
+      if (value === null || value === undefined || String(value).trim() === '') return null;
+      const number = this.numberValue(value);
+      return number === null ? null : Math.max(0, number);
+    },
     sortNumber(value) { return this.numberValue(value) ?? Number.POSITIVE_INFINITY; },
+    resetScenario() { this.predictedGraduateOverride = null; this.predictedExitOverride = null; },
     dateValue(value) {
       const dateOnly = String(value ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])).getTime();
@@ -132,8 +167,17 @@ Vue.component('reports-graduation-students', {
     selectProgramFromContext() {
       const programCode = String(this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? '').trim();
       const campusCode = String(this.getSharedFilterValue('campus_code', this.reportContext?.routeFilters?.campusCode) ?? '').trim();
-      const match = this.programOptions.find(row => String(row.program_code ?? '').trim() === programCode && (!campusCode || String(row.campus_code ?? '').trim() === campusCode));
+      const programName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
+      const match = this.programOptions.find(row => String(row.program_code ?? '').trim() === programCode && (!campusCode || String(row.campus_code ?? '').trim() === campusCode))
+        || this.programOptions.find(row => String(row.program_name ?? '').trim() === programName);
       this.selectedProgramKey = match?.key || (this.programOptions.some(row => row.key === this.selectedProgramKey) ? this.selectedProgramKey : this.programOptions[0]?.key || '');
+    },
+    syncSelectedProgramToSharedFilters() {
+      const program = this.selectedProgram;
+      if (!program) return;
+      this.setSharedFilterValue('program_code', String(program.program_code ?? '').trim());
+      this.setSharedFilterValue('campus_code', String(program.campus_code ?? '').trim());
+      this.setSharedFilterValue('program_name', String(program.program_name ?? '').trim());
     },
     normalizeRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => {
@@ -181,12 +225,17 @@ Vue.component('reports-graduation-students', {
 
   mounted() { this.loadData(); },
   watch: {
-    selectedProgramKey() { if (this.hasLoadedProjections) this.loadCompletionData(); },
+    selectedProgramKey() { this.resetScenario(); this.syncSelectedProgramToSharedFilters(); if (this.hasLoadedProjections) this.loadCompletionData(); },
     reportContext() { this.selectProgramFromContext(); }
   },
 
   template: `
-  <div style="display:grid;grid-template-rows:minmax(0, 2fr) minmax(0, 1fr);gap:12px;flex:1 1 auto;height:100%;min-height:0;overflow:hidden;">
+  <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 auto;height:100%;min-height:0;overflow:hidden;">
+    <div class="btech-card btech-theme" style="padding:12px;flex:0 0 auto;">
+      <label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label>
+      <select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;margin-left:.5rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select>
+    </div>
+    <div style="display:grid;grid-template-rows:minmax(0, 2fr) minmax(0, 1fr);gap:12px;flex:1 1 auto;min-height:0;overflow:hidden;">
     <report-table-shell :embedded="true" title-html="Active Students" :table="activeTable" :rows="visibleActiveRows" :loading="loading" :load-error="loadError" loading-text="Loading active students..." :row-key-fn="(row, index) => ['active', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
       <template #description>
         <div>Current academic-year students, ordered by projected exit date. Blue shows actual progress; red shows the additional progress needed today when the student is behind pace.</div>
@@ -198,13 +247,22 @@ Vue.component('reports-graduation-students', {
             </div>
             <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#111827;" title="60% graduation-rate target"></div>
           </div>
-          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i style="display:inline-block;width:8px;height:8px;background:#1e3a8a;margin-right:3px;"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.72;margin-right:3px;"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#2563eb;opacity:.32;margin-right:3px;"></i>Predicted graduates: {{ projectionSegmentValue('predicted-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#d1d5db;margin-right:3px;"></i>Predicted exits: {{ projectionSegmentValue('predicted-exits').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+          <div v-if="projectionBreakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:.7rem;color:#4b5563;"><span><i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, marginRight:'3px' }"></i>Actual graduates: {{ projectionSegmentValue('actual-graduates').toFixed(1) }}</span><span><i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, opacity:.72, marginRight:'3px' }"></i>Projected graduates: {{ projectionSegmentValue('projected-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:8px;height:8px;background:#9ca3af;margin-right:3px;"></i>Actual exits (not graduated): {{ projectionSegmentValue('actual-non-graduates').toFixed(1) }}</span><span><i style="display:inline-block;width:2px;height:10px;background:#111827;margin:0 4px -1px 0;"></i>60% target</span></div>
+          <div v-if="projectionBreakdown" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.75rem;">
+            <i :style="{ display:'inline-block', width:'8px', height:'8px', background:colors.green, opacity:.32 }"></i>
+            <label for="graduation-students-predicted-graduates">Total graduates</label>
+            <input id="graduation-students-predicted-graduates" v-model.number="scenarioPredictedGraduateCount" type="number" :min="projectionBaseline ? projectionBaseline.actualGraduateCount : 0" :max="projectionBaseline ? Math.max(projectionBaseline.actualGraduateCount, scenarioPredictedExitCount - projectionBaseline.actualNonGraduateCount) : scenarioPredictedExitCount" step="1" aria-label="Scenario total graduates" style="width:4.5rem;font-size:.75rem;">
+            <i style="display:inline-block;width:8px;height:8px;background:#d1d5db;"></i>
+            <label for="graduation-students-predicted-exits">Total exits</label>
+            <input id="graduation-students-predicted-exits" v-model.number="scenarioPredictedExitCount" type="number" :min="projectionBaseline ? projectionBaseline.actualExiters : 0" step="1" aria-label="Scenario total exits" style="width:4.5rem;font-size:.75rem;">
+            <button type="button" @click="resetScenario" style="font-size:.75rem;">Reset</button>
+          </div>
         </div>
       </template>
-      <template #filters><label style="font-size:.75rem;font-weight:600;" for="graduation-students-program">Program</label><select id="graduation-students-program" v-model="selectedProgramKey" aria-label="Select graduation program" style="min-width:18rem;max-width:28rem;font-size:.75rem;"><option v-for="program in programOptions" :key="program.key" :value="program.key">{{ programLabel(program) }}</option></select></template>
     </report-table-shell>
     <report-table-shell :embedded="true" title-html="Exited Students" :table="exitedTable" :rows="visibleExitedRows" :loading="loading" :load-error="loadError" loading-text="Loading exited students..." :row-key-fn="(row, index) => ['exited', row.sis_user_id, row.program_code, row.campus_code, index].join(':')">
       <template #description>Current academic-year exits for the selected program, including whether each student counted as a graduate.</template>
     </report-table-shell>
+    </div>
   </div>`
 });
