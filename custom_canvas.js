@@ -242,6 +242,11 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     if (IS_TEACHER && CURRENT_COURSE_ID === AI_HUB_COURSE_ID) {
       feature("page_formatting/ai_hub/ai_hub", /^\/courses\/621895(?:\/.*)?$/);
     }
+    const ISD_HUB_COURSE_ID = 632661;
+    if (IS_TEACHER && CURRENT_COURSE_ID === ISD_HUB_COURSE_ID) {
+      feature(
+        "page_formatting/isd_hub/isd_hub", /^\/courses\/632661(?:\/.*)?$/);
+    }
 
     // instructor hub
     if (/^\/courses\/611213/.test(window.location.pathname)) {
