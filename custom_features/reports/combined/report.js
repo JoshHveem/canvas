@@ -56,6 +56,7 @@
         const reportOrder = [
           'students',
           'graduation',
+          'placements',
           'evaluations',
           'employment-skills',
           'outcomes',
@@ -266,6 +267,20 @@
             ]
           },
           {
+            value: 'placements',
+            label: 'Placements',
+            title: 'Placements Report',
+            subMenus: [
+              {
+                value: 'locations',
+                label: 'Locations',
+                component: 'reports-placements-locations',
+                dataset: 'programs_placement_outcomes',
+                filters: {}
+              }
+            ]
+          },
+          {
             value: 'evaluations',
             label: 'Evaluations',
             title: 'Evaluations Report',
@@ -329,7 +344,7 @@
         ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
-          reportTypes: IS_ME ? reports : reports.filter(report => report.value !== 'graduation'),
+          reportTypes: IS_ME ? reports : reports.filter(report => !['graduation', 'placements'].includes(report.value)),
           settings: {
             reportType: 'students',
             subMenuByType: {
@@ -527,6 +542,7 @@
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-outlook.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-outlook.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-summary.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-students.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/graduation-students.js");
+    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/placements-locations.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/placements-locations.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-summary.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-evals-by-course.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js") : "https://bridgetools.dev/canvas/custom_features/reports/combined/reports/evaluations-course-detail.js");
