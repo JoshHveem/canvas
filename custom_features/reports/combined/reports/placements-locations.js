@@ -12,6 +12,8 @@ Vue.component('reports-placements-locations', {
       table: window.ReportUtils.createTable('Students', colors),
       outcomes: [],
       selectedAcademicYear: '',
+      selectedProgramName: '',
+      hasLoadedOutcomes: false,
       loading: false,
       loadError: ''
     };
@@ -31,13 +33,23 @@ Vue.component('reports-placements-locations', {
       return Array.from(new Set(this.outcomes.map(row => row.academic_year).filter(Number.isFinite))).sort((a, b) => b - a);
     },
 
+    programOptions() {
+      const year = Number(this.selectedAcademicYear);
+      return Array.from(new Set(this.outcomes
+        .filter(row => !Number.isFinite(year) || row.academic_year === year)
+        .map(row => row.program_name)
+        .filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b));
+    },
+
     placementRows() {
       const year = Number(this.selectedAcademicYear);
+      const programName = String(this.selectedProgramName ?? '').trim();
       if (!Number.isFinite(year)) return [];
       const locations = new Map();
       let estimatedTotal = 0;
 
-      this.outcomes.filter(row => row.academic_year === year).forEach(outcome => {
+      this.outcomes.filter(row => row.academic_year === year && (!programName || row.program_name === programName)).forEach(outcome => {
         const known = outcome.num_students__employer_known;
         const knownRate = outcome.perc_students__employer_known;
         if (known !== null && knownRate !== null && knownRate > 0) {
@@ -94,6 +106,7 @@ Vue.component('reports-placements-locations', {
     normalizeOutcomes(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => ({
         program_code: String(row?.program_code ?? '').trim(),
+        program_name: String(row?.program_name ?? '').trim(),
         academic_year: this.numberValue(row?.academic_year),
         num_students__employer_known: this.numberValue(row?.num_students__employer_known),
         perc_students__employer_known: this.numberValue(row?.perc_students__employer_known),
@@ -109,12 +122,23 @@ Vue.component('reports-placements-locations', {
       this.selectedAcademicYear = this.academicYears[0] ?? '';
     },
 
+    selectProgramFromContext() {
+      const sharedProgramName = String(this.getSharedFilterValue('program_name', this.reportContext?.routeFilters?.programName) ?? '').trim();
+      if (sharedProgramName && this.programOptions.includes(sharedProgramName)) {
+        this.selectedProgramName = sharedProgramName;
+      } else if (!this.programOptions.includes(this.selectedProgramName)) {
+        this.selectedProgramName = '';
+      }
+    },
+
     async loadData() {
       try {
         this.loading = true;
         this.loadError = '';
         this.outcomes = this.normalizeOutcomes(await this.fetchReportDataset({}, { dataset: 'programs_placement_outcomes' }));
         this.selectInitialAcademicYear();
+        this.selectProgramFromContext();
+        this.hasLoadedOutcomes = true;
         if (!this.outcomes.length) this.loadError = 'No placement outcomes are available.';
       } catch (error) {
         console.warn('Failed to load placement outcomes', error);
@@ -128,6 +152,21 @@ Vue.component('reports-placements-locations', {
 
   mounted() {
     this.loadData();
+  },
+
+  watch: {
+    selectedAcademicYear() {
+      if (this.hasLoadedOutcomes) this.selectProgramFromContext();
+    },
+
+    selectedProgramName(value) {
+      if (!this.hasLoadedOutcomes) return;
+      this.setSharedFilterValue('program_name', value);
+    },
+
+    reportContext() {
+      if (this.hasLoadedOutcomes) this.selectProgramFromContext();
+    }
   },
 
   template: `
@@ -146,7 +185,12 @@ Vue.component('reports-placements-locations', {
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="placements-locations-academic-year">Academic year</label>
       <select id="placements-locations-academic-year" v-model.number="selectedAcademicYear" style="font-size:.75rem;">
-        <option v-for="year in academicYears" :key="year" :value="year">{{ year }}-{{ String(year + 1).slice(-2) }}</option>
+        <option v-for="year in academicYears" :key="year" :value="year">{{ year }}</option>
+      </select>
+      <label style="font-size:.75rem;font-weight:600;" for="placements-locations-program">Program</label>
+      <select id="placements-locations-program" v-model="selectedProgramName" style="font-size:.75rem;">
+        <option value="">All programs</option>
+        <option v-for="programName in programOptions" :key="programName" :value="programName">{{ programName }}</option>
       </select>
     </template>
   </report-table-shell>
