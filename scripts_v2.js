@@ -25,21 +25,6 @@
     return promise;
   }
 
-  function loadModule(url, label) {
-    var key = 'module:' + url;
-    if (loaded.has(key)) return loaded.get(key);
-    var promise = new Promise(function (resolve, reject) {
-      var script = document.createElement('script');
-      script.type = 'module';
-      script.src = assetUrl(url);
-      script.onload = resolve;
-      script.onerror = function () { reject(new Error('Unable to load ' + (label || url))); };
-      document.head.appendChild(script);
-    });
-    loaded.set(key, promise);
-    return promise;
-  }
-
   var dependencies = {
     vue: function () { return loadScript(assetBase + '/external-libraries/vue.2.6.12.js', 'Vue'); },
     select2: function () { return loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', 'Select2'); },
@@ -73,7 +58,9 @@
   function loadFeature(entry) {
     var deps = (entry.dependencies || []).map(function (name) { return dependencies[name](); });
     return Promise.all(deps)
-      .then(function () { return loadModule(assetBase + '/custom_features_v2/' + entry.name + '/main.js', entry.name); })
+      // Bundles keep feature-local ES module imports compatible with Canvas's
+      // cross-origin asset loading, which does not permit raw module scripts.
+      .then(function () { return loadScript(assetBase + '/custom_features_v2/' + entry.name + '/main.bundle.js', entry.name); })
       .catch(function (error) { console.error('[BTECH v2] Feature failed:', entry.name, error); });
   }
 

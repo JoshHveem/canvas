@@ -1,0 +1,1 @@
+(()=>{(async function(){$("body").on("click",".bcs__row__associations button",async function(n){rows=await getElement(".bca-associations-table tr"),rows.each(function(){let t=$(this).find("td span");if(t.length>0){let s=$(this).attr("id").replace("course_","");$(t[0]).wrapInner("<a href='/courses/"+s+"/settings' target='#'></a>")}})})})();})();

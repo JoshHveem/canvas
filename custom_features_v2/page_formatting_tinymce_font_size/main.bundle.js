@@ -1,0 +1,1 @@
+(()=>{TOOLBAR_STYLES={init:async function(){let e=await $.get("https://bridgetools.dev/canvas/style/rce.css");tinyMCE.activeEditor.iframeElement.contentDocument.getElementsByTagName("style")[0].innerHTML=tinyMCE.activeEditor.iframeElement.contentDocument.getElementsByTagName("style")[0].innerHTML+e}};})();

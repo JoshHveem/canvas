@@ -25,21 +25,6 @@
     return promise;
   }
 
-  function loadModule(url, label) {
-    var key = 'module:' + url;
-    if (loaded.has(key)) return loaded.get(key);
-    var promise = new Promise(function (resolve, reject) {
-      var script = document.createElement('script');
-      script.type = 'module';
-      script.src = assetUrl(url);
-      script.onload = resolve;
-      script.onerror = function () { reject(new Error('Unable to load ' + (label || url))); };
-      document.head.appendChild(script);
-    });
-    loaded.set(key, promise);
-    return promise;
-  }
-
   var dependencies = {
     vue: function () { return loadScript(assetBase + '/external-libraries/vue.2.6.12.js', 'Vue'); },
     select2: function () { return loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', 'Select2'); },
@@ -73,7 +58,9 @@
   function loadFeature(entry) {
     var deps = (entry.dependencies || []).map(function (name) { return dependencies[name](); });
     return Promise.all(deps)
-      .then(function () { return loadModule(assetBase + '/custom_features_v2/' + entry.name + '/main.js', entry.name); })
+      // Bundles keep feature-local ES module imports compatible with Canvas's
+      // cross-origin asset loading, which does not permit raw module scripts.
+      .then(function () { return loadScript(assetBase + '/custom_features_v2/' + entry.name + '/main.bundle.js', entry.name); })
       .catch(function (error) { console.error('[BTECH v2] Feature failed:', entry.name, error); });
   }
 
@@ -119,7 +106,7 @@
     { name: "files_usage", dependencies: ["bridgetools"], routes: /^\/courses\/[0-9]+\/files/ },
     { name: "grades_page_attempts", routes: /^\/courses\/[0-9]+\/grades\/[0-9]+/ },
     { name: "grades_page_highlighted_grades_page_items", routes: /^\/courses\/[0-9]+\/grades\/[0-9]+/ },
-    { name: "highlight_comments_same_date", routes: "[/^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+/, /^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader/]" },
+    { name: "highlight_comments_same_date", routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },
     { name: "hs_section_adder", isd: true, routes: /^\/accounts\/[0-9]+$/ },
     { name: "img_zoom", priority: "critical", routes: /users/ },
     { name: "inbox_prefill", isd: true, routes: /^\/conversations$/ },
@@ -139,12 +126,12 @@
     { name: "page_formatting_image_formatting", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
     { name: "page_formatting_image_map", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
     { name: "page_formatting_isd_hub", courseIds: [632661], teacher: true, priority: "critical", routes: /^\/courses\/[0-9]+(?:\/.*)?$/ },
-    { name: "page_formatting_isd_hub_gradebook", courseIds: [632661], teacher: true, priority: "critical", routes: "[/^\\/courses\\/[0-9]+\\/grades(?:\\/[0-9]+)?$/, /^\\/courses\\/[0-9]+\\/gradebook\\/[0-9]+/]" },
+    { name: "page_formatting_isd_hub_gradebook", courseIds: [632661], teacher: true, priority: "critical", routes: [/^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/, /^\/courses\/[0-9]+\/gradebook\/[0-9]+/] },
     { name: "page_formatting_print_rubric", routes: /^\/courses\/[0-9]+\/assignments/ },
     { name: "page_formatting_table_from_page", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
     { name: "page_formatting_tabs_from_table", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
     { name: "page_formatting_tinymce_font_size", dependencies: ["select2"], routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/ },
-    { name: "password_reset", routes: "[/^\\/courses\\/[0-9]+\\/users\\/[0-9]+$/, /^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$/, /^\\/users\\/[0-9]+$/]" },
+    { name: "password_reset", routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/users\/[0-9]+$/] },
     { name: "people_page_instructor_add_remove_guide", teacher: true, routes: /^\/courses\/[0-9]+\/users$/ },
     { name: "previous_enrollment_data_previous_enrollment_period_grades", departments: [3833] },
     { name: "quizzes_duplicate_bank_item", routes: /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/ },
@@ -159,10 +146,10 @@
     { name: "reports_combined", teacher: true, dependencies: ["vue","reportRuntime"], routes: /^\/$/ },
     { name: "reports_grades_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: /^\/$/ },
     { name: "reports_grades_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: /^\/courses\/[0-9]+\/gradebook$/ },
-    { name: "reports_individual_page", notTeacher: true, dependencies: ["vue","reportRuntime"], routes: "[/^\\/$/, /^\\/courses\\/[0-9]+\\/grades(?:\\/[0-9]+)?$/]" },
-    { name: "reports_individual_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: "[/^\\/courses\\/[0-9]+\\/users\\/[0-9]+$/, /^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$/, /^\\/courses\\/[0-9]+\\/grades\\/[0-9]+$/, /^\\/users\\/[0-9]+$/]" },
-    { name: "rubrics_attempts_data", departments: [3824], routes: "[/^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+/, /^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader/]" },
-    { name: "rubrics_gen_comment", departments: [3824], routes: "[/^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+/, /^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader/]" },
+    { name: "reports_individual_page", notTeacher: true, dependencies: ["vue","reportRuntime"], routes: [/^\/$/, /^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/] },
+    { name: "reports_individual_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/courses\/[0-9]+\/grades\/[0-9]+$/, /^\/users\/[0-9]+$/] },
+    { name: "rubrics_attempts_data", departments: [3824], routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },
+    { name: "rubrics_gen_comment", departments: [3824], routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },
     { name: "rubrics_upload_rubric_create_rubric_from_json", routes: /^\/courses\/[0-9]+\/rubrics$/ },
     { name: "sections_conclude_all", teacher: true, routes: /^\/courses\/[0-9]+\/sections\/[0-9]+/ },
     { name: "side_menus", priority: "critical" },
@@ -172,7 +159,7 @@
     { name: "speed_grader_split_screen", teacher: true, routes: /^\/courses\/[0-9]+\/gradebook\/speed_grader/ },
     { name: "transfer_navigation", teacher: true, routes: /^\/courses\/[0-9]+\/settings/ },
     { name: "welcome_banner", priority: "critical", teacher: false, routes: /^\/$/ }
-  ];;
+  ];
 
   function needsDepartment(entry) { return Boolean(entry.departments); }
 

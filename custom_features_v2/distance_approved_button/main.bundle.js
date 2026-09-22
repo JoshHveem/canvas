@@ -1,0 +1,10 @@
+(()=>{(async function(){let g=`
+    <svg 
+      aria-label="work from home icon"
+      style="width: 1.5rem; height: auto; vertical-align: middle;"
+      id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 1060.44 1004.85" enable-background="new 0 0 1060.44 1004.85" >
+      <g id="Layer_1-2" data-name="Layer 1">
+        <path class="cls-1" d="M1058.21,512.58c5.1-13.19,1.26-28.93-9.57-39.15h0L559.21,11.51c-16.26-15.34-41.73-15.34-57.99,0L11.8,473.43c-10.83,10.22-14.68,25.95-9.57,39.15,5.29,13.68,18.19,22.52,32.85,22.52h86.47v445.07c0,13.63,11.05,24.67,24.67,24.67h243.72c13.63,0,24.67-11.05,24.67-24.67v-281.25c0-13.36,10.83-24.2,24.2-24.2h179.12c13.36,0,24.2,10.83,24.2,24.2v281.25c0,13.63,11.05,24.67,24.67,24.67h243.72c13.63,0,24.67-11.05,24.67-24.67v-445.07h90.16c14.66,0,27.55-8.84,32.85-22.52Z"/>
+      </g>
+    </svg>
+  `,r=[];try{await $.get("https://distance.bridgetools.dev/api/courses/"+ENV.COURSE_ID+"/approval",o=>{r=o})}catch(o){console.error("NO APPROVALS")}let p=await canvasGet("/api/v1/courses/"+ENV.COURSE_ID+"/modules?include[]=items&include[]=content_details"),v=bridgetools.colors.darkGray,c=bridgetools.colors.canvasGreen;$(".ig-distance-approved").each(function(){$(this).remove()});for(let o=0;o<p.length;o++){let f=p[o];for(let n=0;n<f.items.length;n++){let e=f.items[n];if(e.type=="Page"&&(e.content_id=e.id),e.url!==void 0&&e.content_id>0){let h="context_module_item_"+e.id,m=$("#"+h+" div.ig-info"),i=!1;for(let a=0;a<r.length;a++){let t=r[a];t.type==e.type&&t.content_id==e.content_id&&(i=t.approved)}let s=v;i&&(s=bridgetools.colors.black),IS_ISD&&i&&(s=c);let d=$('<span class="ig-distance-approved" style="cursor: pointer; float: right;"></span>'),l=$(g);l.css("fill",s),d.append(l),IS_ISD&&d.click(function(){let t=l.css("fill")==c;t=!t,t&&l.css("fill",c),t||l.css("fill",v),$.post("https://distance.bridgetools.dev/api/courses/"+ENV.COURSE_ID+"/approval",{title:e.title,type:e.type,content_id:e.content_id,approved:t})}),(i||IS_ISD)&&m.after(d)}}}})();})();

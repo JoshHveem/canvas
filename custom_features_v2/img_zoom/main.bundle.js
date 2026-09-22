@@ -1,0 +1,1 @@
+(()=>{window.onload=function(){$("span").each(function(){let e=$(this);if(e.css("background-image")!="none"){let n=$(e.clone());n.css({width:"256px",height:"256px",position:"absolute","margin-left":"-96px","margin-top":"-96px","pointer-events":"none","z-index":1e7}),e.before(n),n.hide(),e.hover(function(){n.show()},function(){n.hide()})}})};})();

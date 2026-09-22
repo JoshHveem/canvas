@@ -10,6 +10,7 @@
     "build": "node build.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "terser": "^5.39.0"
   }
 }
