@@ -1,4 +1,5 @@
 let manifest;
+let locationOptions = [];
 let selectedIndex = 0;
 let saveTimer;
 let saveChain = Promise.resolve();
@@ -65,6 +66,54 @@ function renderSidebar() {
 }
 
 function checked(feature, key) { return feature[key] ? 'checked' : ''; }
+function locationChildren(parentId) { return locationOptions.filter(item => item.parent === parentId); }
+function locationDescendants(parentId) {
+  return locationChildren(parentId).flatMap(item => [item, ...locationDescendants(item.id)]);
+}
+function locationBranchSelected(item, selected) {
+  return selected.includes(item.id) || locationDescendants(item.id).some(child => selected.includes(child.id));
+}
+function locationPattern(item, feature) {
+  if (!feature.courseIds?.length) return patternText(item.route);
+  const courseIds = `(?:${feature.courseIds.join('|')})`;
+  const source = item.route.source
+    .replace('courses\\/[0-9]+', `courses\\/${courseIds}`)
+    .replace('courses\\/([0-9]+)', `courses\\/${courseIds}`);
+  return patternText({ ...item.route, source });
+}
+function locationOption(item, selected, feature) {
+  const children = locationChildren(item.id);
+  const childMarkup = children.length ? `<div class="location-children">${children.map(child => locationOption(child, selected, feature)).join('')}</div>` : '';
+  const expanded = locationBranchSelected(item, selected);
+  const expandButton = children.length ? `<button class="location-expand" type="button" data-expand="${escapeHtml(item.id)}" aria-label="${expanded ? 'Collapse' : 'Expand'} ${escapeHtml(item.label)}" aria-expanded="${expanded}">${expanded ? '▾' : '▸'}</button>` : '';
+  const locationLine = `<div class="location-line">${expandButton}<label><input data-location="${escapeHtml(item.id)}" type="checkbox" ${selected.includes(item.id) ? 'checked' : ''}><span class="location-label">${escapeHtml(item.label)}</span><code class="location-regex">${escapeHtml(locationPattern(item, feature))}</code></label></div>`;
+  return `<div class="location-option ${children.length ? 'location-parent' : ''} ${children.length && !expanded ? 'collapsed' : ''}" data-location-option="${escapeHtml(item.id)}">${locationLine}${childMarkup}</div>`;
+}
+function locationGroupHeading(group, feature, expanded) {
+  const toggle = `<button class="location-expand" type="button" data-expand-group aria-label="${expanded ? 'Collapse' : 'Expand'} ${escapeHtml(group)} locations" aria-expanded="${expanded}">${expanded ? '▾' : '▸'}</button>`;
+  const title = `<div class="location-group-title">${toggle}<h3>${escapeHtml(group)}</h3></div>`;
+  if (group !== 'Course') return `<div class="location-group-heading">${title}</div>`;
+  return `<div class="location-group-heading">${title}<div class="course-scope-controls"><label class="course-id-scope">Specific course IDs<input data-field="courseIds" value="${list(feature.courseIds)}" placeholder="All courses"></label><label class="blueprint-scope"><input data-field="blueprint" type="checkbox" ${checked(feature, 'blueprint')}> Blueprint Only</label></div></div>`;
+}
+function locationPicker(feature) {
+  const selected = feature.locations || [];
+  const groups = locationOptions.reduce((result, item) => {
+    (result[item.group] ||= []).push(item);
+    return result;
+  }, {});
+  return Object.entries(groups).map(([group, items]) => {
+    const roots = items.filter(item => !item.parent);
+    const expanded = items.some(item => selected.includes(item.id));
+    return roots.length ? `<div class="location-group ${expanded ? '' : 'collapsed'}">${locationGroupHeading(group, feature, expanded)}<div class="location-group-content">${roots.map(item => locationOption(item, selected, feature)).join('')}</div></div>` : '';
+  }).join('');
+}
+function syncLocationParentStates() {
+  locationOptions.filter(item => locationChildren(item.id).length).forEach(parent => {
+    const input = document.querySelector(`[data-location="${parent.id}"]`);
+    const children = locationDescendants(parent.id).map(item => document.querySelector(`[data-location="${item.id}"]`));
+    if (input) input.indeterminate = !input.checked && children.some(child => child?.checked);
+  });
+}
 function renderEditor() {
   const feature = manifest.features[selectedIndex];
   if (!feature) { $('#editor').innerHTML = '<div class="empty-editor">Select a feature or add a new one.</div>'; return; }
@@ -81,18 +130,64 @@ function renderEditor() {
       <label><input data-field="rootAdmin" type="checkbox" ${checked(feature, 'rootAdmin')}> Root admins</label>
     </div></fieldset>
     <fieldset><legend>Where it can run</legend><div class="field-grid">
-      <label>Specific course IDs<input data-field="courseIds" value="${list(feature.courseIds)}" placeholder="Example: 621895, 632661"></label>
       <label>Specific department IDs<input data-field="departments" value="${list(feature.departments)}" placeholder="Example: 3824, 3833"></label>
-    </div><div class="checks">
-      <label><input data-field="course" type="checkbox" ${checked(feature, 'course')}> Require a course page</label>
-      <label><input data-field="blueprint" type="checkbox" ${checked(feature, 'blueprint')}> Blueprint courses only</label>
     </div>
-    <label class="wide">Page path rules<textarea data-field="routes" placeholder="One JavaScript regular expression per line. Example: /^\\/courses\\/[0-9]+\\/modules$/">${escapeHtml(routeItems(feature).map(patternText).join('\n'))}</textarea><small>Leave blank to allow every page. Multiple rules mean any one can match.</small></label>
     </fieldset>
+    <fieldset><legend>Locations</legend><p class="field-help">Select every Canvas location where this feature should load. Selecting a parent also selects its child locations; children can be selected on their own.</p><div class="location-groups">${locationPicker(feature)}</div><label class="wide">Advanced custom path rules<textarea data-field="routes" placeholder="Only use for a location not covered above.">${escapeHtml(routeItems(feature).map(patternText).join('\n'))}</textarea><small>One JavaScript regular expression per line. These are combined with the selected locations.</small></label></fieldset>
     <fieldset><legend>Required shared libraries</legend><div class="checks">${dependencyOptions.map(([name, label]) => `<label><input data-dependency="${name}" type="checkbox" ${(feature.dependencies || []).includes(name) ? 'checked' : ''}> ${label}</label>`).join('')}</div><small>Select every library this feature needs before it loads.</small></fieldset>
   </form>`;
 
-  $('#feature-form').onchange = event => event.target.dataset.dependency ? updateDependencies() : updateFeature(event.target);
+  syncLocationParentStates();
+  document.querySelectorAll('[data-expand]').forEach(button => button.onclick = () => {
+    const container = document.querySelector(`[data-location-option="${button.dataset.expand}"]`);
+    const expanded = container.classList.toggle('collapsed') === false;
+    button.textContent = expanded ? '▾' : '▸';
+    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${button.closest('.location-line').querySelector('.location-label').textContent}`);
+  });
+  document.querySelectorAll('[data-expand-group]').forEach(button => button.onclick = () => {
+    const container = button.closest('.location-group');
+    const expanded = container.classList.toggle('collapsed') === false;
+    button.textContent = expanded ? '▾' : '▸';
+    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${button.closest('.location-group-title').querySelector('h3').textContent} locations`);
+  });
+  $('#feature-form').onchange = event => event.target.dataset.location ? updateLocations(event.target) : event.target.dataset.dependency ? updateDependencies() : updateFeature(event.target);
+}
+
+function expandLocationBranch(id) {
+  let currentId = id;
+  while (currentId) {
+    const container = document.querySelector(`[data-location-option="${currentId}"]`);
+    const button = document.querySelector(`[data-expand="${currentId}"]`);
+    if (container) container.classList.remove('collapsed');
+    if (button) { button.textContent = '▾'; button.setAttribute('aria-expanded', 'true'); }
+    currentId = locationOptions.find(item => item.id === currentId)?.parent;
+  }
+}
+function updateLocations(changedInput) {
+  const descendants = locationDescendants(changedInput.dataset.location);
+  if (descendants.length) {
+    descendants.forEach(item => {
+      const input = document.querySelector(`[data-location="${item.id}"]`);
+      if (input) input.checked = changedInput.checked;
+    });
+  } else {
+    let parent = locationOptions.find(item => item.id === changedInput.dataset.location)?.parent;
+    while (parent) {
+      const input = document.querySelector(`[data-location="${parent}"]`);
+      if (input) input.checked = false;
+      parent = locationOptions.find(item => item.id === parent)?.parent;
+    }
+  }
+  if (changedInput.checked) expandLocationBranch(changedInput.dataset.location);
+  syncLocationParentStates();
+  const feature = manifest.features[selectedIndex];
+  const selected = [...document.querySelectorAll('[data-location]:checked')].map(input => input.dataset.location);
+  selected.length ? feature.locations = selected : delete feature.locations;
+  status('');
+  setSaving(true);
+  queueSave();
 }
 
 function updateDependencies() {
@@ -112,7 +207,7 @@ function updateFeature(input) {
   const field = input.dataset.field;
   if (!field) return;
   try {
-    if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'course', 'blueprint'].includes(field)) feature[field] = input.checked;
+    if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'blueprint'].includes(field)) feature[field] = input.checked;
     else if (field === 'courseIds') { const values = parseNumbers(input.value, 'Course IDs'); values ? feature.courseIds = values : delete feature.courseIds; }
     else if (field === 'departments') { const values = parseNumbers(input.value, 'Department IDs'); values ? feature.departments = values : delete feature.departments; }
     else if (field === 'routes') { const values = parseRoutes(input.value); values ? feature.routes = values : delete feature.routes; }
@@ -121,6 +216,7 @@ function updateFeature(input) {
     setSaving(true);
     queueSave();
     if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'courseIds', 'departments'].includes(field)) renderSidebar();
+    if (field === 'courseIds') renderEditor();
   } catch (error) { status(error.message); input.focus(); }
 }
 
@@ -152,6 +248,7 @@ function queueSave() {
   saveTimer = setTimeout(() => saveNow().catch(() => {}), 350);
 }
 
+locationOptions = await api('/api/locations');
 manifest = await api('/api/features');
 renderSidebar(); renderEditor();
 $('#search').oninput = renderSidebar;

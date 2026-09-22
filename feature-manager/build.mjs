@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { minify } from 'terser';
 import { build as bundle } from 'esbuild';
 import { discoverFeatures, expandFeatureSettings } from './feature-discovery.mjs';
+import { routesForLocations } from './location-rules.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
@@ -30,7 +31,14 @@ await Promise.all(folders.map(name => bundle({
   minify: true,
   legalComments: 'none'
 })));
-const active = expandFeatureSettings(folders, manifest.settings).filter(feature => feature.enabled !== false);
+const materializeLocations = feature => {
+  const { locations, routes, ...entry } = feature;
+  const allRoutes = [...routesForLocations(locations), ...(routes ? (Array.isArray(routes) ? routes : [routes]) : [])];
+  if (allRoutes.length === 1) entry.routes = allRoutes[0];
+  else if (allRoutes.length > 1) entry.routes = allRoutes;
+  return entry;
+};
+const active = expandFeatureSettings(folders, manifest.settings).map(materializeLocations).filter(feature => feature.enabled !== false);
 const featureLiteral = `var features = [\n    ${active.map(value).join(',\n    ')}\n  ];`;
 const sourcePath = path.join(root, 'scripts_v2.js');
 const source = await fs.readFile(sourcePath, 'utf8');

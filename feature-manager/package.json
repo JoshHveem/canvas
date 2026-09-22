@@ -7,6 +7,7 @@
     "import:v2": "node import-v2.mjs",
     "migrate:settings": "node migrate-settings.mjs",
     "migrate:folders": "node migrate-folder-names.mjs",
+    "migrate:locations": "node migrate-locations.mjs",
     "build": "node build.mjs"
   },
   "devDependencies": {

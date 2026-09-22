@@ -5,7 +5,7 @@
   Show which tab you're on
 */
 (async function () {
-  const REPORT_BASE_PATH = '/custom_features/reports/individual_page';
+  const REPORT_BASE_PATH = '/custom_features_v2/reports_individual_page';
   const deepClone = value => JSON.parse(JSON.stringify(value));
 
   function emptyMajor() {

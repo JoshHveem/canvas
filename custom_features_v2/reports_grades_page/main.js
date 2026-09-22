@@ -69,7 +69,7 @@
   async function postLoad() {
     let vueString = '';
     await $.get(
-      (window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features/reports/grades_page/template.vue') : SOURCE_URL + '/custom_features/reports/grades_page/template.vue'),
+      (window.btechAssetUrl ? window.btechAssetUrl(SOURCE_URL + '/custom_features_v2/reports_grades_page/template.vue') : SOURCE_URL + '/custom_features_v2/reports_grades_page/template.vue'),
       null,
       function (html) {
         vueString = html.replace('<template>', '').replace('</template>', '');

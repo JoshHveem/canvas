@@ -102,9 +102,9 @@ $("body").append(`
 `);
 console.log("upload_questions: modal HTML appended, binding Vue root id #canvas-question-bank-uploader-vue");
 const CANVAS_PROMPT_PATHS = {
-  convert: "/custom_features/quizzes/upload_questions/convert_existing_quiz_prompt.md",
-  create: "/custom_features/quizzes/upload_questions/create_new_quiz_prompt.md",
-  shared: "/custom_features/quizzes/upload_questions/shared_canvas_format_rules.md"
+  convert: "/custom_features_v2/quizzes_upload_questions/convert_existing_quiz_prompt.md",
+  create: "/custom_features_v2/quizzes_upload_questions/create_new_quiz_prompt.md",
+  shared: "/custom_features_v2/quizzes_upload_questions/shared_canvas_format_rules.md"
 };
 let CANVAS_PROMPT_CACHE = {};
 

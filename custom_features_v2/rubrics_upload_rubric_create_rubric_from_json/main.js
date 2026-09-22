@@ -2,7 +2,7 @@
   'use strict';
 
   var assocRegex = new RegExp('^/(course|account)s/([0-9]+)/rubrics$');
-  var promptPath = '/custom_features/rubrics/upload_rubric/ai_rubric_prompt.md';
+  var promptPath = '/custom_features_v2/rubrics_upload_rubric_create_rubric_from_json/ai_rubric_prompt.md';
   var buttonId = 'btech_rubric_json_import_button';
   var panelOverlayId = 'btech_rubric_json_panel_overlay';
   var panelStyleId = 'btech_rubric_json_panel_styles';

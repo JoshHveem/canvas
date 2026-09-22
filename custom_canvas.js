@@ -235,7 +235,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     }
 
     feature('modules/enrollment_dates_student_external', /^\/courses\/[0-9]+(\/modules){0,1}$/);
-    feature("login_page", /^\/login/);
     feature("page_formatting/content_image_zoom", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(?!.+?\/edit$)(.+?)/);
     feature("img-zoom", /users/);
 

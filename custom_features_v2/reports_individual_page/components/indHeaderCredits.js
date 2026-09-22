@@ -1,0 +1,280 @@
+Vue.component('ind-header-credits', {
+  template: `
+    <div class="btech-ind-header">
+      <!-- Donut + avatar -->
+      <div class="btech-ind-header__avatar">
+        <div
+          v-if="user.avatar_url"
+          class="btech-ind-header__avatar-img-wrapper">
+          <img
+            :src="user.avatar_url"
+            alt=""
+            class="btech-ind-header__avatar-img">
+        </div>
+        <div
+          id="btech-department-report-student-progress-donut"
+          class="btech-ind-header__donut-svg">
+        </div>
+      </div>
+
+      <!-- All user data on one (wrappable) line -->
+      <div 
+        v-if="major.major_code" 
+      class="btech-ind-header__info">
+
+        <div class="btech-ind-header__row">
+          <!-- row 1 -->
+          <a :href="'https://btech.instructure.com/users/' + user.canvas_user_id"
+            target="_blank"
+            class="btech-ind-header__name">
+            <strong>
+              {{ settings.anonymize ? ("Student " + user.canvas_user_id) : displayName }}
+            </strong>
+          </a>
+
+          <div
+            v-if="user.academic_probation && user.academic_probation.probation != undefined"
+            :title="user.academic_probation.probation"
+            class="btech-ind-header__icon">
+            <icon-alert
+              :fill="academicProbationStyle"
+              width="1.5rem"
+              height="1.5rem">
+            </icon-alert>
+          </div>
+
+          <span class="btech-ind-header__chip">
+            {{ major.campus_code }}
+          </span>
+
+          <span
+            v-if="user.academic_standing_code"
+            class="btech-pill-text btech-ind-header__pill"
+            :title="user.academic_standing_name"
+            :style="{ 'background-color': colors.red, 'color': '#ffffff' }"
+          >
+            {{ user.academic_standing_code }}
+          </span>
+
+          <div
+            v-if="distanceApproved"
+            :title="distanceApproved ? 'Approved to clock in from a distance.' : 'To get a student distance approved, speak with your AVP.'"
+            class="btech-ind-header__icon">
+            <icon-distance-approved
+              :class="{'distance-approved': distanceApproved, 'not-distance-approved': !distanceApproved}"
+              width="1.5rem"
+              height="1.5rem">
+            </icon-distance-approved>
+          </div>
+
+          <div class="btech-flex-spacer"></div>
+
+          <span class="btech-ind-header__label">Last Login</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{
+              'background-color': calcLastLoginColorBg(user.last_login),
+              'color': '#ffffff',
+            }">
+            {{ dateToString(user.last_login) }}
+          </span>
+
+          <span class="btech-ind-header__label" title="The last time this user's data was updated.">
+            Last Updated
+          </span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.gray, 'color': '#000000' }">
+            {{ dateToString(user?.last_update) }}
+          </span>
+        </div>
+
+        <div class="btech-ind-header__row">
+          <!-- row 2 -->
+          <span class="btech-ind-header__label">Credits Earned</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.blue, 'color': '#ffffff' }">
+            {{ Math.round(major.credits_earned * 10) / 10 }} / {{ totalCredits }}
+          </span>
+
+          <span class="btech-ind-header__label">Avg. Grade</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{
+              'background-color': major.average_score
+                ? (Math.round(major.average_score) < 60
+                    ? colors.red
+                    : Math.round(major.average_score) < 80
+                      ? colors.yellow
+                      : colors.green)
+                : colors.gray,
+              'color': major.average_score ? colors.white : colors.black,
+            }">
+            {{ major.average_score ? Math.round(major.average_score) + '%' : 'N/A' }}
+          </span>
+
+          <span class="btech-ind-header__label">Contracted Hours</span>
+          <span class="btech-pill-text btech-ind-header__pill"
+            :style="{ 'background-color': colors.gray, 'color': '#000000' }">
+            {{ user.contracted_hours_total }} hrs
+          </span>
+        </div>
+
+        <div
+          v-if="currentCareerGoal"
+          style="
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-left: 4px solid #d1d5db;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            line-height: 1.5;
+          "
+        >
+          <span
+            class="btech-ind-header__label"
+            style="display: block; margin-bottom: 4px; font-style: normal;"
+          >
+            Career Goal
+          </span>
+          "{{ currentCareerGoal }}"
+        </div>
+
+      </div>
+    
+    </div>
+
+  `,
+  props: {
+    colors: {
+      type: Object,
+      default: () => ({})
+    },
+    user: {
+      type: Object,
+      default: () => ({})
+    },
+    major: {
+      type: Object,
+      default: () => ({})
+    },
+    settings: {
+      type: Object,
+      default: () => ({})
+    },
+    updateinc: Number
+  },
+  computed: {
+    academicProbationStyle: function() {
+      let prob = this.user?.academic_probation;
+      let category = prob?.category || 0;
+      let code = prob?.code || '';
+      let colors = this.colors;
+      return category == -4 ? (code.includes('2') ? colors.orange : colors.yellow) : (category == -5 ? colors.red : colors.gray);
+    },
+    distanceApproved() {
+      return this.major.is_distance_approved;
+    },
+    displayName() {
+      if (this.user.name && this.user.sis_user_id) return `${this.user.name} (${this.user.sis_user_id})`;
+      if (this.user.name) return this.user.name;
+      if (this.user.sis_user_id) return this.user.sis_user_id;
+      return `Student ${this.user.canvas_user_id}`.trim();
+    },
+    totalCredits() {
+      const courses = this.major.courses;
+      return ['core', 'elective', 'other'].reduce((sum, groupName) => {
+        const groupCourses = courses[groupName];
+        return sum + groupCourses.reduce((groupSum, course) => {
+          return groupSum + Number(course.credits);
+        }, 0);
+      }, 0);
+    },
+    currentCareerGoal() {
+      const records = this.user.employment_skills_current || [];
+      const matchingRecord = records.find(record => {
+        return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase()
+          && Number(record.academic_year) === Number(this.major.academic_year__major);
+      }) || records.find(record => {
+        return String(record.program_code || '').trim().toUpperCase() === String(this.major.major_code || '').trim().toUpperCase();
+      }) || records[0];
+
+      return matchingRecord?.career_goal__current || this.user.career_goal__current || '';
+    }
+  },
+  watch: {
+    major: {
+      handler (newVal, oldVal) {
+        if (!newVal) return;
+        this.$nextTick(() => {
+          this.updateHeader();
+        });
+      },
+      deep: true,
+      immediate: true
+    },
+    user: {
+      handler (newVal, oldVal) {
+        if (!newVal) return;
+      },
+      deep: true,
+      immediate: true
+
+    }
+  },
+  data() {
+    return {
+      avatarHover: false,
+      donut: {}
+    }
+  },
+  mounted() {
+    let donut = new ProgressGraphDonut();
+    this.donut = donut;
+  },
+  methods: {
+    updateHeader () {
+      let donut = this.donut;
+      try {
+        donut._init(
+          'btech-department-report-student-progress-donut',
+          this.colors.gray,
+          { width: 140, height: 140 }
+        );
+        donut.fillHours({
+          max: this.totalCredits || 1,
+          hours: this.major.credits_earned,
+          color: this.colors.blue,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    calcLastLoginColorBg(date) {
+      let app = this;
+      if (typeof date == 'string') {
+        if (date == "") return app.colors.red;
+        date = new Date(date);
+      }
+      let now = new Date();
+      let diff = now - date;
+      let days = diff / (1000 * 3600 * 24);
+      if (days >= 7) return app.colors.red;
+      if (days >= 5) return app.colors.yellow;
+      return app.colors.green;
+    },
+
+    dateToString(date) {
+      if (typeof date == 'string') {
+        if (date == "" || date == "N/A") return "N/A";
+        date = new Date(date);
+      }
+      if (date == null) return "N/A";
+      let year = date.getFullYear();
+      let month = (1 + date.getMonth()).toString().padStart(2, '0');
+      let day = date.getDate().toString().padStart(2, '0');
+
+      return month + '/' + day + '/' + year;
+    },
+
+  }
+})

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { discoverFeatures, expandFeatureSettings } from './feature-discovery.mjs';
+import { locations } from './location-rules.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
@@ -31,6 +32,7 @@ const featureView = async () => ({
 http.createServer(async (request, response) => {
   try {
     if (request.url === '/api/features' && request.method === 'GET') return send(response, 200, await featureView());
+    if (request.url === '/api/locations' && request.method === 'GET') return send(response, 200, locations.map(({ id, group, label, parent, route }) => ({ id, group, label, parent, route })));
     if (request.url === '/api/features' && request.method === 'PUT') {
       const data = JSON.parse(await readBody(request));
       if (!Array.isArray(data.features) || data.features.some(item => typeof item.name !== 'string' || !item.name)) return send(response, 400, { error: 'Every feature needs a name.' });

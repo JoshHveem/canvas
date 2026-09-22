@@ -24,7 +24,7 @@
     Copy and paste the following 3 lines of code into your custom_canvas.js file
 
   (async function() {
-    await $.getScript("https://bridgetools.dev/canvas/custom_features/modules/enrollment_dates_student_external.js");
+    await $.getScript("https://bridgetools.dev/canvas/custom_features_v2/modules_enrollment_dates_student_external/main.bundle.js");
   })()
     
 */

@@ -112,7 +112,7 @@
   // Feature entries are generated from custom_features_v2/*/main.js by the
   // feature manager. The source manager intentionally has no manual registry.
   var features = [
-    { name: "blueprint_association_links", blueprint: true, course: true },
+    { name: "blueprint_association_links", blueprint: true, notTeacher: false, isd: false, rootAdmin: false, routes: /^\/courses\/[0-9]+(?:\/.*)?$/ },
     { name: "copy_to_next_year", isd: true, routes: /^\/accounts\/[0-9]+$/ },
     { name: "dashboard_students_near_completion", teacher: true, dependencies: ["vue"], routes: /^\/$/ },
     { name: "department_specific_business_hs", departments: [3833], dependencies: ["bridgetools"] },
@@ -133,7 +133,6 @@
     { name: "img_zoom", priority: "critical", routes: /users/ },
     { name: "inbox_prefill", isd: true, routes: /^\/conversations$/ },
     { name: "kaltura_show_info", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
-    { name: "login_page", priority: "critical", routes: /^\/login/ },
     { name: "modules_course_readiness", teacher: true, dependencies: ["bridgetools"], routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
     { name: "modules_delete_module_items", isd: true, routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
     { name: "modules_enrollment_dates_student_external", priority: "critical", dependencies: ["bridgetools"], routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
@@ -169,7 +168,7 @@
     { name: "reports_grades_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: /^\/$/ },
     { name: "reports_grades_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: /^\/courses\/[0-9]+\/gradebook$/ },
     { name: "reports_individual_page", notTeacher: true, dependencies: ["vue","reportRuntime"], routes: [/^\/$/, /^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/] },
-    { name: "reports_individual_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/courses\/[0-9]+\/grades\/[0-9]+$/, /^\/users\/[0-9]+$/] },
+    { name: "reports_individual_page", teacher: true, dependencies: ["vue","reportRuntime"], routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/users\/[0-9]+$/, /^\/courses\/[0-9]+\/grades\/[0-9]+$/] },
     { name: "rubrics_attempts_data", departments: [3824], routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },
     { name: "rubrics_gen_comment", departments: [3824], routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },
     { name: "rubrics_upload_rubric_create_rubric_from_json", routes: /^\/courses\/[0-9]+\/rubrics$/ },
