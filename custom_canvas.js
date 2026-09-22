@@ -240,16 +240,11 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // CUSTOM COURSE PAGES
     const AI_HUB_COURSE_ID = 621895;
     if (IS_TEACHER && CURRENT_COURSE_ID === AI_HUB_COURSE_ID) {
-      feature("page_formatting/ai_hub/ai_hub", /^\/courses\/621895(?:\/.*)?$/);
+      feature("page_formatting/ai_hub/ai_hub", /^\/courses\/[0-9]+(?:\/.*)?$/);
     }
     const ISD_HUB_COURSE_ID = 632661;
     if (IS_TEACHER && CURRENT_COURSE_ID === ISD_HUB_COURSE_ID) {
-      feature(
-        "page_formatting/isd_hub/isd_hub", /^\/courses\/632661(?:\/.*)?$/);
-    }
-
-    // instructor hub
-    if (/^\/courses\/611213/.test(window.location.pathname)) {
+      feature("page_formatting/isd_hub/isd_hub", /^\/courses\/[0-9]+(?:\/.*)?$/);
       feature("instructor_hub/gradebook", [
         /^\/courses\/[0-9]+\/grades$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
