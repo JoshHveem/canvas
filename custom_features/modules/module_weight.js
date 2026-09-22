@@ -88,18 +88,17 @@ $(document).ready(async function () {
         let modulesDict = {};
 
         try {
-            let data = await getGraphiCourseAssignments(courseId);
-            let courseCode = data.course_code;
-            let HOURS = COURSE_HOURS?.[courseCode] ?? {};
-            let hours = HOURS?.hours ?? 0;
-            //Check to see if a previous year can be found if current year doesn't work
-            for (let i = 1; i < 5; i++) {
-                if (hours == undefined) hours = COURSE_HOURS?.[courseCode].hours;
-            }
-            if (hours === undefined) hours = 0;
-
-            let credits = HOURS?.credits ?? 0;
-            if (credits == 0) credits = hours / 30;
+            if (!window.bridgetools?.req3) throw new Error('API3 client is unavailable');
+            const [data, courseRows] = await Promise.all([
+                getGraphiCourseAssignments(courseId),
+                window.bridgetools.req3(
+                    'reports',
+                    { canvas_course_id: `(${courseId})` },
+                    { dataset: 'canvas_courses' }
+                )
+            ]);
+            const credits = Number(courseRows?.[0]?.credits);
+            if (!Number.isFinite(credits) || credits < 0) throw new Error(`No valid credits found for course ${courseId}`);
             let totalPoints = 0;
             let assignmentGroups = data.assignment_groups.filter(group => group.state == 'available').map(group => {
                 group.points_possible = 0;

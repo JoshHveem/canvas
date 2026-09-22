@@ -28,10 +28,10 @@
   var dependencies = {
     vue: function () { return loadScript(assetBase + '/external-libraries/vue.2.6.12.js', 'Vue'); },
     select2: function () { return loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', 'Select2'); },
-    courseHours: function () { return loadScript(assetBase + '/course_data/course_hours.js', 'course hours'); },
+    api3: function () { return loadScript('https://reports.bridgetools.dev/scripts.js', 'API3 client'); },
     reportRuntime: function () {
       // Keep the legacy order where graphs may rely on report-runtime globals.
-      return loadScript('https://reports.bridgetools.dev/scripts.js', 'report runtime')
+      return dependencies.api3()
         .then(function () { return loadScript('https://reports.bridgetools.dev/department_report/graphs.js', 'report graphs'); });
     }
   };
@@ -45,7 +45,7 @@
   function allowed(entry) {
     if (entry.teacher && !window.IS_TEACHER) return false;
     if (entry.notTeacher && window.IS_TEACHER) return false;
-    if (entry.isd && !window.ISDIDS.includes(Number(ENV.current_user.id))) return false;
+    if (entry.isd && !(window.IS_ISD || window.IS_ME)) return false;
     if (entry.rootAdmin && !(ENV.current_user_roles || []).includes('root_admin')) return false;
     if (entry.course && !window.CURRENT_COURSE_ID) return false;
     if (entry.blueprint && !window.IS_BLUEPRINT) return false;
@@ -105,7 +105,7 @@
     { name: 'reports/reporting_v3/main', routes: /external_tools\/110980/, isd: true, dependencies: ['vue', 'reportRuntime'] },
     { name: 'modules/enrollment_dates_teacher', routes: /^\/courses\/[0-9]+\/users\/[0-9]+$/ },
     { name: 'kaltura/showInfo', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
-    { name: 'modules/module_weight', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, dependencies: ['courseHours'] },
+    { name: 'modules/module_weight', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, dependencies: ['api3'] },
     { name: 'quizzes/show_analytics', routes: /^\/courses\/[0-9]+\/quizzes\/[0-9]+/, teacher: true },
     { name: 'quizzes/printing_accessibility', routes: /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/, teacher: true },
     { name: 'modules/show_undelete', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, teacher: true },

@@ -289,8 +289,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     // featureISD("course_reviewer/discussion_score", /^\/courses\/[0-9]+\/discussion_topics\/[0-9]+/);
     // featureISD("course_reviewer/page_score", /^\/courses\/[0-9]+\/pages\/.+/);
     
-    // need to load course hours before continuing
-    await $.getScript(btechAssetUrl(SOURCE_URL + "/course_data/course_hours.js"));
     //GENERAL FEATURES
     if (!IS_TEACHER) {
       feature("reports/individual_page/report", [
