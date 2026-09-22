@@ -19,7 +19,10 @@ export async function discoverFeatures(root) {
 export function expandFeatureSettings(names, settings = {}) {
   return names.flatMap(name => {
     const setting = settings[name] || {};
-    if (Array.isArray(setting.rules)) return setting.rules.map(rule => ({ name, ...rule }));
+    if (Array.isArray(setting.rules)) {
+      const { rules, ...shared } = setting;
+      return rules.map(rule => ({ name, ...shared, ...rule }));
+    }
     return [{ name, ...setting }];
   });
 }

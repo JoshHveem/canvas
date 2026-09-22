@@ -97,8 +97,8 @@ function locationGroupHeading(group, feature, expanded) {
 }
 function customRouteRules(feature) {
   const rules = routeItems(feature).map(patternText);
-  const rows = (rules.length ? rules : ['']).map(rule => `<input class="route-rule-input" data-route-rule value="${escapeHtml(rule)}" placeholder="/^\\/courses\\/[0-9]+\\/example$/">`).join('');
-  return `<div class="route-rule-list">${rows}</div><button class="route-add" type="button" data-add-route aria-label="Add custom path rule" title="Add custom path rule">+</button>`;
+  const rows = [...rules, ''].map(rule => `<input class="route-rule-input" data-route-rule value="${escapeHtml(rule)}" placeholder="/^\\/courses\\/[0-9]+\\/example$/">`).join('');
+  return `<div class="route-rule-list">${rows}</div>`;
 }
 function locationPicker(feature) {
   const selected = feature.locations || [];
@@ -128,6 +128,7 @@ function renderEditor() {
       <label>Feature folder<input value="${escapeHtml(feature.name)}" readonly><small>Discovered from <code>custom_features_v2/</code>.</small></label>
       <label>Load priority<select data-field="priority"><option value="">Standard</option><option value="critical" ${feature.priority === 'critical' ? 'selected' : ''}>Critical — load first</option></select><small>Reserve critical for work users need immediately.</small></label>
     </div>
+    <label class="wide">Description<textarea data-field="description" placeholder="Internal reference only; this does not affect loading or permissions.">${escapeHtml(feature.description)}</textarea><small>Saved in the feature settings for reference only. It is not included in the generated loader.</small></label>
     <fieldset><legend>Who can use it</legend><div class="checks">
       <label><input data-field="teacher" type="checkbox" ${checked(feature, 'teacher')}> Teachers and admins</label>
       <label><input data-field="notTeacher" type="checkbox" ${checked(feature, 'notTeacher')}> Students only</label>
@@ -157,15 +158,8 @@ function renderEditor() {
     button.setAttribute('aria-expanded', String(expanded));
     button.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${button.closest('.location-group-title').querySelector('h3').textContent} locations`);
   });
-  document.querySelector('[data-add-route]').onclick = () => {
-    const input = document.createElement('input');
-    input.className = 'route-rule-input';
-    input.dataset.routeRule = '';
-    input.placeholder = '/^\\/courses\\/[0-9]+\\/example$/';
-    document.querySelector('.route-rule-list').append(input);
-    input.focus();
-  };
   $('#feature-form').onchange = event => event.target.dataset.location ? updateLocations(event.target) : event.target.dataset.dependency ? updateDependencies() : event.target.dataset.routeRule !== undefined ? updateRoutes() : updateFeature(event.target);
+  $('#feature-form').oninput = event => { if (event.target.dataset.routeRule !== undefined) ensureEmptyRouteInput(); };
 }
 
 function expandLocationBranch(id) {
@@ -215,6 +209,21 @@ function updateRoutes() {
   } catch (error) { status(error.message); }
 }
 
+function ensureEmptyRouteInput() {
+  const inputs = [...document.querySelectorAll('[data-route-rule]')];
+  const blanks = inputs.filter(input => !input.value.trim());
+  if (blanks.length) {
+    const keep = blanks.includes(document.activeElement) ? document.activeElement : blanks[0];
+    blanks.filter(input => input !== keep).forEach(input => input.remove());
+    return;
+  }
+  const input = document.createElement('input');
+  input.className = 'route-rule-input';
+  input.dataset.routeRule = '';
+  input.placeholder = '/^\\/courses\\/[0-9]+\\/example$/';
+  document.querySelector('.route-rule-list').append(input);
+}
+
 function updateDependencies() {
   const feature = manifest.features[selectedIndex];
   const known = dependencyOptions.map(([name]) => name);
@@ -236,6 +245,7 @@ function updateFeature(input) {
     else if (field === 'courseIds') { const values = parseNumbers(input.value, 'Course IDs'); values ? feature.courseIds = values : delete feature.courseIds; }
     else if (field === 'departments') { const values = parseNumbers(input.value, 'Department IDs'); values ? feature.departments = values : delete feature.departments; }
     else if (field === 'routes') { const values = parseRoutes(input.value); values ? feature.routes = values : delete feature.routes; }
+    else if (field === 'description') { input.value.trim() ? feature.description = input.value.trim() : delete feature.description; }
     else if (field === 'priority') { input.value ? feature.priority = input.value : delete feature.priority; }
     status('');
     setSaving(true);

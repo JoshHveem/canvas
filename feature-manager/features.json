@@ -2,18 +2,48 @@
   "schemaVersion": 2,
   "settings": {
     "blueprint_association_links": {
+      "description": "Adds controls for viewing and managing Blueprint course associations.",
       "blueprint": true,
       "notTeacher": false,
       "isd": false,
-      "rootAdmin": false
+      "rootAdmin": false,
+      "locations": [
+        "course_any",
+        "modules",
+        "content_any",
+        "content_edit",
+        "content_view",
+        "assignments",
+        "assignment_submission",
+        "files",
+        "grades",
+        "student_grades",
+        "gradebook",
+        "gradebook_user",
+        "speed_grader",
+        "quiz",
+        "quiz_edit",
+        "quiz_take",
+        "quiz_statistics",
+        "rubrics",
+        "sections",
+        "settings",
+        "people",
+        "course_user",
+        "question_banks",
+        "question_bank",
+        "external_tool"
+      ]
     },
     "copy_to_next_year": {
+      "description": "Adds a button in the admin level courses list that duplicates that course into the next avaiable academic year (same term type e.g. cs, hs)",
       "isd": true,
       "locations": [
         "account"
       ]
     },
     "dashboard_students_near_completion": {
+      "description": "Shows teachers dashboard information about students nearing course completion.",
       "teacher": true,
       "dependencies": [
         "vue"
@@ -23,6 +53,7 @@
       ]
     },
     "department_specific_business_hs": {
+      "description": "Adds department-specific Business and high-school enhancements for submissions and grading.",
       "departments": [
         3833
       ],
@@ -31,6 +62,7 @@
       ]
     },
     "department_specific_data_analytics_feedback_report": {
+      "description": "Provides the Data Analytics department feedback-report workflow from the Modules page.",
       "departments": [
         4218
       ],
@@ -39,6 +71,7 @@
       ]
     },
     "department_specific_phrm_import_cartridges": {
+      "description": "Adds a PHRM-only control for importing CHCM content cartridges into a course.",
       "departments": [
         3945
       ],
@@ -48,15 +81,18 @@
       ]
     },
     "department_specific_replace_course_code_with_name": {
+      "description": "Replaces the course code in Canvas navigation with the full course name for the selected department.",
       "departments": [
         3827
       ],
       "routes": {
         "source": "^\\/courses\\/[0-9]+",
         "flags": ""
-      }
+      },
+      "enabled": false
     },
     "distance_approved_button": {
+      "description": "Adds the Distance Approved course control on the Modules page.",
       "dependencies": [
         "bridgetools"
       ],
@@ -64,34 +100,17 @@
         "modules"
       ]
     },
-    "editor_toolbar_basics": {
+    "editor_toolbar": {
+      "description": "Provides the shared Rich Content Editor toolbar, including core formatting, header, and image tools.",
+      "dependencies": [
+        "select2"
+      ],
       "locations": [
         "content_edit"
       ]
     },
-    "editor_toolbar_headers": {
-      "dependencies": [
-        "select2"
-      ],
-      "locations": [
-        "content_any"
-      ]
-    },
-    "editor_toolbar_images": {
-      "locations": [
-        "content_any"
-      ]
-    },
-    "editor_toolbar_toolbar": {
-      "dependencies": [
-        "vue",
-        "select2"
-      ],
-      "locations": [
-        "content_any"
-      ]
-    },
     "files_restore_images": {
+      "description": "Finds deleted Canvas file links and adds a restore option when the file can be recovered.",
       "teacher": true,
       "routes": {
         "source": "^\\/courses\\/[0-9]+",
@@ -99,36 +118,43 @@
       }
     },
     "files_usage": {
+      "description": "Shows where a course file is used in Canvas content.",
       "dependencies": [
         "bridgetools"
       ],
       "locations": [
         "files"
-      ]
+      ],
+      "enabled": false
     },
     "grades_page_attempts": {
+      "description": "Adds assignment-attempt information to an individual student's Grades page.",
       "locations": [
         "student_grades"
       ]
     },
     "grades_page_highlighted_grades_page_items": {
+      "description": "Highlights configured grade items on an individual student's Grades page.",
       "locations": [
         "student_grades"
       ]
     },
     "highlight_comments_same_date": {
+      "description": "Highlights related submission comments from the same date while grading.",
       "locations": [
         "assignment_submission",
         "speed_grader"
       ]
     },
     "hs_section_adder": {
+      "description": "Adds high-school section-management tools for ISD users at the account level.",
       "isd": true,
       "locations": [
         "account"
       ]
     },
     "img_zoom": {
+      "description": "Enables click-to-zoom behavior for supported Canvas images and background images.",
       "priority": "critical",
       "routes": {
         "source": "users",
@@ -136,17 +162,20 @@
       }
     },
     "inbox_prefill": {
+      "description": "Prefills Canvas Inbox messages from supported links or message parameters.",
       "isd": true,
       "locations": [
         "inbox"
       ]
     },
     "kaltura_show_info": {
+      "description": "Adds Kaltura media information and language-related helpers to supported content pages.",
       "locations": [
         "content_any"
       ]
     },
     "modules_course_readiness": {
+      "description": "Shows instructors a course-readiness checklist on the Modules page.",
       "teacher": true,
       "dependencies": [
         "bridgetools"
@@ -156,12 +185,14 @@
       ]
     },
     "modules_delete_module_items": {
+      "description": "Adds an ISD-only action to delete module content items.",
       "isd": true,
       "locations": [
         "modules"
       ]
     },
     "modules_enrollment_dates_student_external": {
+      "description": "Shows external students enrollment-date progress and countdown information in Modules.",
       "priority": "critical",
       "dependencies": [
         "bridgetools"
@@ -171,11 +202,13 @@
       ]
     },
     "modules_enrollment_dates_teacher": {
+      "description": "Displays enrollment-date details for a user from their course profile page.",
       "locations": [
         "course_user"
       ]
     },
     "modules_module_weight": {
+      "description": "Calculates and displays module weighting using course credit information.",
       "dependencies": [
         "bridgetools"
       ],
@@ -184,12 +217,14 @@
       ]
     },
     "modules_show_undelete": {
+      "description": "Adds an Undelete link to the Modules page for instructors.",
       "teacher": true,
       "locations": [
         "modules"
       ]
     },
     "page_formatting_ai_hub": {
+      "description": "Loads the custom AI Hub experience in its dedicated Canvas course.",
       "courseIds": [
         621895
       ],
@@ -200,37 +235,44 @@
       ]
     },
     "page_formatting_content_image_zoom": {
+      "description": "Adds click-to-zoom behavior for images inside rendered course content.",
       "priority": "critical",
       "locations": [
         "content_view"
       ]
     },
     "page_formatting_dropdown_from_table": {
+      "description": "Transforms marked two-column content tables into dropdown-style content.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_expandable_from_table": {
+      "description": "Transforms marked content tables into expandable sections.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_google_sheets_table": {
+      "description": "Loads and renders marked course tables from connected Google Sheets data.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_image_formatting": {
+      "description": "Applies the standard BTECH formatting treatment to marked content images.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_image_map": {
+      "description": "Builds interactive image maps from marked images and companion tables.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_isd_hub": {
+      "description": "Loads the custom ISD Hub experience in its dedicated Canvas course.",
       "courseIds": [
         632661
       ],
@@ -241,6 +283,7 @@
       ]
     },
     "page_formatting_isd_hub_gradebook": {
+      "description": "Provides the ISD Hub's custom gradebook experience for its dedicated course.",
       "courseIds": [
         632661
       ],
@@ -252,21 +295,25 @@
       ]
     },
     "page_formatting_print_rubric": {
+      "description": "Formats marked assignments as a printable view that includes the rubric.",
       "locations": [
         "assignments"
       ]
     },
     "page_formatting_table_from_page": {
+      "description": "Copies or renders marked table content from Canvas pages into supported course content.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_tabs_from_table": {
+      "description": "Transforms marked content tables into tabbed sections.",
       "locations": [
         "content_any"
       ]
     },
     "page_formatting_tinymce_font_size": {
+      "description": "Adds the BTECH font-size styling controls to the Rich Content Editor.",
       "dependencies": [
         "select2"
       ],
@@ -275,6 +322,7 @@
       ]
     },
     "password_reset": {
+      "description": "Adds password-reset and temporary-password controls to user profile pages.",
       "locations": [
         "course_user",
         "account_user",
@@ -282,60 +330,71 @@
       ]
     },
     "people_page_instructor_add_remove_guide": {
+      "description": "Adds guidance for instructors on adding or removing people in a course.",
       "teacher": true,
       "locations": [
         "people"
       ]
     },
     "previous_enrollment_data_previous_enrollment_period_grades": {
+      "description": "Shows grade data from a student's previous enrollment period.",
       "departments": [
         3833
       ]
     },
     "quizzes_duplicate_bank_item": {
+      "description": "Adds a duplicate action for questions in a classic question bank.",
       "locations": [
         "question_bank"
       ]
     },
     "quizzes_printing_accessibility": {
+      "description": "Applies accessibility-focused print styling to quiz-taking pages.",
       "teacher": true,
       "locations": [
         "quiz_take"
       ]
     },
     "quizzes_question_bank_sorter": {
+      "description": "Adds tools for sorting or organizing question-bank items while editing a quiz.",
       "locations": [
         "quiz_edit"
       ]
     },
     "quizzes_quiz_analytics_print_margin": {
+      "description": "Adjusts print margins for quiz analytics pages.",
       "locations": [
         "quiz_statistics"
       ]
     },
     "quizzes_show_analytics": {
+      "description": "Adds a direct link to quiz statistics from the quiz page.",
       "teacher": true,
       "locations": [
         "quiz"
       ]
     },
     "quizzes_upload_questions": {
+      "description": "Adds a workflow for uploading questions into a classic question bank.",
       "locations": [
         "question_banks"
       ]
     },
     "remove_former_employees": {
+      "description": "Adds a root-admin action for unenrolling former employees from Canvas.",
       "rootAdmin": true,
       "locations": [
         "any_user"
       ]
     },
     "report_broken_content": {
+      "description": "Disabled placeholder for a report that identifies broken course content.",
       "locations": [
         "content_any"
       ]
     },
     "reports_accreditation_2": {
+      "description": "Loads the BTECH Accreditation reporting interface in its external-tool context.",
       "dependencies": [
         "vue",
         "bridgetools"
@@ -345,6 +404,7 @@
       ]
     },
     "reports_combined": {
+      "description": "Adds the combined instructor Reports interface to the dashboard.",
       "teacher": true,
       "dependencies": [
         "vue",
@@ -357,6 +417,7 @@
     "reports_grades_page": {
       "rules": [
         {
+          "description": "Adds a Student Progress report interface to the dashboard and course gradebook.",
           "teacher": true,
           "dependencies": [
             "vue",
@@ -367,6 +428,7 @@
           ]
         },
         {
+          "description": "Adds a Student Progress report interface to the dashboard and course gradebook.",
           "teacher": true,
           "dependencies": [
             "vue",
@@ -381,6 +443,7 @@
     "reports_individual_page": {
       "rules": [
         {
+          "description": "Adds the Student Report interface, including course, employment-skills, and high-school grade reports.",
           "notTeacher": true,
           "dependencies": [
             "vue",
@@ -392,6 +455,7 @@
           ]
         },
         {
+          "description": "Adds the Student Report interface, including course, employment-skills, and high-school grade reports.",
           "teacher": true,
           "dependencies": [
             "vue",
@@ -410,6 +474,7 @@
       ]
     },
     "rubrics_attempts_data": {
+      "description": "Shows recorded rubric attempts and suggested scoring information while grading submissions.",
       "departments": [
         3824
       ],
@@ -419,6 +484,7 @@
       ]
     },
     "rubrics_gen_comment": {
+      "description": "Generates and organizes rubric-summary comments for graded submissions.",
       "departments": [
         3824
       ],
@@ -428,50 +494,59 @@
       ]
     },
     "rubrics_upload_rubric_create_rubric_from_json": {
+      "description": "Adds a workflow for creating Canvas rubrics from JSON or AI-assisted rubric data.",
       "locations": [
         "rubrics"
       ]
     },
     "sections_conclude_all": {
+      "description": "Adds an instructor action to conclude all students in a course section.",
       "teacher": true,
       "locations": [
         "sections"
       ]
     },
     "side_menus": {
+      "description": "Adds shared BTECH navigation and side-menu controls.",
       "priority": "critical"
     },
     "sort_assignment_groups": {
+      "description": "Sorts assignment groups and their assignments into the configured order.",
       "routes": {
         "source": "assignments$",
         "flags": ""
       }
     },
     "speed_grader_answer_key": {
+      "description": "Loads an unpublished assignment Answer Key page in SpeedGrader when available.",
       "routes": {
         "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
         "flags": ""
       }
     },
     "speed_grader_next_submitted_assignment": {
+      "description": "Adds a SpeedGrader control for moving to the next assignment with submitted work.",
       "routes": {
         "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
         "flags": ""
       }
     },
     "speed_grader_split_screen": {
+      "description": "Makes the SpeedGrader side panels share the screen width evenly.",
       "teacher": true,
       "locations": [
         "speed_grader"
       ]
     },
     "transfer_navigation": {
+      "description": "Adds a course-settings workflow for transferring navigation configuration.",
       "teacher": true,
       "locations": [
         "settings"
       ]
     },
     "welcome_banner": {
+      "description": "Adds the BTECH welcome-banner slideshow to the dashboard for non-teachers.",
       "priority": "critical",
       "teacher": false,
       "locations": [

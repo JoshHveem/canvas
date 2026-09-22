@@ -1,3 +1,5 @@
+const TOOLBAR = window.TOOLBAR;
+
 (async function () {
   //escape if not on the editor page
   if (!TOOLBAR.checkEditorPage()) return;

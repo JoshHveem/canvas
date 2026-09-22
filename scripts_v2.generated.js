@@ -112,20 +112,15 @@
   // Feature entries are generated from custom_features_v2/*/main.js by the
   // feature manager. The source manager intentionally has no manual registry.
   var features = [
-    { name: "blueprint_association_links", blueprint: true, notTeacher: false, isd: false, rootAdmin: false, routes: /^\/courses\/[0-9]+(?:\/.*)?$/ },
+    { name: "blueprint_association_links", blueprint: true, notTeacher: false, isd: false, rootAdmin: false, routes: [/^\/courses\/[0-9]+(?:\/.*)?$/, /^\/courses\/[0-9]+(?:\/modules)?$/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(?!.+?\/edit$).+/, /^\/courses\/[0-9]+\/assignments/, /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/files/, /^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/, /^\/courses\/[0-9]+\/grades\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook$/, /^\/courses\/[0-9]+\/gradebook\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics/, /^\/courses\/[0-9]+\/rubrics$/, /^\/courses\/[0-9]+\/sections\/[0-9]+/, /^\/courses\/[0-9]+\/settings/, /^\/courses\/[0-9]+\/users$/, /^\/courses\/[0-9]+\/users\/[0-9]+$/, /\/courses\/([0-9]+)\/question_banks$/, /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/, /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/] },
     { name: "copy_to_next_year", isd: true, routes: /^\/accounts\/[0-9]+$/ },
     { name: "dashboard_students_near_completion", teacher: true, dependencies: ["vue"], routes: /^\/$/ },
     { name: "department_specific_business_hs", departments: [3833], dependencies: ["bridgetools"] },
     { name: "department_specific_data_analytics_feedback_report", departments: [4218], routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
     { name: "department_specific_phrm_import_cartridges", departments: [3945], teacher: true, routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
-    { name: "department_specific_replace_course_code_with_name", departments: [3827], routes: /^\/courses\/[0-9]+/ },
     { name: "distance_approved_button", dependencies: ["bridgetools"], routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
-    { name: "editor_toolbar_basics", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/ },
-    { name: "editor_toolbar_headers", dependencies: ["select2"], routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
-    { name: "editor_toolbar_images", routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
-    { name: "editor_toolbar_toolbar", dependencies: ["vue","select2"], routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
+    { name: "editor_toolbar", dependencies: ["select2"], routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/ },
     { name: "files_restore_images", teacher: true, routes: /^\/courses\/[0-9]+/ },
-    { name: "files_usage", dependencies: ["bridgetools"], routes: /^\/courses\/[0-9]+\/files/ },
     { name: "grades_page_attempts", routes: /^\/courses\/[0-9]+\/grades\/[0-9]+/ },
     { name: "grades_page_highlighted_grades_page_items", routes: /^\/courses\/[0-9]+\/grades\/[0-9]+/ },
     { name: "highlight_comments_same_date", routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/] },

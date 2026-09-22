@@ -1,5 +1,7 @@
+const TOOLBAR = window.TOOLBAR;
+
 (async function () {
-  headerOptions = [
+  const headerOptions = [
     'icon-stats',
     'icon-media',
     'icon-rubric',

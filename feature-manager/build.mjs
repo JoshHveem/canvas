@@ -14,7 +14,7 @@ const regex = (value) => value && typeof value === 'object' && !Array.isArray(va
   ? `/${value.source}/${value.flags || ''}`
   : Array.isArray(value) ? `[${value.map(regex).join(', ')}]` : null;
 const value = (feature) => {
-  const fields = Object.entries(feature).filter(([key]) => key !== 'routes' && key !== 'enabled');
+  const fields = Object.entries(feature).filter(([key]) => !['routes', 'enabled', 'description'].includes(key));
   const properties = fields.map(([key, item]) => `${key}: ${JSON.stringify(item)}`);
   if (feature.routes) properties.push(`routes: ${regex(feature.routes)}`);
   return `{ ${properties.join(', ')} }`;

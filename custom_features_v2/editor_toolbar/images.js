@@ -1,7 +1,10 @@
+const TOOLBAR = window.TOOLBAR;
+
 (async function () {
   if (!TOOLBAR.checkEditorPage()) return;
+  await TOOLBAR.checkReady();
 
-  imgOptions = [
+  const imgOptions = [
     'btech-graphic-image',
     'btech-img-align'
   ]
@@ -36,8 +39,8 @@
       if ($(parent).hasClass(className)) {
         tinyMCE.activeEditor.dom.removeClass(parent, className);
       } else {
-        for (let i = 0; i < tableOptions.length; i++) {
-          let _class = tableOptions[i];
+        for (let i = 0; i < imgOptions.length; i++) {
+          let _class = imgOptions[i];
           tinyMCE.activeEditor.dom.removeClass(parent, _class);
         }
         tinyMCE.activeEditor.dom.addClass(parent, className);
