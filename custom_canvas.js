@@ -6,22 +6,6 @@
   https://btech.instructure.com/accounts/3/theme_editor
 */
 
-
-var ISDIDS= [
-  1893418, // Josh 
-  1638854, // Mason
-  2048150, // Tiffany
-  2074560, // Ryan
-  2116084, // Mikaela
-  2118711, // Colton
-  2147128, // Katie
-  1547292, // Leann (Student Servies)
-  451607,  // Sean (Testing Center)
-  451622,  // Karen (Testing Center)
-  1842412, // Codi (Testing Center)
-  2210696, // Logan
-];
-
 function getCSSVar(cssvar) {
   var r = document.querySelector(':root');
   var rs = getComputedStyle(r);

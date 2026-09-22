@@ -99,8 +99,7 @@ function featurePilot(f, courseId = 0, pilotCourseIds = 0, data = {}, regex = ""
 }
 
 function featureISD(f, data = {}, regex) {
-  let userId = parseInt(ENV.current_user.id);
-  if (ISDIDS.includes(userId)) feature(f, data, regex);
+  if (IS_ISD || IS_ME) feature(f, data, regex);
 }
 
 function addToModuleItemMenu(name, description, func, type = "all") {
