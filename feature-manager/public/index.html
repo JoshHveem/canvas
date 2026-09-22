@@ -1,1 +1,26 @@
-<!doctype html><meta charset="utf-8"><title>Canvas Feature Manager</title><link rel="stylesheet" href="app.css"><main><h1>Canvas Feature Manager</h1><p>JSON is the source of truth. Build creates readable and minified v2 loaders.</p><div class="actions"><button id="save">Save JSON</button><button id="build">Build loaders</button><button id="add">Add feature</button></div><p id="status"></p><section id="features"></section></main><script type="module" src="app.js"></script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canvas Feature Manager</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div><h1>Canvas Feature Manager</h1><p>Manage when each Canvas feature loads and who can use it.</p></div>
+      <div class="actions"><span id="save-indicator" class="save-indicator" hidden aria-label="Saving changes" role="status"></span><button id="build" class="primary">Build loaders</button></div>
+    </header>
+    <p id="status" aria-live="polite"></p>
+    <div class="workspace">
+      <aside class="feature-sidebar">
+        <div class="sidebar-tools"><input id="search" type="search" placeholder="Find a feature"></div>
+        <nav id="feature-list" aria-label="Features"></nav>
+      </aside>
+      <section id="editor" class="editor" aria-live="polite"></section>
+    </div>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

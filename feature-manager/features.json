@@ -1,20 +1,227 @@
 {
-  "schemaVersion": 1,
-  "features": [
-    {
-      "name": "welcome_banner",
-      "priority": "critical",
+  "schemaVersion": 2,
+  "settings": {
+    "blueprint_association_links": {
+      "blueprint": true,
+      "course": true
+    },
+    "copy_to_next_year": {
+      "isd": true,
+      "routes": {
+        "source": "^\\/accounts\\/[0-9]+$",
+        "flags": ""
+      }
+    },
+    "dashboard_students_near_completion": {
+      "teacher": true,
+      "dependencies": [
+        "vue"
+      ],
       "routes": {
         "source": "^\\/$",
         "flags": ""
       }
     },
-    {
-      "name": "side_menus",
-      "priority": "critical"
+    "department_specific_business_hs": {
+      "departments": [
+        3833
+      ],
+      "dependencies": [
+        "bridgetools"
+      ]
     },
-    {
-      "name": "page_formatting/ai_hub/ai_hub",
+    "department_specific_data_analytics_feedback_report": {
+      "departments": [
+        4218
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "department_specific_phrm_import_cartridges": {
+      "departments": [
+        3945
+      ],
+      "teacher": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "department_specific_replace_course_code_with_name": {
+      "departments": [
+        3827
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "distance_approved_button": {
+      "dependencies": [
+        "bridgetools"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "editor_toolbar_basics": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/.+?\\/edit",
+        "flags": ""
+      }
+    },
+    "editor_toolbar_headers": {
+      "dependencies": [
+        "select2"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "editor_toolbar_images": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "editor_toolbar_toolbar": {
+      "dependencies": [
+        "vue",
+        "select2"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "files_restore_images": {
+      "teacher": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "files_usage": {
+      "dependencies": [
+        "bridgetools"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/files",
+        "flags": ""
+      }
+    },
+    "grades_page_attempts": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "grades_page_highlighted_grades_page_items": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "highlight_comments_same_date": {
+      "routes": [
+        {
+          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
+          "flags": ""
+        },
+        {
+          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
+          "flags": ""
+        }
+      ]
+    },
+    "hs_section_adder": {
+      "isd": true,
+      "routes": {
+        "source": "^\\/accounts\\/[0-9]+$",
+        "flags": ""
+      }
+    },
+    "img_zoom": {
+      "priority": "critical",
+      "routes": {
+        "source": "users",
+        "flags": ""
+      }
+    },
+    "inbox_prefill": {
+      "isd": true,
+      "routes": {
+        "source": "^\\/conversations$",
+        "flags": ""
+      }
+    },
+    "kaltura_show_info": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "login_page": {
+      "priority": "critical",
+      "routes": {
+        "source": "^\\/login",
+        "flags": ""
+      }
+    },
+    "modules_course_readiness": {
+      "teacher": true,
+      "dependencies": [
+        "bridgetools"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "modules_delete_module_items": {
+      "isd": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "modules_enrollment_dates_student_external": {
+      "priority": "critical",
+      "dependencies": [
+        "bridgetools"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "modules_enrollment_dates_teacher": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
+        "flags": ""
+      }
+    },
+    "modules_module_weight": {
+      "dependencies": [
+        "bridgetools"
+      ],
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "modules_show_undelete": {
+      "teacher": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "flags": ""
+      }
+    },
+    "page_formatting_ai_hub": {
       "courseIds": [
         621895
       ],
@@ -25,8 +232,44 @@
         "flags": ""
       }
     },
-    {
-      "name": "page_formatting/isd_hub/isd_hub",
+    "page_formatting_content_image_zoom": {
+      "priority": "critical",
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/(?!.+?\\/edit$).+",
+        "flags": ""
+      }
+    },
+    "page_formatting_dropdown_from_table": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_expandable_from_table": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_google_sheets_table": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_image_formatting": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_image_map": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_isd_hub": {
       "courseIds": [
         632661
       ],
@@ -37,8 +280,7 @@
         "flags": ""
       }
     },
-    {
-      "name": "page_formatting/isd_hub/gradebook",
+    "page_formatting_isd_hub_gradebook": {
       "courseIds": [
         632661
       ],
@@ -55,469 +297,113 @@
         }
       ]
     },
-    {
-      "name": "modules/enrollment_dates_student_external",
-      "priority": "critical",
-      "dependencies": [
-        "bridgetools"
-      ],
+    "page_formatting_print_rubric": {
       "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "source": "^\\/courses\\/[0-9]+\\/assignments",
         "flags": ""
       }
     },
-    {
-      "name": "login_page",
-      "priority": "critical",
-      "routes": {
-        "source": "^\\/login",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/content_image_zoom",
-      "priority": "critical",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/(?!.+?\\/edit$).+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "img-zoom",
-      "priority": "critical",
-      "routes": {
-        "source": "users",
-        "flags": ""
-      }
-    },
-    {
-      "name": "copy_to_next_year",
-      "isd": true,
-      "routes": {
-        "source": "^\\/accounts\\/[0-9]+$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "inbox-prefill/inbox-prefill",
-      "isd": true,
-      "routes": {
-        "source": "^\\/conversations$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "dashboard/studentsNearCompletion",
-      "teacher": true,
-      "dependencies": [
-        "vue"
-      ],
-      "routes": {
-        "source": "^\\/$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "reports/grades_page/report",
-      "teacher": true,
-      "dependencies": [
-        "vue",
-        "reportRuntime"
-      ],
-      "routes": {
-        "source": "^\\/$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "reports/combined/report",
-      "teacher": true,
-      "dependencies": [
-        "vue",
-        "reportRuntime"
-      ],
-      "routes": {
-        "source": "^\\/$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "modules/enrollment_dates_teacher",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "kaltura/showInfo",
+    "page_formatting_table_from_page": {
       "routes": {
         "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
         "flags": ""
       }
     },
-    {
-      "name": "modules/module_weight",
+    "page_formatting_tabs_from_table": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "page_formatting_tinymce_font_size": {
       "dependencies": [
-        "bridgetools"
+        "select2"
       ],
       "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/.+?\\/edit",
         "flags": ""
       }
     },
-    {
-      "name": "quizzes/show_analytics",
+    "password_reset": {
+      "routes": [
+        {
+          "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
+          "flags": ""
+        },
+        {
+          "source": "^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$",
+          "flags": ""
+        },
+        {
+          "source": "^\\/users\\/[0-9]+$",
+          "flags": ""
+        }
+      ]
+    },
+    "people_page_instructor_add_remove_guide": {
       "teacher": true,
       "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+",
+        "source": "^\\/courses\\/[0-9]+\\/users$",
         "flags": ""
       }
     },
-    {
-      "name": "quizzes/printing_accessibility",
+    "previous_enrollment_data_previous_enrollment_period_grades": {
+      "departments": [
+        3833
+      ]
+    },
+    "quizzes_duplicate_bank_item": {
+      "routes": {
+        "source": "\\/courses\\/([0-9]+)\\/question_banks\\/([0-9]+)",
+        "flags": ""
+      }
+    },
+    "quizzes_printing_accessibility": {
       "teacher": true,
       "routes": {
         "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+\\/take",
         "flags": ""
       }
     },
-    {
-      "name": "modules/show_undelete",
-      "teacher": true,
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "sections/conclude_all",
-      "teacher": true,
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/sections\\/[0-9]+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "transfer_navigation",
-      "teacher": true,
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/settings",
-        "flags": ""
-      }
-    },
-    {
-      "name": "files/usage",
-      "dependencies": [
-        "bridgetools"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/files",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/tinymce_font_size",
-      "dependencies": [
-        "select2"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/.+?\\/edit",
-        "flags": ""
-      }
-    },
-    {
-      "name": "editor_toolbar/toolbar",
-      "dependencies": [
-        "vue",
-        "select2"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "editor_toolbar/basics",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)\\/.+?\\/edit",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/dropdown_from_table",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/tabs_from_table",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/expandable_from_table",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/google_sheets_table",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/table_from_page",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/image_map",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/image_formatting",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "editor_toolbar/images",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "editor_toolbar/headers",
-      "dependencies": [
-        "select2"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "page_formatting/print_rubric",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/assignments",
-        "flags": ""
-      }
-    },
-    {
-      "name": "hs_section_adder",
-      "isd": true,
-      "routes": {
-        "source": "^\\/accounts\\/[0-9]+$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "reports/individual_page/report",
-      "notTeacher": true,
-      "dependencies": [
-        "vue",
-        "reportRuntime"
-      ],
-      "routes": [
-        {
-          "source": "^\\/$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/courses\\/[0-9]+\\/grades(?:\\/[0-9]+)?$",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "files/restore_images",
-      "teacher": true,
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "reports/grades_page/report",
-      "teacher": true,
-      "dependencies": [
-        "vue",
-        "reportRuntime"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/gradebook$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "modules/course_readiness",
-      "teacher": true,
-      "dependencies": [
-        "bridgetools"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "reports/individual_page/report",
-      "teacher": true,
-      "dependencies": [
-        "vue",
-        "reportRuntime"
-      ],
-      "routes": [
-        {
-          "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/users\\/[0-9]+$",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "password_reset",
-      "routes": [
-        {
-          "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$",
-          "flags": ""
-        },
-        {
-          "source": "^\\/users\\/[0-9]+$",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "distance/approved-button",
-      "dependencies": [
-        "bridgetools"
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "quizzes/upload_questions/upload_questions",
-      "routes": {
-        "source": "\\/courses\\/([0-9]+)\\/question_banks$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "rubrics/upload_rubric/create_rubric_from_json",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/rubrics$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "quizzes/duplicate_bank_item",
-      "routes": {
-        "source": "\\/courses\\/([0-9]+)\\/question_banks\\/([0-9]+)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "quizzes/quiz_analytics_print_margin",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+\\/statistics",
-        "flags": ""
-      }
-    },
-    {
-      "name": "speed_grader/next_submitted_assignment",
-      "routes": {
-        "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
-        "flags": ""
-      }
-    },
-    {
-      "name": "speed_grader/answer_key",
-      "routes": {
-        "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
-        "flags": ""
-      }
-    },
-    {
-      "name": "highlight_comments_same_date",
-      "routes": [
-        {
-          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
-          "flags": ""
-        },
-        {
-          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "report_broken_content",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
-        "flags": ""
-      }
-    },
-    {
-      "name": "grades_page/highlighted_grades_page_items",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "grades_page/attempts",
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "quizzes/question_bank_sorter",
+    "quizzes_question_bank_sorter": {
       "routes": {
         "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+\\/edit",
         "flags": ""
       }
     },
-    {
-      "name": "sort_assignment_groups",
+    "quizzes_quiz_analytics_print_margin": {
       "routes": {
-        "source": "assignments$",
+        "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+\\/statistics",
         "flags": ""
       }
     },
-    {
-      "name": "reports/accreditation-2",
+    "quizzes_show_analytics": {
+      "teacher": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/quizzes\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "quizzes_upload_questions": {
+      "routes": {
+        "source": "\\/courses\\/([0-9]+)\\/question_banks$",
+        "flags": ""
+      }
+    },
+    "remove_former_employees": {
+      "rootAdmin": true,
+      "routes": {
+        "source": "^\\/(?:accounts\\/[0-9]+\\/)?users\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "report_broken_content": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/(pages|assignments|quizzes|discussion_topics)",
+        "flags": ""
+      }
+    },
+    "reports_accreditation_2": {
       "dependencies": [
         "vue",
         "bridgetools"
@@ -527,120 +413,174 @@
         "flags": ""
       }
     },
-    {
-      "name": "blueprint_association_links",
-      "blueprint": true,
-      "course": true
-    },
-    {
-      "name": "modules/delete_module_items",
-      "isd": true,
+    "reports_combined": {
+      "teacher": true,
+      "dependencies": [
+        "vue",
+        "reportRuntime"
+      ],
       "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "source": "^\\/$",
         "flags": ""
       }
     },
-    {
-      "name": "speed_grader/split_screen",
+    "reports_grades_page": {
+      "rules": [
+        {
+          "teacher": true,
+          "dependencies": [
+            "vue",
+            "reportRuntime"
+          ],
+          "routes": {
+            "source": "^\\/$",
+            "flags": ""
+          }
+        },
+        {
+          "teacher": true,
+          "dependencies": [
+            "vue",
+            "reportRuntime"
+          ],
+          "routes": {
+            "source": "^\\/courses\\/[0-9]+\\/gradebook$",
+            "flags": ""
+          }
+        }
+      ]
+    },
+    "reports_individual_page": {
+      "rules": [
+        {
+          "notTeacher": true,
+          "dependencies": [
+            "vue",
+            "reportRuntime"
+          ],
+          "routes": [
+            {
+              "source": "^\\/$",
+              "flags": ""
+            },
+            {
+              "source": "^\\/courses\\/[0-9]+\\/grades(?:\\/[0-9]+)?$",
+              "flags": ""
+            }
+          ]
+        },
+        {
+          "teacher": true,
+          "dependencies": [
+            "vue",
+            "reportRuntime"
+          ],
+          "routes": [
+            {
+              "source": "^\\/courses\\/[0-9]+\\/users\\/[0-9]+$",
+              "flags": ""
+            },
+            {
+              "source": "^\\/accounts\\/[0-9]+\\/users\\/[0-9]+$",
+              "flags": ""
+            },
+            {
+              "source": "^\\/courses\\/[0-9]+\\/grades\\/[0-9]+$",
+              "flags": ""
+            },
+            {
+              "source": "^\\/users\\/[0-9]+$",
+              "flags": ""
+            }
+          ]
+        }
+      ]
+    },
+    "rubrics_attempts_data": {
+      "departments": [
+        3824
+      ],
+      "routes": [
+        {
+          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
+          "flags": ""
+        },
+        {
+          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
+          "flags": ""
+        }
+      ]
+    },
+    "rubrics_gen_comment": {
+      "departments": [
+        3824
+      ],
+      "routes": [
+        {
+          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
+          "flags": ""
+        },
+        {
+          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
+          "flags": ""
+        }
+      ]
+    },
+    "rubrics_upload_rubric_create_rubric_from_json": {
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/rubrics$",
+        "flags": ""
+      }
+    },
+    "sections_conclude_all": {
+      "teacher": true,
+      "routes": {
+        "source": "^\\/courses\\/[0-9]+\\/sections\\/[0-9]+",
+        "flags": ""
+      }
+    },
+    "side_menus": {
+      "priority": "critical"
+    },
+    "sort_assignment_groups": {
+      "routes": {
+        "source": "assignments$",
+        "flags": ""
+      }
+    },
+    "speed_grader_answer_key": {
+      "routes": {
+        "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
+        "flags": ""
+      }
+    },
+    "speed_grader_next_submitted_assignment": {
+      "routes": {
+        "source": "^\\/courses\\/([0-9]+)\\/gradebook\\/speed_grader",
+        "flags": ""
+      }
+    },
+    "speed_grader_split_screen": {
       "teacher": true,
       "routes": {
         "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
         "flags": ""
       }
     },
-    {
-      "name": "people_page/instructor_add_remove_guide",
+    "transfer_navigation": {
       "teacher": true,
       "routes": {
-        "source": "^\\/courses\\/[0-9]+\\/users$",
+        "source": "^\\/courses\\/[0-9]+\\/settings",
         "flags": ""
       }
     },
-    {
-      "name": "department_specific/phrm_import_cartridges",
-      "departments": [
-        3945
-      ],
-      "teacher": true,
+    "welcome_banner": {
+      "priority": "critical",
       "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
+        "source": "^\\/$",
         "flags": ""
-      }
-    },
-    {
-      "name": "department_specific/replace_course_code_with_name",
-      "departments": [
-        3827
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+",
-        "flags": ""
-      }
-    },
-    {
-      "name": "department_specific/data_analytics_feedback_report",
-      "departments": [
-        4218
-      ],
-      "routes": {
-        "source": "^\\/courses\\/[0-9]+(?:\\/modules)?$",
-        "flags": ""
-      }
-    },
-    {
-      "name": "rubrics/attempts_data",
-      "departments": [
-        3824
-      ],
-      "routes": [
-        {
-          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
-          "flags": ""
-        },
-        {
-          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "rubrics/gen_comment",
-      "departments": [
-        3824
-      ],
-      "routes": [
-        {
-          "source": "^\\/courses\\/[0-9]+\\/assignments\\/[0-9]+\\/submissions\\/[0-9]+",
-          "flags": ""
-        },
-        {
-          "source": "^\\/courses\\/[0-9]+\\/gradebook\\/speed_grader",
-          "flags": ""
-        }
-      ]
-    },
-    {
-      "name": "department_specific/business_hs",
-      "departments": [
-        3833
-      ],
-      "dependencies": [
-        "bridgetools"
-      ]
-    },
-    {
-      "name": "previous-enrollment-data/previous_enrollment_period_grades",
-      "departments": [
-        3833
-      ]
-    },
-    {
-      "name": "remove_former_employees",
-      "rootAdmin": true,
-      "routes": {
-        "source": "^\\/(?:accounts\\/[0-9]+\\/)?users\\/[0-9]+",
-        "flags": ""
-      }
+      },
+      "teacher": false
     }
-  ]
+  }
 }

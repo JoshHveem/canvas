@@ -2,11 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { minify } from 'terser';
+import { discoverFeatures, expandFeatureSettings } from './feature-discovery.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
 const manifest = JSON.parse(await fs.readFile(path.join(directory, 'features.json'), 'utf8'));
-if (!Array.isArray(manifest.features)) throw new Error('features.json must contain a features array.');
 
 const regex = (value) => value && typeof value === 'object' && !Array.isArray(value) && 'source' in value
   ? `/${value.source}/${value.flags || ''}`
@@ -16,7 +16,8 @@ const value = (feature) => {
   if (feature.routes) fields.push(['routes', regex(feature.routes)]);
   return `{ ${fields.map(([key, item]) => `${key}: ${typeof item === 'string' && item.startsWith('/') ? item : JSON.stringify(item)}`).join(', ')} }`;
 };
-const active = manifest.features.filter(feature => feature.enabled !== false);
+if (!manifest.settings || typeof manifest.settings !== 'object') throw new Error('features.json must contain a settings object. Run npm run migrate:settings once.');
+const active = expandFeatureSettings(await discoverFeatures(root), manifest.settings).filter(feature => feature.enabled !== false);
 const featureLiteral = `var features = [\n    ${active.map(value).join(',\n    ')}\n  ];`;
 const sourcePath = path.join(root, 'scripts_v2.js');
 const source = await fs.readFile(sourcePath, 'utf8');

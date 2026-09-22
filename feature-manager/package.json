@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node server.mjs",
     "import:v2": "node import-v2.mjs",
+    "migrate:settings": "node migrate-settings.mjs",
+    "migrate:folders": "node migrate-folder-names.mjs",
     "build": "node build.mjs"
   },
   "devDependencies": {

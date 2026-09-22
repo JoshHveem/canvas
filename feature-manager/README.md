@@ -1,6 +1,6 @@
 # Canvas Feature Manager
 
-This local Node application makes `features.json` the v2 feature registry's source of truth.
+This local Node application discovers v2 features from `custom_features_v2/**/main.js`. `features.json` stores only the loading settings for those folders.
 
 ## Use
 
@@ -13,8 +13,8 @@ Alternatively:
 3. Run `npm start`, then open `http://localhost:4173`.
 4. Save changes, then choose **Build loaders**.
 
-The build writes both `../scripts_v2.generated.js` (readable) and `../scripts_v2.min.js` (production). `custom_canvas_v2.js` loads the minified file.
+Create a feature by adding `custom_features_v2/<feature-name>/main.js`. It appears in the manager automatically the next time the manager is opened. The build writes both `../scripts_v2.generated.js` (readable) and `../scripts_v2.min.js` (production). `custom_canvas_v2.js` loads the minified file.
 
-Each feature's routes are stored as JSON regular-expression objects. Advanced settings holds all other feature controls, including role flags, course and department IDs, dependencies, and priority.
+Some folders have more than one loading rule, such as separate teacher and student variants. The manager shows each rule separately while keeping them under that folder's settings.
 
 The manager never commits or pushes. Review the generated changes and use the existing Git workflow to deploy them.
