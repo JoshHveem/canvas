@@ -6,6 +6,28 @@
   var loaded = new Map();
   var route = window.location.pathname;
 
+  // Compatibility helpers used by many existing feature implementations.
+  // The legacy loader supplied these from scripts.js; v2 owns them directly.
+  window.canvasGet = window.canvasGet || async function canvasGet(url, reqData, page, resData) {
+    reqData = Object.assign({}, reqData || {}, { per_page: 100, page: page || '1' });
+    resData = resData || [];
+    var nextPage = '';
+    await $.get(url, reqData, function (data, status, xhr) {
+      resData = resData.concat(data);
+      var header = xhr.getResponseHeader('Link');
+      var nextMatch = header && header.match(/<([^>]*)>; rel="next"/);
+      if (nextMatch) {
+        var pageMatch = nextMatch[1].match(/[?&]page=([^&]+)/);
+        if (pageMatch) nextPage = pageMatch[1];
+      }
+    });
+    return nextPage ? window.canvasGet(url, reqData, nextPage, resData) : resData;
+  };
+  if (window.$) {
+    $.put = $.put || function (url, data) { return $.ajax({ url: url, data: data, type: 'PUT' }); };
+    $.delete = $.delete || function (url, data) { return $.ajax({ url: url, data: data, type: 'DELETE' }); };
+  }
+
   function assetUrl(url) {
     return window.btechAssetUrl ? window.btechAssetUrl(url) : url;
   }
