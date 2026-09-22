@@ -6,7 +6,7 @@
     await Promise.all(
       accountIds.map(accountId =>
         canvasGet(
-          `/api/v1/accounts/${accountId}/courses?include[]=course_image&include[]=banner_image&per_page=100`
+          `/api/v1/accounts/${accountId}/courses?published=true&include[]=course_image&include[]=banner_image&per_page=100`
         )
       )
     )

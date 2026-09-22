@@ -245,7 +245,7 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     const ISD_HUB_COURSE_ID = 632661;
     if (IS_TEACHER && CURRENT_COURSE_ID === ISD_HUB_COURSE_ID) {
       feature("page_formatting/isd_hub/isd_hub", /^\/courses\/[0-9]+(?:\/.*)?$/);
-      feature("instructor_hub/gradebook", [
+      feature("page_formatting/isd_hub/gradebook", [
         /^\/courses\/[0-9]+\/grades$/,
         /^\/courses\/[0-9]+\/grades\/[0-9]+$/,
         /^\/courses\/[0-9]+\/gradebook\/[0-9]+/,
