@@ -95,6 +95,11 @@ function locationGroupHeading(group, feature, expanded) {
   if (group !== 'Course') return `<div class="location-group-heading">${title}</div>`;
   return `<div class="location-group-heading">${title}<div class="course-scope-controls"><label class="course-id-scope">Specific course IDs<input data-field="courseIds" value="${list(feature.courseIds)}" placeholder="All courses"></label><label class="blueprint-scope"><input data-field="blueprint" type="checkbox" ${checked(feature, 'blueprint')}> Blueprint Only</label></div></div>`;
 }
+function customRouteRules(feature) {
+  const rules = routeItems(feature).map(patternText);
+  const rows = (rules.length ? rules : ['']).map(rule => `<input class="route-rule-input" data-route-rule value="${escapeHtml(rule)}" placeholder="/^\\/courses\\/[0-9]+\\/example$/">`).join('');
+  return `<div class="route-rule-list">${rows}</div><button class="route-add" type="button" data-add-route aria-label="Add custom path rule" title="Add custom path rule">+</button>`;
+}
 function locationPicker(feature) {
   const selected = feature.locations || [];
   const groups = locationOptions.reduce((result, item) => {
@@ -133,7 +138,7 @@ function renderEditor() {
       <label>Specific department IDs<input data-field="departments" value="${list(feature.departments)}" placeholder="Example: 3824, 3833"></label>
     </div>
     </fieldset>
-    <fieldset><legend>Locations</legend><p class="field-help">Select every Canvas location where this feature should load. Selecting a parent also selects its child locations; children can be selected on their own.</p><div class="location-groups">${locationPicker(feature)}</div><label class="wide">Advanced custom path rules<textarea data-field="routes" placeholder="Only use for a location not covered above.">${escapeHtml(routeItems(feature).map(patternText).join('\n'))}</textarea><small>One JavaScript regular expression per line. These are combined with the selected locations.</small></label></fieldset>
+    <fieldset><legend>Locations</legend><p class="field-help">Select every Canvas location where this feature should load. Selecting a parent also selects its child locations; children can be selected on their own.</p><div class="location-groups">${locationPicker(feature)}</div><div class="wide"><label>Advanced custom path rules</label>${customRouteRules(feature)}<small>Only use for a location not covered above. Each entry is one JavaScript regular expression and is combined with selected locations.</small></div></fieldset>
     <fieldset><legend>Required shared libraries</legend><div class="checks">${dependencyOptions.map(([name, label]) => `<label><input data-dependency="${name}" type="checkbox" ${(feature.dependencies || []).includes(name) ? 'checked' : ''}> ${label}</label>`).join('')}</div><small>Select every library this feature needs before it loads.</small></fieldset>
   </form>`;
 
@@ -152,7 +157,15 @@ function renderEditor() {
     button.setAttribute('aria-expanded', String(expanded));
     button.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${button.closest('.location-group-title').querySelector('h3').textContent} locations`);
   });
-  $('#feature-form').onchange = event => event.target.dataset.location ? updateLocations(event.target) : event.target.dataset.dependency ? updateDependencies() : updateFeature(event.target);
+  document.querySelector('[data-add-route]').onclick = () => {
+    const input = document.createElement('input');
+    input.className = 'route-rule-input';
+    input.dataset.routeRule = '';
+    input.placeholder = '/^\\/courses\\/[0-9]+\\/example$/';
+    document.querySelector('.route-rule-list').append(input);
+    input.focus();
+  };
+  $('#feature-form').onchange = event => event.target.dataset.location ? updateLocations(event.target) : event.target.dataset.dependency ? updateDependencies() : event.target.dataset.routeRule !== undefined ? updateRoutes() : updateFeature(event.target);
 }
 
 function expandLocationBranch(id) {
@@ -188,6 +201,18 @@ function updateLocations(changedInput) {
   status('');
   setSaving(true);
   queueSave();
+}
+
+function updateRoutes() {
+  const feature = manifest.features[selectedIndex];
+  try {
+    const values = [...document.querySelectorAll('[data-route-rule]')].map(input => input.value).filter(Boolean).join('\n');
+    const routes = parseRoutes(values);
+    routes ? feature.routes = routes : delete feature.routes;
+    status('');
+    setSaving(true);
+    queueSave();
+  } catch (error) { status(error.message); }
 }
 
 function updateDependencies() {

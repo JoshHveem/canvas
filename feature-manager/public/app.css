@@ -6,3 +6,4 @@
 .location-expand{width:18px;min-width:18px;margin:0;padding:0;border:0;background:transparent;color:#687581;font-size:14px;line-height:1;text-align:center}.location-expand:hover{background:transparent;color:#1c232b}.location-option.collapsed>.location-children{display:none}
 .location-line{display:flex;align-items:center;gap:0}.location-line>label{display:flex;min-width:0;flex:1;align-items:center;gap:7px;font-weight:500}
 .location-group.collapsed>.location-group-content{display:none}.location-group-title{display:flex;align-items:center;gap:4px}.location-group-title h3{margin:0}
+.route-rule-list{display:grid;gap:7px;margin-top:5px}.route-rule-input{margin:0}.route-add{display:block;width:32px;margin-top:8px;padding:3px 0;font-size:18px;font-weight:650;line-height:1}
