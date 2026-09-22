@@ -16,6 +16,8 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
     { id: "custom-edit-courses-link", label: "Edit Courses", editor: "courses" },
     { id: "custom-edit-resources-link", label: "Edit Resources", editor: "resources" }
   ];
+  const BADGES_TAB_ID = "isd-hub-badges-link";
+  const BADGES_TAB_ATTRIBUTE = "data-isd-hub-badges-tab";
   const TOGGLE_BUTTON_ID = "custom-toggle-tabs-button";
   const HIDDEN_TAB_ATTRIBUTE = "data-isd-hub-hidden-tab";
   const PREVIOUS_DISPLAY_ATTRIBUTE = "data-isd-hub-previous-display";
@@ -72,6 +74,14 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
   function getCoursePath() {
     return "/courses/" + getCourseId();
+  }
+
+  function getBadgesUrl() {
+    const courseId = String(window.ENV?.COURSE_ID || "").trim();
+    const userId = String(window.ENV?.current_user_id || "").trim();
+    if (!courseId || !userId) return "";
+
+    return "/courses/" + encodeURIComponent(courseId) + "/grades/" + encodeURIComponent(userId);
   }
 
   function getDataPageApiUrl() {
@@ -1303,7 +1313,11 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
   function hideCourseTabs() {
     document.querySelectorAll("#section-tabs li").forEach(li => {
-      if (li.hasAttribute(EDIT_TAB_ATTRIBUTE) || li.id === TOGGLE_BUTTON_ID) return;
+      if (
+        li.hasAttribute(EDIT_TAB_ATTRIBUTE) ||
+        li.hasAttribute(BADGES_TAB_ATTRIBUTE) ||
+        li.id === TOGGLE_BUTTON_ID
+      ) return;
 
       const link = li.querySelector("a");
       if (!link) return;
@@ -1367,6 +1381,26 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
       nav.appendChild(li);
     });
+  }
+
+  function addBadgesTab(nav) {
+    if (document.getElementById(BADGES_TAB_ID)) return;
+
+    const badgesUrl = getBadgesUrl();
+    if (!badgesUrl) return;
+
+    const li = document.createElement("li");
+    li.id = BADGES_TAB_ID;
+    li.className = "section";
+    li.setAttribute(BADGES_TAB_ATTRIBUTE, "true");
+    li.innerHTML = `
+      <a href="${badgesUrl}" class="grades">
+        <i class="icon-gradebook" aria-hidden="true"></i>
+        <span class="name">Badges</span>
+      </a>
+    `;
+
+    nav.appendChild(li);
   }
 
   function closeEditorPopup() {
@@ -2675,6 +2709,7 @@ window.ISDHubConfig = Object.assign({}, window.ISDHubConfig || {}, {
 
     hideHeaderBar();
     hideCourseTabs();
+    addBadgesTab(nav);
     addEditTabs(nav);
     addToggleButton(nav);
   }
