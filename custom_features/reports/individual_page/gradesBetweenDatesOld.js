@@ -904,38 +904,6 @@
         return new Date(dateString);
       },
 
-      newCourse(id, state, name, year, courseCode) {
-        let course = {};
-        course.course_id = id;
-        let hours = "N/A";
-        //get course hours if there's a year
-        if (year !== null) {
-          hours = COURSE_HOURS?.[courseCode]?.hours ?? 0;
-          //Check to see if a previous year can be found if current year doesn't work
-          for (let i = 1; i < 5; i++) {
-            if (hours == undefined) hours = COURSE_HOURS?.[courseCode].hours;
-          }
-          if (hours === undefined) hours = 0;
-        }
-        course.hours = hours;
-        course.state = state;
-        course.name = name;
-        course.days_in_course = 0;
-        course.days_since_last_submission = 0;
-        course.days_since_last_submission_color = "#fff";
-        course.section = "";
-        course.grade_to_date = "N/A";
-        course.points = 0;
-        course.final_grade = "N/A";
-        course.section = "";
-        course.ungraded = 0;
-        course.submissions = 0;
-        course.nameHTML = "<a target='_blank' href='" + window.location.origin + "/courses/" + id + "'>" + name + "</a> (<a target='_blank' href='https://btech.instructure.com/courses/" + id + "/grades/" + this.userId + "'>grades</a>)";
-        return course;
-      },
-
-      
-
       calcPointsProgress(grade, final_grade) {
         let points = "N/A";
         if (!isNaN(parseInt(grade)) && !isNaN(parseInt(final_grade))) {

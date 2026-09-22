@@ -1,0 +1,13 @@
+{
+  "name": "btech-canvas-feature-manager",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "import:v2": "node import-v2.mjs",
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "terser": "^5.39.0"
+  }
+}

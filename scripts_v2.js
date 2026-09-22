@@ -28,10 +28,11 @@
   var dependencies = {
     vue: function () { return loadScript(assetBase + '/external-libraries/vue.2.6.12.js', 'Vue'); },
     select2: function () { return loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', 'Select2'); },
-    api3: function () { return loadScript('https://reports.bridgetools.dev/scripts.js', 'API3 client'); },
+    // Provides req3, colors, date formatting, and other shared Bridgetools helpers.
+    bridgetools: function () { return loadScript('https://reports.bridgetools.dev/scripts.js', 'Bridgetools runtime'); },
     reportRuntime: function () {
       // Keep the legacy order where graphs may rely on report-runtime globals.
-      return dependencies.api3()
+      return dependencies.bridgetools()
         .then(function () { return loadScript('https://reports.bridgetools.dev/department_report/graphs.js', 'report graphs'); });
     }
   };
@@ -92,26 +93,24 @@
     { name: 'page_formatting/ai_hub/ai_hub', routes: /^\/courses\/[0-9]+(?:\/.*)?$/, courseIds: [621895], teacher: true, priority: 'critical' },
     { name: 'page_formatting/isd_hub/isd_hub', routes: /^\/courses\/[0-9]+(?:\/.*)?$/, courseIds: [632661], teacher: true, priority: 'critical' },
     { name: 'page_formatting/isd_hub/gradebook', routes: [/^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/, /^\/courses\/[0-9]+\/gradebook\/[0-9]+/], courseIds: [632661], teacher: true, priority: 'critical' },
-    { name: 'modules/enrollment_dates_student_external', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, priority: 'critical' },
+    { name: 'modules/enrollment_dates_student_external', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, priority: 'critical', dependencies: ['bridgetools'] },
     { name: 'login_page', routes: /^\/login/, priority: 'critical' },
     { name: 'page_formatting/content_image_zoom', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(?!.+?\/edit$).+/, priority: 'critical' },
     { name: 'img-zoom', routes: /users/, priority: 'critical' },
     { name: 'copy_to_next_year', routes: /^\/accounts\/[0-9]+$/, isd: true },
-    { name: 'reports/automations/report', routes: /^\/automations$/, dependencies: ['vue', 'reportRuntime'] },
     { name: 'inbox-prefill/inbox-prefill', routes: /^\/conversations$/, isd: true },
     { name: 'dashboard/studentsNearCompletion', routes: /^\/$/, teacher: true, dependencies: ['vue'] },
     { name: 'reports/grades_page/report', routes: /^\/$/, teacher: true, dependencies: ['vue', 'reportRuntime'] },
     { name: 'reports/combined/report', routes: /^\/$/, teacher: true, dependencies: ['vue', 'reportRuntime'] },
-    { name: 'reports/reporting_v3/main', routes: /external_tools\/110980/, isd: true, dependencies: ['vue', 'reportRuntime'] },
     { name: 'modules/enrollment_dates_teacher', routes: /^\/courses\/[0-9]+\/users\/[0-9]+$/ },
     { name: 'kaltura/showInfo', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/ },
-    { name: 'modules/module_weight', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, dependencies: ['api3'] },
+    { name: 'modules/module_weight', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, dependencies: ['bridgetools'] },
     { name: 'quizzes/show_analytics', routes: /^\/courses\/[0-9]+\/quizzes\/[0-9]+/, teacher: true },
     { name: 'quizzes/printing_accessibility', routes: /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/, teacher: true },
     { name: 'modules/show_undelete', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, teacher: true },
     { name: 'sections/conclude_all', routes: /^\/courses\/[0-9]+\/sections\/[0-9]+/, teacher: true },
     { name: 'transfer_navigation', routes: /^\/courses\/[0-9]+\/settings/, teacher: true },
-    { name: 'files/usage', routes: /^\/courses\/[0-9]+\/files/ },
+    { name: 'files/usage', routes: /^\/courses\/[0-9]+\/files/, dependencies: ['bridgetools'] },
     { name: 'page_formatting/tinymce_font_size', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/, dependencies: ['select2'] },
     { name: 'editor_toolbar/toolbar', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/, dependencies: ['vue', 'select2'] },
     { name: 'editor_toolbar/basics', routes: /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/ },
@@ -129,10 +128,10 @@
     { name: 'reports/individual_page/report', routes: [/^\/$/, /^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/], notTeacher: true, dependencies: ['vue', 'reportRuntime'] },
     { name: 'files/restore_images', routes: /^\/courses\/[0-9]+/, teacher: true },
     { name: 'reports/grades_page/report', routes: /^\/courses\/[0-9]+\/gradebook$/, teacher: true, dependencies: ['vue', 'reportRuntime'] },
-    { name: 'modules/course_readiness', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, teacher: true },
+    { name: 'modules/course_readiness', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, teacher: true, dependencies: ['bridgetools'] },
     { name: 'reports/individual_page/report', routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/courses\/[0-9]+\/grades\/[0-9]+$/, /^\/users\/[0-9]+$/], teacher: true, dependencies: ['vue', 'reportRuntime'] },
     { name: 'password_reset', routes: [/^\/courses\/[0-9]+\/users\/[0-9]+$/, /^\/accounts\/[0-9]+\/users\/[0-9]+$/, /^\/users\/[0-9]+$/] },
-    { name: 'distance/approved-button', routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
+    { name: 'distance/approved-button', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, dependencies: ['bridgetools'] },
     { name: 'quizzes/upload_questions/upload_questions', routes: /\/courses\/([0-9]+)\/question_banks$/ },
     { name: 'rubrics/upload_rubric/create_rubric_from_json', routes: /^\/courses\/[0-9]+\/rubrics$/ },
     { name: 'quizzes/duplicate_bank_item', routes: /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/ },
@@ -145,8 +144,7 @@
     { name: 'grades_page/attempts', routes: /^\/courses\/[0-9]+\/grades\/[0-9]+/ },
     { name: 'quizzes/question_bank_sorter', routes: /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/ },
     { name: 'sort_assignment_groups', routes: /assignments$/ },
-    { name: 'reports/accreditation-2', routes: /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/, dependencies: ['vue'] },
-    { name: 'page_formatting/prep_parts_lists_for_sharing', routes: /^\/courses\/[0-9]+\/pages\/parts-list-master/, blueprint: true, course: true },
+    { name: 'reports/accreditation-2', routes: /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/, dependencies: ['vue', 'bridgetools'] },
     { name: 'blueprint_association_links', blueprint: true, course: true },
     { name: 'modules/delete_module_items', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, isd: true },
     { name: 'speed_grader/split_screen', routes: /^\/courses\/[0-9]+\/gradebook\/speed_grader/, teacher: true },
@@ -156,7 +154,7 @@
     { name: 'department_specific/data_analytics_feedback_report', routes: /^\/courses\/[0-9]+(?:\/modules)?$/, departments: [4218] },
     { name: 'rubrics/attempts_data', routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/], departments: [3824] },
     { name: 'rubrics/gen_comment', routes: [/^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/], departments: [3824] },
-    { name: 'department_specific/business_hs', departments: [3833] },
+    { name: 'department_specific/business_hs', departments: [3833], dependencies: ['bridgetools'] },
     { name: 'previous-enrollment-data/previous_enrollment_period_grades', departments: [3833] },
     { name: 'remove_former_employees', routes: /^\/(?:accounts\/[0-9]+\/)?users\/[0-9]+/, rootAdmin: true }
   ];

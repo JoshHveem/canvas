@@ -31,7 +31,6 @@
   window.IS_TEACHER = roles.some(function (role) { return ['teacher', 'admin'].includes(role); });
   window.IS_ISD = isDepartmentHead;
   window.IS_ME = [1893418, 2210696].includes(Number(ENV && ENV.current_user && ENV.current_user.id));
-  window.COURSE_HOURS = undefined;
   window.SOURCE_URL = window.SOURCE_URL || 'https://bridgetools.dev/canvas';
   window.btechAssetUrl = window.btechAssetUrl || function (url) {
     var version = window.BTECH_CANVAS_ASSET_VERSION;
@@ -39,7 +38,7 @@
     return url + (url.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(version);
   };
 
-  var managerUrl = window.btechAssetUrl(window.SOURCE_URL + '/scripts_v2.js');
+  var managerUrl = window.btechAssetUrl(window.SOURCE_URL + '/scripts_v2.min.js');
   var script = document.createElement('script');
   script.src = managerUrl;
   script.async = true;

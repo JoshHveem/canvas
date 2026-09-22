@@ -55,8 +55,6 @@ var IS_ME = (
   || currentUser === 2210696 // Logan
 );
 
-var COURSE_HOURS;
-
 //Should start experimenting with branching in github
 var SOURCE_URL = 'https://bridgetools.dev/canvas'
 // Cache nudge for the AI Hub toolbox resources editor.
@@ -245,12 +243,10 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
     featureISD('copy_to_next_year', /^\/accounts\/[0-9]+$/);
     // dashboard level reports that need vue
     await $.getScript(btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js"));
-    feature('reports/automations/report', /^\/automations$/);
     featureISD('inbox-prefill/inbox-prefill', /^\/conversations$/);
     if (IS_TEACHER) feature("dashboard/studentsNearCompletion", /^\/$/);
     if (IS_TEACHER) feature("reports/grades_page/report", /^\/$/);
     if (IS_TEACHER) feature("reports/combined/report", /^\/$/);
-    if (IS_ISD) feature("reports/reporting_v3/main", /external_tools\/110980/);
     if (rCheckInCourse.test(window.location.pathname)) {
       feature('modules/enrollment_dates_teacher', /^\/courses\/[0-9]+\/users\/[0-9]+$/);
       feature("kaltura/showInfo", /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/);
@@ -341,7 +337,6 @@ var MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug
       feature("sort_assignment_groups", /assignments$/)
       feature('reports/accreditation-2', /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/);
 
-      if (IS_BLUEPRINT) feature("page_formatting/prep_parts_list_for_sharing", /^\/courses\/[0-9]+\/pages\/parts-list-master/);
       if (IS_BLUEPRINT) feature('blueprint_association_links'); // need to add in regex filter
 
       featureISD("modules/delete_module_items", /^\/courses\/[0-9]+(\/modules){0,1}$/);

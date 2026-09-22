@@ -1,5 +1,6 @@
 *.swp
 *.bat
+!feature-manager/Launch Canvas Feature Manager.bat
 *.py
 *.exe
 course_data/chromium-binary-86
