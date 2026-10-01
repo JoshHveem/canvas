@@ -12,7 +12,7 @@
 
     data() {
       const colors = window.ReportUtils.createColors();
-      return { table: window.ReportUtils.createTable('Last Name', colors) };
+      return { colors, table: window.ReportUtils.createTable('Last Name', colors) };
     },
 
     created() {
@@ -25,7 +25,7 @@
       const gradeColumn = (label, description, field) => new window.ReportColumn(
         label, description, '7rem', false, 'number',
         row => this.gradeText(row[field]),
-        null,
+        row => this.gradePillStyle(row[field]),
         row => this.numberValue(row[field]) ?? Number.POSITIVE_INFINITY
       );
       this.table.setColumns([
@@ -35,13 +35,12 @@
           row => this.anonymous ? 'STUDENT' : String(row.last_name || '').trim()),
         textColumn('SIS ID', 'Student information system ID.', '6rem',
           row => this.anonymous ? 'STUDENT' : row.sis_user_id),
-        textColumn('Course', 'HS enrollment course code.', '8rem', row => row.course_code),
         textColumn('Campus', 'HS enrollment campus code.', '4rem', row => row.campus_code),
         textColumn('Term', 'Enrollment start and end dates.', '12rem',
           row => `${this.termDate(row.entry_at)} to ${this.termDate(row.exit_at)}`),
         new window.ReportColumn(
-          'Credits', 'Credits completed / credits required for the full term.', '7rem', false, 'number',
-          row => `${this.creditText(row.credits_completed)} / ${this.creditText(row.credits_required)}`,
+          'Credits', 'Credits completed / credits required for the full term.', '10rem', false, 'number',
+          row => this.creditProgressHtml(row),
           null,
           row => this.numberValue(row.credits_completed) ?? Number.POSITIVE_INFINITY
         ),
@@ -109,6 +108,25 @@
       gradeText(value) {
         const grade = this.numberValue(value);
         return grade === null ? '-' : `${grade.toFixed(1)}%`;
+      },
+
+      gradePillStyle(value) {
+        const grade = this.numberValue(value);
+        if (grade === null) return { backgroundColor: this.colors.gray, color: this.colors.black };
+        return {
+          backgroundColor: grade < 70 ? this.colors.red : grade < 80 ? this.colors.yellow : this.colors.green,
+          color: grade >= 70 && grade < 80 ? this.colors.black : this.colors.white
+        };
+      },
+
+      creditProgressHtml(row) {
+        const completed = this.numberValue(row.credits_completed);
+        const required = this.numberValue(row.credits_required);
+        const label = `${this.creditText(completed)} / ${this.creditText(required)}`;
+        if (completed === null || required === null || required <= 0) return label;
+
+        const percent = Math.round(Math.max(0, Math.min(1, completed / required)) * 100);
+        return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Credits completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div><span class="btech-muted">${label} (${percent}%)</span></span>`;
       },
 
       creditText(value) {
