@@ -39,7 +39,7 @@
         textColumn('Term', 'Enrollment start and end dates.', '12rem',
           row => `${this.termDate(row.entry_at)} to ${this.termDate(row.exit_at)}`),
         new window.ReportColumn(
-          'Credits', 'Credits completed / credits required for the full term.', '10rem', false, 'number',
+          'Credits', 'Blue: credits completed. Red: credits required to date. Both bars are scaled to the credits required for the full term.', '10rem', false, 'number',
           row => this.creditProgressHtml(row),
           null,
           row => this.numberValue(row.credits_completed) ?? Number.POSITIVE_INFINITY
@@ -126,7 +126,14 @@
         if (completed === null || required === null || required <= 0) return label;
 
         const percent = Math.round(Math.max(0, Math.min(1, completed / required)) * 100);
-        return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Credits completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div><span class="btech-muted">${label} (${percent}%)</span></span>`;
+        const requiredToDate = this.numberValue(row.credits_required__to_date);
+        const requiredToDatePercent = requiredToDate === null ? null
+          : Math.round(Math.max(0, Math.min(1, requiredToDate / required)) * 100);
+        const requiredToDateHtml = requiredToDatePercent === null ? ''
+          : `<div class="btech-progress" style="margin-top:3px;" role="presentation"><div class="fill" style="width:${requiredToDatePercent}%; background-color:${this.colors.red};" role="progressbar" aria-label="Credits required to date" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${requiredToDatePercent}"></div></div>`;
+        const requiredToDateLabel = requiredToDate === null ? ''
+          : `<span class="btech-muted" style="display:block;">Required to date: ${this.creditText(requiredToDate)}</span>`;
+        return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Credits completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div>${requiredToDateHtml}<span class="btech-muted">${label} (${percent}%)</span>${requiredToDateLabel}</span>`;
       },
 
       creditText(value) {
