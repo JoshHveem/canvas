@@ -3,7 +3,7 @@
     mixins: [
       window.ReportMixins.formatting,
       window.ReportMixins.departmentScoped({
-        optionsDataset: 'student_hs_terms',
+        optionsDataset: 'departments',
         hydrate_sis_user_id: true,
         emptySelectionMessage: 'Select a department to view HS student grades.',
         loadErrorMessage: 'Unable to load HS student grades.'
@@ -58,6 +58,48 @@
     },
 
     methods: {
+      async loadDepartmentOptions(forceReloadData = false) {
+        const requestId = ++this.loadDepartmentsRequestId;
+        try {
+          this.loadingDepartments = true;
+          const rows = await this.fetchReportDataset({}, { dataset: this.getDepartmentOptionsDataset() });
+          if (requestId !== this.loadDepartmentsRequestId) return;
+
+          const options = Array.from(new Map(
+            (Array.isArray(rows) ? rows : [])
+              .map(row => ({
+                value: String(row?.department_code ?? row?.code ?? '').trim(),
+                label: String(row?.department_name ?? row?.department ?? row?.name ?? '').trim()
+              }))
+              .filter(option => option.value && option.label)
+              .map(option => [option.value, option])
+          ).values()).sort((a, b) => a.label.localeCompare(b.label));
+
+          this.departmentOptions = options;
+          const nextDepartmentCode = this.resolveDeferredSelection({
+            filterKey: 'department_code',
+            options,
+            currentValue: this.selectedDepartmentCode,
+            routeValue: this.getDepartmentCode()
+          });
+          if (!this.filterValuesEqual(nextDepartmentCode, this.selectedDepartmentCode)) {
+            this.selectedDepartmentCode = nextDepartmentCode;
+            return;
+          }
+
+          const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextDepartmentCode));
+          if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
+          if (forceReloadData) this.loadData();
+        } catch (error) {
+          if (requestId !== this.loadDepartmentsRequestId) return;
+          console.warn('Failed to load HS student grades department options', error);
+          this.departmentOptions = [];
+          if (!this.selectedDepartmentCode) this.loadError = 'Unable to load department list.';
+        } finally {
+          if (requestId === this.loadDepartmentsRequestId) this.loadingDepartments = false;
+        }
+      },
+
       numberValue(value) {
         if (value === null || value === undefined || String(value).trim() === '') return null;
         const number = Number(value);
