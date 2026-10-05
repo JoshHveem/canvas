@@ -32,6 +32,8 @@
   window.IS_ISD = isDepartmentHead;
   window.IS_ME = [1893418, 2210696].includes(Number(ENV && ENV.current_user && ENV.current_user.id));
   window.SOURCE_URL = window.SOURCE_URL || 'https://bridgetools.dev/canvas';
+  // Bump this value when deploying updated v2 loaders or feature assets.
+  window.BTECH_CANVAS_ASSET_VERSION = '2026-10-05-v2-1';
   window.btechAssetUrl = window.btechAssetUrl || function (url) {
     var version = window.BTECH_CANVAS_ASSET_VERSION;
     if (!version) return url;
