@@ -165,8 +165,8 @@ function processListItem(listItem, editor) {
     if (content.trim() == '') content = '<div aria-label="callout-title" style="font-size: 1.2rem; font-weight: bold;"><strong>INSERT TITLE<strong></div><div><p>INSERT TEXT</p></div>'
     editor.execCommand("mceReplaceContent", false, `
       <div 
-        class="btech-callout-box" 
-        style="background-color: #EDEDED; border-radius: 5px; padding: 0.5rem 1.5rem; border: 3px solid #AAA; margin: 1rem auto; width: 70%;"
+        class="btech-callout-box phpally-ignore" 
+        style="background-color: #EDEDED; color: #000000; border-radius: 5px; padding: 0.5rem 1.5rem; border: 3px solid #AAA; margin: 1rem auto; width: 70%;"
         role="note" aria-label="callout-box">
           <p>${content}</p>
       </div>
@@ -181,8 +181,8 @@ function processListItem(listItem, editor) {
     if (content.trim() == '') content = '<div aria-label="callout-title" style="font-size: 1.2rem; font-weight: bold;"><strong>INSERT TITLE<strong></div><div><p>INSERT TEXT</p></div>'
     editor.execCommand("mceReplaceContent", false, `
       <div 
-        class="btech-callout-box" 
-        style="background-color: #F1F1F1; border-radius: 5px; padding: 0.5rem 1.5rem; border: 3px solid #E1E1E1; margin: 1rem auto; width: 70%;"
+        class="btech-callout-box phpally-ignore" 
+        style="background-color: #F1F1F1; color: #000000; border-radius: 5px; padding: 0.5rem 1.5rem; border: 3px solid #E1E1E1; margin: 1rem auto; width: 70%;"
         role="note" aria-label="callout-box">
       <p>${content}</p>
       </div>
@@ -196,9 +196,15 @@ function processListItem(listItem, editor) {
     let content = selection.getContent();
     let color = $("#btech-custom-editor-buttons-color").val();
     let fontColor = "#FFFFFF";
+    // Only these preset backgrounds are paired with the fixed white title text.
+    // The white picker preset and custom colors must still be checked.
+    const presetTitleColors = ['#b20b0f', '#0f79a2', '#0b810f', '#000000'];
+    const calloutClass = presetTitleColors.includes(String(color).toLowerCase())
+      ? 'btech-callout-box phpally-ignore'
+      : 'btech-callout-box';
     if (content.trim() == '') content = 'INSERT CONTENT'
     editor.execCommand("mceReplaceContent", false, `
-      <div style="background-color: #ffffff; color: #000000; border: 3px solid ${color}; border-radius: 5px; margin: 1rem auto; width: 70%;" role="note" aria-label="callout-box">
+      <div class="${calloutClass}" style="background-color: #ffffff; color: #000000; border: 3px solid ${color}; border-radius: 5px; margin: 1rem auto; width: 70%;" role="note" aria-label="callout-box">
         <div aria-label="callout-title" style="background-color: ${color}; color: #ffffff; font-size: 1.2em; padding: 0.25rem 1.5rem; text-align: left; font-weight: bold;"><strong>INSERT TITLE</strong></div>
         <div style="padding: 0.5rem 1.5rem;">
         <p>${content}</p>
