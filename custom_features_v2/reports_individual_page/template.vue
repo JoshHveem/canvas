@@ -254,7 +254,6 @@
             v-if="userId"
             :user="user"
             :user-id="userId"
-            :terms="user.hs_terms"
             :colors="colors"
             :IS-TEACHER="IS_TEACHER"
           ></show-grades-between-dates-old>

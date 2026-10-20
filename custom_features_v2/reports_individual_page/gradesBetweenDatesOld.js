@@ -1,4 +1,44 @@
 (async function() {
+  const FIVE_WEEKS_MS = 60 * 60 * 24 * 7 * 5 * 1000;
+  const parseDateValue = value => value ? new Date(value) : undefined;
+  const normalizeLookupValue = value => String(value ?? '').trim().toLowerCase();
+  const normalizeTermTimestamp = value => {
+    if (!value) return '';
+
+    const normalized = normalizeLookupValue(value)
+      .replace('t', ' ')
+      .replace('z', '')
+      .split('.')[0];
+    const match = normalized.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+    return match ? `${match[1]} ${match[2]}` : normalized;
+  };
+  const buildTermKey = termLike => [
+    normalizeLookupValue(termLike.sis_user_id),
+    normalizeLookupValue(termLike.course_code),
+    normalizeLookupValue(termLike.campus_code),
+    normalizeTermTimestamp(termLike.entry_at__original || termLike.entry_at)
+  ].join('|');
+  const toHtmlDate = date => {
+    const parsed = new Date(date);
+    parsed.setDate(parsed.getDate() + 1);
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${parsed.getFullYear()}-${month}-${day}`;
+  };
+  const calculateCreditsRequired = (entryAt, exitAt, concurrentCount = 1, numWeeksHolidays = 0) => {
+    const start = parseDateValue(entryAt);
+    const end = parseDateValue(exitAt);
+
+    if (!start || !end || end <= start) return 0;
+
+    const holidayWeeks = Math.max(Number(numWeeksHolidays) || 0, 0);
+    const effectiveDurationMs = Math.max(end - start - (holidayWeeks * 7 * 24 * 60 * 60 * 1000), 0);
+    let credits = Math.floor(Number(effectiveDurationMs / FIVE_WEEKS_MS) * 4) / 4;
+    const concurrent = Number(concurrentCount) || 1;
+    if (concurrent > 1) credits *= concurrent;
+    return credits;
+  };
+
   class Column {
     constructor(name, description, average, sort_type, percent, hideable = true) {
       this.name = name;
@@ -24,10 +64,11 @@
           {{loadingMessage}}
         </div>
         <div v-else>
+          <p v-if='termsError' role='alert'>{{termsError}}</p>
           <div class='btech-report-submission-dates'>
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
-              <option v-for='term in terms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} ({{term.hours}} hrs)</option>
+              <option v-for='term in sortedTerms' :value='term._id'>{{dateToHTMLDate(term.entry_date) + " to " + dateToHTMLDate(term.exit_date)}} ({{term.hours}} hrs)</option>
             </select>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change='getIncludedAssignmentsBetweenDates()'>
@@ -163,10 +204,6 @@
         type: Boolean,
         default: false 
       },
-      terms: {
-        type: Array,
-        default: [] 
-      },
       enrollments: {
         type: Object,
         default: () => ({})
@@ -187,9 +224,15 @@
         })
       }
     },
-    computed: {},
+    computed: {
+      sortedTerms() {
+        return [...this.termsData].sort((a, b) => new Date(b.entry_at) - new Date(a.entry_at));
+      }
+    },
     data() {
       return {
+        termsData: [],
+        termsError: '',
         selectedTermId: '',
         selectedTerm: {},
         gradesBetweenDates: {},
@@ -221,6 +264,19 @@
           new Column('Submissions', '', true, 'number', true),
           new Column('Days Since Last Submission', '', true, 'number', false)
         ],
+      }
+    },
+    watch: {
+      'user.sis_user_id': {
+        immediate: true,
+        async handler() {
+          try {
+            await this.loadTerms();
+          } catch (err) {
+            this.termsError = 'Unable to load HS terms. Please reopen the report to try again.';
+            console.error('Failed loading HS terms:', err);
+          }
+        }
       }
     },
     created: async function () {
@@ -278,10 +334,75 @@
       this.loadingProgress = 100;
       this.loadingMessage = "Data loading complete.";
       this.loadingAssignments = false;
+      if (this.selectedTermId) this.updateDatesToSelectedTerm();
     },
 
 
     methods: {
+      normalizeTerm(baseTerm, overrideTerm) {
+        const effectiveEntryAt = overrideTerm ? overrideTerm.entry_at__override || baseTerm.entry_at : baseTerm.entry_at;
+        const effectiveExitAt = overrideTerm ? overrideTerm.exit_at__override || baseTerm.exit_at : baseTerm.exit_at;
+        const creditsRequiredOverride = overrideTerm ? overrideTerm.credits_required__override : null;
+        const dateCalculatedCredits = calculateCreditsRequired(
+          effectiveEntryAt,
+          effectiveExitAt,
+          baseTerm.concurrent_sections,
+          baseTerm.num_weeks__holidays
+        );
+        const defaultCredits = Number(baseTerm.credits__default) || 0;
+
+        return {
+          ...baseTerm,
+          _id: buildTermKey(baseTerm),
+          entry_at__original: baseTerm.entry_at,
+          exit_at__original: baseTerm.exit_at,
+          entry_at: effectiveEntryAt,
+          exit_at: effectiveExitAt,
+          entry_date: effectiveEntryAt,
+          exit_date: effectiveExitAt,
+          section_code: baseTerm.section_code,
+          concurrent_sections: Number(baseTerm.concurrent_sections),
+          num_weeks__holidays: Number(baseTerm.num_weeks__holidays) || 0,
+          credits_required: creditsRequiredOverride != null
+            ? Number(creditsRequiredOverride)
+            : Math.max(dateCalculatedCredits, defaultCredits),
+          has_credits_required_override: creditsRequiredOverride != null,
+          // The legacy grade calculations use hours rather than credits.
+          hours: (creditsRequiredOverride != null
+            ? Number(creditsRequiredOverride)
+            : Math.max(dateCalculatedCredits, defaultCredits)) * 30,
+          override: overrideTerm,
+        };
+      },
+
+      mergeTerms(baseTerms, overrideTerms) {
+        const overridesByKey = new Map(
+          (overrideTerms || []).map(term => [buildTermKey(term), term])
+        );
+
+        return (baseTerms || []).map(baseTerm => this.normalizeTerm(baseTerm, overridesByKey.get(buildTermKey(baseTerm))));
+      },
+
+      async loadTerms() {
+        const sisUserId = this.user.sis_user_id;
+        this.termsError = '';
+        this.termsData = [];
+        this.selectedTermId = '';
+        this.selectedTerm = {};
+        if (!sisUserId) return;
+
+        const query = { sis_user_id: sisUserId };
+        const [baseTerms, overrideTerms] = await Promise.all([
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms' }),
+          bridgetools.req3('reports', query, { dataset: 'student_hs_terms__override' })
+        ]);
+        if (this.user.sis_user_id !== sisUserId) return;
+
+        this.termsData = this.mergeTerms(baseTerms, overrideTerms);
+        this.selectedTermId = this.sortedTerms[0]?._id || '';
+        if (this.selectedTermId && !this.loadingAssignments) this.updateDatesToSelectedTerm();
+      },
+
       // Example: Drawing a Bar Chart for Submissions
 
       drawSubmissionsGraph: function (startDate, endDate) {
@@ -573,12 +694,8 @@
       },
 
       updateDatesToSelectedTerm() {
-        let term;
-        for (let i = 0; i < this.terms.length; i++) {
-          if (this.terms[i]._id === this.selectedTermId) {
-            term = this.terms[i];
-          }
-        }
+        const term = this.termsData.find(term => term._id === this.selectedTermId);
+        if (!term) return;
         this.selectedTerm = term;
         this.submissionDatesStart = this.dateToHTMLDate(term.entry_date);
         this.submissionDatesEnd = this.dateToHTMLDate(term.exit_date);
@@ -1046,16 +1163,7 @@
       },
 
       dateToHTMLDate(date) {
-        date = new Date(date);
-        date.setDate(date.getDate() + 1);
-        let month = '' + (date.getMonth() + 1);
-        if (month.length === 1) month = '0' + month;
-
-        let day = '' + date.getDate();
-        if (day.length === 1) day = '0' + day;
-
-        let htmlDate = date.getFullYear() + "-" + month + "-" + day;
-        return htmlDate;
+        return toHtmlDate(date);
       },
     }
   });
