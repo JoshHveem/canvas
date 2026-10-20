@@ -104,7 +104,7 @@
               </tr>
               <tr style="border-top: 2px solid #000;">
                 <td colspan="2"></td>
-                <td colspan="2"><b>Credits Completed</b></td>
+                <td colspan="2"><b>Hours Completed</b></td>
                 <td><b>{{ sumHoursCompleted() }}</b></td>
               </tr>
 
