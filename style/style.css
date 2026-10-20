@@ -233,7 +233,8 @@
 .btech-callout-box {
   background-color: #F1F1F1;
   border-radius: 5px;
-  padding: 0.5rem;
+  /* Templates own their spacing so headers stay flush with the border, as in the editor. */
+  padding: 0;
   margin: 0.5rem 5% 1rem 5%;
   border: 1px solid #E1E1E1;
   box-shadow: none;
