@@ -135,7 +135,11 @@ Vue.component('multi-filter-pill', {
 
 Vue.component('reports-department-course-readiness', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'canvas_course_readiness',
       emptySelectionMessage: 'Select a department from the summary report to view details.',

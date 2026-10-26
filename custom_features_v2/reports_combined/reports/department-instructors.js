@@ -1,6 +1,10 @@
 Vue.component('reports-department-instructors', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'instructors_department_summary',
       emptySelectionMessage: 'Select a department to view instructor summary.',

@@ -1,7 +1,12 @@
 (async function () {
   Vue.component('reports-hs-student-grades', {
     mixins: [
+      window.ReportMixins.requests,
       window.ReportMixins.formatting,
+      window.ReportMixins.tables,
+      window.ReportMixins.filters,
+      window.ReportMixins.datasets,
+      window.ReportMixins.canvasProfiles,
       window.ReportMixins.departmentScoped({
         optionsDataset: 'departments',
         hydrate_sis_user_id: true,
@@ -49,20 +54,18 @@
       ]);
     },
 
-    computed: {
-      visibleRows() {
-        this.table.setRows(this.rows);
-        return this.table.getSortedRows();
-      }
-    },
-
     methods: {
       async loadDepartmentOptions(forceReloadData = false) {
-        const requestId = ++this.loadDepartmentsRequestId;
-        try {
-          this.loadingDepartments = true;
-          const rows = await this.fetchReportDataset({}, { dataset: this.getDepartmentOptionsDataset() });
-          if (requestId !== this.loadDepartmentsRequestId) return;
+        return this.runReportRequest('options', {
+          loadingKey: 'loadingDepartments',
+          invalidate: ['data'],
+          onError: error => {
+            console.warn('Failed to load HS student grades department options', error);
+            this.departmentOptions = [];
+            if (!this.selectedDepartmentCode) this.loadError = 'Unable to load department list.';
+          }
+        }, async request => {
+          const rows = await request.wait(this.fetchReportDataset({}, { dataset: this.getDepartmentOptionsDataset() }));
 
           const options = Array.from(new Map(
             (Array.isArray(rows) ? rows : [])
@@ -89,14 +92,7 @@
           const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextDepartmentCode));
           if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
           if (forceReloadData) this.loadData();
-        } catch (error) {
-          if (requestId !== this.loadDepartmentsRequestId) return;
-          console.warn('Failed to load HS student grades department options', error);
-          this.departmentOptions = [];
-          if (!this.selectedDepartmentCode) this.loadError = 'Unable to load department list.';
-        } finally {
-          if (requestId === this.loadDepartmentsRequestId) this.loadingDepartments = false;
-        }
+        });
       },
 
       numberValue(value) {
@@ -157,30 +153,24 @@
       },
 
       async loadData() {
-        // Invalidate previous requests even when the department selection is cleared.
-        const requestId = ++this.loadRequestId;
-        this.rows = [];
-        this.loadError = '';
-        this.loading = false;
-        if (!this.selectedDepartmentCode) {
-          this.loadError = this.getEmptySelectionMessage();
-          return;
-        }
+        return this.runReportRequest('data', {
+          onError: error => {
+            console.warn('Failed to load HS student grades', error);
+            this.loadError = this.getLoadErrorMessage();
+          }
+        }, async request => {
+          this.rows = [];
+          if (!this.selectedDepartmentCode) {
+            this.loadError = this.getEmptySelectionMessage();
+            return;
+          }
 
-        try {
-          this.loading = true;
-          const rows = await this.fetchReportDataset(this.getRequestFilters(), { dataset: this.getDataset() });
-          if (requestId !== this.loadRequestId) return;
-          const hydratedRows = await this.hydrateSisUserIds(this.mapRows(rows), { hydrate_sis_user_id: true });
-          if (requestId !== this.loadRequestId) return;
+          const rows = await request.wait(this.fetchReportDataset(this.getRequestFilters(), { dataset: this.getDataset() }));
+
+          const hydratedRows = await request.wait(this.hydrateSisUserIds(this.mapRows(rows), { hydrate_sis_user_id: true }));
+
           this.rows = hydratedRows;
-        } catch (error) {
-          if (requestId !== this.loadRequestId) return;
-          console.warn('Failed to load HS student grades', error);
-          this.loadError = this.getLoadErrorMessage();
-        } finally {
-          if (requestId === this.loadRequestId) this.loading = false;
-        }
+        });
       }
     },
 

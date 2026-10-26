@@ -1,5 +1,10 @@
 Vue.component('reports-graduation-outlook', {
-  mixins: [window.ReportMixins.formatting],
+  mixins: [
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets
+  ],
 
   props: {
     reportContext: { type: Object, default: () => ({}) }
@@ -400,11 +405,6 @@ Vue.component('reports-graduation-outlook', {
       return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - ');
     },
 
-    numberValue(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number : null;
-    },
-
     wholeNumber(value) {
       const number = this.numberValue(value);
       return number === null ? '-' : Math.round(number).toLocaleString();
@@ -518,33 +518,41 @@ Vue.component('reports-graduation-outlook', {
 
     async loadMonthlyData() {
       const projection = this.selectedProjection;
-      if (!projection) return;
-      try {
-        const rows = await this.fetchReportDataset(
+      return this.runReportRequest('data', {
+        clearError: false,
+        onError: error => {
+          console.warn('Failed to load monthly graduation data', error);
+          this.monthlyRows = [];
+        }
+      }, async request => {
+        if (!projection) {
+          this.monthlyRows = [];
+          return;
+        }
+
+        const rows = await request.wait(this.fetchReportDataset(
           { program_code: projection.program_code, campus_code: projection.campus_code },
           { dataset: 'programs_graduates_monthly' }
-        );
+        ));
         this.monthlyRows = Array.isArray(rows) ? rows : [];
-      } catch (error) {
-        console.warn('Failed to load monthly graduation data', error);
-        this.monthlyRows = [];
-      }
+      });
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-        this.projections = this.normalizeProjections(await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }));
+      return this.runReportRequest('programs', {
+        invalidate: ['data'],
+        onError: error => {
+          console.warn('Failed to load graduation projections', error);
+          this.loadError = 'Unable to load graduation projections.';
+        }
+      }, async request => {
+        this.projections = this.normalizeProjections(await request.wait(this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' })));
+        const previousProjectionKey = this.selectedProjectionKey;
         if (!this.projectionOptions.length) this.loadError = 'No on-campus program projections are available for the current academic year.';
         else if (!this.selectProjectionFromContext() && !this.projectionOptions.some(row => row.key === this.selectedProjectionKey)) this.selectedProjectionKey = this.projectionOptions[0].key;
-        await this.loadMonthlyData();
-      } catch (error) {
-        console.warn('Failed to load graduation projections', error);
-        this.loadError = 'Unable to load graduation projections.';
-      } finally {
-        this.loading = false;
-      }
+        // Changed selections load through the watcher; refresh unchanged ones here.
+        if (this.projectionOptions.length && previousProjectionKey === this.selectedProjectionKey) this.loadMonthlyData();
+      });
     },
 
     trendArrow(change) {

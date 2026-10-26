@@ -1,5 +1,10 @@
 Vue.component('reports-placements-locations', {
-  mixins: [window.ReportMixins.formatting],
+  mixins: [
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets
+  ],
 
   props: {
     reportContext: { type: Object, default: () => ({}) }
@@ -76,20 +81,10 @@ Vue.component('reports-placements-locations', {
   },
 
   methods: {
-    numberValue(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number : null;
-    },
-
     numberText(value) {
       const number = this.numberValue(value);
       if (number === null) return '—';
       return Number.isInteger(number) ? String(number) : number.toFixed(1);
-    },
-
-    percent(value) {
-      const number = this.numberValue(value);
-      return number === null ? '—' : `${(number * 100).toFixed(1)}%`;
     },
 
     addLocation(locations, location, students, programCode) {
@@ -132,21 +127,19 @@ Vue.component('reports-placements-locations', {
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-        this.outcomes = this.normalizeOutcomes(await this.fetchReportDataset({}, { dataset: 'programs_placement_outcomes' }));
+      return this.runReportRequest('data', {
+        onError: error => {
+          console.warn('Failed to load placement outcomes', error);
+          this.outcomes = [];
+          this.loadError = 'Unable to load placement outcomes.';
+        }
+      }, async request => {
+        this.outcomes = this.normalizeOutcomes(await request.wait(this.fetchReportDataset({}, { dataset: 'programs_placement_outcomes' })));
         this.selectInitialAcademicYear();
         this.selectProgramFromContext();
         this.hasLoadedOutcomes = true;
         if (!this.outcomes.length) this.loadError = 'No placement outcomes are available.';
-      } catch (error) {
-        console.warn('Failed to load placement outcomes', error);
-        this.outcomes = [];
-        this.loadError = 'Unable to load placement outcomes.';
-      } finally {
-        this.loading = false;
-      }
+      });
     }
   },
 

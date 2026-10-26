@@ -1,6 +1,11 @@
 Vue.component('reports-departments-course-readiness', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.labels,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
     window.ReportMixins.yearSummary({
       loadErrorMessage: 'Unable to load course readiness summary.'
     })
@@ -74,12 +79,6 @@ Vue.component('reports-departments-course-readiness', {
       )
     ]);
   },
-  computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    }
-  },
 
   methods: {
     mapRows(rows) {
@@ -115,54 +114,66 @@ Vue.component('reports-departments-course-readiness', {
       });
     },
 
-    departmentName(department) {
-      return String(department?.department_name ?? department?.name ?? department?.department_code ?? '').trim();
-    },
     totalCourses(department) {
       return Number(department?.num_courses) || 0;
     },
+
     syllabiApprovedCount(department) {
       return Number(department?.num_syllabi_approved) || 0;
     },
+
     syllabiApprovedPct(department) {
       return Number(department?.perc_syllabi_approved);
     },
+
     courseEvalPublishedCount(department) {
       return Number(department?.num_course_evaluation_published) || 0;
     },
+
     courseEvalPublishedPct(department) {
       return Number(department?.perc_course_evaluation_published);
     },
+
     instructorEvalPublishedCount(department) {
       return Number(department?.num_instructor_evaluation_published) || 0;
     },
+
     instructorEvalPublishedPct(department) {
       return Number(department?.perc_instructor_evaluation_published);
     },
+
     employmentSkillsPublishedCount(department) {
       return Number(department?.num_employment_skills_evaluation_published) || 0;
     },
+
     employmentSkillsPublishedPct(department) {
       return Number(department?.perc_employment_skills_evaluation_published);
     },
+
     contentPublishedCount(department) {
       return Number(department?.num_content_published) || 0;
     },
+
     contentPublishedPct(department) {
       return Number(department?.perc_content_published);
     },
+
     readyCount(department) {
       return Number(department?.num_courses_ready) || 0;
     },
+
     readyPct(department) {
       return Number(department?.perc_courses_ready);
     },
+
     readyPublishedCount(department) {
       return Number(department?.num_courses_ready_published) || 0;
     },
+
     readyPublishedPct(department) {
       return Number(department?.perc_courses_ready_published);
     },
+
     countPctText(count, pct) {
       const n = Number(count);
       const pctText = this.pctText(pct);

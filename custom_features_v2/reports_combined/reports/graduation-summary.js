@@ -1,5 +1,10 @@
 Vue.component('reports-graduation-summary', {
-  mixins: [window.ReportMixins.formatting],
+  mixins: [
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.datasets
+  ],
 
   props: {
     reportContext: { type: Object, default: () => ({}) }
@@ -29,32 +34,10 @@ Vue.component('reports-graduation-summary', {
     ]);
   },
 
-  computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    }
-  },
-
   methods: {
-    numberValue(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number : null;
-    },
-
-    sortNumber(value) {
-      const number = this.numberValue(value);
-      return number === null ? Number.POSITIVE_INFINITY : number;
-    },
-
     wholeNumber(value) {
       const number = this.numberValue(value);
       return number === null ? '—' : Math.round(number).toLocaleString();
-    },
-
-    percent(value) {
-      const number = this.numberValue(value);
-      return number === null ? '—' : `${(number * 100).toFixed(1)}%`;
     },
 
     isValidatedForecast(row) {
@@ -197,19 +180,17 @@ Vue.component('reports-graduation-summary', {
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-        const projections = await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' });
+      return this.runReportRequest('data', {
+        onError: error => {
+          console.warn('Failed to load graduation summary', error);
+          this.rows = [];
+          this.loadError = 'Unable to load the graduation summary.';
+        }
+      }, async request => {
+        const projections = await request.wait(this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }));
         this.rows = this.buildRows(projections);
         if (!this.rows.length) this.loadError = 'No active on-campus program projections are available for the current academic year.';
-      } catch (error) {
-        console.warn('Failed to load graduation summary', error);
-        this.rows = [];
-        this.loadError = 'Unable to load the graduation summary.';
-      } finally {
-        this.loading = false;
-      }
+      });
     }
   },
 

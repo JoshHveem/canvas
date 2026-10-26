@@ -1,6 +1,11 @@
 Vue.component('reports-outcomes-cpl-historic', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.cplMetrics,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.programScoped({
       includeAcademicYear: false,
       emptySelectionMessage: 'Select a program.',
@@ -99,15 +104,22 @@ Vue.component('reports-outcomes-cpl-historic', {
     },
 
     async loadProgramOptions(forceReloadData = false) {
-      const requestId = ++this.loadProgramsRequestId;
-      try {
-        this.loadingPrograms = true;
-        this.loadError = '';
-
-        const rows = await this.fetchReportDataset(
+      return this.runReportRequest('options', {
+        loadingKey: 'loadingPrograms',
+        invalidate: ['data'],
+        onError: e => {
+          console.warn('Failed to load program options', e);
+          this.programOptions = [];
+          this.optionRows = [];
+          if (!this.selectedProgramCode) {
+            this.loadError = this.getProgramOptionsLoadErrorMessage();
+          }
+        }
+      }, async request => {
+        const rows = await request.wait(this.fetchReportDataset(
           {},
           { dataset: 'program_cpl' }
-        );
+        ));
 
         this.optionRows = (Array.isArray(rows) ? rows : []).map(row => ({
           program_code: String(row?.program_code ?? '').trim(),
@@ -151,18 +163,7 @@ Vue.component('reports-outcomes-cpl-historic', {
           this.setSharedFilterValue('program_name', selectedOption.label);
         }
         if (forceReloadData) this.loadData();
-      } catch (e) {
-        console.warn('Failed to load program options', e);
-        this.programOptions = [];
-        this.optionRows = [];
-        if (!this.selectedProgramCode) {
-          this.loadError = this.getProgramOptionsLoadErrorMessage();
-        }
-      } finally {
-        if (requestId === this.loadProgramsRequestId) {
-          this.loadingPrograms = false;
-        }
-      }
+      });
     },
 
     mapRows(rows) {
@@ -449,28 +450,6 @@ Vue.component('reports-outcomes-cpl-historic', {
 
     handleResize() {
       this.renderCharts();
-    },
-
-    bandStyle(value, warnMin, passMin) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      return {
-        backgroundColor: n < warnMin
-          ? this.colors.red
-          : (n < passMin ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-
-    completionPillStyle(value) {
-      return this.bandStyle(value, 0.6, 0.7);
-    },
-
-    outcomePillStyle(value) {
-      return this.bandStyle(value, 0.7, 0.8);
     }
   },
 

@@ -1,6 +1,8 @@
 Vue.component('reports-admissions-overview', {
   mixins: [
-    window.ReportMixins.formatting
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.filters
   ],
 
   props: {
@@ -195,15 +197,23 @@ Vue.component('reports-admissions-overview', {
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const rows = await bridgetools.req3(
+      return this.runReportRequest('data', {
+        onError: e => {
+          console.warn('Failed to load admissions overview dataset', e);
+          this.rawRows = [];
+          this.loadError = 'Unable to load admissions pathways.';
+        },
+        onFinally: request => {
+          this.$nextTick(() => {
+            if (request.isCurrent()) this.renderChart();
+          });
+        }
+      }, async request => {
+        const rows = await request.wait(bridgetools.req3(
           'reports',
           { academic_year: Number(this.year) },
           { dataset: this.getDataset() }
-        );
+        ));
 
         this.rawRows = (Array.isArray(rows) ? rows : []).map(row => this.normalizeRow(row));
 
@@ -228,14 +238,7 @@ Vue.component('reports-admissions-overview', {
         if (!this.filterValuesEqual(nextStageFocus, this.selectedStageFocus)) {
           this.selectedStageFocus = nextStageFocus;
         }
-      } catch (e) {
-        console.warn('Failed to load admissions overview dataset', e);
-        this.rawRows = [];
-        this.loadError = 'Unable to load admissions pathways.';
-      } finally {
-        this.loading = false;
-        this.$nextTick(() => this.renderChart());
-      }
+      });
     },
 
     createTreeNode(stageName, pathSoFar) {
@@ -701,15 +704,6 @@ Vue.component('reports-admissions-overview', {
 
     hideTooltip() {
       this.tooltip.visible = false;
-    },
-
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
   },
 

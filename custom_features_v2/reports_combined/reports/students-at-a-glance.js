@@ -1,6 +1,12 @@
 Vue.component('reports-students-at-a-glance', {
   mixins: [
-    window.ReportMixins.formatting
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.students,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
+    window.ReportMixins.tables
   ],
 
   props: {
@@ -18,8 +24,6 @@ Vue.component('reports-students-at-a-glance', {
       loading: false,
       loadingDepartments: false,
       loadError: '',
-      loadRequestId: 0,
-      loadDepartmentsRequestId: 0,
       hasLoadedDepartmentOptions: false,
       rows: [],
       departmentOptions: [],
@@ -171,24 +175,6 @@ Vue.component('reports-students-at-a-glance', {
       if (nextDepartmentCode && nextDepartmentCode !== this.selectedDepartmentCode) {
         this.selectedDepartmentCode = nextDepartmentCode;
       }
-    },
-
-    getStudentName(row) {
-      const firstName = this.getStudentFirstName(row);
-      const lastName = this.getStudentLastName(row);
-      return [firstName, lastName].filter(name => name && name !== '-').join(' ') || '-';
-    },
-
-    getStudentFirstName(row) {
-      const firstName = String(row?.first_name ?? '').trim();
-      if (firstName) return firstName;
-
-      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
-    },
-
-    getStudentLastName(row) {
-      return String(row?.last_name ?? '').trim() || '-';
     },
 
     getStudentSisId(row) {
@@ -558,18 +544,29 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     async loadDepartmentOptions() {
-      const requestId = ++this.loadDepartmentsRequestId;
+      return this.runReportRequest('options', {
+        loadingKey: 'loadingDepartments',
+        clearError: !this.loading,
+        onError: e => {
+          console.warn('Failed to load student at-a-glance department options', e);
+          this.departmentOptions = [];
+          this.rows = [];
+          this.loadError = 'Unable to load department list.';
+        },
+        onFinally: () => {
+          this.hasLoadedDepartmentOptions = true;
 
-      try {
-        this.loadingDepartments = true;
+          if (!this.loadError && !this.selectedDepartmentCode && !this.rows.length) {
+            this.loadError = 'Select a department.';
+          }
+        }
+      }, async request => {
         this.hasLoadedDepartmentOptions = false;
-        if (!this.loading) this.loadError = '';
 
-        const departmentRows = await this.fetchReportDataset(
+        const departmentRows = await request.wait(this.fetchReportDataset(
           {},
           { dataset: 'departments' }
-        );
-        if (requestId !== this.loadDepartmentsRequestId) return;
+        ));
 
         const options = Array.from(
           new Map(
@@ -586,6 +583,7 @@ Vue.component('reports-students-at-a-glance', {
         ).sort((a, b) => a.label.localeCompare(b.label));
 
         this.departmentOptions = options;
+        this.hasLoadedDepartmentOptions = true;
 
         const nextDepartmentCode = this.resolveDeferredSelection({
           filterKey: 'department_code',
@@ -601,20 +599,8 @@ Vue.component('reports-students-at-a-glance', {
 
         const selectedOption = options.find(option => this.filterValuesEqual(option.value, nextDepartmentCode));
         if (selectedOption?.label) this.setSharedFilterValue('department_name', selectedOption.label);
-      } catch (e) {
-        console.warn('Failed to load student at-a-glance department options', e);
-        this.departmentOptions = [];
-        this.rows = [];
-        this.loadError = 'Unable to load department list.';
-      } finally {
-        if (requestId === this.loadDepartmentsRequestId) {
-          this.hasLoadedDepartmentOptions = true;
-          this.loadingDepartments = false;
-          if (!this.selectedDepartmentCode && !this.rows.length) {
-            this.loadError = 'Select a department.';
-          }
-        }
-      }
+        this.loadData();
+      });
     },
 
     createStudentKey(sisUserId, canvasUserId) {
@@ -873,26 +859,27 @@ Vue.component('reports-students-at-a-glance', {
 
     async loadData() {
       const departmentCode = String(this.selectedDepartmentCode ?? '').trim();
-      if (!departmentCode) {
-        this.rows = [];
-        this.loadError = 'Select a department.';
-        return;
-      }
+      return this.runReportRequest('data', {
+        onError: e => {
+          console.warn('Failed to load student at-a-glance report', e);
+          this.rows = [];
+          this.loadError = 'Unable to load student at-a-glance report.';
+        }
+      }, async request => {
+        if (!departmentCode) {
+          this.rows = [];
+          this.loadError = 'Select a department.';
+          return;
+        }
 
-      const requestId = ++this.loadRequestId;
-
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const selectedMajorRows = this.normalizeMajorRows(await this.fetchReportDataset(
+        const selectedMajorRows = this.normalizeMajorRows(await request.wait(this.fetchReportDataset(
           {
             department_code: departmentCode,
             is_active_degree: true,
             entry_at: { op: '<=', value: this.todayDate() }
           },
           { dataset: 'student_majors' }
-        ));
+        )));
 
         if (!selectedMajorRows.length) {
           this.rows = [];
@@ -916,7 +903,7 @@ Vue.component('reports-students-at-a-glance', {
           endDateRows,
           employmentRows,
           activityRows
-        ] = await Promise.all([
+        ] = await request.wait(Promise.all([
           this.fetchReportDataset(
             userFilters,
             { dataset: 'student_header' }
@@ -930,9 +917,7 @@ Vue.component('reports-students-at-a-glance', {
             { dataset: 'student_employment_skills_current' }
           ),
           this.fetchReportDataset(userFilters, { dataset: 'student_canvas_activity' })
-        ]);
-
-        if (requestId !== this.loadRequestId) return;
+        ]));
 
         const mergedRows = this.mergeRows({
           headerRows: this.normalizeHeaderRows(headerRows),
@@ -942,19 +927,10 @@ Vue.component('reports-students-at-a-glance', {
           selectedMajorRows
         });
 
-        const hydratedRows = await this.hydrateSisUserIds(mergedRows, { hydrate_sis_user_id: true });
-        if (requestId !== this.loadRequestId) return;
+        const hydratedRows = await request.wait(this.hydrateSisUserIds(mergedRows, { hydrate_sis_user_id: true }));
 
         this.rows = hydratedRows;
-      } catch (e) {
-        console.warn('Failed to load student at-a-glance report', e);
-        this.rows = [];
-        this.loadError = 'Unable to load student at-a-glance report.';
-      } finally {
-        if (requestId === this.loadRequestId) {
-          this.loading = false;
-        }
-      }
+      });
     }
   },
 

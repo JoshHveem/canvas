@@ -1,6 +1,11 @@
 Vue.component('reports-evaluations-course-evals-by-course', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.labels,
+    window.ReportMixins.evaluationSummary,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
     window.ReportMixins.yearSummary({
       loadErrorMessage: 'Unable to load course course evaluations summary.'
     })
@@ -150,15 +155,6 @@ Vue.component('reports-evaluations-course-evals-by-course', {
       });
     },
 
-    syncSelectedProgram() {
-      const routedProgramCode = String(
-        this.getSharedFilterValue('program_code', this.reportContext?.routeFilters?.programCode) ?? ''
-      ).trim();
-      if (routedProgramCode && routedProgramCode !== this.selectedProgramCode) {
-        this.selectedProgramCode = routedProgramCode;
-      }
-    },
-
     mapRows(rows) {
       return (Array.isArray(rows) ? rows : []).map(row => {
         const numSubmissions = Number(row?.num_submissions) || 0;
@@ -180,97 +176,6 @@ Vue.component('reports-evaluations-course-evals-by-course', {
           top_tags: tags
         };
       });
-    },
-
-    normalizeTags(rawTags, numSubmissions) {
-      const entries = Object.entries(rawTags && typeof rawTags === 'object' ? rawTags : {})
-        .map(([name, count]) => ({
-          name: String(name ?? '').trim(),
-          count: Number(count) || 0
-        }))
-        .filter(tag => tag.name && tag.count > 0)
-        .sort((a, b) => {
-          if (b.count !== a.count) return b.count - a.count;
-          return a.name.localeCompare(b.name);
-        })
-        .map(tag => ({
-          ...tag,
-          pct: numSubmissions > 0 ? tag.count / numSubmissions : NaN
-        }));
-
-      return entries.slice(0, 3);
-    },
-
-    courseLabel(row) {
-      const code = String(row?.course_code ?? '').trim();
-      const name = String(row?.course_name ?? '').trim();
-      if (code && name) return `${code} - ${name}`;
-      return code || name || '(no course)';
-    },
-
-    programName(row) {
-      return String(row?.program_name ?? row?.program_code ?? '').trim() || '(no program)';
-    },
-
-    likertPillStyle(value) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      return {
-        backgroundColor: n > 0.9 ? this.colors.green : (n >= 0.8 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
-
-    feedbackRecsPillStyle(value) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      return {
-        backgroundColor: n < 0.5 ? this.colors.green : (n < 0.75 ? this.colors.yellow : this.colors.red),
-        color: this.colors.white
-      };
-    },
-
-    getTopTag(row, index) {
-      return Array.isArray(row?.top_tags) ? (row.top_tags[index] || null) : null;
-    },
-
-    topTagHtml(row, index) {
-      const tag = this.getTopTag(row, index);
-      if (!tag) return '<span title="No tag">-</span>';
-
-      const count = Number(tag.count) || 0;
-      const label = this.escapeHtml(tag.name);
-      return `<span title="${count} mention${count === 1 ? '' : 's'}">${label}</span>`;
-    },
-
-    topTagPillStyle(row, index) {
-      const tag = this.getTopTag(row, index);
-      if (!tag) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      const pct = Number(tag.pct);
-      const count = Number(tag.count) || 0;
-
-      if (Number.isFinite(pct) && pct > 0.1 && count > 3) {
-        return { backgroundColor: this.colors.red, color: this.colors.white };
-      }
-      if (Number.isFinite(pct) && pct > 0.05 && count > 2) {
-        return { backgroundColor: this.colors.yellow, color: this.colors.white };
-      }
-      return { backgroundColor: this.colors.green, color: this.colors.white };
-    },
-
-    topTagSortValue(row, index) {
-      const tag = this.getTopTag(row, index);
-      if (!tag) return -1;
-      return Number(tag.count) || -1;
     }
   },
 

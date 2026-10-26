@@ -1,7 +1,12 @@
 // departments-syllabi.js
 Vue.component('reports-departments-syllabi', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.labels,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
     window.ReportMixins.yearSummary({
       loadErrorMessage: 'Unable to load department syllabi summary.'
     })
@@ -57,12 +62,6 @@ Vue.component('reports-departments-syllabi', {
       )
     ]);
   },
-  computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    }
-  },
 
   methods: {
     mapRows(rows) {
@@ -86,24 +85,26 @@ Vue.component('reports-departments-syllabi', {
       });
     },
 
-    departmentName(department) {
-      return String(department?.department_name ?? department?.name ?? department?.department_code ?? '').trim();
-    },
     totalCourses(department) {
       return Number(department?.num_courses) || 0;
     },
+
     submittedCount(department) {
       return Number(department?.num_courses__submitted) || 0;
     },
+
     completedCount(department) {
       return Number(department?.num_courses__approved) || 0;
     },
+
     needsSubmission(department) {
       return Math.max(this.totalCourses(department) - this.submittedCount(department), 0);
     },
+
     needsApproval(department) {
       return Math.max(this.submittedCount(department) - this.completedCount(department), 0);
     },
+
     pctCompleted(department) {
       const total = this.totalCourses(department);
       return total > 0 ? (this.completedCount(department) / total) : NaN;

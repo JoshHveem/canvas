@@ -1,3 +1,5 @@
+import './components/report-mixins.js';
+
 // reports/combined/report.js
 (async function () {
   window.ReportColumn = ReportColumn;
@@ -529,8 +531,6 @@
 
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js") : "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/d3.v7.js") : "https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
-
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-mixins.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-mixins.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/submission-history-graph.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/submission-history-graph.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/message-template-menu.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/message-template-menu.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-table-shell.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-table-shell.js");

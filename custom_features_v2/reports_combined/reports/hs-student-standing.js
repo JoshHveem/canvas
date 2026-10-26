@@ -1,6 +1,10 @@
 Vue.component('reports-hs-student-standing', {
   mixins: [
-    window.ReportMixins.formatting
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles
   ],
 
   data() {
@@ -53,11 +57,6 @@ Vue.component('reports-hs-student-standing', {
   },
 
   computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    },
-
     titleText() {
       return `HS Student Standing${this.submittedStudentIds.length ? ` (${this.submittedStudentIds.length} students)` : ''}`;
     }
@@ -140,21 +139,24 @@ Vue.component('reports-hs-student-standing', {
 
     async loadData() {
       const sisUserIds = this.parseStudentIds();
-      this.submittedStudentIds = sisUserIds;
-      this.rows = [];
-      this.loadError = '';
+      return this.runReportRequest('data', {
+        onError: error => {
+          console.warn('Failed to load HS student standing courses', error);
+          this.rows = [];
+          this.loadError = 'Unable to load student courses.';
+        }
+      }, async request => {
+        this.submittedStudentIds = sisUserIds;
+        this.rows = [];
+        if (!sisUserIds.length) {
+          this.loadError = 'Paste at least one SIS user ID.';
+          return;
+        }
 
-      if (!sisUserIds.length) {
-        this.loadError = 'Paste at least one SIS user ID.';
-        return;
-      }
-
-      try {
-        this.loading = true;
-        const headers = await this.fetchReportDataset(
+        const headers = await request.wait(this.fetchReportDataset(
           { sis_user_id: sisUserIds },
           { dataset: 'student_header' }
-        );
+        ));
         const sisUserIdByCanvasId = new Map(
           (Array.isArray(headers) ? headers : [])
             .map(row => [
@@ -169,19 +171,13 @@ Vue.component('reports-hs-student-standing', {
           return;
         }
 
-        const rows = await this.fetchReportDataset(
+        const rows = await request.wait(this.fetchReportDataset(
           { canvas_user_id: canvasUserIds },
           { dataset: 'student_courses' }
-        );
+        ));
         const normalizedRows = this.normalizeRows(rows, sisUserIdByCanvasId);
-        this.rows = await this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true });
-      } catch (error) {
-        console.warn('Failed to load HS student standing courses', error);
-        this.rows = [];
-        this.loadError = 'Unable to load student courses.';
-      } finally {
-        this.loading = false;
-      }
+        this.rows = await request.wait(this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true }));
+      });
     }
   },
 

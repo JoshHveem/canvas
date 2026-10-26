@@ -1,6 +1,11 @@
 Vue.component('reports-students-probations', {
   mixins: [
-    window.ReportMixins.formatting
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.students,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles
   ],
 
   props: {
@@ -54,28 +59,9 @@ Vue.component('reports-students-probations', {
     this.loadData();
   },
 
-  computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    }
-  },
-
   methods: {
     getDataset() {
       return String(this.reportContext?.dataset || '').trim();
-    },
-
-    getStudentFirstName(row) {
-      const firstName = String(row?.first_name ?? '').trim();
-      if (firstName) return firstName;
-
-      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
-    },
-
-    getStudentLastName(row) {
-      return String(row?.last_name ?? '').trim() || '-';
     },
 
     standingPillStyle(row) {
@@ -103,24 +89,21 @@ Vue.component('reports-students-probations', {
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const rows = await this.fetchReportDataset(
+      return this.runReportRequest('data', {
+        onError: e => {
+          console.warn('Failed to load student probation dataset', e);
+          this.rows = [];
+          this.loadError = 'Unable to load student probations.';
+        }
+      }, async request => {
+        const rows = await request.wait(this.fetchReportDataset(
           {},
           { dataset: this.getDataset() }
-        );
+        ));
 
         const normalizedRows = this.mapRows(rows);
-        this.rows = await this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true });
-      } catch (e) {
-        console.warn('Failed to load student probation dataset', e);
-        this.rows = [];
-        this.loadError = 'Unable to load student probations.';
-      } finally {
-        this.loading = false;
-      }
+        this.rows = await request.wait(this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true }));
+      });
     }
   },
 

@@ -1,6 +1,12 @@
 Vue.component('reports-outcomes-cpl', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.tables,
+    window.ReportMixins.cplMetrics,
+    window.ReportMixins.labels,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
     window.ReportMixins.yearSummary({
       loadErrorMessage: 'Unable to load CPL summary.'
     })
@@ -51,13 +57,6 @@ Vue.component('reports-outcomes-cpl', {
     ]);
   },
 
-  computed: {
-    visibleRows() {
-      this.table.setRows(this.rows);
-      return this.table.getSortedRows();
-    }
-  },
-
   methods: {
     drillToHistoric(row) {
       this.$emit('drill-report', {
@@ -80,32 +79,6 @@ Vue.component('reports-outcomes-cpl', {
         placement: Number(row?.placement),
         licensure: Number(row?.licensure)
       }));
-    },
-
-    programName(row) {
-      return String(row?.program_name ?? row?.program_code ?? '').trim() || '(no program)';
-    },
-
-    bandStyle(value, warnMin, passMin) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) {
-        return { backgroundColor: this.colors.gray, color: this.colors.black };
-      }
-
-      return {
-        backgroundColor: n < warnMin
-          ? this.colors.red
-          : (n < passMin ? this.colors.yellow : this.colors.green),
-        color: this.colors.white
-      };
-    },
-
-    completionPillStyle(value) {
-      return this.bandStyle(value, 0.6, 0.7);
-    },
-
-    outcomePillStyle(value) {
-      return this.bandStyle(value, 0.7, 0.8);
     }
   },
 

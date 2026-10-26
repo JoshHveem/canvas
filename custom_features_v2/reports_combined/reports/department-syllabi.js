@@ -1,7 +1,11 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
   mixins: [
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'department_syllabi_summary',
       emptySelectionMessage: 'Select a department from the summary report to view details.',
