@@ -1,12 +1,6 @@
 const path = require('node:path');
-const { buildSync } = require('../../../feature-manager/node_modules/esbuild');
+const fs = require('node:fs');
 
-// Exercise the same module composition and browser target as the feature build.
-module.exports = buildSync({
-  entryPoints: [path.resolve(__dirname, '../components/report-mixins.js')],
-  bundle: true,
-  write: false,
-  format: 'iife',
-  platform: 'browser',
-  target: 'es2018'
-}).outputFiles[0].text;
+// Evaluate the actual URL loaded by legacy jQuery.getScript callers. Compiling
+// source here would conceal import/export syntax errors in the deployed script.
+module.exports = fs.readFileSync(path.resolve(__dirname, '../components/report-mixins.js'), 'utf8');

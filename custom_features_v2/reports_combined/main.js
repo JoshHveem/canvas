@@ -1,4 +1,4 @@
-import './components/report-mixins.js';
+import './components/report-mixins.entry.js';
 
 // reports/combined/report.js
 (async function () {

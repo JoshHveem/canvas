@@ -26,6 +26,31 @@ function adapter(context, names, properties = {}) {
   return view;
 }
 
+test('the legacy report-mixins URL executes synchronously as a classic script', () => {
+  const context = vm.createContext({ window: {} });
+  // This deliberately performs no bundling or module transformation.
+  new vm.Script(runtime, { filename: 'report-mixins.js' }).runInContext(context);
+  assert.equal(typeof context.window.ReportMixins.requests.methods.runReportRequest, 'function');
+  assert.equal(typeof context.window.ReportMixins.evaluationDetail, 'function');
+  assert.equal(context.window.ReportUtils.escapeHtml('<test>'), '&lt;test&gt;');
+});
+
+test('the legacy classic-script artifact matches the modular source', () => {
+  const { buildSync } = require('../../../feature-manager/node_modules/esbuild');
+  const compiled = buildSync({
+    entryPoints: [path.resolve(__dirname, '../components/report-mixins.entry.js')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2018',
+    minify: true,
+    legalComments: 'none',
+    banner: { js: '// Generated from report-mixins.entry.js. Do not edit directly.' }
+  }).outputFiles[0].text;
+  assert.equal(runtime.trim(), compiled.trim());
+});
+
 test('the deployed feature bundle provides shared modules before loading report scripts', () => {
   const scripts = [];
   const context = vm.createContext({
