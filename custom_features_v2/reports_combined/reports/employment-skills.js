@@ -125,7 +125,7 @@ Vue.component('reports-employment-skills', {
         ''
       ).trim();
       const suffix = programName || 'Employment Skills Submissions';
-      return `${this.escapeHtml(suffix)} - Employment Skills Submissions`;
+      return `${this.escapeHtml(programName ? this.displayName(programName, 'program_name', 'Program') : suffix)} - Employment Skills Submissions`;
     }
   },
 

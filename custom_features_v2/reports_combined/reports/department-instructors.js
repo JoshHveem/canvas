@@ -134,7 +134,7 @@ Vue.component('reports-department-instructors', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Instructors';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Instructors`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Instructors`;
     }
   },
 

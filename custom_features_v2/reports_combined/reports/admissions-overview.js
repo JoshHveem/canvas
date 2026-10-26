@@ -43,6 +43,10 @@ Vue.component('reports-admissions-overview', {
   },
 
   watch: {
+    isAnonymized() {
+      this.hideTooltip();
+      this.renderChart();
+    },
     reportContext: {
       deep: true,
       handler() {
@@ -658,7 +662,7 @@ Vue.component('reports-admissions-overview', {
         .style('font-size', '12px')
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
         .text(node => node.data.stage_name.trim()
-          ? `${node.data.stage_name} (${node.data.count})`
+          ? `${this.displayName(node.data.stage_name, 'stage_name', 'Focus Stage')} (${node.data.count})`
           : '');
 
       nodeGroups
@@ -682,7 +686,7 @@ Vue.component('reports-admissions-overview', {
 
       this.tooltip.visible = true;
       this.tooltip.html = [
-        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name.trim() || 'Prior stages')}</div>`,
+        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name.trim() ? this.displayName(node.data.stage_name, 'stage_name', 'Focus Stage') : 'Prior stages')}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
         `<div>Eventually enrolled: <strong>${this.formatPercent(this.nodeEventualEnrollmentRate(node.data))}</strong></div>`,
         `<div>Hidden downstream branches: <strong>${Number(node.data.hidden_child_count) || 0}</strong></div>`,
@@ -691,7 +695,7 @@ Vue.component('reports-admissions-overview', {
           ? [`<div>Avg days from first stage: <strong>${this.formatDays(node.data.synthetic_link_avg_days)}</strong></div>`]
           : []),
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
-        `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`
+        `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(String(node.data.path_so_far || '').split(' > ').map(stage => this.displayName(stage, 'stage_name', 'Focus Stage')).join(' > '))}</div>`
       ].join('');
       this.moveTooltip(event);
     },

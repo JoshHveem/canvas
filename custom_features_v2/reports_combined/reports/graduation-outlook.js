@@ -609,7 +609,7 @@ Vue.component('reports-graduation-outlook', {
     <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
     <template v-else-if="selectedProjection">
-    <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ projectionLabel(selectedProjection) }} - {{ selectedProjection.academic_year }}</div>
+    <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ displayName(projectionLabel(selectedProjection), 'program_name', 'Program') }} - {{ selectedProjection.academic_year }}</div>
     <div style="display:grid; grid-template-columns:repeat(5, minmax(11rem, 1fr)); gap:12px; min-width:62rem; margin-bottom:20px;">
       <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Exiters to Date</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter) }}</div></div>
       <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Exiters</div><div v-if="hasValidatedForecast" style="font-size:1.25rem; font-weight:700; margin-top:8px;">{{ rangeValues(selectedProjection.num_students__exiter__projected__low_80, selectedProjection.num_students__exiter__projected__high_80, wholeNumber) }}</div><div v-else style="font-size:1rem; font-weight:700; margin-top:10px;">Insufficient history</div></div>

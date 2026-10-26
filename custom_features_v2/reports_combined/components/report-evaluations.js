@@ -220,7 +220,7 @@ export function evaluationDetail(config = {}) {
           || (this.selectedCourseCode === '' ? 'All Courses' : '')
           || String(this.reportContext?.routeFilters?.courseName ?? '').trim()
           || 'Course';
-        return `${this.escapeHtml(course)} - ${config.titleSuffix}`;
+        return `${this.escapeHtml(this.displayName(course, 'course_name', 'Course'))} - ${config.titleSuffix}`;
       }
     },
 

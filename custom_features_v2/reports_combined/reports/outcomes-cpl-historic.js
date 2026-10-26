@@ -515,7 +515,7 @@ Vue.component('reports-outcomes-cpl-historic', {
       </div>
 
       <span v-if="selectedCampusCode" class="btech-pill">Campus: {{ selectedCampusCode }}</span>
-      <span v-if="loadedProgramName" class="btech-pill">{{ loadedProgramName }}</span>
+      <span v-if="loadedProgramName" class="btech-pill">{{ displayName(loadedProgramName, 'program_name', 'Program') }}</span>
       <span class="btech-pill">Years: {{ yearRangeLabel }}</span>
       <span class="btech-pill">Rows: {{ sortedRows.length }}</span>
     </div>

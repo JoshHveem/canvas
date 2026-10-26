@@ -141,7 +141,7 @@ Vue.component('reports-students-at-a-glance', {
         ''
       ).trim();
       const suffix = departmentName || 'Students';
-      return `${this.escapeHtml(suffix)} - At a Glance`;
+      return `${this.escapeHtml(departmentName ? this.displayName(departmentName, 'department_name', 'Department') : suffix)} - At a Glance`;
     }
   },
 

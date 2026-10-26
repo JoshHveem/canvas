@@ -271,7 +271,7 @@ Vue.component('reports-department-course-readiness', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Course Readiness';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Course Readiness`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Course Readiness`;
     }
   },
 

@@ -122,7 +122,7 @@ Vue.component('reports-department-syllabi', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Syllabi';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Syllabi`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Syllabi`;
     }
   },
 
