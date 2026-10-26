@@ -31,6 +31,21 @@ await Promise.all(folders.map(name => bundle({
   minify: true,
   legalComments: 'none'
 })));
+// Older report entry points still fetch this URL through jQuery.getScript.
+// Keep a synchronous classic-script bundle alongside the modular source.
+if (folders.includes('reports_combined')) {
+  await bundle({
+    entryPoints: [path.join(root, 'custom_features_v2/reports_combined/components/report-mixins.entry.js')],
+    outfile: path.join(root, 'custom_features_v2/reports_combined/components/report-mixins.js'),
+    bundle: true,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2018',
+    minify: true,
+    legalComments: 'none',
+    banner: { js: '// Generated from report-mixins.entry.js. Do not edit directly.' }
+  });
+}
 const materializeLocations = feature => {
   const { locations, routes, ...entry } = feature;
   const allRoutes = [...routesForLocations(locations), ...(routes ? (Array.isArray(routes) ? routes : [routes]) : [])];
