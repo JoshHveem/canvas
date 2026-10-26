@@ -34,7 +34,8 @@ export const anonymization = {
 
     displayFilterOption(option, field, label) {
       if (option.value === '' || option.value === null || option.value === undefined) return option.label;
-      return this.displayName(option.label, field, label);
+      if (!this.isAnonymized) return option.label;
+      return this.displayName(option.nameValue ?? option.label, field, label);
     },
 
     displayColumnContent(column, row) {

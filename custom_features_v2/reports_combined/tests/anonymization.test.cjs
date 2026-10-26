@@ -148,3 +148,44 @@ test('real report columns and report subtitles mask names and restore them on to
   assert.equal(view.titleText, 'Nursing - At a Glance');
   shell.$destroy(); view.$destroy(); provider.$destroy();
 });
+
+test('course aliases match between evaluation filters, subtitles, and table columns', () => {
+  const { provider, definitions } = setup();
+  const view = new Vue({
+    ...definitions.get('reports-evaluations-course-detail'), parent: provider,
+    propsData: { reportContext: { routeFilters: { programCode: 'P', courseCode: 'C1' } } }
+  });
+  view.optionRows = [{ program_code: 'P', program_name: 'Program', course_code: 'C1', course_name: 'Nursing' }];
+  const option = view.courseOptions.find(option => option.value === 'C1');
+  const shell = new Vue({ ...definitions.get('report-table-shell'), parent: view, propsData: { table: view.table } });
+  const course = view.table.columns.find(column => column.name === 'Course');
+  provider.privacy.enabled = true;
+  assert.equal(view.displayFilterOption(option, 'course_name', 'Course'), 'Course #1');
+  assert.equal(shell.displayColumnContent(course, view.optionRows[0]), 'Course #1');
+  assert.equal(view.titleText, 'Course #1 - Course Eval Detail');
+  assert.equal(option.value, 'C1');
+  provider.privacy.enabled = false;
+  assert.equal(view.displayFilterOption(option, 'course_name', 'Course'), 'C1 - Nursing');
+  shell.$destroy(); view.$destroy(); provider.$destroy();
+});
+
+test('Admissions chart tooltips mask stage names and old tooltips close on toggle', async () => {
+  const { provider, definitions } = setup();
+  let renders = 0;
+  const definition = definitions.get('reports-admissions-overview');
+  const view = new Vue({
+    ...definition, parent: provider,
+    methods: { ...definition.methods, renderChart() { renders++; }, moveTooltip() {} },
+    propsData: { reportContext: {} }
+  });
+  view.tooltip.visible = true;
+  provider.privacy.enabled = true;
+  await flush();
+  assert.equal(view.tooltip.visible, false);
+  assert.equal(renders, 1);
+  view.showTooltip({}, { data: { stage_name: 'Admitted', path_so_far: 'Applied > Admitted', count: 2 } });
+  assert.equal(view.tooltip.html.includes('Admitted'), false);
+  assert.equal(view.tooltip.html.includes('Applied'), false);
+  assert.match(view.tooltip.html, /Focus Stage #/);
+  view.$destroy(); provider.$destroy();
+});

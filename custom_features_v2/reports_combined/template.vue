@@ -8,7 +8,7 @@
           <h3 class="btech-card-title" style="margin:0; text-align:center;">
             {{ currentReportMeta.title }}
           </h3>
-          <label for="btech-reports-anonymize" style="display:inline-flex; align-items:center; gap:5px; margin:0; font-size:.8rem; white-space:nowrap; cursor:pointer;">
+          <label v-if="$data.anonymization" for="btech-reports-anonymize" style="display:inline-flex; align-items:center; gap:5px; margin:0; font-size:.8rem; white-space:nowrap; cursor:pointer;">
             <input id="btech-reports-anonymize" type="checkbox" v-model="anonymization.enabled" style="margin:0;">
             Anonymize
           </label>

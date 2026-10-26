@@ -182,7 +182,8 @@ export function evaluationDetail(config = {}) {
               .filter(row => String(row?.program_code ?? '').trim() === selectedProgramCode)
               .map(row => ({
                 value: String(row?.course_code ?? '').trim(),
-                label: this.courseLabel(row)
+                  label: this.courseLabel(row),
+                  nameValue: String(row?.course_name ?? '').trim()
               }))
               .filter(option => option.value && option.label)
               .map(option => [option.value, option])
@@ -216,11 +217,15 @@ export function evaluationDetail(config = {}) {
       },
 
       titleText() {
-        const course = this.courseOptions.find(option => option.value === this.selectedCourseCode)?.label
+        const selectedCourse = this.courseOptions.find(option => option.value === this.selectedCourseCode);
+        const course = selectedCourse?.label
           || (this.selectedCourseCode === '' ? 'All Courses' : '')
           || String(this.reportContext?.routeFilters?.courseName ?? '').trim()
           || 'Course';
-        return `${this.escapeHtml(this.displayName(course, 'course_name', 'Course'))} - ${config.titleSuffix}`;
+        const label = selectedCourse
+          ? this.displayFilterOption(selectedCourse, 'course_name', 'Course')
+          : this.displayName(course, 'course_name', 'Course');
+        return `${this.escapeHtml(label)} - ${config.titleSuffix}`;
       }
     },
 
