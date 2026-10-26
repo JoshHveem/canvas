@@ -54,6 +54,10 @@ import './components/report-mixins.entry.js';
       el: '#canvas-instructor-report-vue-app',
       template: vueString,
 
+      provide() {
+        return { reportAnonymization: this.anonymization };
+      },
+
       data: function () {
         const reportOrder = [
           'students',
@@ -353,6 +357,7 @@ import './components/report-mixins.entry.js';
         ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
+          anonymization: window.ReportUtils.createAnonymizationState(),
           reportTypes: IS_ME ? reports : reports.filter(report => !['graduation', 'placements'].includes(report.value)),
           settings: {
             reportType: 'students',

@@ -1,5 +1,6 @@
 Vue.component('reports-placements-locations', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.filters,
@@ -183,7 +184,7 @@ Vue.component('reports-placements-locations', {
       <label style="font-size:.75rem;font-weight:600;" for="placements-locations-program">Program</label>
       <select id="placements-locations-program" v-model="selectedProgramName" style="font-size:.75rem;">
         <option value="">All programs</option>
-        <option v-for="programName in programOptions" :key="programName" :value="programName">{{ programName }}</option>
+        <option v-for="programName in programOptions" :key="programName" :value="programName">{{ displayName(programName, 'program_name', 'Program') }}</option>
       </select>
     </template>
   </report-table-shell>

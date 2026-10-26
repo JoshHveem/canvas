@@ -12,12 +12,14 @@ import { students } from './report-students.js';
 import { labels } from './report-labels.js';
 import { dates } from './report-dates.js';
 import { cplMetrics } from './report-cpl-metrics.js';
+import { anonymization, createAnonymizationState } from './report-anonymization.js';
 
 // Public adapters used by reports registered through dynamically loaded scripts.
 // Keep composition here; each module owns one responsibility.
-window.ReportUtils = { ...formattingUtils, ...tablesUtils, ...datasetsUtils };
+window.ReportUtils = { ...formattingUtils, ...tablesUtils, ...datasetsUtils, createAnonymizationState };
 window.ReportMixins = {
   requests,
+  anonymization,
   formatting,
   tables,
   filters,

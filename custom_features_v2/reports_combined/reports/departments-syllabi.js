@@ -1,6 +1,7 @@
 // departments-syllabi.js
 Vue.component('reports-departments-syllabi', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.tables,

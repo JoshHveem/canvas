@@ -1,6 +1,7 @@
 (async function () {
   Vue.component('reports-hs-student-grades', {
     mixins: [
+      window.ReportMixins.anonymization,
       window.ReportMixins.requests,
       window.ReportMixins.formatting,
       window.ReportMixins.tables,
@@ -198,7 +199,7 @@
           <label for="report-filter-department_code" class="btech-muted" style="font-size:.75rem;">Department</label>
           <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
             <option value="">Select a Department</option>
-            <option v-for="option in departmentOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            <option v-for="option in departmentOptions" :key="option.value" :value="option.value">{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
           </select>
         </div>
       </template>

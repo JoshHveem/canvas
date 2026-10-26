@@ -1,5 +1,6 @@
 Vue.component('reports-outcomes-cpl-historic', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.cplMetrics,
@@ -508,7 +509,7 @@ Vue.component('reports-outcomes-cpl-historic', {
         <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:260px; max-width:360px;">
           <option value="">Select a program</option>
           <option v-for="option in programOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
+            {{ displayFilterOption(option, 'program_name', 'Program') }}
           </option>
         </select>
       </div>

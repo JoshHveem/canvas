@@ -1,5 +1,6 @@
 Vue.component('reports-admissions-overview', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.filters
@@ -730,7 +731,7 @@ Vue.component('reports-admissions-overview', {
               v-for="program in programOptions"
               :key="program"
               :value="program"
-            >{{ program }}</option>
+            >{{ displayName(program, 'program_name', 'Program') }}</option>
           </select>
         </div>
 
@@ -742,7 +743,7 @@ Vue.component('reports-admissions-overview', {
               v-for="stage in stageOptions"
               :key="stage"
               :value="stage"
-            >{{ stage }}</option>
+            >{{ displayName(stage, 'stage_name', 'Focus Stage') }}</option>
           </select>
         </div>
 

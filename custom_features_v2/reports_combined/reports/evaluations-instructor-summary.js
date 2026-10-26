@@ -1,5 +1,6 @@
 Vue.component('reports-evaluations-instructor-summary', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.tables,

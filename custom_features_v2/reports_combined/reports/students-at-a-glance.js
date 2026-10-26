@@ -1,5 +1,6 @@
 Vue.component('reports-students-at-a-glance', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.students,
@@ -954,7 +955,7 @@ Vue.component('reports-students-at-a-glance', {
         <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option value="">Select a Department</option>
           <option v-for="option in departmentOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
+            {{ displayFilterOption(option, 'department_name', 'Department') }}
           </option>
         </select>
       </div>

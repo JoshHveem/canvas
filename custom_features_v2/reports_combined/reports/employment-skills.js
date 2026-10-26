@@ -1,5 +1,6 @@
 Vue.component('reports-employment-skills', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.students,
@@ -574,7 +575,7 @@ Vue.component('reports-employment-skills', {
         <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option value="">Select a Program</option>
           <option v-for="option in programOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
+            {{ displayFilterOption(option, 'program_name', 'Program') }}
           </option>
         </select>
       </div>

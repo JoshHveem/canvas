@@ -1,4 +1,5 @@
 Vue.component('report-table-shell', {
+  mixins: [window.ReportMixins.anonymization],
   props: {
     titleHtml: { type: String, default: '' },
     table: { type: Object, required: true },
@@ -144,7 +145,7 @@ Vue.component('report-table-shell', {
               :style="col.wrap
                 ? Object.assign({}, col.get_style(row), { display: 'block', whiteSpace: 'normal' })
                 : col.get_style(row)"
-              v-html="col.getContent(row)"
+              v-html="displayColumnContent(col, row)"
             ></span>
           </div>
         </div>

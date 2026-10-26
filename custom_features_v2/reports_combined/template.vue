@@ -4,10 +4,14 @@
       <div class="btech-modal-content-inner" style="overflow:hidden; display:flex; flex-direction:column; min-height:0;">
         <span class="btech-close" v-on:click="close()">&times;</span>
 
-        <div class="btech-row" style="align-items:center; margin-bottom:6px;">
-          <h3 class="btech-card-title" style="margin:0; width:100%; text-align:center;">
+        <div class="btech-row" style="align-items:center; justify-content:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
+          <h3 class="btech-card-title" style="margin:0; text-align:center;">
             {{ currentReportMeta.title }}
           </h3>
+          <label for="btech-reports-anonymize" style="display:inline-flex; align-items:center; gap:5px; margin:0; font-size:.8rem; white-space:nowrap; cursor:pointer;">
+            <input id="btech-reports-anonymize" type="checkbox" v-model="anonymization.enabled" style="margin:0;">
+            Anonymize
+          </label>
         </div>
 
         <div

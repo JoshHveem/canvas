@@ -1,5 +1,6 @@
 Vue.component('reports-evaluations-instructor-evals-by-course', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.labels,
@@ -238,7 +239,7 @@ Vue.component('reports-evaluations-instructor-evals-by-course', {
             v-for="option in programOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'program_name', 'Program') }}</option>
         </select>
       </div>
     </template>

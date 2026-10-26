@@ -1,5 +1,6 @@
 Vue.component('reports-students-prospective', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.dates,
@@ -264,7 +265,7 @@ Vue.component('reports-students-prospective', {
     <template #filters>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-program">Program</label>
       <select id="prospective-students-program" v-model="selectedProgramName" aria-label="Filter prospective students by program" style="min-width:18rem;max-width:28rem;font-size:.75rem;">
-        <option v-for="program in programOptions" :key="program.value" :value="program.value">{{ program.label }}</option>
+        <option v-for="program in programOptions" :key="program.value" :value="program.value">{{ displayFilterOption(program, 'program_name', 'Program') }}</option>
       </select>
       <label style="font-size:.75rem;font-weight:600;" for="prospective-students-min-progress">Min. progress</label>
       <input id="prospective-students-min-progress" v-model="minimumProgramProgressPercent" type="number" min="0" max="100" step="1" aria-label="Minimum high-school program progress percentage" style="width:5rem;font-size:.75rem;">

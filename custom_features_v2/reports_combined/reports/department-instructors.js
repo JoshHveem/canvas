@@ -1,5 +1,6 @@
 Vue.component('reports-department-instructors', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.filters,
@@ -204,7 +205,7 @@ Vue.component('reports-department-instructors', {
             v-for="option in departmentOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
         </select>
       </div>
 
@@ -216,7 +217,7 @@ Vue.component('reports-department-instructors', {
             v-for="option in instructorOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'full_name__instructor', 'Instructor') }}</option>
         </select>
       </div>
     </template>

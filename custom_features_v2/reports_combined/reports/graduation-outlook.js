@@ -1,5 +1,6 @@
 Vue.component('reports-graduation-outlook', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.filters,
@@ -603,7 +604,7 @@ Vue.component('reports-graduation-outlook', {
     <div class="btech-row" style="align-items:center; margin-bottom:4px;">
       <h4 class="btech-card-title" style="margin:0;">Graduation Outlook</h4>
       <div style="flex:1;"></div>
-      <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ projectionLabel(projection) }}</option></select>
+      <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ displayName(projectionLabel(projection), 'program_name', 'Program') }}</option></select>
     </div>
     <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>

@@ -1,6 +1,7 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
   mixins: [
+    window.ReportMixins.anonymization,
     window.ReportMixins.requests,
     window.ReportMixins.formatting,
     window.ReportMixins.filters,
@@ -226,7 +227,7 @@ Vue.component('reports-department-syllabi', {
             v-for="option in departmentOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
         </select>
       </div>
 
