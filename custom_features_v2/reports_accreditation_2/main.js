@@ -212,12 +212,12 @@
 
           const enrollmentsByUser = {};
           try {
-            let req = await bridgetools.req3('canvas_enrollments', {
+            let req = await bridgetools.req3('reports', {
               canvas_course_id: { op: '=', value: this.courseId }
             }, {
-              include: ['sis_data']
+              dataset: 'canvas_enrollments'
             });
-            let enrollments = Array.isArray(req?.data) ? req.data : [];
+            let enrollments = Array.isArray(req) ? req : [];
 
             for (let i = 0; i < enrollments.length; i++) {
               let enrollment = enrollments[i];
