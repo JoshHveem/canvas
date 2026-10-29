@@ -16,4 +16,6 @@ initialise();
 
 The feature manager bundles each feature to `main.bundle.js` when it builds the v2 loader. Canvas loads that classic bundle, preserving compatibility with Bridgetools' cross-origin asset host while still allowing standard imports in source files. Do not edit `main.bundle.js` directly.
 
+The combined reports feature also builds `components/report-mixins.js` and `components/report-table-shell.js` from their `.entry.js` sources. The table shell bundles its required anonymization mixin so it can load alongside a cached main bundle. Edit the entry sources and rebuild; do not edit these generated files directly.
+
 Feature folders are always direct children of `custom_features_v2`; nested feature folders are not used. The initial migration is a parallel copy of the existing feature implementations. The legacy `custom_features/` tree remains available to the existing loader and to any v2 feature that still has legacy asset URLs.

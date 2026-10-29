@@ -75,6 +75,30 @@ test('the deployed feature bundle provides shared modules before loading report 
   assert.equal(typeof context.window.ReportMixins.departmentScoped, 'function');
 });
 
+test('the standalone table shell artifact includes its own required mixin and matches its source', () => {
+  const { buildSync } = require('../../../feature-manager/node_modules/esbuild');
+  const compiled = buildSync({
+    entryPoints: [path.resolve(__dirname, '../components/report-table-shell.entry.js')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2018',
+    minify: true,
+    legalComments: 'none',
+    banner: { js: '// Generated from report-table-shell.entry.js. Do not edit directly.' }
+  }).outputFiles[0].text;
+  const deployed = fs.readFileSync(path.resolve(__dirname, '../components/report-table-shell.js'), 'utf8');
+  assert.equal(deployed.trim(), compiled.trim());
+  let shell;
+  const context = vm.createContext({
+    window: {},
+    Vue: { component: (_name, definition) => { shell = definition; } }
+  });
+  vm.runInContext(deployed, context);
+  assert.equal(typeof shell.mixins[0].methods.prepareReportData, 'function');
+});
+
 test('formatting and table adapters preserve display, sorting, and wrapped columns', () => {
   const context = setup();
   const colors = context.window.ReportUtils.createColors();

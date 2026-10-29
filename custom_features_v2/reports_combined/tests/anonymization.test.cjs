@@ -6,7 +6,7 @@ const { test } = require('node:test');
 const Vue = require('../../../external-libraries/vue.2.6.12.js');
 const root = path.resolve(__dirname, '..');
 
-function setup() {
+function setup({ staleAnonymization = false } = {}) {
   const definitions = new Map(), errors = [];
   let requests = 0;
   const context = vm.createContext({
@@ -29,6 +29,7 @@ function setup() {
     }
   };
   vm.runInContext(require('./shared-runtime.cjs'), context);
+  if (staleAnonymization) delete context.window.ReportMixins.anonymization.methods.prepareReportData;
   for (const file of ['report-table-shell.js', 'message-template-menu.js', 'submission-history-graph.js']) {
     vm.runInContext(fs.readFileSync(path.join(root, 'components', file), 'utf8'), context);
   }
@@ -51,6 +52,20 @@ function renderContent(view, column, row) {
 async function flush() {
   for (let i = 0; i < 10; i++) await Vue.nextTick();
 }
+
+test('a fresh table shell works with an older feature bundle missing prepareReportData', () => {
+  const { provider, definitions, context } = setup({ staleAnonymization: true });
+  assert.equal(context.window.ReportMixins.anonymization.methods.prepareReportData, undefined);
+  const source = { first_name: 'Ada', canvas_user_id: '42' };
+  const shell = new Vue({ ...definitions.get('report-table-shell'), parent: provider, propsData: { table: {}, rows: [source] } });
+  assert.equal(shell.preparedRows[0], source);
+  provider.privacy.enabled = true;
+  assert.equal(shell.preparedRows[0].first_name, 'First Name #1');
+  assert.equal(shell.preparedRows[0].canvas_user_id, '42');
+  provider.privacy.enabled = false;
+  assert.equal(shell.preparedRows[0], source);
+  shell.$destroy(); provider.$destroy();
+});
 
 test('name columns get stable, escaped aliases while raw rows and non-name content stay intact', () => {
   const { provider, view } = setup();
