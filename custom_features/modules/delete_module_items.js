@@ -1,3 +1,4 @@
+(async function() {
 addToModuleMenu("Delete Content", "Delete all content from the course.", async (event, courseId, moduleId, item) => {  
   event.preventDefault(); 
   let loadBar = $(`
@@ -22,9 +23,7 @@ addToModuleMenu("Delete Content", "Delete all content from the course.", async (
       });
       $("#delete-items-progress-bar").empty();
       $("#delete-items-progress-bar-buttons").remove();
-      $("#delete-items-progress-bar").progressbar({
-          value: 0
-      });
+      $("#delete-items-progress-bar").append('<progress max="100" value="0" aria-label="Delete content progress" style="width: 100%;"></progress>');
       let moduleItems = await canvasGet(`/api/v1/courses/${courseId}/modules/${moduleId}/items?include[]=content_details`);
       let deleteFuncs = {
           'ExternalUrl': async (moduleItem) => {
@@ -58,9 +57,7 @@ addToModuleMenu("Delete Content", "Delete all content from the course.", async (
           let moduleItem = moduleItems[m];
           await deleteFuncs[moduleItem.type](moduleItem);
           $(`#context_module_item_${moduleItem.id}`).remove();
-          $("#delete-items-progress-bar").progressbar({
-                value: ((m + 1) / (moduleItems.length + 1)) * 100
-          })
+          $("#delete-items-progress-bar").find("progress").val(((Number(m) + 1) / moduleItems.length) * 100);
       }
       loadBar.remove();
       // //await $.delete(`/api/v1/courses/${courseId}/modules/${moduleId}`);
@@ -70,3 +67,4 @@ addToModuleMenu("Delete Content", "Delete all content from the course.", async (
       });
   })
 }, "icon-trash");
+})();
