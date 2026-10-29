@@ -19,6 +19,9 @@ Vue.component('report-table-shell', {
   },
 
   computed: {
+    preparedRows() {
+      return this.prepareReportData(this.rows);
+    },
     rowCount() {
       return Array.isArray(this.rows) ? this.rows.length : 0;
     },
@@ -117,9 +120,9 @@ Vue.component('report-table-shell', {
         </div>
 
         <div
-          v-for="(row, index) in rows"
+          v-for="(row, index) in preparedRows"
           :key="getRowKey(row, index)"
-          @click="onRowClick(row, index)"
+          @click="onRowClick(rows[index], index)"
           style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
           :style="{
             'grid-template-columns': columnsWidthString,
@@ -145,7 +148,7 @@ Vue.component('report-table-shell', {
               :style="col.wrap
                 ? Object.assign({}, col.get_style(row), { display: 'block', whiteSpace: 'normal' })
                 : col.get_style(row)"
-              v-html="displayColumnContent(col, row)"
+              v-html="col.getContent(row)"
             ></span>
           </div>
         </div>

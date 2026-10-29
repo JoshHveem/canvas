@@ -1,5 +1,5 @@
-// Keep aliases outside report rows so filtering, sorting, drilldowns, and requests
-// continue to use their real values. The registry lasts for this modal session.
+// Prepare a copy for rendering; source rows remain available for filtering,
+// sorting, drilldowns, and requests. Aliases last for this modal session.
 export function createAnonymizationState() {
   const aliases = new Map();
   return {
@@ -38,32 +38,34 @@ export const anonymization = {
       return this.displayName(option.nameValue ?? option.label, field, label);
     },
 
-    displayColumnContent(column, row) {
-      if (!this.isAnonymized || !row || typeof row !== 'object') return column.getContent(row);
-      const names = new Map();
-      // Observe the actual field reads, including those inside shared formatters.
-      // Do not infer sensitive fields from a column's human-readable title.
-      const probe = new Proxy(row, {
-        get(target, field, receiver) {
-          const value = Reflect.get(target, field, receiver);
-          if (typeof field === 'string' && (field.includes('_name') || field === 'name')) {
-            names.set(field, value);
-          }
-          return value;
+    prepareReportData(data) {
+      if (!this.isAnonymized) return data;
+
+      const labels = {
+        first_name: 'First Name', last_name: 'Last Name',
+        full_name__instructor: 'Instructor', user_name: 'User', name: 'Name',
+        course_name: 'Course', department_name: 'Department',
+        program_name: 'Program', campus_name: 'Campus', stage_name: 'Focus Stage'
+      };
+      const copies = new WeakMap();
+      const prepare = value => {
+        if (!value || typeof value !== 'object') return value;
+        if (Object.prototype.toString.call(value) !== '[object Object]' && !Array.isArray(value)) return value;
+        if (copies.has(value)) return copies.get(value);
+        const copy = Array.isArray(value) ? [] : {};
+        copies.set(value, copy);
+        for (const [field, entry] of Object.entries(value)) {
+          const nameField = field === 'upcoming_course_name' ? 'course_name' : field;
+          // Academic standing is a status, not an identifying name.
+          const isName = nameField !== 'academic_standing_name' &&
+            (nameField === 'name' || nameField.includes('_name'));
+          copy[field] = isName && typeof entry === 'string'
+            ? this.displayName(entry, nameField, labels[nameField] || 'Name')
+            : prepare(entry);
         }
-      });
-      const content = column.getContent(probe);
-      // Names used only in link URLs or other attributes are not displayed names.
-      const visibleText = String(content ?? '').replace(/<[^>]*>/g, '');
-      const fields = Array.from(names).filter(([, value]) => {
-        const name = String(value ?? '').trim();
-        return name && (visibleText.includes(window.ReportUtils.escapeHtml(name)) || visibleText.includes(name));
-      });
-      if (!fields.length) return content;
-      fields.sort(([a], [b]) => a.localeCompare(b));
-      const field = fields.length === 1 ? fields[0][0] : fields.map(([key]) => key).join(',');
-      const value = fields.length === 1 ? fields[0][1] : JSON.stringify(fields.map(([, value]) => value));
-      return window.ReportUtils.escapeHtml(this.displayName(value, field, column.name || 'Name'));
+        return copy;
+      };
+      return prepare(data);
     }
   }
 };
