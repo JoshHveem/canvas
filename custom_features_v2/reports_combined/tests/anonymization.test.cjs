@@ -13,6 +13,7 @@ function setup() {
     window: { addEventListener() {}, removeEventListener() {} },
     Vue: { component: (name, definition) => definitions.set(name, definition) },
     console: { warn: (...args) => errors.push(args) },
+    URLSearchParams,
     bridgetools: { req3: async () => { requests++; return []; } }
   });
   context.window.ReportTable = class {
@@ -147,6 +148,49 @@ test('real report columns and report subtitles mask names and restore them on to
   assert.equal(shell.displayColumnContent(last, row), 'Lovelace');
   assert.equal(view.titleText, 'Nursing - At a Glance');
   shell.$destroy(); view.$destroy(); provider.$destroy();
+});
+
+test('Pending Form remains clickable and prefills the table aliases when names are anonymized', () => {
+  const { provider, definitions } = setup();
+  const view = new Vue({
+    ...definitions.get('reports-students-at-a-glance'), parent: provider,
+    mounted: [], propsData: { reportContext: {} }
+  });
+  const shell = new Vue({ ...definitions.get('report-table-shell'), parent: view, propsData: { table: view.table } });
+  const standing = view.table.columns.find(column => column.name === 'Academic Standing');
+  const first = view.table.columns.find(column => column.name === 'First Name');
+  const row = {
+    first_name: 'Ada', last_name: 'Lovelace', canvas_user_id: '42',
+    academic_standing_code__expected: 'W1'
+  };
+  const original = shell.displayColumnContent(standing, row);
+  assert.match(original, /href="https:\/\/btech.jotform.com\/262353898849983\?/);
+  assert.match(original, />Pending Form<\/a>/);
+  assert.match(original, /name__student%5Bfirst%5D=Ada/);
+  provider.privacy.enabled = true;
+  const anonymized = shell.displayColumnContent(standing, row);
+  assert.match(anonymized, />Pending Form<\/a>/);
+  const params = new URL(anonymized.match(/href="([^"]+)"/)[1].replaceAll('&amp;', '&')).searchParams;
+  assert.equal(shell.displayColumnContent(first, row), 'First Name #1');
+  assert.equal(params.get('name__student[first]'), 'First Name #1');
+  assert.equal(params.get('name__student[last]'), 'Last Name #1');
+  assert.equal(params.get('canvas_user_id__student'), '42');
+  assert.equal(params.get('academic_standing_code__recommended'), 'W1');
+  assert.equal(shell.displayColumnContent(standing, { ...row, academic_standing_code: 'W1' }), 'W1');
+  provider.privacy.enabled = false;
+  assert.equal(shell.displayColumnContent(standing, row), original);
+  shell.$destroy(); view.$destroy(); provider.$destroy();
+});
+
+test('names in link attributes do not mask action labels, while escaped visible names are masked', () => {
+  const { provider, view } = setup();
+  provider.privacy.enabled = true;
+  const row = { course_name: 'Design & Art' };
+  const action = { name: 'Action', getContent: row => `<a href="/course?name=${encodeURIComponent(row.course_name)}">Open course</a>` };
+  assert.equal(view.displayColumnContent(action, row), action.getContent(row));
+  const course = { name: 'Course', getContent: row => `<a href="/course">${view.escapeHtml(row.course_name)}</a>` };
+  assert.equal(view.displayColumnContent(course, row), 'Course #1');
+  provider.$destroy();
 });
 
 test('course aliases match between evaluation filters, subtitles, and table columns', () => {

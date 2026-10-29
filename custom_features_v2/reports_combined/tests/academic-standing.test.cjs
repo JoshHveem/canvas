@@ -16,7 +16,7 @@ for (const folder of ['custom_features/reports/combined', 'custom_features_v2/re
     vm.runInContext(fs.readFileSync(path.join(repository, folder, 'components/report-mixins.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(repository, folder, 'reports/students-at-a-glance.js'), 'utf8'), context);
     const mixins = context.window.ReportMixins;
-    return Object.assign({}, (mixins.canvasProfiles || mixins.formatting).methods, mixins.formatting.methods, definition.methods);
+    return Object.assign({}, mixins.anonymization?.methods, (mixins.canvasProfiles || mixins.formatting).methods, mixins.formatting.methods, definition.methods);
   }
 
   test(`${folder}: Canvas profiles populate every Jotform parameter and are cached`, async () => {

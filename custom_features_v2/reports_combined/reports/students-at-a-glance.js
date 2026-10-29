@@ -407,8 +407,8 @@ Vue.component('reports-students-at-a-glance', {
         canvas_user_id__instructor: String(instructor.id || window.ENV?.current_user_id || '').trim(),
         academic_standing_code__recommended: recommendedCode,
         email__student: String(row?.email__student ?? '').trim(),
-        'name__student[first]': String(row?.first_name ?? '').trim(),
-        'name__student[last]': String(row?.last_name ?? '').trim(),
+        'name__student[first]': this.displayName(String(row?.first_name ?? '').trim(), 'first_name', 'First Name'),
+        'name__student[last]': this.displayName(String(row?.last_name ?? '').trim(), 'last_name', 'Last Name'),
         sis_user_id: this.getStudentSisId(row),
         email__instructor: String(instructor.email ?? '').trim(),
         sanction_type: sanctionType

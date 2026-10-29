@@ -53,7 +53,12 @@ export const anonymization = {
         }
       });
       const content = column.getContent(probe);
-      const fields = Array.from(names).filter(([, value]) => String(value ?? '').trim());
+      // Names used only in link URLs or other attributes are not displayed names.
+      const visibleText = String(content ?? '').replace(/<[^>]*>/g, '');
+      const fields = Array.from(names).filter(([, value]) => {
+        const name = String(value ?? '').trim();
+        return name && (visibleText.includes(window.ReportUtils.escapeHtml(name)) || visibleText.includes(name));
+      });
       if (!fields.length) return content;
       fields.sort(([a], [b]) => a.localeCompare(b));
       const field = fields.length === 1 ? fields[0][0] : fields.map(([key]) => key).join(',');
