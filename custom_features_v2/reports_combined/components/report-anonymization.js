@@ -38,6 +38,12 @@ export const anonymization = {
       return this.displayName(option.nameValue ?? option.label, field, label);
     },
 
+    anonymizeEmail(value) {
+      if (!this.isAnonymized || !String(value ?? '').trim()) return value;
+      const alias = this.reportAnonymization.alias('email', String(value).trim().toLowerCase(), 'Email');
+      return `${alias.replace('Email #', 'email')}@example.invalid`;
+    },
+
     prepareReportData(data) {
       if (!this.isAnonymized) return data;
 
@@ -59,9 +65,12 @@ export const anonymization = {
           // Academic standing is a status, not an identifying name.
           const isName = nameField !== 'academic_standing_name' &&
             (nameField === 'name' || nameField.includes('_name'));
-          copy[field] = isName && typeof entry === 'string'
-            ? this.displayName(entry, nameField, labels[nameField] || 'Name')
-            : prepare(entry);
+          const isEmail = /(^|_)email(?:_|$)/i.test(field);
+          copy[field] = isEmail && typeof entry === 'string'
+            ? this.anonymizeEmail(entry)
+            : isName && typeof entry === 'string'
+              ? this.displayName(entry, nameField, labels[nameField] || 'Name')
+              : prepare(entry);
         }
         return copy;
       };

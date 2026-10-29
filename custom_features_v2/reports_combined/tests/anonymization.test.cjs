@@ -181,8 +181,10 @@ test('Pending Form remains clickable and prefills the table aliases when names a
   const first = view.table.columns.find(column => column.name === 'First Name');
   const row = {
     first_name: 'Ada', last_name: 'Lovelace', canvas_user_id: '42',
-    academic_standing_code__expected: 'W1'
+    academic_standing_code__expected: 'W1',
+    email__student: 'ada@example.com', email__instructor: 'teacher@example.com'
   };
+  view.standingFormInstructor = { id: '99', email: 'teacher@example.com' };
   const original = renderContent(shell, standing, row);
   assert.match(original, /href="https:\/\/btech.jotform.com\/262353898849983\?/);
   assert.match(original, />Pending Form<\/a>/);
@@ -196,6 +198,10 @@ test('Pending Form remains clickable and prefills the table aliases when names a
   assert.equal(params.get('name__student[last]'), 'Last Name #1');
   assert.equal(params.get('canvas_user_id__student'), '42');
   assert.equal(params.get('academic_standing_code__recommended'), 'W1');
+  assert.match(params.get('email__student'), /^email\d+@example\.invalid$/);
+  assert.match(params.get('email__instructor'), /^email\d+@example\.invalid$/);
+  assert.notEqual(params.get('email__student'), params.get('email__instructor'));
+  assert.doesNotMatch(decodeURIComponent(anonymized), /ada@example.com|teacher@example.com/);
   assert.equal(renderContent(shell, standing, { ...row, academic_standing_code: 'W1' }), 'W1');
   provider.privacy.enabled = false;
   assert.equal(renderContent(shell, standing, row), original);
@@ -234,7 +240,8 @@ test('the shell prepares nested data once for text, links, styles, and component
   assert.equal(row.upcoming_course_name, 'Course #1');
   assert.equal(row.courses[0].course_name, row.upcoming_course_name);
   assert.equal(row.courses[0].canvas_course_id, '7');
-  for (const field of ['canvas_user_id', 'sis_user_id', 'academic_standing_name', 'academic_standing_code__expected', 'email__student', 'score']) {
+  assert.match(row.email__student, /^email\d+@example\.invalid$/);
+  for (const field of ['canvas_user_id', 'sis_user_id', 'academic_standing_name', 'academic_standing_code__expected', 'score']) {
     assert.equal(row[field], source[field]);
   }
   const column = {
@@ -268,6 +275,31 @@ test('message templates use prepared student and course names with the original 
   assert.match(params.get('prefill'), /Course #1/);
   assert.doesNotMatch(params.get('prefill'), /Ada|Lovelace|Nursing/);
   shell.$destroy(); report.$destroy(); provider.$destroy();
+});
+
+test('email aliases are stable across fields, nested data, and mailto links and restore on toggle', () => {
+  const { provider, definitions, view } = setup();
+  const source = Object.freeze({
+    email: 'Student@Example.com', email_address: 'student@example.com',
+    email__student: 'student@example.com', email__instructor: 'teacher@example.com',
+    primary_email: '', contact: Object.freeze({ primary_email: 'teacher@example.com' })
+  });
+  assert.equal(view.prepareReportData(source), source);
+  provider.privacy.enabled = true;
+  const prepared = view.prepareReportData(source);
+  assert.match(prepared.email, /^email\d+@example\.invalid$/);
+  assert.equal(prepared.email_address, prepared.email);
+  assert.equal(prepared.email__student, prepared.email);
+  assert.equal(prepared.contact.primary_email, prepared.email__instructor);
+  assert.notEqual(prepared.email__instructor, prepared.email);
+  assert.equal(prepared.primary_email, '');
+  assert.equal(view.prepareReportData(source).email, prepared.email);
+  const emailHtml = definitions.get('reports-students-prospective').methods.emailHtml.call(view, prepared.email_address);
+  assert.equal(emailHtml, `<a href="mailto:${encodeURIComponent(prepared.email)}">${prepared.email}</a>`);
+  provider.privacy.enabled = false;
+  assert.equal(view.prepareReportData(source), source);
+  assert.equal(source.email, 'Student@Example.com');
+  provider.$destroy();
 });
 
 test('course aliases match between evaluation filters, subtitles, and table columns', () => {

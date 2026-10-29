@@ -194,6 +194,7 @@ Vue.component('reports-students-at-a-glance', {
         return {
           ...row,
           email__student: profile.email || '',
+          email__instructor: this.standingFormInstructor.email || '',
           original_sis_user_id: profile.sis_user_id || this.getStudentSisId(row)
         };
       });
@@ -410,7 +411,7 @@ Vue.component('reports-students-at-a-glance', {
         'name__student[first]': String(row?.first_name ?? '').trim(),
         'name__student[last]': String(row?.last_name ?? '').trim(),
         sis_user_id: this.getStudentSisId(row),
-        email__instructor: String(instructor.email ?? '').trim(),
+        email__instructor: String(row?.email__instructor ?? '').trim(),
         sanction_type: sanctionType
       });
       return `https://btech.jotform.com/262353898849983?${params.toString()}`;
