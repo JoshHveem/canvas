@@ -24,7 +24,8 @@ Vue.component('reports-students-at-a-glance', {
       rows: [],
       departmentOptions: [],
       selectedDepartmentCode: '',
-      selectedFlagReason: 'all'
+      selectedFlagReason: 'all',
+      standingFormInstructor: null
     };
   },
 
@@ -141,6 +142,58 @@ Vue.component('reports-students-at-a-glance', {
   },
 
   methods: {
+    async fetchCanvasUserProfile(canvasUserId) {
+      const id = String(canvasUserId ?? '').trim();
+      if (!id) return {};
+
+      const cache = this.getCanvasUserNameCache();
+      if (cache[id] && Object.prototype.hasOwnProperty.call(cache[id], 'email')) return cache[id];
+
+      try {
+        const response = await fetch(`/api/v1/users/${encodeURIComponent(id)}/profile`, {
+          credentials: 'include',
+          headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Canvas user lookup failed with ${response.status}`);
+
+        const profile = await response.json();
+        const details = {
+          ...this.extractCanvasUserNames(profile),
+          id: String(profile.id ?? '').trim(),
+          email: String(profile.primary_email ?? profile.email ?? '').trim(),
+          sis_user_id: String(profile.sis_user_id ?? '').trim()
+        };
+        cache[id] = details;
+        return details;
+      } catch (error) {
+        console.warn(`Failed to load Canvas user profile for ${id}`, error);
+        return cache[id] || {};
+      }
+    },
+
+    async hydrateStandingFormData(rows) {
+      if (!rows.some(row => this.isPendingStandingDocumentation(row))) return rows;
+
+      const ids = [...new Set(rows
+        .filter(row => this.isPendingStandingDocumentation(row))
+        .map(row => String(row.canvas_user_id ?? '').trim())
+        .filter(Boolean))];
+      const instructorPromise = this.fetchCanvasUserProfile('self');
+      for (let i = 0; i < ids.length; i += 10) {
+        await Promise.all(ids.slice(i, i + 10).map(id => this.fetchCanvasUserProfile(id)));
+      }
+      this.standingFormInstructor = await instructorPromise;
+      const cache = this.getCanvasUserNameCache();
+      return rows.map(row => {
+        const profile = cache[String(row.canvas_user_id ?? '').trim()] || {};
+        return {
+          ...row,
+          email__student: profile.email || '',
+          original_sis_user_id: profile.sis_user_id || this.getStudentSisId(row)
+        };
+      });
+    },
+
     matchesFlagReason(row) {
       switch (this.selectedFlagReason) {
         case 'defined-exit-date':
@@ -346,25 +399,34 @@ Vue.component('reports-students-at-a-glance', {
 
     academicStandingHtml(row) {
       const text = this.academicStandingText(row);
-      const downloadUrl = this.pendingStandingDownloadUrl(row);
-      if (!downloadUrl) return this.escapeHtml(text);
+      const formUrl = this.pendingStandingFormUrl(row);
+      if (!formUrl) return this.escapeHtml(text);
 
-      const href = this.escapeHtml(downloadUrl);
-      return `<a href="${href}" download target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
+      const href = this.escapeHtml(formUrl);
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
     },
 
-    pendingStandingDownloadUrl(row) {
-      if (this.academicStandingText(row) !== 'Pending Form') return '';
+    pendingStandingFormUrl(row) {
+      if (!this.isPendingStandingDocumentation(row)) return '';
 
-      const expectedCode = String(row?.academic_standing_code__expected ?? '').trim().toUpperCase();
-      if (expectedCode.startsWith('P')) {
-        return 'https://bridgetools.dev/canvas/custom_features/reports/combined/forms/616-probation.pdf';
-      }
-      if (expectedCode.startsWith('W')) {
-        return 'https://bridgetools.dev/canvas/custom_features/reports/combined/forms/616-written-warning.pdf';
-      }
+      const recommendedCode = String(row?.academic_standing_code__expected ?? '').trim();
+      const prefix = recommendedCode.charAt(0).toUpperCase();
+      const sanctionType = prefix === 'W' ? 'Written Warning' : prefix === 'P' ? 'Probation' : '';
+      if (!sanctionType) return '';
 
-      return '';
+      const instructor = this.standingFormInstructor || {};
+      const params = new URLSearchParams({
+        canvas_user_id__student: String(row?.canvas_user_id ?? '').trim(),
+        canvas_user_id__instructor: String(instructor.id || window.ENV?.current_user_id || '').trim(),
+        academic_standing_code__recommended: recommendedCode,
+        email__student: String(row?.email__student ?? '').trim(),
+        'name__student[first]': String(row?.first_name ?? '').trim(),
+        'name__student[last]': String(row?.last_name ?? '').trim(),
+        sis_user_id: this.getStudentSisId(row),
+        email__instructor: String(instructor.email ?? '').trim(),
+        sanction_type: sanctionType
+      });
+      return `https://btech.jotform.com/262353898849983?${params.toString()}`;
     },
 
     academicStandingPillStyle(row) {
@@ -945,7 +1007,10 @@ Vue.component('reports-students-at-a-glance', {
         const hydratedRows = await this.hydrateSisUserIds(mergedRows, { hydrate_sis_user_id: true });
         if (requestId !== this.loadRequestId) return;
 
-        this.rows = hydratedRows;
+        const formRows = await this.hydrateStandingFormData(hydratedRows);
+        if (requestId !== this.loadRequestId) return;
+
+        this.rows = formRows;
       } catch (e) {
         console.warn('Failed to load student at-a-glance report', e);
         this.rows = [];
