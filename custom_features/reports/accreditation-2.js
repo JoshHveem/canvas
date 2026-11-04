@@ -1,4 +1,5 @@
 (async function () {
+  let nextIframeId = 0;
   //FILTER BY SECTION
   //NEW QUIZZES???
   //With assignments make sure to also grab if they did a text submission or other possible submission types
@@ -948,14 +949,14 @@
           },
 
           async createIframe(url, func = null, data = {}) {
-            let id = genId();
-            let elId = 'btech-content-' + id
+            let elId;
+            do {
+              elId = 'btech-content-' + ++nextIframeId;
+            } while (document.getElementById(elId));
             let iframe = $('<iframe id="' + elId + '" style="width: 1200px;" src="' + url + '"></iframe>');
             iframe.hide();
 
             $("#content").append(iframe);
-            //This is unused. was for trying to convert an html element to a canvas then to a data url then to image then to pdf, but ran into cors issues.
-            // $("#content").append("<div id='btech-export-" + id + "'></div>");
             let window = document.getElementById(elId).contentWindow;
             window.onload = function () {
               let content = $(window.document.getElementsByTagName('body')[0]);
