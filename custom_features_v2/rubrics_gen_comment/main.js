@@ -1,3 +1,6 @@
+import { createId as genId } from '../shared/ids.js';
+import { waitForElement as getElement } from '../shared/dom.js';
+
 //change this to have the comment not include any HTML
 (function () {
   IMPORTED_FEATURE = {};

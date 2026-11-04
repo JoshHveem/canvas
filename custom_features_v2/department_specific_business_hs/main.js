@@ -1,3 +1,5 @@
+import { waitForElement as getElement } from '../shared/dom.js';
+
 (async function () {
   IMPORTED_FEATURE = {};
   //IF the editor, add the ability to add services

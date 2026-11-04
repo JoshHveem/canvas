@@ -1,3 +1,4 @@
+import { addToModuleMenu } from '../shared/module-menus.js';
 (async function() {
 addToModuleMenu("Delete Content", "Delete all content from the course.", async (event, courseId, moduleId, item) => {  
   event.preventDefault(); 

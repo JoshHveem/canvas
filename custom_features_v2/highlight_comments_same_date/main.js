@@ -1,3 +1,5 @@
+import { waitForElement as getElement } from '../shared/dom.js';
+
 IMPORTED_FEATURE = {};
 async function hoverByClass(classname,colorover,colorout="transparent"){
     let comments = await getElement("." + classname);

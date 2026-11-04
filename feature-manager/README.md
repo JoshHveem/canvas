@@ -2,6 +2,8 @@
 
 This local Node application discovers v2 features from `custom_features_v2/**/main.js`. `features.json` stores only the loading settings for those folders.
 
+`custom_canvas.js` delegates to `custom_canvas_v2.js`, so both theme entry points load this manager. Feature implementation and shared utilities live in `custom_features_v2/`; legacy feature files are retained for reference.
+
 ## Use
 
 Double-click `Launch Canvas Feature Manager.bat`. It installs dependencies when needed, starts the local server, and opens `http://localhost:4173`.

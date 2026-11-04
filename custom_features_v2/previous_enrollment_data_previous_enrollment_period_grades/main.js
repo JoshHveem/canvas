@@ -1,3 +1,4 @@
+import { toPrecision } from '../shared/formatting.js';
 IMPORTED_FEATURE = {};
 if (/^\/courses\/[0-9]+\/grades/.test(window.location.pathname)) {
   IMPORTED_FEATURE = {

@@ -1153,5 +1153,5 @@
 
 /*
   AI rubric prompt page:
-  custom_features/rubrics/upload_rubric/ai_rubric_prompt.md
+  custom_features_v2/rubrics_upload_rubric_create_rubric_from_json/ai_rubric_prompt.md
 */

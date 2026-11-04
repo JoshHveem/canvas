@@ -1,5 +1,5 @@
 // Very temporary tool while trying to sort out Pharmacy Tech weird cartridge importing.
-// Maybe keep while they use the tool, but turn it off in custom_canvas.js once they're done with it for this year.
+// Disable this feature in feature-manager/features.json when it is no longer needed.
 
 (() => {
   "use strict";
