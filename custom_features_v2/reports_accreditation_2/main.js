@@ -88,15 +88,21 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
           </div>
         </div>
 
-        <div v-if='showModal && !preparingDocument' @click="if(!preparingDocument) showModal = false;" class='btech-modal' style='display: inline-block;'>
+        <div v-if='showModal && !preparingDocument' @click="if(!preparingDocument) close();" class='btech-modal' style='display: inline-block;'>
           <div class='btech-modal-content' @click.stop>
             <div class="icon-container" style='float: right; margin-right: .5rem; margin-top: .5rem;' v-on:click='close()'>
               <i class="icon-end"></i> 
             </div>
             <div class='btech-modal-content-inner'>
               <h2><a target='#' v-bind:href="'/courses/'+courseId+'/assignments/'+currentAssignment.id">{{currentAssignment.name}}</a></h2>
+              <button type="button" class="btn" :disabled="loadingAssignmentDetails" @click="openModal(currentAssignment, { force: true })">
+                {{assignmentDetailsError ? 'Retry loading details' : 'Refresh details'}}
+              </button>
               <div v-if='loadingAssignmentDetails'>
                 Loading assignment details...
+              </div>
+              <div v-else-if="assignmentDetailsError" role="alert">
+                {{assignmentDetailsError}}
               </div>
               <div v-else-if='getFilteredSubmissions(submissions).length > 0'>
                 <div
@@ -161,9 +167,9 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
                   </span>
                 </div>
 
-                <div v-else>
-                  No graded submissions found. There may be submissions pending grading.
-                </div>
+              </div>
+              <div v-else>
+                No graded submissions found. There may be submissions pending grading.
               </div>
           </div>
         </div>
@@ -292,7 +298,9 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
             campuses: {},
             enrollmentTypes: {},
             loadingCourse: true,
-            loadingAssignmentDetails: false
+            loadingAssignmentDetails: false,
+            assignmentDetailsError: '',
+            assignmentDetailsRequestId: 0
           }
         },
         methods: {
@@ -318,6 +326,10 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
             return results;
           },
           normalizeSubmission(sub, includeDetails = false) {
+            if (includeDetails && (!Array.isArray(sub.commentsConnection?.nodes) ||
+                !Array.isArray(sub.rubricAssessmentsConnection?.nodes))) {
+              throw new Error('Submission comments or rubric details are missing.');
+            }
             return {
               ...sub,
               quiz_id: sub?.quiz?._id,
@@ -530,7 +542,16 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
               `;
 
               const res = await $.post(`/api/graphql`, { query });
-              const connection = res.data.assignment.submissionsConnection;
+              if (res?.errors?.length) {
+                throw new Error(res.errors.map(error => error.message).join('; '));
+              }
+              const connection = res?.data?.assignment?.submissionsConnection;
+              if (!Array.isArray(connection?.nodes) ||
+                  typeof connection?.pageInfo?.hasNextPage !== 'boolean' ||
+                  (connection.pageInfo.hasNextPage &&
+                    (!connection.pageInfo.endCursor || connection.pageInfo.endCursor === after))) {
+                throw new Error('Canvas returned incomplete submission data.');
+              }
               allSubmissions = allSubmissions.concat(connection.nodes);
               hasNextPage = connection.pageInfo.hasNextPage;
               after = connection.pageInfo.endCursor;
@@ -947,21 +968,32 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
             return iframe;
           },
 
-          async openModal(assignment) {
+          async openModal(assignment, { force = false } = {}) {
             let app = this;
+            const requestId = ++app.assignmentDetailsRequestId;
             app.showModal = true;
             app.currentAssignment = assignment;
             app.submissions = [];
-            if (assignment.submissionDetailsLoaded !== true) {
+            app.assignmentDetailsError = '';
+            app.loadingAssignmentDetails = false;
+            if (force || assignment.submissionDetailsLoaded !== true) {
+              assignment.submissionDetailsLoaded = false;
               app.loadingAssignmentDetails = true;
               try {
                 const submissions = await app.getSubmissions(assignment.id, { includeDetails: true });
-                assignment.submissions = submissions.map(sub => app.normalizeSubmission(sub, true));
+                const detailedSubmissions = submissions.map(sub => app.normalizeSubmission(sub, true));
+                if (requestId !== app.assignmentDetailsRequestId) return;
+                assignment.submissions = detailedSubmissions;
                 assignment.submissionDetailsLoaded = true;
               } catch (err) {
                 console.error(err);
+                if (requestId !== app.assignmentDetailsRequestId) return;
+                app.assignmentDetailsError = 'Unable to load assignment details. Comments and rubrics could not be verified. Please retry.';
+                return;
               } finally {
-                app.loadingAssignmentDetails = false;
+                if (requestId === app.assignmentDetailsRequestId) {
+                  app.loadingAssignmentDetails = false;
+                }
               }
             }
             app.submissions = assignment.submissions;
@@ -983,6 +1015,8 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
           close() {
             let app = this;
             app.showModal = false;
+            app.assignmentDetailsRequestId += 1;
+            app.loadingAssignmentDetails = false;
           }
         }
       });
