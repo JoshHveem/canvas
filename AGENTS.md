@@ -10,7 +10,8 @@ These instructions apply to the whole repository.
 
 ## Canvas Feature Work
 
-- Prefer feature-specific files under `custom_features/` for behavior, UI, templates, and Canvas API workflows.
+- Prefer feature-specific files under `custom_features_v2/<feature>/` for behavior, UI, templates, and Canvas API workflows. The legacy `custom_features/` tree is retained for reference.
+- Import shared utilities explicitly from `custom_features_v2/shared/`; do not depend on helpers from the legacy `scripts.js` loader. Rebuild changed features before deployment.
 - Keep Canvas page/body rendering changes scoped to the owning feature folder when possible.
 - Preserve existing Canvas page content unless the user explicitly asks to replace or reseed it.
 - When adding feature UI, guard against duplicate insertion with stable IDs, attributes, or existing-element checks.

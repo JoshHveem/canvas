@@ -20,12 +20,9 @@
     REQUIRES: end date
     This will create a bunch of cards that show the time remaining. Shows days unless they've reached final_countdown_days, then shows hours, minutes, seconds to increase urgency
 
-  HOW TO IMPORT
-    Copy and paste the following 3 lines of code into your custom_canvas.js file
-
-  (async function() {
-    await $.getScript("https://bridgetools.dev/canvas/custom_features_v2/modules_enrollment_dates_student_external/main.bundle.js");
-  })()
+  HOW TO LOAD
+    Configure modules_enrollment_dates_student_external in feature-manager/features.json.
+    The v2 loader selects this feature by location and loads its built bundle.
     
 */
 (async function() {

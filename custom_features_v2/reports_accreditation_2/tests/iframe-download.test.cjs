@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
+const { buildSync } = require('../../../feature-manager/node_modules/esbuild');
 
 const root = path.resolve(__dirname, '../../..');
 const files = [
@@ -47,7 +48,10 @@ async function setup(file) {
     add_javascript_library() {}
     // Deliberately omit genId, as in the v2 loader.
   });
-  await vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
+  const source = file.endsWith('/main.js')
+    ? buildSync({ entryPoints: [path.join(root, file)], bundle: true, write: false, format: 'iife', target: 'es2018' }).outputFiles[0].text
+    : fs.readFileSync(path.join(root, file), 'utf8');
+  await vm.runInContext(source, context);
   // The esbuild IIFE does not return the async initializer's promise.
   await new Promise(setImmediate);
   assert.ok(definition, 'the actual feature initializes');

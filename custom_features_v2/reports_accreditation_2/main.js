@@ -1,3 +1,5 @@
+import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubric-export.js';
+
 (async function () {
   let nextIframeId = 0;
   //FILTER BY SECTION
@@ -15,7 +17,6 @@
       // Vue is supplied by the v2 loader. Await export libraries locally;
       // the legacy add_javascript_library helper is not available in v2.
       await Promise.all([
-        "https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js",
         "https://html2canvas.hertzen.com/dist/html2canvas.min.js",
         "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.1.1/jspdf.umd.js",
         "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js",
@@ -763,56 +764,37 @@
             return title;
           },
           async downloadRubric(iframe, content, data) {
-            let app = this;
-            let title = this.getTitle(data) + " submission rubric";
-            // Wait for the iframe to load
-            await new Promise(resolve => {
-              $(iframe).on('load', function() {
-                let iframeContent = $(this).contents();
-    
-                // Check if #rubric_holder is present
-                let rubricHolder = iframeContent.find("#rubric_holder");
-                if (rubricHolder.length > 0) {
-                  rubricHolder.show();
-                  app.addRequiredInformation(rubricHolder, data.submission, data.assignment);
-                  // rubricHolder.prepend(`<div>${data.submission.body}</div>`);
-                  let commentEl = app.getComments(data.submission);
-                  rubricHolder.append(commentEl);
-                  rubricHolder.css({
-                    'max-height': '',
-                    'overflow': 'visible'
-                  });
-                  let comments = rubricHolder.find('[data-selenium="criterion_comments_text"]');
-                  for (let c = 0; c < comments.length; c++) {
-                      let comment = comments[c];
-                      $(comment).css({
-                        'height': '10rem',
-                        'width': '30rem'
-                      });
-                  }
-  
-                  // Continue with the rest of your function
-                  let ogTitle = $('title').text();
-                  $('title').text(title);
-                  rubricHolder.printThis({
-                    pageTitle: title,
-                    afterPrint: function () {
-                      $('title').text(ogTitle);
-                      app.preparingDocument = false;
-                      app.checkLTI(data.submission);
-                      iframe.remove();
-                    }
-                  });
-  
-                  resolve(); // Resolve the promise once everything is done
-                } else {
-                  console.error("#rubric_holder not found");
-                  resolve(); // Resolve the promise even if #rubric_holder is not found
-                }
-              });
-            });
+            const app = this;
+            const title = this.getTitle(data) + ' submission rubric';
+            const sourceWindow = iframe[0].contentWindow;
+            const sourceDocument = sourceWindow.document;
+            const originalTitle = document.title;
+            const cleanup = () => {
+              document.title = originalTitle;
+              app.preparingDocument = false;
+              iframe.remove();
+            };
+            try {
+              const holder = await waitForRubric(sourceDocument);
+              const printable = $(prepareRubricDocument(sourceDocument, holder));
+              app.addRequiredInformation(printable, data.submission, data.assignment);
+              printable.append(app.getComments(data.submission));
+              sourceDocument.title = title;
+              await waitForPrintAssets(sourceDocument);
+              document.title = title;
+              sourceWindow.onafterprint = () => {
+                cleanup();
+                app.checkLTI(data.submission);
+              };
+              sourceWindow.focus();
+              sourceWindow.print();
+            } catch (error) {
+              cleanup();
+              console.error('Unable to prepare rubric export', error);
+              alert('Unable to prepare this rubric for printing. ' + error.message);
+            }
           },
-        
+
           //Not currently working because of CORS
           async downloadNewQuiz(iframe, content, data) {
             let app = this;
