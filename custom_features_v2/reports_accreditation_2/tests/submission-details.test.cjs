@@ -41,6 +41,30 @@ const response = (nodes, hasNextPage = false, endCursor = null) => ({
 });
 
 for (const file of ['main.js', 'main.bundle.js']) {
+  test(`${file}: rubric criterion feedback counts as comments without submission comments`, async () => {
+    const { app, $ } = await setup(file);
+    const a = assignment('7508442');
+    const node = raw('2240214');
+    node.rubricAssessmentsConnection.nodes = [
+      { score: 10, assessmentType: 'grading', assessmentRatings: [
+        { comments: null }, { comments: 'Written rubric feedback' }
+      ] }
+    ];
+    $.post = async (url, { query }) => {
+      assert.match(query, /assessmentRatings\s*\{\s*comments\s*\}/);
+      return response([node]);
+    };
+    await app.openModal(a);
+    assert.equal(app.submissions[0].comments.length, 0);
+    assert.equal(app.hasComments(app.submissions[0]), true);
+    assert.equal(app.hasComments({ comments: [{ comment: 'Submission feedback' }] }), true);
+    assert.equal(app.hasComments({ rubric_assessments: [
+      { score: 10, assessmentRatings: [{ comments: null }, { comments: '' }, { comments: ' \n ' }] }
+    ] }), false, 'scores and blank criterion comments do not count');
+    assert.equal(app.hasComments({ rubric_assessments: [{ assessmentRatings: null }] }), false);
+    assert.equal(app.hasComments({ comments: [], rubric_assessments: [] }), false);
+  });
+
   test(`${file}: details remain hidden until all pages load; cache can be refreshed`, async () => {
     const { app, $ } = await setup(file);
     const a = assignment('A');

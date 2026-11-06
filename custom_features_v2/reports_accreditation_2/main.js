@@ -157,7 +157,7 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
                     <i v-if="submission?.rubric_assessments?.length > 0" class='icon-check'></i>
                   </span>
                   <span>
-                    <i v-if="submission?.comments?.length > 0" class='icon-check'></i>
+                    <i v-if="hasComments(submission)" class='icon-check'></i>
                   </span>
                   <span>
                     {{dateToString(getSubmissionDate(submission))}}
@@ -341,6 +341,14 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
               rubric_assessments: includeDetails ? (sub.rubricAssessmentsConnection?.nodes || []) : [],
               detailsLoaded: includeDetails
             };
+          },
+          hasComments(submission) {
+            if (submission?.comments?.length > 0) return true;
+            return (submission?.rubric_assessments || []).some(assessment =>
+              (assessment.assessmentRatings || []).some(rating =>
+                typeof rating.comments === 'string' && rating.comments.trim().length > 0
+              )
+            );
           },
           getSubmissionDate(submission) {
             let date = submission.submittedAt;
@@ -533,6 +541,9 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
                           nodes {
                             score
                             assessmentType
+                            assessmentRatings {
+                              comments
+                            }
                           }
                         }` : ''}
                       }
