@@ -51,7 +51,7 @@ for (const file of ['main.js', 'main.bundle.js']) {
       ] }
     ];
     $.post = async (url, { query }) => {
-      assert.match(query, /assessmentRatings\s*\{\s*comments\s*\}/);
+      assert.match(query, /assessmentRatings\s*\{\s*comments\s+commentsHtml\s*\}/);
       return response([node]);
     };
     await app.openModal(a);
@@ -63,6 +63,25 @@ for (const file of ['main.js', 'main.bundle.js']) {
     ] }), false, 'scores and blank criterion comments do not count');
     assert.equal(app.hasComments({ rubric_assessments: [{ assessmentRatings: null }] }), false);
     assert.equal(app.hasComments({ comments: [], rubric_assessments: [] }), false);
+  });
+
+  test(`${file}: formatted rubric feedback counts even when the plain-text field is empty`, async () => {
+    const { app, $ } = await setup(file);
+    const a = assignment('7508442');
+    const node = raw('2240214');
+    node.rubricAssessmentsConnection.nodes = [{ assessmentRatings: [
+      { comments: '', commentsHtml: '<p><strong>Written feedback</strong></p>' }
+    ] }];
+    $.post = async () => response([node]);
+    await app.openModal(a);
+    assert.equal(app.hasComments(app.submissions[0]), true);
+    const rating = app.submissions[0].rubric_assessments[0].assessmentRatings[0];
+    for (const html of [null, '', '<p><br></p>', '<p>&nbsp;&#160;&#xA0;</p>', '<!-- hidden -->', '<p>\u200b</p>']) {
+      rating.commentsHtml = html;
+      assert.equal(app.hasComments(app.submissions[0]), false, `empty editor markup: ${html}`);
+    }
+    rating.commentsHtml = '<p><img src="/feedback.png"></p>';
+    assert.equal(app.hasComments(app.submissions[0]), true, 'image feedback counts');
   });
 
   test(`${file}: details remain hidden until all pages load; cache can be refreshed`, async () => {

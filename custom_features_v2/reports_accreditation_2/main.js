@@ -1,4 +1,5 @@
-import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubric-export.js';
+import { waitForRubric, loadAssessedRubric, prepareRubricDocument, waitForPrintAssets } from './rubric-export.js';
+import { initialisePrintMediaLinks } from './print-media-links.js';
 
 (async function () {
   let nextIframeId = 0;
@@ -346,9 +347,19 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
             if (submission?.comments?.length > 0) return true;
             return (submission?.rubric_assessments || []).some(assessment =>
               (assessment.assessmentRatings || []).some(rating =>
-                typeof rating.comments === 'string' && rating.comments.trim().length > 0
+                this.hasCommentContent(rating.comments, rating.commentsHtml)
               )
             );
+          },
+          hasCommentContent(text, html) {
+            if (typeof text === 'string' && text.trim().length > 0) return true;
+            if (typeof html !== 'string') return false;
+            // Inspect content without inserting instructor-authored HTML into the live page.
+            const content = html.replace(/<!--[\s\S]*?-->/g, '');
+            if (/<(?:img|audio|video|iframe)\b/i.test(content)) return true;
+            return content.replace(/<[^>]*>/g, '')
+              .replace(/&(?:nbsp|#0*160|#x0*a0);/gi, ' ')
+              .replace(/[\s\u200b-\u200d\ufeff]/g, '').length > 0;
           },
           getSubmissionDate(submission) {
             let date = submission.submittedAt;
@@ -543,6 +554,7 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
                             assessmentType
                             assessmentRatings {
                               comments
+                              commentsHtml
                             }
                           }
                         }` : ''}
@@ -807,7 +819,16 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
               iframe.remove();
             };
             try {
-              const holder = await waitForRubric(sourceDocument);
+              let holder;
+              try {
+                holder = await waitForRubric(sourceDocument);
+              } catch (renderError) {
+                holder = await loadAssessedRubric(sourceDocument, {
+                  courseId: app.courseId,
+                  assignmentId: data.assignment.id,
+                  userId: data.submission.user.id
+                });
+              }
               const printable = $(prepareRubricDocument(sourceDocument, holder));
               app.addRequiredInformation(printable, data.submission, data.assignment);
               printable.append(app.getComments(data.submission));
@@ -970,6 +991,7 @@ import { waitForRubric, prepareRubricDocument, waitForPrintAssets } from './rubr
             $("#content").append(iframe);
             let window = document.getElementById(elId).contentWindow;
             window.onload = function () {
+              initialisePrintMediaLinks(window.document);
               let content = $(window.document.getElementsByTagName('body')[0]);
               let imgs = content.find('img'); // I believe this was done just to make sure the images were fully loaded. Was running into issues with quizzes where images didn't have a chance to load all the way. 
               if (func !== null) {
