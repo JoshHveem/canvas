@@ -65,16 +65,54 @@
     return routes.some(function (pattern) { return pattern.test(route); });
   }
 
-  function allowed(entry) {
-    if (entry.teacher && !window.IS_TEACHER) return false;
-    if (entry.notTeacher && window.IS_TEACHER) return false;
-    if (entry.isd && !(window.IS_ISD || window.IS_ME)) return false;
-    if (entry.rootAdmin && !(ENV.current_user_roles || []).includes('root_admin')) return false;
+  function hasSisUserIds(entry) {
+    return Array.isArray(entry.sisUserIds) && entry.sisUserIds.length > 0;
+  }
+
+  function allowed(entry, sisUserId) {
+    var hasRoleRules = Boolean(entry.teacher || entry.notTeacher || entry.isd || entry.rootAdmin);
+    var roleAllowed = !hasRoleRules || (
+      (!entry.teacher || window.IS_TEACHER) &&
+      (!entry.notTeacher || !window.IS_TEACHER) &&
+      (!entry.isd || window.IS_ISD || window.IS_ME) &&
+      (!entry.rootAdmin || (ENV.current_user_roles || []).includes('root_admin'))
+    );
+    var sisAllowed = hasSisUserIds(entry) && sisUserId != null &&
+      entry.sisUserIds.some(function (id) { return String(id) === String(sisUserId); });
+    var audienceAllowed = hasSisUserIds(entry) ? sisAllowed || (hasRoleRules && roleAllowed) : roleAllowed;
+    if (!audienceAllowed) return false;
     if (entry.course && !window.CURRENT_COURSE_ID) return false;
     if (entry.blueprint && !window.IS_BLUEPRINT) return false;
     if (entry.courseIds && !entry.courseIds.includes(window.CURRENT_COURSE_ID)) return false;
     if (entry.departments && !entry.departments.includes(window.CURRENT_DEPARTMENT_ID)) return false;
     return matches(entry);
+  }
+
+  var currentSisUserIdPromise;
+  function getCurrentSisUserId() {
+    if (!currentSisUserIdPromise) {
+      currentSisUserIdPromise = fetch('/api/v1/users/self', { credentials: 'include' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Canvas profile request failed (' + response.status + ')');
+          return response.json();
+        })
+        .then(function (profile) { return profile && profile.sis_user_id != null ? String(profile.sis_user_id).trim() : null; })
+        .catch(function (error) {
+          console.warn('[BTECH v2] Could not read the current SIS ID; SIS-only feature rules will not match.', error);
+          return null;
+        });
+    }
+    return currentSisUserIdPromise;
+  }
+
+  function loadEligible(entries) {
+    var sisRestricted = entries.filter(hasSisUserIds);
+    entries.filter(function (entry) { return !hasSisUserIds(entry) && allowed(entry); }).forEach(loadFeature);
+    if (sisRestricted.length) {
+      getCurrentSisUserId().then(function (sisUserId) {
+        sisRestricted.filter(function (entry) { return allowed(entry, sisUserId); }).forEach(loadFeature);
+      });
+    }
   }
 
   function loadFeature(entry) {
@@ -114,6 +152,7 @@
   var features = [
     { name: "blueprint_association_links", blueprint: true, notTeacher: false, isd: false, rootAdmin: false, routes: [/^\/courses\/[0-9]+(?:\/.*)?$/, /^\/courses\/[0-9]+(?:\/modules)?$/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/.+?\/edit/, /^\/courses\/[0-9]+\/(pages|assignments|quizzes|discussion_topics)\/(?!.+?\/edit$).+/, /^\/courses\/[0-9]+\/assignments/, /^\/courses\/[0-9]+\/assignments\/[0-9]+\/submissions\/[0-9]+/, /^\/courses\/[0-9]+\/files/, /^\/courses\/[0-9]+\/grades(?:\/[0-9]+)?$/, /^\/courses\/[0-9]+\/grades\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook$/, /^\/courses\/[0-9]+\/gradebook\/[0-9]+/, /^\/courses\/[0-9]+\/gradebook\/speed_grader/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/edit/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/take/, /^\/courses\/[0-9]+\/quizzes\/[0-9]+\/statistics/, /^\/courses\/[0-9]+\/rubrics$/, /^\/courses\/[0-9]+\/sections\/[0-9]+/, /^\/courses\/[0-9]+\/settings/, /^\/courses\/[0-9]+\/users$/, /^\/courses\/[0-9]+\/users\/[0-9]+$/, /\/courses\/([0-9]+)\/question_banks$/, /\/courses\/([0-9]+)\/question_banks\/([0-9]+)/, /^\/courses\/([0-9]+)\/external_tools\/([0-9]+)/] },
     { name: "copy_to_next_year", isd: true, routes: /^\/accounts\/[0-9]+$/ },
+    { name: "dashboard_role_filter", sisUserIds: ["70899"], routes: /^\/$/ },
     { name: "dashboard_students_near_completion", teacher: true, dependencies: ["vue"], routes: /^\/$/ },
     { name: "department_specific_business_hs", departments: [3833], dependencies: ["bridgetools"] },
     { name: "department_specific_data_analytics_feedback_report", departments: [4218], routes: /^\/courses\/[0-9]+(?:\/modules)?$/ },
@@ -188,16 +227,15 @@
 
   function start() {
     addCourseBanner();
-    var critical = features.filter(function (entry) { return entry.priority === 'critical' && allowed(entry); });
-    critical.forEach(loadFeature);
+    var critical = features.filter(function (entry) { return entry.priority === 'critical'; });
+    loadEligible(critical);
 
     var remaining = features.filter(function (entry) { return entry.priority !== 'critical'; });
-    var immediate = remaining.filter(function (entry) { return !needsDepartment(entry) && allowed(entry); });
-    immediate.forEach(loadFeature);
+    loadEligible(remaining.filter(function (entry) { return !needsDepartment(entry); }));
 
     if (remaining.some(needsDepartment) && window.CURRENT_COURSE_ID) {
       resolveCourseDepartment().then(function () {
-        remaining.filter(function (entry) { return needsDepartment(entry) && allowed(entry); }).forEach(loadFeature);
+        loadEligible(remaining.filter(needsDepartment));
       });
     }
   }

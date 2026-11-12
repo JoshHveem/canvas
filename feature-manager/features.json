@@ -52,6 +52,15 @@
         "dashboard"
       ]
     },
+    "dashboard_role_filter": {
+      "description": "Provides student and teacher dashboard views with a toggle based on enrollment.",
+      "sisUserIds": [
+        "70899"
+      ],
+      "locations": [
+        "dashboard"
+      ]
+    },
     "department_specific_business_hs": {
       "description": "Adds department-specific Business and high-school enhancements for submissions and grading.",
       "departments": [
