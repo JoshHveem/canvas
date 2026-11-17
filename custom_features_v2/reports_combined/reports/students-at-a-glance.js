@@ -492,6 +492,7 @@ Vue.component('reports-students-at-a-glance', {
 
     majorProgressHtml(row) {
       const majors = row?.major_progress || [];
+      const fillColor = this.escapeHtml(window.bridgetools?.colors?.blue || this.colors.blue || '#005a9c');
       return majors.map(major => {
         const label = majors.length > 1 ? `${this.escapeHtml(major.major_code)}: ` : '';
         const earned = Number.isFinite(major.credits_earned) ? major.credits_earned : '\u2014';
@@ -501,7 +502,7 @@ Vue.component('reports-students-at-a-glance', {
         const progressAttrs = Number.isFinite(ratio)
           ? `role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"`
           : '';
-        return `<div class="btech-progress" ${progressAttrs} aria-label="Major progress" style="position:relative; height:1.5rem; line-height:1.5rem;"><div class="fill btech-fill-accent" style="width:${percent}%; opacity:.25;"></div><span style="position:absolute; inset:0; text-align:center; color:#111827; font-size:.75rem; white-space:nowrap;">${label}${earned} / ${required} credits</span></div>`;
+        return `<div class="btech-progress" ${progressAttrs} aria-label="Major progress" style="position:relative; height:1.5rem; line-height:1.5rem; background:#374151;"><div class="fill" style="width:${percent}%; background:${fillColor};"></div><span style="position:absolute; inset:0; text-align:center; color:#fff; font-size:.75rem; white-space:nowrap;">${label}${earned} / ${required} credits</span></div>`;
       }).join('');
     },
 
