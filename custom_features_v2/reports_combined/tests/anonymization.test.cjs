@@ -157,6 +157,8 @@ test('real report columns and report subtitles mask names and restore them on to
   const first = view.table.columns.find(column => column.name === 'First Name');
   const last = view.table.columns.find(column => column.name === 'Last Name');
   const course = view.table.columns.find(column => column.name === 'Next Course to Exit');
+  const majorIndex = view.table.columns.findIndex(column => column.name === 'Major Progress');
+  assert.equal(view.table.columns[majorIndex + 1].name, 'Next Course to Exit');
   const row = { first_name: 'Ada', last_name: 'Lovelace', upcoming_course_name: 'Nursing 101' };
   assert.equal(view.titleText, 'Nursing - At A Glance - CS');
   provider.privacy.enabled = true;
@@ -170,7 +172,7 @@ test('real report columns and report subtitles mask names and restore them on to
   shell.$destroy(); view.$destroy(); provider.$destroy();
 });
 
-test('Pending Form remains clickable and prefills the table aliases when names are anonymized', () => {
+test('the standing form icon stays separate from status and prefills aliases when names are anonymized', () => {
   const { provider, definitions } = setup();
   const view = new Vue({
     ...definitions.get('reports-students-at-a-glance'), parent: provider,
@@ -187,11 +189,13 @@ test('Pending Form remains clickable and prefills the table aliases when names a
   view.standingFormInstructor = { id: '99', email: 'teacher@example.com' };
   const original = renderContent(shell, standing, row);
   assert.match(original, /href="https:\/\/btech.jotform.com\/262353898849983\?/);
-  assert.match(original, />Pending Form<\/a>/);
+  assert.match(original, /class="icon-assignment"/);
+  assert.match(original, />Pending<\/span>/);
+  assert.doesNotMatch(original, />Pending<\/a>/);
   assert.match(original, /name__student%5Bfirst%5D=Ada/);
   provider.privacy.enabled = true;
   const anonymized = renderContent(shell, standing, row);
-  assert.match(anonymized, />Pending Form<\/a>/);
+  assert.match(anonymized, />Pending<\/span>/);
   const params = new URL(anonymized.match(/href="([^"]+)"/)[1].replaceAll('&amp;', '&')).searchParams;
   assert.equal(renderContent(shell, first, row), 'First Name #1');
   assert.equal(params.get('name__student[first]'), 'First Name #1');
@@ -201,8 +205,10 @@ test('Pending Form remains clickable and prefills the table aliases when names a
   assert.match(params.get('email__student'), /^email\d+@example\.invalid$/);
   assert.match(params.get('email__instructor'), /^email\d+@example\.invalid$/);
   assert.notEqual(params.get('email__student'), params.get('email__instructor'));
-  assert.doesNotMatch(decodeURIComponent(anonymized), /ada@example.com|teacher@example.com/);
-  assert.equal(renderContent(shell, standing, { ...row, academic_standing_code: 'W1' }), 'W1');
+  assert.doesNotMatch(decodeURIComponent(params.toString()), /ada@example.com|teacher@example.com/);
+  const currentStanding = renderContent(shell, standing, { ...row, academic_standing_code: 'W1' });
+  assert.match(currentStanding, />W1<\/span>/);
+  assert.match(currentStanding, /aria-label="Open academic standing form"/);
   provider.privacy.enabled = false;
   assert.equal(renderContent(shell, standing, row), original);
   shell.$destroy(); view.$destroy(); provider.$destroy();

@@ -16,7 +16,10 @@ for (const folder of ['custom_features/reports/combined', 'custom_features_v2/re
     vm.runInContext(fs.readFileSync(path.join(repository, folder, 'components/report-mixins.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(repository, folder, 'reports/students-at-a-glance.js'), 'utf8'), context);
     const mixins = context.window.ReportMixins;
-    return Object.assign({}, mixins.anonymization?.methods, (mixins.canvasProfiles || mixins.formatting).methods, mixins.formatting.methods, definition.methods);
+    const view = Object.assign({ colors: context.window.ReportUtils.createColors() }, mixins.anonymization?.methods, (mixins.canvasProfiles || mixins.formatting).methods, mixins.formatting.methods, definition.methods);
+    // Legacy reports retain their pending-only form launcher.
+    if (view.standingFormUrl) view.pendingStandingFormUrl = view.standingFormUrl;
+    return view;
   }
 
   test(`${folder}: Canvas profiles populate every Jotform parameter and are cached`, async () => {
@@ -47,15 +50,51 @@ for (const folder of ['custom_features/reports/combined', 'custom_features_v2/re
     assert.equal(requests.length, 2);
   });
 
-  test(`${folder}: sanction prefixes are case insensitive and only pending forms link`, () => {
+  test(`${folder}: sanction prefixes are case insensitive and form availability matches the report`, () => {
     const view = setup();
     for (const [code, sanction] of [['W1', 'Written Warning'], ['w2', 'Written Warning'], ['P1', 'Probation'], ['p2', 'Probation'], [' p1 ', 'Probation']]) {
       assert.equal(new URL(view.pendingStandingFormUrl({ academic_standing_code__expected: code })).searchParams.get('sanction_type'), sanction);
     }
-    assert.equal(view.pendingStandingFormUrl({ academic_standing_code: 'P1', academic_standing_code__expected: 'P1' }), '');
-    assert.equal(view.pendingStandingFormUrl({ academic_standing_code__expected: 'X1' }), '');
-    assert.equal(view.pendingStandingFormUrl({}), '');
+    if (view.standingFormUrl) {
+      for (const row of [{ academic_standing_code: 'P1', academic_standing_code__expected: 'P1' }, { academic_standing_code__expected: 'X1' }, {}]) {
+        assert.equal(new URL(view.standingFormUrl(row)).pathname, '/262353898849983');
+        const html = view.academicStandingHtml(row);
+        assert.match(html, /aria-label="Open academic standing form"/);
+        assert.match(html, /class="icon-assignment"/);
+        assert.doesNotMatch(html, /<a[^>]*>[^<]*(?:Pending|P1)/);
+      }
+      const blank = new URL(view.standingFormUrl({})).searchParams;
+      assert.equal(blank.has('sanction_type'), false);
+      assert.equal(blank.has('academic_standing_code__recommended'), false);
+      assert.equal(view.academicStandingText({ academic_standing_code: 'P1' }), 'P1');
+      assert.equal(view.academicStandingText({ is_pending_add__academic_standing: true }), 'Pending');
+      assert.deepEqual(Object.keys(view.academicStandingPillStyle({})), []);
+    } else {
+      assert.equal(view.pendingStandingFormUrl({ academic_standing_code: 'P1', academic_standing_code__expected: 'P1' }), '');
+      assert.equal(view.pendingStandingFormUrl({ academic_standing_code__expected: 'X1' }), '');
+      assert.equal(view.pendingStandingFormUrl({}), '');
+    }
   });
+
+  if (folder === 'custom_features_v2/reports_combined') {
+    test(`${folder}: form profiles are hydrated for students without pending documentation`, async () => {
+      const requests = [];
+      const view = setup(async url => {
+        requests.push(url);
+        const instructor = url.includes('/self/');
+        return { ok: true, json: async () => ({ id: instructor ? 456 : 123, primary_email: instructor ? 'teacher@example.com' : 'student@example.com' }) };
+      });
+      const rows = await view.hydrateStandingFormData([{ canvas_user_id: '123', sis_user_id: '001234' }]);
+      assert.equal(requests.length, 2);
+      const params = new URL(view.standingFormUrl(rows[0])).searchParams;
+      assert.equal(params.get('email__student'), 'student@example.com');
+      assert.equal(params.get('email__instructor'), 'teacher@example.com');
+      assert.equal(params.get('canvas_user_id__student'), '123');
+      assert.equal(params.get('sis_user_id'), '001234');
+      assert.equal(view.isPendingStandingDocumentation(rows[0]), false);
+      assert.equal(view.academicStandingText(rows[0]), '');
+    });
+  }
 
   test(`${folder}: refreshes a names-only cache and preserves SIS ID if Canvas omits it`, async () => {
     const view = setup(async url => ({ ok: true, json: async () => ({ id: url.includes('/self/') ? 456 : 123, name: 'A Person', primary_email: 'person@example.com' }) }));

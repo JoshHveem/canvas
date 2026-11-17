@@ -59,6 +59,12 @@ Vue.component('reports-students-at-a-glance', {
         row => this.getStudentSisId(row).toLowerCase()
       ),
       new window.ReportColumn(
+        'Major Progress', 'Credits earned out of credits required for each active major in this department. Sorts by the least complete major.', '11rem', false, 'number',
+        row => this.majorProgressHtml(row),
+        null,
+        row => this.majorProgressSort(row)
+      ),
+      new window.ReportColumn(
         'Next Course to Exit', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
         row => this.escapeHtml(row?.upcoming_course_name || ''),
         null,
@@ -88,9 +94,9 @@ Vue.component('reports-students-at-a-glance', {
         sortValue: row => this.submissionHistoryTotal(row)
       }),
       new window.ReportColumn(
-        'Academic Standing', 'Shows Pending Form when the expected and current standing codes differ.', '12rem', false, 'string',
+        'Academic Standing', 'Open the academic standing form for any student using the form icon. The status shows their current standing or Pending when documentation is needed.', '12rem', false, 'string',
         row => this.academicStandingHtml(row),
-        row => this.academicStandingPillStyle(row),
+        null,
         row => this.academicStandingText(row).toLowerCase()
       ),
       new window.ReportColumn(
@@ -186,10 +192,9 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     async hydrateStandingFormData(rows) {
-      if (!rows.some(row => this.isPendingStandingDocumentation(row))) return rows;
+      if (!rows.length) return rows;
 
       const ids = [...new Set(rows
-        .filter(row => this.isPendingStandingDocumentation(row))
         .map(row => String(row.canvas_user_id ?? '').trim())
         .filter(Boolean))];
       const instructorPromise = this.fetchCanvasUserProfile('self');
@@ -381,7 +386,7 @@ Vue.component('reports-students-at-a-glance', {
 
     academicStandingText(row) {
       const currentCode = String(row?.academic_standing_code ?? '').trim();
-      if (this.isPendingStandingDocumentation(row)) return 'Pending Form';
+      if (this.isPendingStandingDocumentation(row)) return 'Pending';
       return currentCode;
     },
 
@@ -396,38 +401,35 @@ Vue.component('reports-students-at-a-glance', {
 
     academicStandingHtml(row) {
       const text = this.academicStandingText(row);
-      const formUrl = this.pendingStandingFormUrl(row);
-      if (!formUrl) return this.escapeHtml(text);
-
+      const formUrl = this.standingFormUrl(row);
       const href = this.escapeHtml(formUrl);
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">${this.escapeHtml(text)}</a>`;
+      const statusStyle = Object.entries(this.academicStandingPillStyle(row))
+        .map(([key, value]) => `${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}:${value}`)
+        .join(';');
+      return `<span style="display:inline-flex; align-items:center; justify-content:flex-start; gap:.5rem; width:100%;"><a href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Open academic standing form" title="Open academic standing form" style="flex:0 0 auto;"><i class="icon-assignment" aria-hidden="true"></i></a><span style="${this.escapeHtml(statusStyle)}">${this.escapeHtml(text)}</span></span>`;
     },
 
-    pendingStandingFormUrl(row) {
-      if (!this.isPendingStandingDocumentation(row)) return '';
-
+    standingFormUrl(row) {
       const recommendedCode = String(row?.academic_standing_code__expected ?? '').trim();
       const prefix = recommendedCode.charAt(0).toUpperCase();
       const sanctionType = prefix === 'W' ? 'Written Warning' : prefix === 'P' ? 'Probation' : '';
-      if (!sanctionType) return '';
-
       const instructor = this.standingFormInstructor || {};
       const params = new URLSearchParams({
         canvas_user_id__student: String(row?.canvas_user_id ?? '').trim(),
         canvas_user_id__instructor: String(instructor.id || window.ENV?.current_user_id || '').trim(),
-        academic_standing_code__recommended: recommendedCode,
         email__student: String(row?.email__student ?? '').trim(),
         'name__student[first]': String(row?.first_name ?? '').trim(),
         'name__student[last]': String(row?.last_name ?? '').trim(),
         sis_user_id: this.getStudentSisId(row),
-        email__instructor: String(row?.email__instructor ?? '').trim(),
-        sanction_type: sanctionType
+        email__instructor: String(row?.email__instructor ?? '').trim()
       });
+      if (recommendedCode) params.set('academic_standing_code__recommended', recommendedCode);
+      if (sanctionType) params.set('sanction_type', sanctionType);
       return `https://btech.jotform.com/262353898849983?${params.toString()}`;
     },
 
     academicStandingPillStyle(row) {
-      if (this.academicStandingText(row) === 'Pending Form') {
+      if (this.isPendingStandingDocumentation(row)) {
         return this.alertPillStyle(true);
       }
 
@@ -464,11 +466,38 @@ Vue.component('reports-students-at-a-glance', {
       return Number.isFinite(value) && value >= 0.99;
     },
 
-    courseProgressHtml(value) {
+    courseProgressHtml(value, label = 'Course progress') {
       if (!Number.isFinite(value)) return '';
 
       const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
-      return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div><span class="btech-muted">${percent}%</span></span>`;
+      return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="${this.escapeHtml(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div><span class="btech-muted">${percent}%</span></span>`;
+    },
+
+    normalizeCredits(value) {
+      if (value == null || String(value).trim() === '') return null;
+      const credits = Number(value);
+      return Number.isFinite(credits) && credits >= 0 ? credits : null;
+    },
+
+    majorProgressRatio(major) {
+      return Number.isFinite(major?.credits_earned) && major?.credits_required > 0
+        ? major.credits_earned / major.credits_required
+        : null;
+    },
+
+    majorProgressSort(row) {
+      const ratios = (row?.major_progress || []).map(major => this.majorProgressRatio(major)).filter(Number.isFinite);
+      return ratios.length ? Math.min(...ratios) : -1;
+    },
+
+    majorProgressHtml(row) {
+      const majors = row?.major_progress || [];
+      return majors.map(major => {
+        const label = majors.length > 1 ? `${this.escapeHtml(major.major_code)}: ` : '';
+        const earned = Number.isFinite(major.credits_earned) ? major.credits_earned : '\u2014';
+        const required = Number.isFinite(major.credits_required) ? major.credits_required : '\u2014';
+        return `<div style="margin-bottom:.25rem;">${this.courseProgressHtml(this.majorProgressRatio(major), 'Major progress')}<span class="btech-muted">${label}${earned} / ${required} credits</span></div>`;
+      }).join('');
     },
 
     normalizeSisUserId(value) {
@@ -497,6 +526,8 @@ Vue.component('reports-students-at-a-glance', {
         department_code: String(row?.department_code ?? '').trim(),
         major_code: String(row?.major_code ?? '').trim(),
         academic_year__major: this.normalizeMajorYear(row?.academic_year__major),
+        credits_earned: this.normalizeCredits(row?.credits_earned),
+        credits_required: this.normalizeCredits(row?.credits_required),
         entry_at: String(row?.entry_at ?? '').trim(),
         enrollment_type: String(row?.enrollment_type ?? '').trim().toUpperCase(),
         is_active_degree: Boolean(row?.is_active_degree)
@@ -712,6 +743,7 @@ Vue.component('reports-students-at-a-glance', {
           upcoming_canvas_course_id: '',
           upcoming_course_name: '',
           upcoming_course_progress: null,
+          major_progress: [],
           num_days_since_last_activity: null,
           submissions_by_date: {}
         });
@@ -814,7 +846,16 @@ Vue.component('reports-students-at-a-glance', {
       const studentsWithEvaluations = new Set();
 
       selectedMajorRows.forEach(row => {
-        this.ensureStudentRecord(studentMap, this.createStudentKey(row?.sis_user_id, row?.canvas_user_id), row);
+        const record = this.ensureStudentRecord(studentMap, this.createStudentKey(row?.sis_user_id, row?.canvas_user_id), row);
+        if (!record) return;
+        if (record.major_progress.some(major => major.major_code === row.major_code
+          && major.academic_year__major === row.academic_year__major)) return;
+        record.major_progress.push({
+          major_code: row.major_code,
+          academic_year__major: row.academic_year__major,
+          credits_earned: row.credits_earned,
+          credits_required: row.credits_required
+        });
       });
 
       headerRows

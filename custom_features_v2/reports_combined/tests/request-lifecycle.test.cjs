@@ -324,7 +324,8 @@ for (const enrollmentType of ['CS', 'HS']) {
     const entryAt = new Date(Date.now() - 60 * 86400000).toISOString();
     const major = (id, extra = {}) => ({
       sis_user_id: id, canvas_user_id: id, major_code: 'P',
-      is_active_degree: true, entry_at: entryAt, enrollment_type: enrollmentType, ...extra
+      is_active_degree: true, entry_at: entryAt, enrollment_type: enrollmentType,
+      credits_earned: '12', credits_required: '24', ...extra
     });
     const view = report('students-at-a-glance', {
       fetchReportDataset: async (filters, options) => {
@@ -362,6 +363,11 @@ for (const enrollmentType of ['CS', 'HS']) {
       }
       const ids = Array.from(view.rows, row => row.canvas_user_id).sort();
       assert.deepEqual(ids, ['clean', 'flagged', 'missing-eval']);
+      for (const row of view.rows) {
+        assert.equal(row.major_progress[0].credits_earned, 12);
+        assert.equal(row.major_progress[0].credits_required, 24);
+        assert.equal(view.majorProgressSort(row), 0.5);
+      }
       assert.equal(view.rows.find(row => row.canvas_user_id === 'missing-eval').is_no_es_eval_on_record, true);
       assert.equal(view.hasAnyAlert(view.rows.find(row => row.canvas_user_id === 'clean')), false);
       view.selectedFlagReason = 'progress-meetings';
@@ -373,6 +379,37 @@ for (const enrollmentType of ['CS', 'HS']) {
     }
   });
 }
+
+test('major progress keeps separate majors and handles missing credits, zero requirements, and over-completion', () => {
+  const view = report('students-at-a-glance', {}, { filters: { enrollment_type: 'CS' } });
+  try {
+    const major = (major_code, credits_earned, credits_required) => ({
+      canvas_user_id: '1', major_code, credits_earned, credits_required,
+      is_active_degree: true, entry_at: '2020-01-01', enrollment_type: 'CS'
+    });
+    const selectedMajorRows = view.normalizeMajorRows([
+      major('A', '12', '24'), major('A', '12', '24'), major('B', 9, 36)
+    ]);
+    const [row] = view.mergeRows({ selectedMajorRows, headerRows: [], endDateRows: [], employmentRows: [], activityRows: [] });
+    assert.equal(row.major_progress.length, 2);
+    assert.equal(view.majorProgressSort(row), 0.25);
+    const html = view.majorProgressHtml(row);
+    assert.match(html, /A: 12 \/ 24 credits/);
+    assert.match(html, /B: 9 \/ 36 credits/);
+    assert.match(html, /aria-label="Major progress"/);
+    for (const [earned, required] of [[null, 24], ['', 24], ['bad', 24], [12, 0], [12, null], [-1, 24]]) {
+      const normalized = view.normalizeMajorRows([major('A', earned, required)])[0];
+      const missing = { major_progress: [normalized] };
+      assert.equal(view.majorProgressRatio(normalized), null);
+      assert.equal(view.majorProgressSort(missing), -1);
+      assert.doesNotMatch(view.majorProgressHtml(missing), /role="progressbar"|NaN|Infinity/);
+    }
+    assert.match(view.majorProgressHtml({ major_progress: [major('A', 30, 24)] }), /aria-valuenow="100"/);
+    assert.match(view.majorProgressHtml({ major_progress: [major('A', 0, 24)] }), /aria-valuenow="0"/);
+  } finally {
+    view.$destroy();
+  }
+});
 
 test('switching at-a-glance cohorts clears prior rows and flag selection and cancels pending data', async () => {
   const pending = deferred();
