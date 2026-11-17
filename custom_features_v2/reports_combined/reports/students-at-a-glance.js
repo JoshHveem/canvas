@@ -525,6 +525,7 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     normalizeMajorYear(value) {
+      if (value == null || String(value).trim() === '') return null;
       const num = Number(value);
       return Number.isFinite(num) ? num : null;
     },
@@ -535,7 +536,7 @@ Vue.component('reports-students-at-a-glance', {
     },
 
     normalizeMajorRows(rows) {
-      return (Array.isArray(rows) ? rows : []).map(row => ({
+      const normalizedRows = (Array.isArray(rows) ? rows : []).map(row => ({
         sis_user_id: this.normalizeSisUserId(row?.sis_user_id),
         canvas_user_id: this.normalizeCanvasUserId(row?.canvas_user_id),
         department_code: String(row?.department_code ?? '').trim(),
@@ -549,6 +550,22 @@ Vue.component('reports-students-at-a-glance', {
       })).filter(row => row.is_active_degree
         && row.enrollment_type === this.enrollmentType
         && this.isEntryDateStarted(row.entry_at));
+
+      if (this.enrollmentType !== 'HS') return normalizedRows;
+
+      const latestMajors = new Map();
+      normalizedRows.forEach(row => {
+        const studentKey = this.createStudentKey(row.sis_user_id, row.canvas_user_id);
+        if (!studentKey) return;
+        const current = latestMajors.get(studentKey);
+        const year = row.academic_year__major ?? -Infinity;
+        const currentYear = current?.academic_year__major ?? -Infinity;
+        if (!current || year > currentYear || (year === currentYear
+          && Date.parse(row.entry_at) > Date.parse(current.entry_at))) {
+          latestMajors.set(studentKey, row);
+        }
+      });
+      return Array.from(latestMajors.values());
     },
 
     isEntryDateStarted(entryAt) {

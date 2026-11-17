@@ -380,6 +380,54 @@ for (const enrollmentType of ['CS', 'HS']) {
   });
 }
 
+for (const enrollmentType of ['HS', 'CS']) {
+  test(`${enrollmentType} major selection ${enrollmentType === 'HS' ? 'uses the latest academic year per student' : 'retains multiple majors'}`, () => {
+    const view = report('students-at-a-glance', {}, { filters: { enrollment_type: enrollmentType } });
+    const major = (major_code, academic_year__major, extra = {}) => ({
+      canvas_user_id: '1', sis_user_id: 'S1', major_code, academic_year__major,
+      credits_earned: 12, credits_required: 24, entry_at: '2020-01-01',
+      is_active_degree: true, enrollment_type: enrollmentType, ...extra
+    });
+    try {
+      const selectedMajorRows = view.normalizeMajorRows([
+        major('OLD', '2025', { entry_at: '2022-01-01' }),
+        major('NEW', '2026', { credits_earned: 6, credits_required: 30 }),
+        major('MISSING', null),
+        major('OTHER-STUDENT', 2024, { canvas_user_id: '2', sis_user_id: 'S2' }),
+        major('INACTIVE', 2099, { is_active_degree: false }),
+        major('FUTURE', 2099, { entry_at: '2999-01-01' })
+      ]);
+      const rows = view.mergeRows({
+        selectedMajorRows, headerRows: [], endDateRows: [], activityRows: [],
+        employmentRows: [
+          { canvas_user_id: '1', program_code: 'OLD', is_pending_instructor_eval: true, num_days_since_last_eval: 60 },
+          { canvas_user_id: '1', program_code: 'NEW', num_days_since_last_eval: 1 }
+        ]
+      });
+      const first = rows.find(row => row.canvas_user_id === '1');
+      const second = rows.find(row => row.canvas_user_id === '2');
+      assert.equal(second.major_progress[0].major_code, 'OTHER-STUDENT');
+      if (enrollmentType === 'HS') {
+        assert.equal(first.major_progress.length, 1);
+        assert.equal(first.major_progress[0].major_code, 'NEW');
+        assert.equal(first.major_progress[0].academic_year__major, 2026);
+        assert.equal(view.majorProgressSort(first), 0.2);
+        assert.equal(first.is_pending_instructor_eval, false);
+        assert.equal(first.num_days_since_last_eval, 1);
+        const tied = view.normalizeMajorRows([
+          major('EARLIER', 2026), major('LATER', 2026, { entry_at: '2021-01-01' })
+        ]);
+        assert.equal(tied[0].major_code, 'LATER');
+      } else {
+        assert.equal(first.major_progress.length, 3);
+        assert.equal(first.is_pending_instructor_eval, true);
+      }
+    } finally {
+      view.$destroy();
+    }
+  });
+}
+
 test('major progress keeps separate majors and handles missing credits, zero requirements, and over-completion', () => {
   const view = report('students-at-a-glance', {}, { filters: { enrollment_type: 'CS' } });
   try {
