@@ -58,12 +58,12 @@ Vue.component('reports-students-at-a-glance', {
         null,
         row => this.getStudentSisId(row).toLowerCase()
       ),
-      new window.ReportColumn(
+      this.withColumnWrap(new window.ReportColumn(
         'Major Progress', 'Credits earned out of credits required for each active major in this department. Sorts by the least complete major.', '11rem', false, 'number',
         row => this.majorProgressHtml(row),
         null,
         row => this.majorProgressSort(row)
-      ),
+      )),
       new window.ReportColumn(
         'Next Course to Exit', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
         row => this.escapeHtml(row?.upcoming_course_name || ''),
@@ -406,7 +406,7 @@ Vue.component('reports-students-at-a-glance', {
       const statusStyle = Object.entries(this.academicStandingPillStyle(row))
         .map(([key, value]) => `${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}:${value}`)
         .join(';');
-      return `<span style="display:inline-flex; align-items:center; justify-content:flex-start; gap:.5rem; width:100%;"><a href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Open academic standing form" title="Open academic standing form" style="flex:0 0 auto;"><i class="icon-assignment" aria-hidden="true"></i></a><span style="${this.escapeHtml(statusStyle)}">${this.escapeHtml(text)}</span></span>`;
+      return `<span style="display:inline-flex; align-items:center; justify-content:flex-start; gap:.5rem; width:100%;"><a href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Open academic standing form" title="Open academic standing form" style="flex:0 0 auto;"><i class="icon-assignment" aria-hidden="true"></i></a><span class="${text ? 'btech-pill-text' : ''}" style="${this.escapeHtml(statusStyle)}">${this.escapeHtml(text)}</span></span>`;
     },
 
     standingFormUrl(row) {
@@ -470,7 +470,16 @@ Vue.component('reports-students-at-a-glance', {
       if (!Number.isFinite(value)) return '';
 
       const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
-      return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="${this.escapeHtml(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div><span class="btech-muted">${percent}%</span></span>`;
+      return this.progressBarHtml(value, `${percent}%`, label);
+    },
+
+    progressBarHtml(value, text, label) {
+      const percent = Number.isFinite(value) ? Math.round(Math.max(0, Math.min(1, value)) * 100) : 0;
+      const fillColor = this.escapeHtml(window.bridgetools?.colors?.blue || this.colors.blue || '#005a9c');
+      const progressAttrs = Number.isFinite(value)
+        ? `role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"`
+        : '';
+      return `<span class="btech-progress" ${progressAttrs} aria-label="${this.escapeHtml(label)}" title="${this.escapeHtml(text)}" style="display:block; position:relative; width:calc(100% - .5rem); max-width:100%; min-width:0; box-sizing:border-box; overflow:hidden; border-radius:999px; height:1.5rem; line-height:1.5rem; background:#374151;"><span class="fill" style="display:block; height:100%; width:${percent}%; background:${fillColor};"></span><span style="position:absolute; inset:0; overflow:hidden; text-overflow:ellipsis; text-align:center; color:#fff; font-size:.75rem; white-space:nowrap;">${this.escapeHtml(text)}</span></span>`;
     },
 
     normalizeCredits(value) {
@@ -492,17 +501,12 @@ Vue.component('reports-students-at-a-glance', {
 
     majorProgressHtml(row) {
       const majors = row?.major_progress || [];
-      const fillColor = this.escapeHtml(window.bridgetools?.colors?.blue || this.colors.blue || '#005a9c');
       return majors.map(major => {
-        const label = majors.length > 1 ? `${this.escapeHtml(major.major_code)}: ` : '';
+        const label = majors.length > 1 ? `${major.major_code}: ` : '';
         const earned = Number.isFinite(major.credits_earned) ? major.credits_earned : '\u2014';
         const required = Number.isFinite(major.credits_required) ? major.credits_required : '\u2014';
         const ratio = this.majorProgressRatio(major);
-        const percent = Number.isFinite(ratio) ? Math.round(Math.max(0, Math.min(1, ratio)) * 100) : 0;
-        const progressAttrs = Number.isFinite(ratio)
-          ? `role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"`
-          : '';
-        return `<div class="btech-progress" ${progressAttrs} aria-label="Major progress" style="position:relative; height:1.5rem; line-height:1.5rem; background:#374151;"><div class="fill" style="width:${percent}%; background:${fillColor};"></div><span style="position:absolute; inset:0; text-align:center; color:#fff; font-size:.75rem; white-space:nowrap;">${label}${earned} / ${required} credits</span></div>`;
+        return this.progressBarHtml(ratio, `${label}${earned} / ${required} credits`, 'Major progress');
       }).join('');
     },
 
