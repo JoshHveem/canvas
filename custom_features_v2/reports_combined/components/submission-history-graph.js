@@ -5,6 +5,7 @@
     props: {
       history: { type: Object, default: () => ({}) },
       days: { type: Number, default: 30 },
+      graphWidth: { type: Number, default: 180 },
       ariaLabel: { type: String, default: 'Submission history' }
     },
 
@@ -21,6 +22,10 @@
 
       normalizedDays() {
         return Math.max(1, Math.floor(Number(this.days) || 30));
+      },
+
+      normalizedWidth() {
+        return Math.max(60, Math.floor(Number(this.graphWidth) || 180));
       },
 
       latestHistoryDate() {
@@ -44,7 +49,7 @@
         }
 
         const maxCount = Math.max(...values.map(value => value.count), 0);
-        const width = 174 / this.normalizedDays;
+        const width = (this.normalizedWidth - 6) / this.normalizedDays;
         const activeIndexes = values
           .map((value, index) => value.count > 0 ? index : -1)
           .filter(index => index >= 0);
@@ -92,8 +97,8 @@
 
     template: `
       <span :title="summary" :aria-label="ariaLabel + ': ' + summary" style="display:inline-block; line-height:0; vertical-align:middle;">
-        <svg v-if="bars.length" width="180" height="48" viewBox="0 0 180 48" role="img" :aria-label="ariaLabel + ': ' + summary">
-          <line x1="3" y1="38.5" x2="177" y2="38.5" :stroke="colors.gray" stroke-width="1"></line>
+        <svg v-if="bars.length" :width="normalizedWidth" height="48" :viewBox="'0 0 ' + normalizedWidth + ' 48'" role="img" :aria-label="ariaLabel + ': ' + summary">
+          <line x1="3" y1="38.5" :x2="normalizedWidth - 3" y2="38.5" :stroke="colors.gray" stroke-width="1"></line>
           <rect
             v-for="bar in bars"
             :key="bar.date"
@@ -104,8 +109,8 @@
             rx="1"
             :fill="bar.color"
           ><title>{{ bar.title }}</title></rect>
-          <text x="3" y="47" :fill="colors.black" font-size="8">30d ago</text>
-          <text x="177" y="47" :fill="colors.black" font-size="8" text-anchor="end">Today</text>
+          <text x="3" y="47" :fill="colors.black" font-size="8">{{ normalizedDays }}d ago</text>
+          <text :x="normalizedWidth - 3" y="47" :fill="colors.black" font-size="8" text-anchor="end">Today</text>
         </svg>
         <span v-else style="line-height:1.2rem;">-</span>
       </span>
@@ -133,6 +138,7 @@
     column.cellProps = row => ({
       history: history(row),
       days,
+      graphWidth: Number(options.graphWidth) || 180,
       ariaLabel: options.ariaLabel || 'Submission history'
     });
     return column;

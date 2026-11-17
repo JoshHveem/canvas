@@ -93,8 +93,9 @@ Vue.component('reports-students-at-a-glance', {
       ),
       window.ReportColumnTypes.submissionHistory({
         history: row => row?.submissions_by_date,
-        days: 30,
-        width: '12rem',
+        days: 14,
+        width: '10rem',
+        graphWidth: 150,
         sortValue: row => this.submissionHistoryTotal(row)
       }),
       new window.ReportColumn(
@@ -654,10 +655,15 @@ Vue.component('reports-students-at-a-glance', {
 
     submissionHistoryTotal(row) {
       const history = row?.submissions_by_date || {};
-      return Object.keys(history)
+      const dates = Object.keys(history)
         .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
-        .sort()
-        .slice(-30)
+        .sort();
+      const endDate = dates[dates.length - 1];
+      const endTime = Date.parse(`${endDate}T00:00:00Z`);
+      if (!Number.isFinite(endTime)) return 0;
+      const startDate = new Date(endTime - 13 * 86400000).toISOString().slice(0, 10);
+      return dates
+        .filter(date => date >= startDate && date <= endDate)
         .reduce((total, date) => {
           const count = history[date];
           return total + Math.max(0, Number(count) || 0);

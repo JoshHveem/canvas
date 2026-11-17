@@ -182,6 +182,33 @@ test('real report columns and report subtitles mask names and restore them on to
   shell.$destroy(); view.$destroy(); provider.$destroy();
 });
 
+test('at-a-glance submission history charts and sorts 14 calendar days within the narrower column', () => {
+  const { provider, definitions } = setup();
+  const view = new Vue({
+    ...definitions.get('reports-students-at-a-glance'), parent: provider,
+    mounted: [], propsData: { reportContext: {} }
+  });
+  const column = view.table.columns.find(column => column.name === 'Submission History');
+  const row = { submissions_by_date: { '2026-11-01': 100, '2026-11-02': 3, '2026-11-15': 2 } };
+  const graph = new Vue({ ...definitions.get('submission-history-graph'), propsData: column.cellProps(row) });
+  const defaultGraph = new Vue({ ...definitions.get('submission-history-graph') });
+  try {
+    assert.equal(column.width, '10rem');
+    assert.equal(graph.normalizedWidth, 150);
+    assert.equal(graph.bars.length, 14);
+    assert.equal(graph.bars[0].date, '2026-11-02');
+    assert.equal(graph.bars[13].date, '2026-11-15');
+    assert.equal(graph.summary, '5 submissions in the last 14 days.');
+    assert.equal(view.submissionHistoryTotal(row), 5);
+    assert.equal(view.submissionHistoryTotal({}), 0);
+    assert.ok(graph.bars.every(bar => bar.x + bar.width <= 147));
+    assert.equal(defaultGraph.normalizedDays, 30);
+    assert.equal(defaultGraph.normalizedWidth, 180);
+  } finally {
+    graph.$destroy(); defaultGraph.$destroy(); view.$destroy(); provider.$destroy();
+  }
+});
+
 test('the standing form icon stays separate from status and prefills aliases when names are anonymized', () => {
   const { provider, definitions } = setup();
   const view = new Vue({
