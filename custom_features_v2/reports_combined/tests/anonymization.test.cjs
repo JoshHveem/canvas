@@ -159,6 +159,12 @@ test('real report columns and report subtitles mask names and restore them on to
   const course = view.table.columns.find(column => column.name === 'Next Course to Exit');
   const majorIndex = view.table.columns.findIndex(column => column.name === 'Major Progress');
   assert.equal(view.table.columns[majorIndex + 1].name, 'Next Course to Exit');
+  assert.equal(view.table.columns[majorIndex].wrap, true);
+  const courseProgress = view.table.columns.find(column => column.name === 'Course Progress');
+  const progressHtml = renderContent(shell, courseProgress, { upcoming_course_progress: 0.5 });
+  assert.match(progressHtml, /aria-label="Course progress"/);
+  assert.match(progressHtml, />50%<\/span>/);
+  assert.doesNotMatch(progressHtml, /btech-muted/);
   const row = { first_name: 'Ada', last_name: 'Lovelace', upcoming_course_name: 'Nursing 101' };
   assert.equal(view.titleText, 'Nursing - At A Glance - CS');
   provider.privacy.enabled = true;
@@ -191,6 +197,7 @@ test('the standing form icon stays separate from status and prefills aliases whe
   assert.match(original, /href="https:\/\/btech.jotform.com\/262353898849983\?/);
   assert.match(original, /class="icon-assignment"/);
   assert.match(original, />Pending<\/span>/);
+  assert.match(original, /class="btech-pill-text"/);
   assert.doesNotMatch(original, />Pending<\/a>/);
   assert.match(original, /name__student%5Bfirst%5D=Ada/);
   provider.privacy.enabled = true;
@@ -208,6 +215,7 @@ test('the standing form icon stays separate from status and prefills aliases whe
   assert.doesNotMatch(decodeURIComponent(params.toString()), /ada@example.com|teacher@example.com/);
   const currentStanding = renderContent(shell, standing, { ...row, academic_standing_code: 'W1' });
   assert.match(currentStanding, />W1<\/span>/);
+  assert.match(currentStanding, /class="btech-pill-text"/);
   assert.match(currentStanding, /aria-label="Open academic standing form"/);
   provider.privacy.enabled = false;
   assert.equal(renderContent(shell, standing, row), original);

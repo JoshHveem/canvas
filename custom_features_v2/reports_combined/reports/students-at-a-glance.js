@@ -59,7 +59,7 @@ Vue.component('reports-students-at-a-glance', {
         row => this.getStudentSisId(row).toLowerCase()
       ),
       this.withColumnWrap(new window.ReportColumn(
-        'Major Progress', 'Credits earned out of credits required for each active major in this department. Sorts by the least complete major.', '11rem', false, 'number',
+        'Major Progress', 'Credits earned out of credits required for each active major in this department. Sorts by the least complete major.', '9rem', false, 'number',
         row => this.majorProgressHtml(row),
         null,
         row => this.majorProgressSort(row)
@@ -71,19 +71,19 @@ Vue.component('reports-students-at-a-glance', {
         row => String(row?.upcoming_course_name ?? '').toLowerCase()
       ),
       this.withColumnWrap(new window.ReportColumn(
-        'Course Progress', 'Student progress in the course with the nearest upcoming end date.', '10rem', false, 'number',
+        'Course Progress', 'Student progress in the course with the nearest upcoming end date.', '7.5rem', false, 'number',
         row => this.courseProgressHtml(row?.upcoming_course_progress),
         null,
         row => Number.isFinite(row?.upcoming_course_progress) ? row.upcoming_course_progress : -1
       )),
       new window.ReportColumn(
-        'Days Until Exit', 'Red below 7 days; green at 7 days or more. The compose icon opens an exit-date check-in message.', '10rem', false, 'number',
+        'Days Until Exit', 'Red below 7 days; green at 7 days or more. The compose icon opens an exit-date check-in message.', '6.5rem', false, 'number',
         row => this.daysUntilExitHtml(row),
         null,
         row => this.dayCountSort(row?.num_days_until_next_end_date)
       ),
       new window.ReportColumn(
-        'Last Submission', 'Days since the student last submitted work. Alerted at 7 days; the compose icon opens a check-in message to the student.', '11rem', false, 'number',
+        'Last Submission', 'Days since the student last submitted work. Alerted at 7 days; the compose icon opens a check-in message to the student.', '7.5rem', false, 'number',
         row => this.lastSubmissionHtml(row),
         null,
         row => this.dayCountSort(row?.num_days_since_last_activity)
@@ -91,16 +91,17 @@ Vue.component('reports-students-at-a-glance', {
       window.ReportColumnTypes.submissionHistory({
         history: row => row?.submissions_by_date,
         days: 30,
+        width: '12rem',
         sortValue: row => this.submissionHistoryTotal(row)
       }),
       new window.ReportColumn(
-        'Academic Standing', 'Open the academic standing form for any student using the form icon. The status shows their current standing or Pending when documentation is needed.', '12rem', false, 'string',
+        'Academic Standing', 'Open the academic standing form for any student using the form icon. The status shows their current standing or Pending when documentation is needed.', '8.5rem', false, 'string',
         row => this.academicStandingHtml(row),
         null,
         row => this.academicStandingText(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. A pending instructor evaluation takes priority and links to SpeedGrader.', '11rem', false, 'number',
+        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. A pending instructor evaluation takes priority and links to SpeedGrader.', '9rem', false, 'number',
         row => this.lastProgressMeetingHtml(row),
         null,
         row => row?.is_pending_instructor_eval ? -1 : this.evaluationStatusSort(row)
