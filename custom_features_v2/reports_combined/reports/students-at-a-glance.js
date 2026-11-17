@@ -496,7 +496,12 @@ Vue.component('reports-students-at-a-glance', {
         const label = majors.length > 1 ? `${this.escapeHtml(major.major_code)}: ` : '';
         const earned = Number.isFinite(major.credits_earned) ? major.credits_earned : '\u2014';
         const required = Number.isFinite(major.credits_required) ? major.credits_required : '\u2014';
-        return `<div style="margin-bottom:.25rem;">${this.courseProgressHtml(this.majorProgressRatio(major), 'Major progress')}<span class="btech-muted">${label}${earned} / ${required} credits</span></div>`;
+        const ratio = this.majorProgressRatio(major);
+        const percent = Number.isFinite(ratio) ? Math.round(Math.max(0, Math.min(1, ratio)) * 100) : 0;
+        const progressAttrs = Number.isFinite(ratio)
+          ? `role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"`
+          : '';
+        return `<div class="btech-progress" ${progressAttrs} aria-label="Major progress" style="position:relative; height:1.5rem; line-height:1.5rem;"><div class="fill btech-fill-accent" style="width:${percent}%; opacity:.25;"></div><span style="position:absolute; inset:0; text-align:center; color:#111827; font-size:.75rem; white-space:nowrap;">${label}${earned} / ${required} credits</span></div>`;
       }).join('');
     },
 
