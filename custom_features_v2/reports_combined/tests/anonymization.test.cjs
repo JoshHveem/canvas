@@ -158,15 +158,15 @@ test('real report columns and report subtitles mask names and restore them on to
   const last = view.table.columns.find(column => column.name === 'Last Name');
   const course = view.table.columns.find(column => column.name === 'Next Course to Exit');
   const row = { first_name: 'Ada', last_name: 'Lovelace', upcoming_course_name: 'Nursing 101' };
-  assert.equal(view.titleText, 'Nursing - At a Glance');
+  assert.equal(view.titleText, 'Nursing - At A Glance - CS');
   provider.privacy.enabled = true;
   assert.equal(renderContent(shell, first, row), 'First Name #1');
   assert.equal(renderContent(shell, last, row), 'Last Name #1');
   assert.equal(renderContent(shell, course, row), 'Course #1');
-  assert.equal(view.titleText, 'Department #1 - At a Glance');
+  assert.equal(view.titleText, 'Department #1 - At A Glance - CS');
   provider.privacy.enabled = false;
   assert.equal(renderContent(shell, last, row), 'Lovelace');
-  assert.equal(view.titleText, 'Nursing - At a Glance');
+  assert.equal(view.titleText, 'Nursing - At A Glance - CS');
   shell.$destroy(); view.$destroy(); provider.$destroy();
 });
 

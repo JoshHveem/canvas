@@ -110,7 +110,12 @@ Vue.component('reports-students-at-a-glance', {
   watch: {
     reportContext: {
       deep: true,
-      async handler() {
+      async handler(next, previous) {
+        if (next?.filters?.enrollment_type !== previous?.filters?.enrollment_type) {
+          this.rows = [];
+          this.selectedFlagReason = 'all';
+          this.cancelReportRequest('data');
+        }
         this.syncFromReportContext();
         await this.loadDepartmentOptions();
       }
@@ -125,6 +130,10 @@ Vue.component('reports-students-at-a-glance', {
   },
 
   computed: {
+    enrollmentType() {
+      return String(this.reportContext?.filters?.enrollment_type ?? 'CS').trim().toUpperCase();
+    },
+
     filteredRows() {
       return this.rows.filter(row => this.matchesFlagReason(row));
     },
@@ -142,7 +151,7 @@ Vue.component('reports-students-at-a-glance', {
         ''
       ).trim();
       const suffix = departmentName || 'Students';
-      return `${this.escapeHtml(departmentName ? this.displayName(departmentName, 'department_name', 'Department') : suffix)} - At a Glance`;
+      return `${this.escapeHtml(departmentName ? this.displayName(departmentName, 'department_name', 'Department') : suffix)} - At A Glance - ${this.escapeHtml(this.enrollmentType)}`;
     }
   },
 
@@ -489,8 +498,11 @@ Vue.component('reports-students-at-a-glance', {
         major_code: String(row?.major_code ?? '').trim(),
         academic_year__major: this.normalizeMajorYear(row?.academic_year__major),
         entry_at: String(row?.entry_at ?? '').trim(),
+        enrollment_type: String(row?.enrollment_type ?? '').trim().toUpperCase(),
         is_active_degree: Boolean(row?.is_active_degree)
-      })).filter(row => row.is_active_degree && this.isEntryDateStarted(row.entry_at));
+      })).filter(row => row.is_active_degree
+        && row.enrollment_type === this.enrollmentType
+        && this.isEntryDateStarted(row.entry_at));
     },
 
     isEntryDateStarted(entryAt) {
@@ -801,6 +813,10 @@ Vue.component('reports-students-at-a-glance', {
       const studentMap = new Map();
       const studentsWithEvaluations = new Set();
 
+      selectedMajorRows.forEach(row => {
+        this.ensureStudentRecord(studentMap, this.createStudentKey(row?.sis_user_id, row?.canvas_user_id), row);
+      });
+
       headerRows
         .filter(row =>
           row.academic_standing_code ||
@@ -918,7 +934,7 @@ Vue.component('reports-students-at-a-glance', {
           }
         });
 
-      return Array.from(studentMap.values()).filter(row => this.hasAnyAlert(row));
+      return Array.from(studentMap.values()).filter(row => this.enrollmentType === 'CS' || this.hasAnyAlert(row));
     },
 
     async loadData() {
@@ -939,6 +955,7 @@ Vue.component('reports-students-at-a-glance', {
         const selectedMajorRows = this.normalizeMajorRows(await request.wait(this.fetchReportDataset(
           {
             department_code: departmentCode,
+            enrollment_type: this.enrollmentType,
             is_active_degree: true,
             entry_at: { op: '<=', value: this.todayDate() }
           },
@@ -947,7 +964,7 @@ Vue.component('reports-students-at-a-glance', {
 
         if (!selectedMajorRows.length) {
           this.rows = [];
-          this.loadError = 'No active students who have started were found for this department.';
+          this.loadError = `No active ${this.enrollmentType} students who have started were found for this department.`;
           return;
         }
 
@@ -1009,7 +1026,10 @@ Vue.component('reports-students-at-a-glance', {
     :row-key-fn="(row, index) => row.student_key || row.canvas_user_id || row.sis_user_id || index"
   >
     <template #description>
-      A list of all students flagged as needing attention. The report updates once per day in the morning. Click on flagged items to reach out to the student in Canvas Messaging. The compose button will open a blank message. The specific items will prefill with a sample message.
+      {{ enrollmentType === 'CS'
+        ? 'A list of all active CS students who have started in the selected department, including students with no attention flags.'
+        : 'A list of active HS students who have started in the selected department and are flagged as needing attention.' }}
+      The report updates once per day in the morning. Click on flagged items to reach out to the student in Canvas Messaging. The compose button will open a blank message. The specific items will prefill with a sample message.
     </template>
 
     <template #filters>

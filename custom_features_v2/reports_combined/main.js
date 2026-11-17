@@ -202,11 +202,18 @@ import './components/report-mixins.entry.js';
             title: 'Students Report',
             subMenus: [
               {
-                value: 'at-a-glance',
-                label: 'At a Glance',
+                value: 'at-a-glance-cs',
+                label: 'At A Glance - CS',
                 component: 'reports-students-at-a-glance',
                 dataset: 'student_majors',
-                filters: {}
+                filters: { enrollment_type: 'CS' }
+              },
+              {
+                value: 'at-a-glance-hs',
+                label: 'At A Glance - HS',
+                component: 'reports-students-at-a-glance',
+                dataset: 'student_majors',
+                filters: { enrollment_type: 'HS' }
               },
               {
                 value: 'probations',
@@ -367,7 +374,7 @@ import './components/report-mixins.entry.js';
               instructors: 'department-summary',
               admissions: 'overview',
               outcomes: 'cpl',
-              students: 'at-a-glance',
+              students: 'at-a-glance-cs',
               evaluations: 'course-evals-summary'
             }
           },

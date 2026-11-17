@@ -264,6 +264,89 @@ test('a stale empty first-stage result cannot clear current at-a-glance rows', a
   view.$destroy();
 });
 
+for (const enrollmentType of ['CS', 'HS']) {
+  test(`at-a-glance ${enrollmentType} scopes majors and ${enrollmentType === 'CS' ? 'includes' : 'excludes'} students without flags`, async () => {
+    const calls = [];
+    const entryAt = new Date(Date.now() - 60 * 86400000).toISOString();
+    const major = (id, extra = {}) => ({
+      sis_user_id: id, canvas_user_id: id, major_code: 'P',
+      is_active_degree: true, entry_at: entryAt, enrollment_type: enrollmentType, ...extra
+    });
+    const view = report('students-at-a-glance', {
+      fetchReportDataset: async (filters, options) => {
+        calls.push({ filters, dataset: options.dataset });
+        switch (options.dataset) {
+          case 'student_majors': return [
+            major('clean'), major('flagged'), major('missing-eval'),
+            major('other-type', { enrollment_type: enrollmentType === 'CS' ? 'HS' : 'CS' }),
+            major('inactive', { is_active_degree: false }),
+            major('future', { entry_at: '2999-01-01' }),
+            major('invalid-entry', { entry_at: '' })
+          ];
+          case 'student_employment_skills_current': return [
+            { canvas_user_id: 'clean', program_code: 'P', num_days_since_last_eval: 1 },
+            { canvas_user_id: 'flagged', program_code: 'P', num_days_since_last_eval: 40 },
+            { canvas_user_id: 'missing-eval', program_code: 'OTHER', num_days_since_last_eval: 1 }
+          ];
+          case 'student_canvas_activity': return [{ canvas_user_id: 'clean', num_days_since_last_submission: 1 }];
+          default: return [];
+        }
+      },
+      hydrateSisUserIds: async rows => rows,
+      hydrateStandingFormData: async rows => rows
+    }, { filters: { enrollment_type: enrollmentType } });
+    try {
+      view.selectedDepartmentCode = 'A';
+      await view.loadData();
+      assert.equal(calls[0].dataset, 'student_majors');
+      assert.equal(calls[0].filters.department_code, 'A');
+      assert.equal(calls[0].filters.enrollment_type, enrollmentType);
+      assert.equal(calls[0].filters.is_active_degree, true);
+      assert.equal(calls[0].filters.entry_at.op, '<=');
+      for (const call of calls.slice(1)) {
+        assert.deepEqual(Array.from(call.filters.canvas_user_id), ['clean', 'flagged', 'missing-eval']);
+      }
+      const ids = Array.from(view.rows, row => row.canvas_user_id).sort();
+      assert.deepEqual(ids, enrollmentType === 'CS' ? ['clean', 'flagged', 'missing-eval'] : ['flagged', 'missing-eval']);
+      assert.equal(view.rows.find(row => row.canvas_user_id === 'missing-eval').is_no_es_eval_on_record, true);
+      if (enrollmentType === 'CS') assert.equal(view.hasAnyAlert(view.rows.find(row => row.canvas_user_id === 'clean')), false);
+      view.selectedFlagReason = 'progress-meetings';
+      assert.deepEqual(Array.from(view.filteredRows, row => row.canvas_user_id).sort(), ['flagged', 'missing-eval']);
+      assert.match(view.titleText, new RegExp(`At A Glance - ${enrollmentType}$`));
+      assert.equal(view.loadError, '');
+    } finally {
+      view.$destroy();
+    }
+  });
+}
+
+test('switching at-a-glance cohorts clears prior rows and flag selection and cancels pending data', async () => {
+  const pending = deferred();
+  let optionsLoads = 0;
+  const view = report('students-at-a-glance', {
+    fetchReportDataset: () => pending.promise,
+    loadDepartmentOptions: async () => { optionsLoads++; }
+  }, { filters: { enrollment_type: 'CS' } });
+  try {
+    view.selectedDepartmentCode = 'A';
+    const first = view.loadData();
+    view.rows = [{ canvas_user_id: 'old-CS' }];
+    view.selectedFlagReason = 'academic-standing';
+    view.reportContext = { filters: { enrollment_type: 'HS' } };
+    await flush();
+    assert.equal(view.rows.length, 0);
+    assert.equal(view.selectedFlagReason, 'all');
+    assert.equal(optionsLoads, 1);
+    assert.equal(view.loading, false);
+    pending.resolve([]);
+    await first;
+    assert.equal(view.loadError, '');
+    assert.equal(view.enrollmentType, 'HS');
+  } finally {
+    view.$destroy();
+  }
+});
+
 test('multi-dataset employment loading still tolerates optional dataset failures', async () => {
   const view = report('employment-skills', {
     fetchReportDataset: async (filters, options) => {
