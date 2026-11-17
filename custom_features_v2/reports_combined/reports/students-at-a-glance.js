@@ -934,7 +934,7 @@ Vue.component('reports-students-at-a-glance', {
           }
         });
 
-      return Array.from(studentMap.values()).filter(row => this.enrollmentType === 'CS' || this.hasAnyAlert(row));
+      return Array.from(studentMap.values());
     },
 
     async loadData() {
@@ -1026,9 +1026,7 @@ Vue.component('reports-students-at-a-glance', {
     :row-key-fn="(row, index) => row.student_key || row.canvas_user_id || row.sis_user_id || index"
   >
     <template #description>
-      {{ enrollmentType === 'CS'
-        ? 'A list of all active CS students who have started in the selected department, including students with no attention flags.'
-        : 'A list of active HS students who have started in the selected department and are flagged as needing attention.' }}
+      A list of all active {{ enrollmentType }} students who have started in the selected department, including students with no attention flags.
       The report updates once per day in the morning. Click on flagged items to reach out to the student in Canvas Messaging. The compose button will open a blank message. The specific items will prefill with a sample message.
     </template>
 

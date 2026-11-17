@@ -265,7 +265,7 @@ test('a stale empty first-stage result cannot clear current at-a-glance rows', a
 });
 
 for (const enrollmentType of ['CS', 'HS']) {
-  test(`at-a-glance ${enrollmentType} scopes majors and ${enrollmentType === 'CS' ? 'includes' : 'excludes'} students without flags`, async () => {
+  test(`at-a-glance ${enrollmentType} scopes majors and includes students without flags`, async () => {
     const calls = [];
     const entryAt = new Date(Date.now() - 60 * 86400000).toISOString();
     const major = (id, extra = {}) => ({
@@ -307,9 +307,9 @@ for (const enrollmentType of ['CS', 'HS']) {
         assert.deepEqual(Array.from(call.filters.canvas_user_id), ['clean', 'flagged', 'missing-eval']);
       }
       const ids = Array.from(view.rows, row => row.canvas_user_id).sort();
-      assert.deepEqual(ids, enrollmentType === 'CS' ? ['clean', 'flagged', 'missing-eval'] : ['flagged', 'missing-eval']);
+      assert.deepEqual(ids, ['clean', 'flagged', 'missing-eval']);
       assert.equal(view.rows.find(row => row.canvas_user_id === 'missing-eval').is_no_es_eval_on_record, true);
-      if (enrollmentType === 'CS') assert.equal(view.hasAnyAlert(view.rows.find(row => row.canvas_user_id === 'clean')), false);
+      assert.equal(view.hasAnyAlert(view.rows.find(row => row.canvas_user_id === 'clean')), false);
       view.selectedFlagReason = 'progress-meetings';
       assert.deepEqual(Array.from(view.filteredRows, row => row.canvas_user_id).sort(), ['flagged', 'missing-eval']);
       assert.match(view.titleText, new RegExp(`At A Glance - ${enrollmentType}$`));
