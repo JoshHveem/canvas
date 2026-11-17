@@ -11,6 +11,9 @@ These instructions apply to the whole repository.
 ## Canvas Feature Work
 
 - Prefer feature-specific files under `custom_features_v2/<feature>/` for behavior, UI, templates, and Canvas API workflows. The legacy `custom_features/` tree is retained for reference.
+- Preserve the established v2 feature and deployment workflow. New features must use `custom_features_v2/<feature-name>/main.js` and existing Feature Manager settings; do not introduce per-feature entrypoint, discovery, build, loader, or bootstrap changes unless the user explicitly asks for changes to that shared system.
+- Treat `feature-manager/build.mjs`, `feature-manager/feature-discovery.mjs`, `feature-manager/server.mjs`, `feature-manager/public/app.js`, `custom_canvas_v2.js`, and `scripts_v2.js` as shared infrastructure. Do not modify them for an individual feature unless explicitly authorized. Per-feature settings through the existing manager workflow are allowed.
+- `scripts_v2.generated.js` and `scripts_v2.min.js` are build outputs. Regenerate them through the existing build workflow when needed; do not hand-edit them or add bespoke deployment steps for a feature.
 - Import shared utilities explicitly from `custom_features_v2/shared/`; do not depend on helpers from the legacy `scripts.js` loader. Rebuild changed features before deployment.
 - Keep Canvas page/body rendering changes scoped to the owning feature folder when possible.
 - Preserve existing Canvas page content unless the user explicitly asks to replace or reseed it.
