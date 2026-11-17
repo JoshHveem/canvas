@@ -65,8 +65,11 @@ Vue.component('reports-students-at-a-glance', {
         row => this.majorProgressSort(row)
       )),
       new window.ReportColumn(
-        'Next Course to Exit', 'Course with the nearest upcoming end date.', '14rem', false, 'string',
-        row => this.escapeHtml(row?.upcoming_course_name || ''),
+        'Current Course', 'Course with the nearest upcoming end date. Hover to see the full course name.', '12rem', false, 'string',
+        row => {
+          const name = this.escapeHtml(row?.upcoming_course_name || '');
+          return `<span title="${name}" style="display:block; width:11.5rem; max-width:100%; box-sizing:border-box; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${name}</span>`;
+        },
         null,
         row => String(row?.upcoming_course_name ?? '').toLowerCase()
       ),
@@ -101,7 +104,7 @@ Vue.component('reports-students-at-a-glance', {
         row => this.academicStandingText(row).toLowerCase()
       ),
       new window.ReportColumn(
-        'Last Progress Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. A pending instructor evaluation takes priority and links to SpeedGrader.', '9rem', false, 'number',
+        'Last Progr. Meeting', 'Shows days since the last progress meeting, or X when none exists for the student\'s active major. A pending instructor evaluation takes priority and links to SpeedGrader.', '9rem', false, 'number',
         row => this.lastProgressMeetingHtml(row),
         null,
         row => row?.is_pending_instructor_eval ? -1 : this.evaluationStatusSort(row)

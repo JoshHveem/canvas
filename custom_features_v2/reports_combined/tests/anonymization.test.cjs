@@ -156,9 +156,9 @@ test('real report columns and report subtitles mask names and restore them on to
   const shell = new Vue({ ...definitions.get('report-table-shell'), parent: view, propsData: { table: view.table } });
   const first = view.table.columns.find(column => column.name === 'First Name');
   const last = view.table.columns.find(column => column.name === 'Last Name');
-  const course = view.table.columns.find(column => column.name === 'Next Course to Exit');
+  const course = view.table.columns.find(column => column.name === 'Current Course');
   const majorIndex = view.table.columns.findIndex(column => column.name === 'Major Progress');
-  assert.equal(view.table.columns[majorIndex + 1].name, 'Next Course to Exit');
+  assert.equal(view.table.columns[majorIndex + 1].name, 'Current Course');
   assert.equal(view.table.columns[majorIndex].wrap, true);
   const courseProgress = view.table.columns.find(column => column.name === 'Course Progress');
   const progressHtml = renderContent(shell, courseProgress, { upcoming_course_progress: 0.5 });
@@ -170,7 +170,11 @@ test('real report columns and report subtitles mask names and restore them on to
   provider.privacy.enabled = true;
   assert.equal(renderContent(shell, first, row), 'First Name #1');
   assert.equal(renderContent(shell, last, row), 'Last Name #1');
-  assert.equal(renderContent(shell, course, row), 'Course #1');
+  const courseHtml = renderContent(shell, course, row);
+  assert.match(courseHtml, /title="Course #1"/);
+  assert.match(courseHtml, />Course #1<\/span>/);
+  assert.match(courseHtml, /text-overflow:ellipsis/);
+  assert.doesNotMatch(courseHtml, /Nursing/);
   assert.equal(view.titleText, 'Department #1 - At A Glance - CS');
   provider.privacy.enabled = false;
   assert.equal(renderContent(shell, last, row), 'Lovelace');
