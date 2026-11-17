@@ -264,6 +264,60 @@ test('a stale empty first-stage result cannot clear current at-a-glance rows', a
   view.$destroy();
 });
 
+test('the bundled report menu passes distinct CS and HS filters through to student loading', async () => {
+  const initialized = deferred();
+  const element = { length: 1, after() {}, hide() {}, append() {} };
+  const jquery = () => element;
+  jquery.getScript = async () => {};
+  jquery.get = async (_url, _data, callback) => callback('<template></template>');
+  const appContext = vm.createContext({
+    window: {},
+    document: { createElement: () => ({}), head: { insertBefore() {} } },
+    ReportColumn: class {}, ReportTable: class {},
+    MutationObserver: class { observe() {} },
+    IS_ME: true, IS_ISD: false, SOURCE_URL: 'https://example.test',
+    $: jquery,
+    Vue: function (options) {
+      const app = new Vue({ ...options, el: undefined, template: undefined });
+      initialized.resolve(app);
+      return app;
+    }
+  });
+  vm.runInContext(fs.readFileSync(path.join(root, 'main.bundle.js'), 'utf8'), appContext);
+  const app = await initialized.promise;
+  const calls = [];
+  const view = report('students-at-a-glance', {
+    loadDepartmentOptions: async () => {},
+    fetchReportDataset: async (filters, options) => {
+      calls.push({ filters, dataset: options.dataset });
+      if (options.dataset !== 'student_majors') return [];
+      return ['CS', 'HS'].map(type => ({
+        canvas_user_id: type, sis_user_id: type, enrollment_type: type,
+        is_active_degree: true, entry_at: '2020-01-01', major_code: 'P'
+      }));
+    },
+    hydrateSisUserIds: async rows => rows,
+    hydrateStandingFormData: async rows => rows
+  }, app.currentReportProps.reportContext);
+  try {
+    view.selectedDepartmentCode = 'A';
+    for (const type of ['CS', 'HS', 'CS']) {
+      app.setSubMenu(`at-a-glance-${type.toLowerCase()}`);
+      const props = app.currentReportProps;
+      assert.equal(props.reportContext.filters.enrollment_type, type);
+      view.reportContext = props.reportContext;
+      await flush();
+      await view.loadData();
+      assert.equal(view.enrollmentType, type);
+      assert.deepEqual(Array.from(view.rows, row => row.canvas_user_id), [type]);
+    }
+    assert.deepEqual(calls.filter(call => call.dataset === 'student_majors').map(call => call.filters.enrollment_type), ['CS', 'HS', 'CS']);
+  } finally {
+    view.$destroy();
+    app.$destroy();
+  }
+});
+
 for (const enrollmentType of ['CS', 'HS']) {
   test(`at-a-glance ${enrollmentType} scopes majors and includes students without flags`, async () => {
     const calls = [];

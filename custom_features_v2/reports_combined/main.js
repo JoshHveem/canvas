@@ -206,14 +206,14 @@ import './components/report-mixins.entry.js';
                 label: 'At A Glance - CS',
                 component: 'reports-students-at-a-glance',
                 dataset: 'student_majors',
-                filters: { enrollment_type: 'CS' }
+                filters: { enrollment_type: { value: 'CS' } }
               },
               {
                 value: 'at-a-glance-hs',
                 label: 'At A Glance - HS',
                 component: 'reports-students-at-a-glance',
                 dataset: 'student_majors',
-                filters: { enrollment_type: 'HS' }
+                filters: { enrollment_type: { value: 'HS' } }
               },
               {
                 value: 'probations',
