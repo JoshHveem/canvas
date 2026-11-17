@@ -25,6 +25,11 @@ function parseNumbers(value, label) {
   return values;
 }
 
+function parseSisUserIds(value) {
+  const values = value.split(',').map(item => item.trim()).filter(Boolean);
+  return values.length ? [...new Set(values)] : undefined;
+}
+
 function parseRoutes(value) {
   const lines = value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   if (!lines.length) return undefined;
@@ -44,6 +49,7 @@ function scopes(feature) {
   if (feature.notTeacher) items.push('Students');
   if (feature.isd) items.push('ISD');
   if (feature.rootAdmin) items.push('Root admin');
+  if (feature.sisUserIds?.length) items.push(`${feature.sisUserIds.length} SIS ID${feature.sisUserIds.length === 1 ? '' : 's'}`);
   if (feature.courseIds) items.push(`${feature.courseIds.length} course${feature.courseIds.length === 1 ? '' : 's'}`);
   if (feature.departments) items.push(`${feature.departments.length} department${feature.departments.length === 1 ? '' : 's'}`);
   return items.length ? items.join(' · ') : 'All users';
@@ -134,7 +140,9 @@ function renderEditor() {
       <label><input data-field="notTeacher" type="checkbox" ${checked(feature, 'notTeacher')}> Students only</label>
       <label><input data-field="isd" type="checkbox" ${checked(feature, 'isd')}> ISD users</label>
       <label><input data-field="rootAdmin" type="checkbox" ${checked(feature, 'rootAdmin')}> Root admins</label>
-    </div></fieldset>
+    </div>
+    <label class="wide">Specific SIS user IDs<input data-field="sisUserIds" value="${escapeHtml(list(feature.sisUserIds))}" placeholder="Example: 12345, ABC987"><small>Comma-separated. Matching IDs add those people to the allowed audience; location, department, and course restrictions still apply.</small></label>
+    </fieldset>
     <fieldset><legend>Where it can run</legend><div class="field-grid">
       <label>Specific department IDs<input data-field="departments" value="${list(feature.departments)}" placeholder="Example: 3824, 3833"></label>
     </div>
@@ -244,13 +252,14 @@ function updateFeature(input) {
     if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'blueprint'].includes(field)) feature[field] = input.checked;
     else if (field === 'courseIds') { const values = parseNumbers(input.value, 'Course IDs'); values ? feature.courseIds = values : delete feature.courseIds; }
     else if (field === 'departments') { const values = parseNumbers(input.value, 'Department IDs'); values ? feature.departments = values : delete feature.departments; }
+    else if (field === 'sisUserIds') { const values = parseSisUserIds(input.value); values ? feature.sisUserIds = values : delete feature.sisUserIds; }
     else if (field === 'routes') { const values = parseRoutes(input.value); values ? feature.routes = values : delete feature.routes; }
     else if (field === 'description') { input.value.trim() ? feature.description = input.value.trim() : delete feature.description; }
     else if (field === 'priority') { input.value ? feature.priority = input.value : delete feature.priority; }
     status('');
     setSaving(true);
     queueSave();
-    if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'courseIds', 'departments'].includes(field)) renderSidebar();
+    if (['teacher', 'notTeacher', 'isd', 'rootAdmin', 'sisUserIds', 'courseIds', 'departments'].includes(field)) renderSidebar();
     if (field === 'courseIds') renderEditor();
   } catch (error) { status(error.message); input.focus(); }
 }
