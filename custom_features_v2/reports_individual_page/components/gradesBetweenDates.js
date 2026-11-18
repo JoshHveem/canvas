@@ -68,15 +68,11 @@
         <div v-else>
           <div class='btech-report-submission-dates' style="display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;">
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
-              <option disabled value=''>{{ activeTermsOnly && !sortedTerms.length ? 'No active terms' : '-select term-' }}</option>
+              <option disabled value=''>-select term-</option>
               <option v-for='term in sortedTerms' :value='term._id'>
                 {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_sections}})
               </option>
             </select>
-            <label style="display:inline-flex; align-items:center; gap:.35rem;">
-              <input type="checkbox" v-model="activeTermsOnly" @change="onActiveTermsChange()">
-              Active
-            </label>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change="onDateRangeChange()">
 
@@ -335,14 +331,7 @@
     },
     computed: {
       sortedTerms() {
-        const today = todayDate();
-        return this.termsData.filter(term => {
-          if (!this.activeTermsOnly) return true;
-          const start = String(term.entry_at || '').slice(0, 10);
-          const end = String(term.exit_at || '').slice(0, 10);
-          return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) &&
-            start <= today && today <= end;
-        }).sort((a, b) => {
+        return [...this.termsData].sort((a, b) => {
           return new Date(b.entry_at) - new Date(a.entry_at);
         });
       },
@@ -419,7 +408,6 @@
 
 
         termsData: [],
-        activeTermsOnly: false,
         loadedTermsSisUserId: null,
         selectedTermId: '',
         selectedTerm: {},
@@ -582,7 +570,7 @@
 
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
-        this.onActiveTermsChange(true);
+        this.selectTermAfterLoad();
       },
 
       buildHsTermUpdatePayload(term) {
@@ -985,10 +973,16 @@
         this.applySelectedTerm(term);
       },
 
-      onActiveTermsChange(reload = false) {
+      selectTermAfterLoad() {
         const current = this.sortedTerms.find(term => term._id === this.selectedTermId);
-        if (current && !reload) return;
-        const term = current || this.sortedTerms[0];
+        const today = todayDate();
+        const latestActive = this.sortedTerms.find(term => {
+          const start = String(term.entry_at || '').slice(0, 10);
+          const end = String(term.exit_at || '').slice(0, 10);
+          return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) &&
+            start <= today && today <= end;
+        });
+        const term = current || latestActive || this.sortedTerms[0];
         this.selectedTermId = term?._id || '';
         if (term) {
           this.applySelectedTerm(term);

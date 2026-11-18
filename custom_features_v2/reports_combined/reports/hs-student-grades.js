@@ -18,7 +18,7 @@
 
     data() {
       const colors = window.ReportUtils.createColors();
-      return { colors, table: window.ReportUtils.createTable('Last Name', colors), selectedHighSchool: '' };
+      return { colors, table: window.ReportUtils.createTable('Last Name', colors), selectedHighSchool: '', activeTermsOnly: false };
     },
 
     created() {
@@ -69,9 +69,16 @@
       },
 
       filteredRows() {
-        return this.selectedHighSchool
-          ? this.rows.filter(row => (row.high_schools || []).includes(this.selectedHighSchool))
-          : this.rows;
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        return this.rows.filter(row => {
+          if (this.selectedHighSchool && !(row.high_schools || []).includes(this.selectedHighSchool)) return false;
+          if (!this.activeTermsOnly) return true;
+          const start = String(row.entry_at || '').slice(0, 10);
+          const end = String(row.exit_at || '').slice(0, 10);
+          return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) &&
+            start <= today && today <= end;
+        });
       },
 
       visibleRows() {
@@ -236,6 +243,10 @@
         HS student term grades for the selected department and year. Term Grade shows the grade for the full term if no additional work is submitted.
       </template>
       <template #filters>
+        <label style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto; font-size:.75rem;">
+          <input type="checkbox" v-model="activeTermsOnly">
+          Active
+        </label>
         <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
           <label for="report-filter-academic_year" class="btech-muted" style="font-size:.75rem;">Year</label>
           <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
