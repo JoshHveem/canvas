@@ -18,7 +18,7 @@
 
     data() {
       const colors = window.ReportUtils.createColors();
-      return { colors, table: window.ReportUtils.createTable('Last Name', colors) };
+      return { colors, table: window.ReportUtils.createTable('Last Name', colors), selectedHighSchool: '' };
     },
 
     created() {
@@ -42,6 +42,8 @@
         textColumn('SIS ID', 'Student information system ID.', '6rem',
           row => this.anonymous ? 'STUDENT' : row.sis_user_id),
         textColumn('Campus', 'HS enrollment campus code.', '4rem', row => row.campus_code),
+        this.withColumnWrap(textColumn('High Schools', 'High schools associated with the student.', '12rem',
+          row => (row.high_schools || []).map(school => this.displayName(school, 'high_school_name', 'High School')).join(', '))),
         textColumn('Term', 'Enrollment start and end dates.', '12rem',
           row => `${this.termDate(row.entry_at)} to ${this.termDate(row.exit_at)}`),
         this.withColumnWrap(new window.ReportColumn(
@@ -53,6 +55,25 @@
         gradeColumn('Grade to Date', 'Grade scaled by the credits required to date.', 'grade__to_date'),
         gradeColumn('Term Grade', 'Grade scaled by the credits required for the full term.', 'grade__term')
       ]);
+    },
+
+    computed: {
+      highSchoolOptions() {
+        return [...new Set(this.rows.flatMap(row => row.high_schools || []))]
+          .sort((a, b) => a.localeCompare(b))
+          .map(school => ({ value: school, label: school }));
+      },
+
+      filteredRows() {
+        return this.selectedHighSchool
+          ? this.rows.filter(row => (row.high_schools || []).includes(this.selectedHighSchool))
+          : this.rows;
+      },
+
+      visibleRows() {
+        this.table.setRows(this.filteredRows);
+        return this.table.getSortedRows();
+      }
     },
 
     methods: {
@@ -150,7 +171,11 @@
           sis_user_id: String(row?.sis_user_id ?? '').trim(),
           canvas_user_id: String(row?.canvas_user_id ?? '').trim(),
           course_code: String(row?.course_code ?? '').trim(),
-          campus_code: String(row?.campus_code ?? '').trim()
+          campus_code: String(row?.campus_code ?? '').trim(),
+          high_schools: [...new Set((Array.isArray(row?.high_schools) ? row.high_schools : [])
+            .filter(school => typeof school === 'string')
+            .map(school => school.trim())
+            .filter(Boolean))]
         }));
       },
 
@@ -163,6 +188,7 @@
         }, async request => {
           this.rows = [];
           if (!this.selectedDepartmentCode) {
+            this.selectedHighSchool = '';
             this.loadError = this.getEmptySelectionMessage();
             return;
           }
@@ -172,6 +198,9 @@
           const hydratedRows = await request.wait(this.hydrateSisUserIds(this.mapRows(rows), { hydrate_sis_user_id: true }));
 
           this.rows = hydratedRows;
+          if (this.selectedHighSchool && !this.highSchoolOptions.some(option => option.value === this.selectedHighSchool)) {
+            this.selectedHighSchool = '';
+          }
         });
       }
     },
@@ -201,6 +230,13 @@
           <select v-model="selectedDepartmentCode" v-bind="filterAttrs('department_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
             <option value="">Select a Department</option>
             <option v-for="option in departmentOptions" :key="option.value" :value="option.value">{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
+          <label for="report-filter-high_school" class="btech-muted" style="font-size:.75rem;">High School</label>
+          <select v-model="selectedHighSchool" v-bind="filterAttrs('high_school')" :disabled="loading || !highSchoolOptions.length" style="font-size:.75rem; min-width:180px; max-width:280px;">
+            <option value="">All High Schools</option>
+            <option v-for="option in highSchoolOptions" :key="option.value" :value="option.value">{{ displayFilterOption(option, 'high_school_name', 'High School') }}</option>
           </select>
         </div>
       </template>

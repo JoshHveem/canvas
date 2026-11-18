@@ -523,6 +523,41 @@ test('direct admissions requests ignore a late failure after a year change', asy
   }
 });
 
+test('HS grades high-school options and filtering use loaded arrays without additional requests', async () => {
+  let calls = 0;
+  let dataset = [
+    { sis_user_id: 'A', high_schools: [' West High ', 'East High', 'West High', '', null] },
+    { sis_user_id: 'B', high_schools: ['East High'] },
+    { sis_user_id: 'C', high_schools: null }
+  ];
+  const view = report('hs-student-grades', {
+    fetchReportDataset: async () => { calls++; return dataset; },
+    hydrateSisUserIds: async rows => rows
+  });
+  try {
+    view.selectedDepartmentCode = 'A';
+    await flush();
+    assert.equal(calls, 1);
+    assert.deepEqual(Array.from(view.highSchoolOptions, option => option.value), ['East High', 'West High']);
+    assert.equal(view.visibleRows.length, 3);
+    view.selectedHighSchool = 'West High';
+    assert.deepEqual(Array.from(view.visibleRows, row => row.sis_user_id), ['A']);
+    view.selectedHighSchool = 'East High';
+    assert.deepEqual(Array.from(view.visibleRows, row => row.sis_user_id), ['A', 'B']);
+    view.selectedHighSchool = '';
+    assert.equal(view.visibleRows.length, 3);
+    await flush();
+    assert.equal(calls, 1);
+    view.selectedHighSchool = 'West High';
+    dataset = [{ sis_user_id: 'B', high_schools: ['East High'] }];
+    await view.loadData();
+    assert.equal(view.selectedHighSchool, '');
+    assert.equal(view.visibleRows.length, 1);
+    assert.equal(view.highSchoolOptions.length, 1);
+    assert.equal(calls, 2);
+  } finally { view.$destroy(); }
+});
+
 test('clearing a department invalidates in-flight rows, including hydration', async () => {
   const hydration = deferred();
   const view = report('hs-student-grades', {
