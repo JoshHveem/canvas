@@ -670,12 +670,18 @@ test('report-specific grade thresholds and numeric missing-value behavior remain
 test('student links retain their report-specific course fields, query parameters, and escaping', () => {
   const skills = report('employment-skills');
   const glance = report('students-at-a-glance');
+  const hsGrades = report('hs-student-grades');
   const row = { first_name: '<Ada>', canvas_user_id: '34', canvas_course_id: '12', upcoming_canvas_course_id: '56' };
   assert.match(skills.studentFirstNameLinkHtml(row), /href="\/courses\/12\/users\/34\?open_btech_report=employment-skills"/);
   assert.match(glance.studentFirstNameLinkHtml(row), /href="\/courses\/56\/users\/34"/);
   assert.match(skills.studentFirstNameLinkHtml(row), /&lt;Ada&gt;/);
   assert.equal(skills.studentFirstNameLinkHtml({ first_name: '<Ada>', canvas_user_id: '34' }), '&lt;Ada&gt;');
-  skills.$destroy(); glance.$destroy();
+  assert.match(hsGrades.studentNameLinkHtml(row), /href="\/courses\/12\/users\/34\?open_btech_report=hs-grades"/);
+  assert.match(hsGrades.studentNameLinkHtml(row), />&lt;Ada&gt;<\/a>/);
+  assert.match(hsGrades.studentNameLinkHtml({ canvas_user_id: '34', first_name: 'Ada' }), /href="\/users\/34\?open_btech_report=hs-grades"/);
+  assert.match(hsGrades.studentNameLinkHtml({ canvas_user_id: '34', last_name: 'Lovelace' }, 'last_name'), />Lovelace<\/a>/);
+  assert.equal(hsGrades.studentNameLinkHtml({ first_name: '<Ada>' }), '&lt;Ada&gt;');
+  skills.$destroy(); glance.$destroy(); hsGrades.$destroy();
 });
 
 test('inherited table rows react to report data replacements', () => {

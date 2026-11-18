@@ -34,11 +34,15 @@
         row => this.gradePillStyle(row[field]),
         row => this.numberValue(row[field]) ?? Number.POSITIVE_INFINITY
       );
+      const nameColumn = (label, field, width) => new window.ReportColumn(
+        label, 'Open the student user page and HS Grades report.', width, false, 'string',
+        row => this.studentNameLinkHtml(row, field),
+        null,
+        row => String(this.anonymous ? 'STUDENT' : row[field] || '').toLowerCase()
+      );
       this.table.setColumns([
-        textColumn('First Name', 'Student first name pulled from Canvas.', '8rem',
-          row => this.anonymous ? 'STUDENT' : String(row.first_name || '').trim()),
-        textColumn('Last Name', 'Student last name pulled from Canvas.', '9rem',
-          row => this.anonymous ? 'STUDENT' : String(row.last_name || '').trim()),
+        nameColumn('First Name', 'first_name', '8rem'),
+        nameColumn('Last Name', 'last_name', '9rem'),
         textColumn('SIS ID', 'Student information system ID.', '6rem',
           row => this.anonymous ? 'STUDENT' : row.sis_user_id),
         textColumn('Campus', 'HS enrollment campus code.', '4rem', row => row.campus_code),
@@ -77,6 +81,19 @@
     },
 
     methods: {
+      studentNameLinkHtml(row, field = 'first_name') {
+        if (this.anonymous) return 'STUDENT';
+        const text = this.escapeHtml(String(row?.[field] ?? '').trim() || '-');
+        const userId = String(row?.canvas_user_id ?? '').trim();
+        if (!userId) return text;
+
+        const courseId = String(row?.canvas_course_id ?? '').trim();
+        const path = courseId
+          ? `/courses/${encodeURIComponent(courseId)}/users/${encodeURIComponent(userId)}`
+          : `/users/${encodeURIComponent(userId)}`;
+        return `<a href="${path}?open_btech_report=hs-grades" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      },
+
       async loadDepartmentOptions(forceReloadData = false) {
         return this.runReportRequest('options', {
           loadingKey: 'loadingDepartments',
