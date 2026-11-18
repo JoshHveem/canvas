@@ -615,6 +615,16 @@ test('report-specific grade thresholds and numeric missing-value behavior remain
   assert.equal(grades.numberValue(''), null);
   assert.equal(summary.numberValue(''), 0);
   assert.equal(grades.gradePillStyle(65).backgroundColor, grades.colors.red);
+  grades.colors.blue = '#005a9c';
+  const credits = grades.creditProgressHtml({ credits_completed: 5, credits_required: 20, credits_required__to_date: 10 });
+  assert.equal((credits.match(/role="progressbar"/g) || []).length, 1);
+  assert.match(credits, /width:50%; background:/);
+  assert.match(credits, /width:25%; background:#005a9c/);
+  assert.ok(credits.indexOf('width:50%') < credits.indexOf('width:25%'));
+  assert.match(credits, />5\.00 \/ 20\.00<\/span>/);
+  assert.match(credits, /background:#374151/);
+  assert.equal(grades.creditProgressHtml({ credits_completed: 5, credits_required: 0 }), '5.00 / 0.00');
+  assert.match(grades.creditProgressHtml({ credits_completed: 25, credits_required: 20 }), /aria-valuenow="100"/);
   assert.equal(standing.gradePillStyle(65).backgroundColor, standing.colors.yellow);
   assert.equal(summary.percent(NaN), '—');
   const outlook = report('graduation-outlook');

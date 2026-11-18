@@ -44,12 +44,12 @@
         textColumn('Campus', 'HS enrollment campus code.', '4rem', row => row.campus_code),
         textColumn('Term', 'Enrollment start and end dates.', '12rem',
           row => `${this.termDate(row.entry_at)} to ${this.termDate(row.exit_at)}`),
-        new window.ReportColumn(
-          'Credits', 'Blue: credits completed. Red: credits required to date. Both bars are scaled to the credits required for the full term.', '10rem', false, 'number',
+        this.withColumnWrap(new window.ReportColumn(
+          'Credits', 'Blue: credits earned. Red behind blue: credits required to date. Dark gray: remaining credits. The label shows earned credits / total credits required for the full term.', '10rem', false, 'number',
           row => this.creditProgressHtml(row),
           null,
           row => this.numberValue(row.credits_completed) ?? Number.POSITIVE_INFINITY
-        ),
+        )),
         gradeColumn('Grade to Date', 'Grade scaled by the credits required to date.', 'grade__to_date'),
         gradeColumn('Term Grade', 'Grade scaled by the credits required for the full term.', 'grade__term')
       ]);
@@ -126,11 +126,12 @@
         const requiredToDate = this.numberValue(row.credits_required__to_date);
         const requiredToDatePercent = requiredToDate === null ? null
           : Math.round(Math.max(0, Math.min(1, requiredToDate / required)) * 100);
+        const blue = this.escapeHtml(window.bridgetools?.colors?.blue || this.colors.blue || '#005a9c');
+        const red = this.escapeHtml(window.bridgetools?.colors?.red || this.colors.red);
+        const description = `${label} credits${requiredToDate === null ? '' : `; ${this.creditText(requiredToDate)} required to date`}`;
         const requiredToDateHtml = requiredToDatePercent === null ? ''
-          : `<div class="btech-progress" style="margin-top:3px;" role="presentation"><div class="fill" style="width:${requiredToDatePercent}%; background-color:${this.colors.red};" role="progressbar" aria-label="Credits required to date" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${requiredToDatePercent}"></div></div>`;
-        const requiredToDateLabel = requiredToDate === null ? ''
-          : `<span class="btech-muted" style="display:block;">Required to date: ${this.creditText(requiredToDate)}</span>`;
-        return `<span style="display:block; padding-right:.5rem;"><div class="btech-progress" role="presentation"><div class="fill btech-fill-accent" style="width:${percent}%;" role="progressbar" aria-label="Credits completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"></div></div>${requiredToDateHtml}<span class="btech-muted">${label} (${percent}%)</span>${requiredToDateLabel}</span>`;
+          : `<span style="position:absolute; inset:0 auto 0 0; width:${requiredToDatePercent}%; background:${red};"></span>`;
+        return `<span class="btech-progress" role="progressbar" aria-label="Credits earned" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="${description}" title="${description}" style="display:block; position:relative; width:calc(100% - .5rem); max-width:100%; min-width:0; box-sizing:border-box; overflow:hidden; border-radius:999px; height:1.5rem; line-height:1.5rem; background:#374151;">${requiredToDateHtml}<span style="position:absolute; inset:0 auto 0 0; width:${percent}%; background:${blue};"></span><span style="position:absolute; inset:0; overflow:hidden; text-overflow:ellipsis; text-align:center; color:#fff; font-size:.75rem; white-space:nowrap;">${label}</span></span>`;
       },
 
       creditText(value) {
