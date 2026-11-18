@@ -51,10 +51,16 @@
         textColumn('Term', 'Enrollment start and end dates.', '12rem',
           row => `${this.termDate(row.entry_at)} to ${this.termDate(row.exit_at)}`),
         this.withColumnWrap(new window.ReportColumn(
-          'Credits', 'Blue: credits earned. Red behind blue: credits required to date. Dark gray: remaining credits. The label shows earned credits / total credits required for the full term.', '10rem', false, 'number',
+          'Credits', 'Blue: credits earned. Red behind blue: credits required to date. Dark gray: remaining credits. The label shows earned credits / total credits required for the full term. Sorts by percentage of term credits completed.', '10rem', false, 'number',
           row => this.creditProgressHtml(row),
           null,
-          row => this.numberValue(row.credits_completed) ?? Number.POSITIVE_INFINITY
+          row => {
+            const completed = this.numberValue(row.credits_completed);
+            const required = this.numberValue(row.credits_required);
+            return completed !== null && required !== null && required > 0
+              ? completed / required
+              : Number.POSITIVE_INFINITY;
+          }
         )),
         gradeColumn('Grade to Date', 'Grade scaled by the credits required to date.', 'grade__to_date'),
         gradeColumn('Term Grade', 'Grade scaled by the credits required for the full term.', 'grade__term')
@@ -243,10 +249,6 @@
         HS student term grades for the selected department and year. Term Grade shows the grade for the full term if no additional work is submitted.
       </template>
       <template #filters>
-        <label style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto; font-size:.75rem;">
-          <input type="checkbox" v-model="activeTermsOnly">
-          Active
-        </label>
         <div style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto;">
           <label for="report-filter-academic_year" class="btech-muted" style="font-size:.75rem;">Year</label>
           <select v-model.number="year" v-bind="filterAttrs('academic_year')" style="font-size:.75rem; min-width:90px;">
@@ -267,6 +269,10 @@
             <option v-for="option in highSchoolOptions" :key="option.value" :value="option.value">{{ displayFilterOption(option, 'high_school_name', 'High School') }}</option>
           </select>
         </div>
+        <label style="display:flex; align-items:center; gap:.5rem; flex:0 0 auto; font-size:.75rem;">
+          <input type="checkbox" v-model="activeTermsOnly">
+          Active
+        </label>
       </template>
     </report-table-shell>
     `
