@@ -68,11 +68,15 @@
         <div v-else>
           <div class='btech-report-submission-dates' style="display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;">
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
-              <option selected disabled value=''>-select term-</option>
+              <option disabled value=''>{{ activeTermsOnly && !sortedTerms.length ? 'No active terms' : '-select term-' }}</option>
               <option v-for='term in sortedTerms' :value='term._id'>
                 {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_sections}})
               </option>
             </select>
+            <label style="display:inline-flex; align-items:center; gap:.35rem;">
+              <input type="checkbox" v-model="activeTermsOnly" @change="onActiveTermsChange()">
+              Active
+            </label>
             <span>Start Date:</span>
             <input type="date" v-model="submissionDatesStart" @change="onDateRangeChange()">
 
@@ -250,7 +254,7 @@
               <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
             </tfoot>
           </table>
-          <div id = "submissionGraph"></div>
+          <div id="submissionGraph" v-show="submissionDatesStart && submissionDatesEnd"></div>
           <div v-if='showGradeDetails'>
             <!--include a reset button to go back to the default. Probably just rerun the code from on change of date-->
             <div v-for='course in includedAssignments' :key='course.name'>
@@ -331,7 +335,14 @@
     },
     computed: {
       sortedTerms() {
-        return [...this.termsData].sort((a, b) => {
+        const today = todayDate();
+        return this.termsData.filter(term => {
+          if (!this.activeTermsOnly) return true;
+          const start = String(term.entry_at || '').slice(0, 10);
+          const end = String(term.exit_at || '').slice(0, 10);
+          return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) &&
+            start <= today && today <= end;
+        }).sort((a, b) => {
           return new Date(b.entry_at) - new Date(a.entry_at);
         });
       },
@@ -408,6 +419,7 @@
 
 
         termsData: [],
+        activeTermsOnly: false,
         loadedTermsSisUserId: null,
         selectedTermId: '',
         selectedTerm: {},
@@ -570,20 +582,7 @@
 
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
-        if (!this.termsData.length) {
-          this.selectedTermId = '';
-          this.selectedTerm = {};
-          return;
-        }
-
-        const selectedTermStillExists = this.termsData.some(term => term._id === this.selectedTermId);
-        this.selectedTermId = selectedTermStillExists
-          ? this.selectedTermId
-          : this.sortedTerms[0]._id;
-
-        if (this.selectedTermId) {
-          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
-        }
+        this.onActiveTermsChange(true);
       },
 
       buildHsTermUpdatePayload(term) {
@@ -670,8 +669,6 @@
 
           await this.hsTermsUpdate(payload);
           await this.loadTerms();
-          this.selectedTermId = term._id;
-          this.applySelectedTerm(this.termsData.find(item => item._id === term._id));
           this.closeBulkModal();
         } catch (err) {
           console.error("Failed saving term dates:", err);
@@ -763,8 +760,6 @@
           }
 
           await this.loadTerms();
-          this.selectedTermId = this.selectedTerm._id;
-          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
           this.closeBulkModal();
           alert("Bulk update complete.");
         } catch (err) {
@@ -988,6 +983,27 @@
         if (!term) return;
 
         this.applySelectedTerm(term);
+      },
+
+      onActiveTermsChange(reload = false) {
+        const current = this.sortedTerms.find(term => term._id === this.selectedTermId);
+        if (current && !reload) return;
+        const term = current || this.sortedTerms[0];
+        this.selectedTermId = term?._id || '';
+        if (term) {
+          this.applySelectedTerm(term);
+          return;
+        }
+        this.selectedTerm = {};
+        this.submissionDatesStart = undefined;
+        this.submissionDatesEnd = undefined;
+        this.termCreditsRequired = 0;
+        this.estimatedCreditsRequired = 0;
+        this.termCreditsManuallyEdited = false;
+        this.termCreditsResetPending = false;
+        this.includedAssignments = {};
+        this.gradesBetweenDates = {};
+        this.progressBetweenDates = {};
       },
       async saveTermDates() {
         const termId = this.selectedTerm?._id;
