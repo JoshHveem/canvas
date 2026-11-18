@@ -2,6 +2,16 @@
   const FIVE_WEEKS_MS = 60 * 60 * 24 * 7 * 5 * 1000;
   const deepClone = value => JSON.parse(JSON.stringify(value));
   const parseDateValue = value => value ? new Date(value) : undefined;
+  const calendarDate = value => value ? new Date(`${value}T00:00:00`) : undefined;
+  const nextCalendarDay = value => {
+    const date = calendarDate(value);
+    if (date) date.setDate(date.getDate() + 1);
+    return date;
+  };
+  const todayDate = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
   const normalizeLookupValue = value => String(value ?? '').trim().toLowerCase();
   const normalizeTermTimestamp = value => {
     if (!value) return '';
@@ -56,7 +66,7 @@
           {{loadingMessage}}
         </div>
         <div v-else>
-          <div class='btech-report-submission-dates'>
+          <div class='btech-report-submission-dates' style="display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;">
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
               <option selected disabled value=''>-select term-</option>
               <option v-for='term in sortedTerms' :value='term._id'>
@@ -90,8 +100,11 @@
             >
               Cancel
             </button>
-
-
+            <label style="display:inline-flex; align-items:center; gap:.5rem; margin-left:auto;">
+              As of
+              <input type="date" v-model="scoreAsOfDate" @change="onScoreAsOfDateChange"
+                title="Preview grades using work submitted by this date and credits required as of this date.">
+            </label>
           </div>
           <div v-if="showBulkUpdateModal" style="
             position: fixed;
@@ -410,6 +423,7 @@
         termCreditsResetPending: false,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
+        scoreAsOfDate: todayDate(),
         loadingProgress: 0,
         loadingMessage: "Loading...",
         loadingAssignments: true,
@@ -476,6 +490,7 @@
       this.loadingProgress = 100;
       this.loadingMessage = "Data loading complete.";
       this.loadingAssignments = false;
+      this.refreshIncludedAssignments();
     },
 
 
@@ -794,7 +809,8 @@
         const formatDate = d3.timeFormat("%Y-%m-%d");
         let submissions = this.submissionDates.filter(submission => {
           const submittedDate = submission.submittedAt;
-          return submittedDate >= startDate && submittedDate <= endDate;
+          const cutoff = nextCalendarDay(this.scoreAsOfDate);
+          return submittedDate >= startDate && submittedDate <= endDate && (!cutoff || submittedDate < cutoff);
         });
         
         const submissionsGrouped = d3.rollup(
@@ -1008,6 +1024,14 @@
         this.calcGradesFromIncludedAssignments();
       },
 
+      onScoreAsOfDateChange() {
+        if (!this.scoreAsOfDate) this.scoreAsOfDate = todayDate();
+        this.refreshIncludedAssignments();
+        const start = calendarDate(this.submissionDatesStart);
+        const end = nextCalendarDay(this.submissionDatesEnd);
+        if (start && end) this.drawSubmissionsGraph(start, new Date(end.getTime() - 1));
+      },
+
       resetTermCreditsRequired() {
         this.termCreditsRequired = this.calculatedTermCreditsRequired;
         this.termCreditsManuallyEdited = false;
@@ -1113,8 +1137,10 @@
             if (!assignment.published || !submission) return;
 
             const submissionDate = submission.submittedAt || submission.gradedAt;
+            const asOfEnd = nextCalendarDay(this.scoreAsOfDate);
             const include = submissionDate
-              ? new Date(submissionDate) >= startDate && new Date(submissionDate) <= endDate
+              ? new Date(submissionDate) >= startDate && new Date(submissionDate) < endDate &&
+                (!asOfEnd || new Date(submissionDate) < asOfEnd)
               : false;
 
             includedCourse.groups[index].assignments[assignmentId] = {
@@ -1133,8 +1159,8 @@
       },
 
       refreshIncludedAssignments() {
-        const startDate = this.parseDate(this.submissionDatesStart);
-        const endDate = this.parseDate(this.submissionDatesEnd);
+        const startDate = calendarDate(this.submissionDatesStart);
+        const endDate = nextCalendarDay(this.submissionDatesEnd);
         if (startDate === undefined || endDate === undefined) return;
 
         const includedAssignments = this.courses.reduce((map, course) => {
@@ -1149,15 +1175,14 @@
       calcGradesFromIncludedAssignments() {
         let gradesBetweenDates = {};
         let progressBetweenDates = {};
-        let startDate = this.parseDate(this.submissionDatesStart);
-        let endDate = this.parseDate(this.submissionDatesEnd);
-        let midtermPercentCompleted = 1;
-        let currentDate = new Date();
-        if (currentDate < endDate) {
-          midtermPercentCompleted = (currentDate - startDate) / (endDate - startDate);
-        }
+        let startDate = calendarDate(this.submissionDatesStart);
+        let endDate = calendarDate(this.submissionDatesEnd);
         //break if a date is undefined
         if (startDate === undefined || endDate === undefined) return;
+        const asOfDate = calendarDate(this.scoreAsOfDate) || new Date();
+        const midtermPercentCompleted = endDate > startDate
+          ? Math.max(0, Math.min(1, (asOfDate - startDate) / (endDate - startDate)))
+          : asOfDate >= endDate ? 1 : 0;
 
         for (let courseId in this.includedAssignments) {
           let course = this.includedAssignments[courseId];
