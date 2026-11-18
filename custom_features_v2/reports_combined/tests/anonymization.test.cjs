@@ -198,7 +198,7 @@ test('at-a-glance submission history charts and sorts 14 calendar days within th
     assert.equal(graph.bars.length, 14);
     assert.equal(graph.bars[0].date, '2026-11-02');
     assert.equal(graph.bars[13].date, '2026-11-15');
-    assert.equal(graph.summary, '5 submissions in the last 14 days.');
+    assert.equal(graph.summary, '5 submissions in the 14-day window ending 2026-11-15.');
     assert.equal(view.submissionHistoryTotal(row), 5);
     assert.equal(view.submissionHistoryTotal({}), 0);
     assert.ok(graph.bars.every(bar => bar.x + bar.width <= 147));
