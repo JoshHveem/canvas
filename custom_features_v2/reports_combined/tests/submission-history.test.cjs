@@ -20,12 +20,12 @@ function history(days) {
   ]));
 }
 
-test('expanded ranges include actual 30-day, 90-day, and full returned history', () => {
+test('expanded ranges show 30 or 90 days even when more history is returned', () => {
   const compact = graph({ history: history(120), days: 14, graphWidth: 150 });
   try {
     assert.equal(compact.bars.length, 14);
     assert.equal(compact.availableDays, 120);
-    for (const [range, days] of [['30', 30], ['90', 90], ['all', 120]]) {
+    for (const [range, days] of [['30', 30], ['90', 90]]) {
       compact.selectedRange = range;
       const expanded = graph({ history: compact.history, days: compact.expandedDays,
         graphWidth: compact.expandedWidth, graphHeight: 220, expandable: false });
@@ -45,7 +45,7 @@ test('short history limits expansion and invalid dates cannot extend the availab
   const view = graph({ history: { ...history(14), 'not-a-date': 2, '2026-02-30': 5, '9999-99-99': 9 } });
   try {
     assert.equal(view.availableDays, 14);
-    for (const range of ['30', '90', 'all']) {
+    for (const range of ['30', '90']) {
       view.selectedRange = range;
       assert.equal(view.expandedDays, 14);
     }
@@ -64,7 +64,7 @@ test('opening and closing expansion uses a single native modal and resets the ra
   };
   view.$refs.expandedDialog = dialog;
   try {
-    view.selectedRange = 'all';
+    view.selectedRange = '90';
     await view.openExpanded();
     assert.equal(view.isExpandedOpen, true);
     assert.equal(view.selectedRange, '30');

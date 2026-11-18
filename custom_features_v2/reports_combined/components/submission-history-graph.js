@@ -76,7 +76,7 @@
       },
 
       expandedDays() {
-        return this.selectedRange === 'all' ? this.availableDays : Math.min(Number(this.selectedRange), this.availableDays);
+        return Math.min(this.selectedRange === '90' ? 90 : 30, this.availableDays);
       },
 
       expandedWidth() {
@@ -178,7 +178,7 @@
             </div>
             <label style="display:flex; align-items:center; gap:.5rem; margin-top:1rem;">Show
               <select v-model="selectedRange" style="width:auto; margin:0;">
-                <option value="30">30 days</option><option value="90">90 days</option><option value="all">All available</option>
+                <option value="30">30 days</option><option value="90">90 days</option>
               </select>
             </label>
             <p style="margin:.75rem 0;">Available history: {{ historyDates[0] }} through {{ latestHistoryDate }} ({{ availableDays }} days). Showing {{ expandedDays }} days. Hover over a bar for the date and submission count.</p>
