@@ -226,6 +226,12 @@
                     @input="onTermCreditsRequiredInput"
                     type="text"
                   >
+                  <span v-if="termCreditsManuallyEdited" style="display:inline-flex; align-items:center; gap:.35rem; margin-left:.35rem;">
+                    <span :style="{ backgroundColor: colors.blue || '#005a9c', color: '#fff', borderRadius: '999px', padding: '.15rem .55rem', fontSize: '.75rem' }">Adjusted</span>
+                    <button type="button" :disabled="savingTermDates || bulkSaving" @click="resetTermCreditsRequired"
+                      title="Clear the manual credit override. Save to apply."
+                      style="background:#000; color:#fff; border:0; border-radius:999px; padding:.15rem .55rem; font-size:.75rem; cursor:pointer;">Reset</button>
+                  </span>
                 </td>
               </tr>
               <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
@@ -317,12 +323,12 @@
         });
       },
       calculatedTermCreditsRequired() {
-        return calculateCreditsRequired(
+        return Math.max(calculateCreditsRequired(
           this.submissionDatesStart,
           this.submissionDatesEnd,
           this.selectedTerm?.concurrent_sections,
           this.selectedTerm?.num_weeks__holidays
-        );
+        ), Number(this.selectedTerm?.credits__default) || 0);
       },
       weightedGradeForTerm() {
         return this.scaleGradeByCredits(this.unweightedGrade, this.estimatedCreditsRequired);
@@ -365,6 +371,7 @@
           (
             this.submissionDatesStart !== this.savedSubmissionDatesStart ||
             this.submissionDatesEnd !== this.savedSubmissionDatesEnd ||
+            this.termCreditsResetPending ||
             Number(this.termCreditsRequired) !== Number(this.savedTermCreditsRequired)
           )
         );
@@ -400,6 +407,7 @@
         estimatedCreditsRequired: 0,
         termCreditsRequired: 0,
         termCreditsManuallyEdited: false,
+        termCreditsResetPending: false,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
         loadingProgress: 0,
@@ -527,6 +535,7 @@
         this.savedTermCreditsRequired = creditsRequired;
         this.savedTermCreditsHasOverride = hasOverride;
         this.termCreditsManuallyEdited = hasOverride;
+        this.termCreditsResetPending = false;
 
         this.refreshIncludedAssignments();
         this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
@@ -582,7 +591,9 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (
+        if (this.termCreditsResetPending) {
+          payload.credits_required__override = null;
+        } else if (
           this.termCreditsManuallyEdited &&
           nextCreditsRequired !== Number(this.savedTermCreditsRequired)
         ) {
@@ -980,6 +991,7 @@
         this.submissionDatesEnd = this.savedSubmissionDatesEnd;
         this.termCreditsRequired = this.savedTermCreditsRequired;
         this.termCreditsManuallyEdited = this.savedTermCreditsHasOverride;
+        this.termCreditsResetPending = false;
         this.refreshIncludedAssignments();
       },
 
@@ -992,6 +1004,14 @@
 
       onTermCreditsRequiredInput() {
         this.termCreditsManuallyEdited = true;
+        this.termCreditsResetPending = false;
+        this.calcGradesFromIncludedAssignments();
+      },
+
+      resetTermCreditsRequired() {
+        this.termCreditsRequired = this.calculatedTermCreditsRequired;
+        this.termCreditsManuallyEdited = false;
+        this.termCreditsResetPending = this.savedTermCreditsHasOverride;
         this.calcGradesFromIncludedAssignments();
       },
 
