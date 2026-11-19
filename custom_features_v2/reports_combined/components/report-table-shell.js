@@ -1,68 +1,5 @@
-Vue.component('report-table-shell', {
-  props: {
-    titleHtml: { type: String, default: '' },
-    table: { type: Object, required: true },
-    rows: { type: Array, default: () => [] },
-    loading: { type: Boolean, default: false },
-    loadError: { type: String, default: '' },
-    loadingText: { type: String, default: 'Loading...' },
-    rowKeyFn: { type: Function, default: null },
-    rowClickable: { type: Boolean, default: false },
-    embedded: { type: Boolean, default: false }
-  },
-
-  data() {
-    return {
-      tableTick: 0
-    };
-  },
-
-  computed: {
-    rowCount() {
-      return Array.isArray(this.rows) ? this.rows.length : 0;
-    },
-    columnsWidthString() {
-      return this.table?.getColumnsWidthsString ? this.table.getColumnsWidthsString() : '';
-    },
-    visibleColumns() {
-      return this.table?.getVisibleColumns ? this.table.getVisibleColumns() : [];
-    },
-    shellStyle() {
-      return {
-        padding: '12px',
-        marginTop: this.embedded ? '0' : '12px',
-        display: 'flex',
-        flexDirection: 'column',
-        flex: '1 1 auto',
-        minHeight: '0',
-        height: this.embedded ? 'auto' : '100%',
-        overflow: 'hidden'
-      };
-    }
-  },
-
-  methods: {
-    setSortColumn(name) {
-      if (!this.table?.setSortColumn) return;
-      this.table.setSortColumn(name);
-      this.tableTick += 1;
-    },
-    getRowKey(row, index) {
-      if (typeof this.rowKeyFn === 'function') {
-        return this.rowKeyFn(row, index);
-      }
-      return row?.id ?? index;
-    },
-    onRowClick(row, index) {
-      if (!this.rowClickable) return;
-      this.$emit('row-click', row, index);
-    },
-    getCellComponentProps(column, row) {
-      return typeof column?.cellProps === 'function' ? column.cellProps(row) : {};
-    }
-  },
-
-  template: `
+// Generated from report-table-shell.entry.js. Do not edit directly.
+(()=>{var d={inject:{reportAnonymization:{default:null}},computed:{isAnonymized(){var e;return!!((e=this.reportAnonymization)!=null&&e.enabled)}},methods:{displayName(e,t,n){return!this.isAnonymized||!String(e!=null?e:"").trim()?e:this.reportAnonymization.alias(t,e,n)},displayFilterOption(e,t,n){var r;return e.value===""||e.value===null||e.value===void 0||!this.isAnonymized?e.label:this.displayName((r=e.nameValue)!=null?r:e.label,t,n)},anonymizeEmail(e){return!this.isAnonymized||!String(e!=null?e:"").trim()?e:`${this.reportAnonymization.alias("email",String(e).trim().toLowerCase(),"Email").replace("Email #","email")}@example.invalid`},prepareReportData(e){if(!this.isAnonymized)return e;let t={first_name:"First Name",last_name:"Last Name",full_name__instructor:"Instructor",user_name:"User",name:"Name",course_name:"Course",department_name:"Department",program_name:"Program",campus_name:"Campus",stage_name:"Focus Stage"},n=new WeakMap,r=i=>{if(!i||typeof i!="object"||Object.prototype.toString.call(i)!=="[object Object]"&&!Array.isArray(i))return i;if(n.has(i))return n.get(i);let a=Array.isArray(i)?[]:{};n.set(i,a);for(let[l,o]of Object.entries(i)){let s=l==="upcoming_course_name"?"course_name":l,m=s!=="academic_standing_name"&&(s==="name"||s.includes("_name")),c=/(^|_)email(?:_|$)/i.test(l);a[l]=c&&typeof o=="string"?this.anonymizeEmail(o):m&&typeof o=="string"?this.displayName(o,s,t[s]||"Name"):r(o)}return a};return r(e)}}};Vue.component("report-table-shell",{mixins:[d],props:{titleHtml:{type:String,default:""},table:{type:Object,required:!0},rows:{type:Array,default:()=>[]},loading:{type:Boolean,default:!1},loadError:{type:String,default:""},loadingText:{type:String,default:"Loading..."},rowKeyFn:{type:Function,default:null},rowClickable:{type:Boolean,default:!1},embedded:{type:Boolean,default:!1}},data(){return{tableTick:0}},computed:{preparedRows(){return this.prepareReportData(this.rows)},rowCount(){return Array.isArray(this.rows)?this.rows.length:0},columnsWidthString(){var e;return(e=this.table)!=null&&e.getColumnsWidthsString?this.table.getColumnsWidthsString():""},visibleColumns(){var e;return(e=this.table)!=null&&e.getVisibleColumns?this.table.getVisibleColumns():[]},shellStyle(){return{padding:"12px",marginTop:this.embedded?"0":"12px",display:"flex",flexDirection:"column",flex:"1 1 auto",minHeight:"0",height:this.embedded?"auto":"100%",overflow:"hidden"}}},methods:{setSortColumn(e){var t;(t=this.table)!=null&&t.setSortColumn&&(this.table.setSortColumn(e),this.tableTick+=1)},getRowKey(e,t){var n;return typeof this.rowKeyFn=="function"?this.rowKeyFn(e,t):(n=e==null?void 0:e.id)!=null?n:t},onRowClick(e,t){this.rowClickable&&this.$emit("row-click",e,t)},getCellComponentProps(e,t){return typeof(e==null?void 0:e.cellProps)=="function"?e.cellProps(t):{}}},template:`
   <div class="btech-card btech-theme" :style="shellStyle">
     <div style="flex:0 0 auto; background:#fff; padding-bottom:8px;">
       <div class="btech-row" style="align-items:center; margin-bottom:8px;">
@@ -116,9 +53,9 @@ Vue.component('report-table-shell', {
         </div>
 
         <div
-          v-for="(row, index) in rows"
+          v-for="(row, index) in preparedRows"
           :key="getRowKey(row, index)"
-          @click="onRowClick(row, index)"
+          @click="onRowClick(rows[index], index)"
           style="padding:.25rem .5rem; display:grid; align-items:center; font-size:.75rem; line-height:1.5rem;"
           :style="{
             'grid-template-columns': columnsWidthString,
@@ -151,5 +88,4 @@ Vue.component('report-table-shell', {
       </div>
     </div>
   </div>
-  `
-});
+  `});})();

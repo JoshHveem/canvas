@@ -1,3 +1,5 @@
+import { waitForElement as getElement } from '../shared/dom.js';
+
 (function () {
   //Make it so the suggested score is out of the points available for the assignment, not the rubric
   IMPORTED_FEATURE = {};

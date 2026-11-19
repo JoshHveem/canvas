@@ -1,3 +1,5 @@
+import { waitForElement as getElement } from '../shared/dom.js';
+
 (async function () {
   //If possible, figure out a way to narrow this down because as is it checks every click on the body, which is pretty much every click
   $('body').on('click', '.bcs__row__associations button', async function (e) {

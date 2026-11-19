@@ -1,6 +1,9 @@
 Vue.component('reports-admissions-overview', {
   mixins: [
-    window.ReportMixins.formatting
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.filters
   ],
 
   props: {
@@ -40,6 +43,10 @@ Vue.component('reports-admissions-overview', {
   },
 
   watch: {
+    isAnonymized() {
+      this.hideTooltip();
+      this.renderChart();
+    },
     reportContext: {
       deep: true,
       handler() {
@@ -195,15 +202,23 @@ Vue.component('reports-admissions-overview', {
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-
-        const rows = await bridgetools.req3(
+      return this.runReportRequest('data', {
+        onError: e => {
+          console.warn('Failed to load admissions overview dataset', e);
+          this.rawRows = [];
+          this.loadError = 'Unable to load admissions pathways.';
+        },
+        onFinally: request => {
+          this.$nextTick(() => {
+            if (request.isCurrent()) this.renderChart();
+          });
+        }
+      }, async request => {
+        const rows = await request.wait(bridgetools.req3(
           'reports',
           { academic_year: Number(this.year) },
           { dataset: this.getDataset() }
-        );
+        ));
 
         this.rawRows = (Array.isArray(rows) ? rows : []).map(row => this.normalizeRow(row));
 
@@ -228,14 +243,7 @@ Vue.component('reports-admissions-overview', {
         if (!this.filterValuesEqual(nextStageFocus, this.selectedStageFocus)) {
           this.selectedStageFocus = nextStageFocus;
         }
-      } catch (e) {
-        console.warn('Failed to load admissions overview dataset', e);
-        this.rawRows = [];
-        this.loadError = 'Unable to load admissions pathways.';
-      } finally {
-        this.loading = false;
-        this.$nextTick(() => this.renderChart());
-      }
+      });
     },
 
     createTreeNode(stageName, pathSoFar) {
@@ -654,7 +662,7 @@ Vue.component('reports-admissions-overview', {
         .style('font-size', '12px')
         .style('font-weight', node => this.pathIsHighlighted(node.data.path_so_far) ? 700 : 500)
         .text(node => node.data.stage_name.trim()
-          ? `${node.data.stage_name} (${node.data.count})`
+          ? `${this.displayName(node.data.stage_name, 'stage_name', 'Focus Stage')} (${node.data.count})`
           : '');
 
       nodeGroups
@@ -678,7 +686,7 @@ Vue.component('reports-admissions-overview', {
 
       this.tooltip.visible = true;
       this.tooltip.html = [
-        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name.trim() || 'Prior stages')}</div>`,
+        `<div style="font-weight:700; margin-bottom:4px;">${this.escapeHtml(node.data.stage_name.trim() ? this.displayName(node.data.stage_name, 'stage_name', 'Focus Stage') : 'Prior stages')}</div>`,
         `<div>Path count: <strong>${nodeCount.toLocaleString()}</strong></div>`,
         `<div>Eventually enrolled: <strong>${this.formatPercent(this.nodeEventualEnrollmentRate(node.data))}</strong></div>`,
         `<div>Hidden downstream branches: <strong>${Number(node.data.hidden_child_count) || 0}</strong></div>`,
@@ -687,7 +695,7 @@ Vue.component('reports-admissions-overview', {
           ? [`<div>Avg days from first stage: <strong>${this.formatDays(node.data.synthetic_link_avg_days)}</strong></div>`]
           : []),
         `<div>% of parent: <strong>${this.formatPercent(shareOfParent)}</strong></div>`,
-        `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(node.data.path_so_far)}</div>`
+        `<div style="margin-top:4px; color:#9ca3af;">${this.escapeHtml(String(node.data.path_so_far || '').split(' > ').map(stage => this.displayName(stage, 'stage_name', 'Focus Stage')).join(' > '))}</div>`
       ].join('');
       this.moveTooltip(event);
     },
@@ -701,15 +709,6 @@ Vue.component('reports-admissions-overview', {
 
     hideTooltip() {
       this.tooltip.visible = false;
-    },
-
-    escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
   },
 
@@ -736,7 +735,7 @@ Vue.component('reports-admissions-overview', {
               v-for="program in programOptions"
               :key="program"
               :value="program"
-            >{{ program }}</option>
+            >{{ displayName(program, 'program_name', 'Program') }}</option>
           </select>
         </div>
 
@@ -748,7 +747,7 @@ Vue.component('reports-admissions-overview', {
               v-for="stage in stageOptions"
               :key="stage"
               :value="stage"
-            >{{ stage }}</option>
+            >{{ displayName(stage, 'stage_name', 'Focus Stage') }}</option>
           </select>
         </div>
 

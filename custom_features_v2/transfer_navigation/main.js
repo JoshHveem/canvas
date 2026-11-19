@@ -1,3 +1,4 @@
+(async function() {
 let transferNavigation = $(`<a data-tool-launch-type="transfer_navigation" data-tool-launch-method="" class="Button Button--link Button--link--has-divider"><i class="icon-export-content"></i>Transfer Navigation</a>`);
 $('#right-side div table.summary').before(transferNavigation);
 function createModal() {
@@ -34,28 +35,20 @@ transferNavigation.click(async function () {
     }
     
     $(".btech-modal #tab-progress-bar").empty();
-    $(".btech-modal #tab-progress-bar").progressbar({
-        value: 0
-    });
+    $(".btech-modal #tab-progress-bar").append('<progress max="100" value="0" aria-label="Navigation progress" style="width: 100%;"></progress>');
     $(".btech-modal #course-progress-bar").empty();
-    $(".btech-modal #course-progress-bar").progressbar({
-        value: 0
-    });
-    $(".btech-modal #tab-progress-bar .ui-progressbar-value").css('background', '#CF2247'); // Tomato red
+    $(".btech-modal #course-progress-bar").append('<progress max="100" value="0" aria-label="Course progress" style="width: 100%;"></progress>');
+    $(".btech-modal #tab-progress-bar progress").css("accent-color", "#CF2247");
     
     for (let c in sisterCourses) {
         let course = sisterCourses[c];
         let progress = ((parseInt(c) + 1) / sisterCourses.length) * 100;
-        $(".btech-modal #course-progress-bar").progressbar({
-            value: progress
-        });
+        $(".btech-modal #course-progress-bar").find("progress").val(progress);
         $('.btech-modal #copy-message').html(`${course.name} (${parseInt(c) + 1} / ${sisterCourses.length})`);
         for (let o in order) {
             let tab = order[o];
             let progress = ((parseInt(o) + 1) / order.length) * 100;
-            $(".btech-modal #tab-progress-bar").progressbar({
-                value: progress
-            });
+            $(".btech-modal #tab-progress-bar").find("progress").val(progress);
             if (tab !== undefined) {
                 try {
                   await $.put(`/api/v1/courses/${course.id}/tabs/${tab.id}`, {
@@ -70,3 +63,5 @@ transferNavigation.click(async function () {
     }
     modal.remove();
 });
+
+})();

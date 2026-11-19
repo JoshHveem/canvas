@@ -135,7 +135,12 @@ Vue.component('multi-filter-pill', {
 
 Vue.component('reports-department-course-readiness', {
   mixins: [
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'canvas_course_readiness',
       emptySelectionMessage: 'Select a department from the summary report to view details.',
@@ -266,7 +271,7 @@ Vue.component('reports-department-course-readiness', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Course Readiness';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Course Readiness`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Course Readiness`;
     }
   },
 
@@ -398,7 +403,7 @@ Vue.component('reports-department-course-readiness', {
             v-for="option in departmentOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
         </select>
       </div>
 

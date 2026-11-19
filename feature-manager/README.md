@@ -2,6 +2,8 @@
 
 This local Node application discovers v2 features from `custom_features_v2/**/main.js`. `features.json` stores only the loading settings for those folders.
 
+`custom_canvas.js` delegates to `custom_canvas_v2.js`, so both theme entry points load this manager. Feature implementation and shared utilities live in `custom_features_v2/`; legacy feature files are retained for reference.
+
 ## Use
 
 To rebuild all v2 feature bundles and loaders, double-click `Build Canvas V2 Bundles.bat` in the repository root. It installs build dependencies when needed and keeps the window open so you can see the result. Deploy the changed generated files using the existing Git workflow. The batch file does not change the cache version or upload the Canvas theme script.

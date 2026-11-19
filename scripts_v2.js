@@ -65,16 +65,54 @@
     return routes.some(function (pattern) { return pattern.test(route); });
   }
 
-  function allowed(entry) {
-    if (entry.teacher && !window.IS_TEACHER) return false;
-    if (entry.notTeacher && window.IS_TEACHER) return false;
-    if (entry.isd && !(window.IS_ISD || window.IS_ME)) return false;
-    if (entry.rootAdmin && !(ENV.current_user_roles || []).includes('root_admin')) return false;
+  function hasSisUserIds(entry) {
+    return Array.isArray(entry.sisUserIds) && entry.sisUserIds.length > 0;
+  }
+
+  function allowed(entry, sisUserId) {
+    var hasRoleRules = Boolean(entry.teacher || entry.notTeacher || entry.isd || entry.rootAdmin);
+    var roleAllowed = !hasRoleRules || (
+      (!entry.teacher || window.IS_TEACHER) &&
+      (!entry.notTeacher || !window.IS_TEACHER) &&
+      (!entry.isd || window.IS_ISD || window.IS_ME) &&
+      (!entry.rootAdmin || (ENV.current_user_roles || []).includes('root_admin'))
+    );
+    var sisAllowed = hasSisUserIds(entry) && sisUserId != null &&
+      entry.sisUserIds.some(function (id) { return String(id) === String(sisUserId); });
+    var audienceAllowed = hasSisUserIds(entry) ? sisAllowed || (hasRoleRules && roleAllowed) : roleAllowed;
+    if (!audienceAllowed) return false;
     if (entry.course && !window.CURRENT_COURSE_ID) return false;
     if (entry.blueprint && !window.IS_BLUEPRINT) return false;
     if (entry.courseIds && !entry.courseIds.includes(window.CURRENT_COURSE_ID)) return false;
     if (entry.departments && !entry.departments.includes(window.CURRENT_DEPARTMENT_ID)) return false;
     return matches(entry);
+  }
+
+  var currentSisUserIdPromise;
+  function getCurrentSisUserId() {
+    if (!currentSisUserIdPromise) {
+      currentSisUserIdPromise = fetch('/api/v1/users/self', { credentials: 'include' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Canvas profile request failed (' + response.status + ')');
+          return response.json();
+        })
+        .then(function (profile) { return profile && profile.sis_user_id != null ? String(profile.sis_user_id).trim() : null; })
+        .catch(function (error) {
+          console.warn('[BTECH v2] Could not read the current SIS ID; SIS-only feature rules will not match.', error);
+          return null;
+        });
+    }
+    return currentSisUserIdPromise;
+  }
+
+  function loadEligible(entries) {
+    var sisRestricted = entries.filter(hasSisUserIds);
+    entries.filter(function (entry) { return !hasSisUserIds(entry) && allowed(entry); }).forEach(loadFeature);
+    if (sisRestricted.length) {
+      getCurrentSisUserId().then(function (sisUserId) {
+        sisRestricted.filter(function (entry) { return allowed(entry, sisUserId); }).forEach(loadFeature);
+      });
+    }
   }
 
   function loadFeature(entry) {
@@ -125,16 +163,15 @@
 
   function start() {
     addCourseBanner();
-    var critical = features.filter(function (entry) { return entry.priority === 'critical' && allowed(entry); });
-    critical.forEach(loadFeature);
+    var critical = features.filter(function (entry) { return entry.priority === 'critical'; });
+    loadEligible(critical);
 
     var remaining = features.filter(function (entry) { return entry.priority !== 'critical'; });
-    var immediate = remaining.filter(function (entry) { return !needsDepartment(entry) && allowed(entry); });
-    immediate.forEach(loadFeature);
+    loadEligible(remaining.filter(function (entry) { return !needsDepartment(entry); }));
 
     if (remaining.some(needsDepartment) && window.CURRENT_COURSE_ID) {
       resolveCourseDepartment().then(function () {
-        remaining.filter(function (entry) { return needsDepartment(entry) && allowed(entry); }).forEach(loadFeature);
+        loadEligible(remaining.filter(needsDepartment));
       });
     }
   }

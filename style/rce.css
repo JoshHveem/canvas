@@ -20,6 +20,10 @@ h2, h3, h4 {
 .btech-citation {
   font-size: .66rem;
 }
+.btech-callout-box {
+  /* Match saved-page widths, including each variant's padding and borders. */
+  box-sizing: border-box;
+}
 .btech-graphic-image {
   filter: blur(4px);
 }

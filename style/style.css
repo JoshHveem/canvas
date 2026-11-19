@@ -231,9 +231,12 @@
 
 /*copy and paste into tinymce_font_size script so it appears right in the editor*/
 .btech-callout-box {
+  /* Include padding and borders in the declared width for every callout variant. */
+  box-sizing: border-box;
   background-color: #F1F1F1;
   border-radius: 5px;
-  padding: 0.5rem;
+  /* Templates own their spacing so headers stay flush with the border, as in the editor. */
+  padding: 0;
   margin: 0.5rem 5% 1rem 5%;
   border: 1px solid #E1E1E1;
   box-shadow: none;

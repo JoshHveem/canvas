@@ -1,5 +1,11 @@
 Vue.component('reports-graduation-outlook', {
-  mixins: [window.ReportMixins.formatting],
+  mixins: [
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
+    window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets
+  ],
 
   props: {
     reportContext: { type: Object, default: () => ({}) }
@@ -400,11 +406,6 @@ Vue.component('reports-graduation-outlook', {
       return [String(row?.program_name ?? '').trim(), String(row?.campus_name ?? row?.campus_code ?? '').trim()].filter(Boolean).join(' - ');
     },
 
-    numberValue(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number : null;
-    },
-
     wholeNumber(value) {
       const number = this.numberValue(value);
       return number === null ? '-' : Math.round(number).toLocaleString();
@@ -518,33 +519,41 @@ Vue.component('reports-graduation-outlook', {
 
     async loadMonthlyData() {
       const projection = this.selectedProjection;
-      if (!projection) return;
-      try {
-        const rows = await this.fetchReportDataset(
+      return this.runReportRequest('data', {
+        clearError: false,
+        onError: error => {
+          console.warn('Failed to load monthly graduation data', error);
+          this.monthlyRows = [];
+        }
+      }, async request => {
+        if (!projection) {
+          this.monthlyRows = [];
+          return;
+        }
+
+        const rows = await request.wait(this.fetchReportDataset(
           { program_code: projection.program_code, campus_code: projection.campus_code },
           { dataset: 'programs_graduates_monthly' }
-        );
+        ));
         this.monthlyRows = Array.isArray(rows) ? rows : [];
-      } catch (error) {
-        console.warn('Failed to load monthly graduation data', error);
-        this.monthlyRows = [];
-      }
+      });
     },
 
     async loadData() {
-      try {
-        this.loading = true;
-        this.loadError = '';
-        this.projections = this.normalizeProjections(await this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' }));
+      return this.runReportRequest('programs', {
+        invalidate: ['data'],
+        onError: error => {
+          console.warn('Failed to load graduation projections', error);
+          this.loadError = 'Unable to load graduation projections.';
+        }
+      }, async request => {
+        this.projections = this.normalizeProjections(await request.wait(this.fetchReportDataset({}, { dataset: 'programs_graduates_projections' })));
+        const previousProjectionKey = this.selectedProjectionKey;
         if (!this.projectionOptions.length) this.loadError = 'No on-campus program projections are available for the current academic year.';
         else if (!this.selectProjectionFromContext() && !this.projectionOptions.some(row => row.key === this.selectedProjectionKey)) this.selectedProjectionKey = this.projectionOptions[0].key;
-        await this.loadMonthlyData();
-      } catch (error) {
-        console.warn('Failed to load graduation projections', error);
-        this.loadError = 'Unable to load graduation projections.';
-      } finally {
-        this.loading = false;
-      }
+        // Changed selections load through the watcher; refresh unchanged ones here.
+        if (this.projectionOptions.length && previousProjectionKey === this.selectedProjectionKey) this.loadMonthlyData();
+      });
     },
 
     trendArrow(change) {
@@ -595,12 +604,12 @@ Vue.component('reports-graduation-outlook', {
     <div class="btech-row" style="align-items:center; margin-bottom:4px;">
       <h4 class="btech-card-title" style="margin:0;">Graduation Outlook</h4>
       <div style="flex:1;"></div>
-      <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ projectionLabel(projection) }}</option></select>
+      <select v-if="projectionOptions.length" v-model="selectedProjectionKey" aria-label="Select program projection" style="min-width:18rem; max-width:28rem;"><option v-for="projection in projectionOptions" :key="projection.key" :value="projection.key">{{ displayName(projectionLabel(projection), 'program_name', 'Program') }}</option></select>
     </div>
     <div v-if="loading" class="btech-muted" style="padding:16px;">Loading graduation projections...</div>
     <div v-else-if="loadError" class="btech-muted" style="padding:16px;">{{ loadError }}</div>
     <template v-else-if="selectedProjection">
-    <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ projectionLabel(selectedProjection) }} - {{ selectedProjection.academic_year }}</div>
+    <div style="font-size:.85rem; font-weight:600; margin-bottom:8px;">{{ displayName(projectionLabel(selectedProjection), 'program_name', 'Program') }} - {{ selectedProjection.academic_year }}</div>
     <div style="display:grid; grid-template-columns:repeat(5, minmax(11rem, 1fr)); gap:12px; min-width:62rem; margin-bottom:20px;">
       <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Exiters to Date</div><div style="font-size:1.8rem; font-weight:700;">{{ wholeNumber(selectedProjection.num_students__exiter) }}</div></div>
       <div :title="projectionDetails(selectedProjection)" style="border:1px solid #e5e7eb; border-radius:6px; padding:14px;"><div class="btech-muted" style="font-size:.8rem;">Projected Exiters</div><div v-if="hasValidatedForecast" style="font-size:1.25rem; font-weight:700; margin-top:8px;">{{ rangeValues(selectedProjection.num_students__exiter__projected__low_80, selectedProjection.num_students__exiter__projected__high_80, wholeNumber) }}</div><div v-else style="font-size:1rem; font-weight:700; margin-top:10px;">Insufficient history</div></div>

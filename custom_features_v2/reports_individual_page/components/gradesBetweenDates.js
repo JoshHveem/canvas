@@ -2,6 +2,16 @@
   const FIVE_WEEKS_MS = 60 * 60 * 24 * 7 * 5 * 1000;
   const deepClone = value => JSON.parse(JSON.stringify(value));
   const parseDateValue = value => value ? new Date(value) : undefined;
+  const calendarDate = value => value ? new Date(`${value}T00:00:00`) : undefined;
+  const nextCalendarDay = value => {
+    const date = calendarDate(value);
+    if (date) date.setDate(date.getDate() + 1);
+    return date;
+  };
+  const todayDate = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
   const normalizeLookupValue = value => String(value ?? '').trim().toLowerCase();
   const normalizeTermTimestamp = value => {
     if (!value) return '';
@@ -56,9 +66,9 @@
           {{loadingMessage}}
         </div>
         <div v-else>
-          <div class='btech-report-submission-dates'>
+          <div class='btech-report-submission-dates' style="display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;">
             <select @change='updateDatesToSelectedTerm()' v-model='selectedTermId'>
-              <option selected disabled value=''>-select term-</option>
+              <option disabled value=''>-select term-</option>
               <option v-for='term in sortedTerms' :value='term._id'>
                 {{dateToHTMLDate(term.entry_at) + " to " + dateToHTMLDate(term.exit_at)}} (x{{term.concurrent_sections}})
               </option>
@@ -90,8 +100,11 @@
             >
               Cancel
             </button>
-
-
+            <label style="display:inline-flex; align-items:center; gap:.5rem; margin-left:auto;">
+              As of
+              <input type="date" v-model="scoreAsOfDate" @change="onScoreAsOfDateChange"
+                title="Preview grades using work submitted by this date and credits required as of this date.">
+            </label>
           </div>
           <div v-if="showBulkUpdateModal" style="
             position: fixed;
@@ -226,12 +239,18 @@
                     @input="onTermCreditsRequiredInput"
                     type="text"
                   >
+                  <span v-if="termCreditsManuallyEdited" style="display:inline-flex; align-items:center; gap:.35rem; margin-left:.35rem;">
+                    <span :style="{ backgroundColor: colors.blue || '#005a9c', color: '#fff', borderRadius: '999px', padding: '.15rem .55rem', fontSize: '.75rem' }">Adjusted</span>
+                    <button type="button" :disabled="savingTermDates || bulkSaving" @click="resetTermCreditsRequired"
+                      title="Clear the manual credit override. Save to apply."
+                      style="background:#000; color:#fff; border:0; border-radius:999px; padding:.15rem .55rem; font-size:.75rem; cursor:pointer;">Reset</button>
+                  </span>
                 </td>
               </tr>
               <tr><td colspan="5"><p style="font-size: 0.75rem;">*Grade (Term) is what the student's grade will be at the end of the term if they submit nothing else. Until a student's credits completed surpasses Credits Required (Term) this will always be less than or equal to Grade (to Date). The exact formula is Grade * (Credits Completed / Credits Required)</p></td></tr>
             </tfoot>
           </table>
-          <div id = "submissionGraph"></div>
+          <div id="submissionGraph" v-show="submissionDatesStart && submissionDatesEnd"></div>
           <div v-if='showGradeDetails'>
             <!--include a reset button to go back to the default. Probably just rerun the code from on change of date-->
             <div v-for='course in includedAssignments' :key='course.name'>
@@ -317,12 +336,12 @@
         });
       },
       calculatedTermCreditsRequired() {
-        return calculateCreditsRequired(
+        return Math.max(calculateCreditsRequired(
           this.submissionDatesStart,
           this.submissionDatesEnd,
           this.selectedTerm?.concurrent_sections,
           this.selectedTerm?.num_weeks__holidays
-        );
+        ), Number(this.selectedTerm?.credits__default) || 0);
       },
       weightedGradeForTerm() {
         return this.scaleGradeByCredits(this.unweightedGrade, this.estimatedCreditsRequired);
@@ -365,6 +384,7 @@
           (
             this.submissionDatesStart !== this.savedSubmissionDatesStart ||
             this.submissionDatesEnd !== this.savedSubmissionDatesEnd ||
+            this.termCreditsResetPending ||
             Number(this.termCreditsRequired) !== Number(this.savedTermCreditsRequired)
           )
         );
@@ -400,8 +420,10 @@
         estimatedCreditsRequired: 0,
         termCreditsRequired: 0,
         termCreditsManuallyEdited: false,
+        termCreditsResetPending: false,
         submissionDatesStart: undefined,
         submissionDatesEnd: undefined,
+        scoreAsOfDate: todayDate(),
         loadingProgress: 0,
         loadingMessage: "Loading...",
         loadingAssignments: true,
@@ -468,6 +490,7 @@
       this.loadingProgress = 100;
       this.loadingMessage = "Data loading complete.";
       this.loadingAssignments = false;
+      this.refreshIncludedAssignments();
     },
 
 
@@ -527,6 +550,7 @@
         this.savedTermCreditsRequired = creditsRequired;
         this.savedTermCreditsHasOverride = hasOverride;
         this.termCreditsManuallyEdited = hasOverride;
+        this.termCreditsResetPending = false;
 
         this.refreshIncludedAssignments();
         this.drawSubmissionsGraph(new Date(term.entry_at), new Date(term.exit_at));
@@ -546,20 +570,7 @@
 
         this.termsData = this.mergeTerms(baseTerms, overrideTerms);
 
-        if (!this.termsData.length) {
-          this.selectedTermId = '';
-          this.selectedTerm = {};
-          return;
-        }
-
-        const selectedTermStillExists = this.termsData.some(term => term._id === this.selectedTermId);
-        this.selectedTermId = selectedTermStillExists
-          ? this.selectedTermId
-          : this.sortedTerms[0]._id;
-
-        if (this.selectedTermId) {
-          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
-        }
+        this.selectTermAfterLoad();
       },
 
       buildHsTermUpdatePayload(term) {
@@ -582,7 +593,9 @@
           payload.exit_at__override = nextExitAt;
         }
 
-        if (
+        if (this.termCreditsResetPending) {
+          payload.credits_required__override = null;
+        } else if (
           this.termCreditsManuallyEdited &&
           nextCreditsRequired !== Number(this.savedTermCreditsRequired)
         ) {
@@ -644,8 +657,6 @@
 
           await this.hsTermsUpdate(payload);
           await this.loadTerms();
-          this.selectedTermId = term._id;
-          this.applySelectedTerm(this.termsData.find(item => item._id === term._id));
           this.closeBulkModal();
         } catch (err) {
           console.error("Failed saving term dates:", err);
@@ -737,8 +748,6 @@
           }
 
           await this.loadTerms();
-          this.selectedTermId = this.selectedTerm._id;
-          this.applySelectedTerm(this.termsData.find(term => term._id === this.selectedTermId));
           this.closeBulkModal();
           alert("Bulk update complete.");
         } catch (err) {
@@ -783,7 +792,8 @@
         const formatDate = d3.timeFormat("%Y-%m-%d");
         let submissions = this.submissionDates.filter(submission => {
           const submittedDate = submission.submittedAt;
-          return submittedDate >= startDate && submittedDate <= endDate;
+          const cutoff = nextCalendarDay(this.scoreAsOfDate);
+          return submittedDate >= startDate && submittedDate <= endDate && (!cutoff || submittedDate < cutoff);
         });
         
         const submissionsGrouped = d3.rollup(
@@ -962,6 +972,33 @@
 
         this.applySelectedTerm(term);
       },
+
+      selectTermAfterLoad() {
+        const current = this.sortedTerms.find(term => term._id === this.selectedTermId);
+        const today = todayDate();
+        const latestActive = this.sortedTerms.find(term => {
+          const start = String(term.entry_at || '').slice(0, 10);
+          const end = String(term.exit_at || '').slice(0, 10);
+          return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) &&
+            start <= today && today <= end;
+        });
+        const term = current || latestActive || this.sortedTerms[0];
+        this.selectedTermId = term?._id || '';
+        if (term) {
+          this.applySelectedTerm(term);
+          return;
+        }
+        this.selectedTerm = {};
+        this.submissionDatesStart = undefined;
+        this.submissionDatesEnd = undefined;
+        this.termCreditsRequired = 0;
+        this.estimatedCreditsRequired = 0;
+        this.termCreditsManuallyEdited = false;
+        this.termCreditsResetPending = false;
+        this.includedAssignments = {};
+        this.gradesBetweenDates = {};
+        this.progressBetweenDates = {};
+      },
       async saveTermDates() {
         const termId = this.selectedTerm?._id;
         if (!termId) return;
@@ -980,6 +1017,7 @@
         this.submissionDatesEnd = this.savedSubmissionDatesEnd;
         this.termCreditsRequired = this.savedTermCreditsRequired;
         this.termCreditsManuallyEdited = this.savedTermCreditsHasOverride;
+        this.termCreditsResetPending = false;
         this.refreshIncludedAssignments();
       },
 
@@ -992,6 +1030,22 @@
 
       onTermCreditsRequiredInput() {
         this.termCreditsManuallyEdited = true;
+        this.termCreditsResetPending = false;
+        this.calcGradesFromIncludedAssignments();
+      },
+
+      onScoreAsOfDateChange() {
+        if (!this.scoreAsOfDate) this.scoreAsOfDate = todayDate();
+        this.refreshIncludedAssignments();
+        const start = calendarDate(this.submissionDatesStart);
+        const end = nextCalendarDay(this.submissionDatesEnd);
+        if (start && end) this.drawSubmissionsGraph(start, new Date(end.getTime() - 1));
+      },
+
+      resetTermCreditsRequired() {
+        this.termCreditsRequired = this.calculatedTermCreditsRequired;
+        this.termCreditsManuallyEdited = false;
+        this.termCreditsResetPending = this.savedTermCreditsHasOverride;
         this.calcGradesFromIncludedAssignments();
       },
 
@@ -1093,8 +1147,10 @@
             if (!assignment.published || !submission) return;
 
             const submissionDate = submission.submittedAt || submission.gradedAt;
+            const asOfEnd = nextCalendarDay(this.scoreAsOfDate);
             const include = submissionDate
-              ? new Date(submissionDate) >= startDate && new Date(submissionDate) <= endDate
+              ? new Date(submissionDate) >= startDate && new Date(submissionDate) < endDate &&
+                (!asOfEnd || new Date(submissionDate) < asOfEnd)
               : false;
 
             includedCourse.groups[index].assignments[assignmentId] = {
@@ -1113,8 +1169,8 @@
       },
 
       refreshIncludedAssignments() {
-        const startDate = this.parseDate(this.submissionDatesStart);
-        const endDate = this.parseDate(this.submissionDatesEnd);
+        const startDate = calendarDate(this.submissionDatesStart);
+        const endDate = nextCalendarDay(this.submissionDatesEnd);
         if (startDate === undefined || endDate === undefined) return;
 
         const includedAssignments = this.courses.reduce((map, course) => {
@@ -1129,15 +1185,14 @@
       calcGradesFromIncludedAssignments() {
         let gradesBetweenDates = {};
         let progressBetweenDates = {};
-        let startDate = this.parseDate(this.submissionDatesStart);
-        let endDate = this.parseDate(this.submissionDatesEnd);
-        let midtermPercentCompleted = 1;
-        let currentDate = new Date();
-        if (currentDate < endDate) {
-          midtermPercentCompleted = (currentDate - startDate) / (endDate - startDate);
-        }
+        let startDate = calendarDate(this.submissionDatesStart);
+        let endDate = calendarDate(this.submissionDatesEnd);
         //break if a date is undefined
         if (startDate === undefined || endDate === undefined) return;
+        const asOfDate = calendarDate(this.scoreAsOfDate) || new Date();
+        const midtermPercentCompleted = endDate > startDate
+          ? Math.max(0, Math.min(1, (asOfDate - startDate) / (endDate - startDate)))
+          : asOfDate >= endDate ? 1 : 0;
 
         for (let courseId in this.includedAssignments) {
           let course = this.includedAssignments[courseId];

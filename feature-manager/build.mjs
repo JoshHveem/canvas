@@ -31,6 +31,23 @@ await Promise.all(folders.map(name => bundle({
   minify: true,
   legalComments: 'none'
 })));
+// Report components still load through jQuery.getScript. Package their required
+// modules together so cached feature bundles cannot supply incompatible mixins.
+if (folders.includes('reports_combined')) {
+  for (const name of ['report-mixins', 'report-table-shell']) {
+    await bundle({
+      entryPoints: [path.join(root, `custom_features_v2/reports_combined/components/${name}.entry.js`)],
+      outfile: path.join(root, `custom_features_v2/reports_combined/components/${name}.js`),
+      bundle: true,
+      format: 'iife',
+      platform: 'browser',
+      target: 'es2018',
+      minify: true,
+      legalComments: 'none',
+      banner: { js: `// Generated from ${name}.entry.js. Do not edit directly.` }
+    });
+  }
+}
 const materializeLocations = feature => {
   const { locations, routes, ...entry } = feature;
   const allRoutes = [...routesForLocations(locations), ...(routes ? (Array.isArray(routes) ? routes : [routes]) : [])];

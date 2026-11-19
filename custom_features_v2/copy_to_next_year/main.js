@@ -1,3 +1,5 @@
+import { waitForElement as getElement } from '../shared/dom.js';
+
 (async function() {
   async function createNextYear(courseId) {
     const modal = createModal();

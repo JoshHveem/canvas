@@ -1,6 +1,11 @@
 Vue.component('reports-department-instructors', {
   mixins: [
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'instructors_department_summary',
       emptySelectionMessage: 'Select a department to view instructor summary.',
@@ -129,7 +134,7 @@ Vue.component('reports-department-instructors', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Instructors';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Instructors`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Instructors`;
     }
   },
 
@@ -200,7 +205,7 @@ Vue.component('reports-department-instructors', {
             v-for="option in departmentOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
         </select>
       </div>
 
@@ -212,7 +217,7 @@ Vue.component('reports-department-instructors', {
             v-for="option in instructorOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'full_name__instructor', 'Instructor') }}</option>
         </select>
       </div>
     </template>

@@ -1,4 +1,8 @@
+import { waitForRubric, loadAssessedRubric, prepareRubricDocument, waitForPrintAssets } from './rubric-export.js';
+import { initialisePrintMediaLinks } from './print-media-links.js';
+
 (async function () {
+  let nextIframeId = 0;
   //FILTER BY SECTION
   //NEW QUIZZES???
   //With assignments make sure to also grab if they did a text submission or other possible submission types
@@ -11,17 +15,14 @@
     if ($('#accreditation').length > 0) return;
     let rCheckInCourse = /^\/courses\/([0-9]+)/;
     if (rCheckInCourse.test(window.location.pathname)) {
-      add_javascript_library("https://cdn.jsdelivr.net/npm/vue@2.6.12");
-      //Allows printing of an element, may be obsolete
-      add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js");
-      //convert html to a canvas which can then be converted to a blob...
-      add_javascript_library("https://html2canvas.hertzen.com/dist/html2canvas.min.js");
-      //and converted to a pdf
-      add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.1.1/jspdf.umd.js");
-      //which can then be zipped into a file using this library
-      add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js");
-      //and then saved
-      add_javascript_library("https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js");
+      // Vue is supplied by the v2 loader. Await export libraries locally;
+      // the legacy add_javascript_library helper is not available in v2.
+      await Promise.all([
+        "https://html2canvas.hertzen.com/dist/html2canvas.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.1.1/jspdf.umd.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js",
+        "https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"
+      ].map(url => $.getScript(window.btechAssetUrl ? window.btechAssetUrl(url) : url)));
       let CURRENT_COURSE_ID = parseInt(window.location.pathname.match(rCheckInCourse)[1]);
         await $.put(`https://btech.instructure.com/api/v1/courses/${CURRENT_COURSE_ID}/gradebook_settings`, {
             gradebook_settings: {
@@ -88,15 +89,21 @@
           </div>
         </div>
 
-        <div v-if='showModal && !preparingDocument' @click="if(!preparingDocument) showModal = false;" class='btech-modal' style='display: inline-block;'>
+        <div v-if='showModal && !preparingDocument' @click="if(!preparingDocument) close();" class='btech-modal' style='display: inline-block;'>
           <div class='btech-modal-content' @click.stop>
             <div class="icon-container" style='float: right; margin-right: .5rem; margin-top: .5rem;' v-on:click='close()'>
               <i class="icon-end"></i> 
             </div>
             <div class='btech-modal-content-inner'>
               <h2><a target='#' v-bind:href="'/courses/'+courseId+'/assignments/'+currentAssignment.id">{{currentAssignment.name}}</a></h2>
+              <button type="button" class="btn" :disabled="loadingAssignmentDetails" @click="openModal(currentAssignment, { force: true })">
+                {{assignmentDetailsError ? 'Retry loading details' : 'Refresh details'}}
+              </button>
               <div v-if='loadingAssignmentDetails'>
                 Loading assignment details...
+              </div>
+              <div v-else-if="assignmentDetailsError" role="alert">
+                {{assignmentDetailsError}}
               </div>
               <div v-else-if='getFilteredSubmissions(submissions).length > 0'>
                 <div
@@ -151,7 +158,7 @@
                     <i v-if="submission?.rubric_assessments?.length > 0" class='icon-check'></i>
                   </span>
                   <span>
-                    <i v-if="submission?.comments?.length > 0" class='icon-check'></i>
+                    <i v-if="hasComments(submission)" class='icon-check'></i>
                   </span>
                   <span>
                     {{dateToString(getSubmissionDate(submission))}}
@@ -161,15 +168,14 @@
                   </span>
                 </div>
 
-                <div v-else>
-                  No graded submissions found. There may be submissions pending grading.
-                </div>
+              </div>
+              <div v-else>
+                No graded submissions found. There may be submissions pending grading.
               </div>
           </div>
         </div>
       </div>`;
       $("#content").html("<div id='accreditation'><div id='accreditation-app'></div></div>");
-      await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
       new Vue({
         el: "#accreditation-app",
         template: accreditationTemplate,
@@ -215,12 +221,12 @@
 
           const enrollmentsByUser = {};
           try {
-            let req = await bridgetools.req3('canvas_enrollments', {
+            let req = await bridgetools.req3('reports', {
               canvas_course_id: { op: '=', value: this.courseId }
             }, {
-              include: ['sis_data']
+              dataset: 'canvas_enrollments'
             });
-            let enrollments = Array.isArray(req?.data) ? req.data : [];
+            let enrollments = Array.isArray(req) ? req : [];
 
             for (let i = 0; i < enrollments.length; i++) {
               let enrollment = enrollments[i];
@@ -293,7 +299,9 @@
             campuses: {},
             enrollmentTypes: {},
             loadingCourse: true,
-            loadingAssignmentDetails: false
+            loadingAssignmentDetails: false,
+            assignmentDetailsError: '',
+            assignmentDetailsRequestId: 0
           }
         },
         methods: {
@@ -319,6 +327,10 @@
             return results;
           },
           normalizeSubmission(sub, includeDetails = false) {
+            if (includeDetails && (!Array.isArray(sub.commentsConnection?.nodes) ||
+                !Array.isArray(sub.rubricAssessmentsConnection?.nodes))) {
+              throw new Error('Submission comments or rubric details are missing.');
+            }
             return {
               ...sub,
               quiz_id: sub?.quiz?._id,
@@ -330,6 +342,24 @@
               rubric_assessments: includeDetails ? (sub.rubricAssessmentsConnection?.nodes || []) : [],
               detailsLoaded: includeDetails
             };
+          },
+          hasComments(submission) {
+            if (submission?.comments?.length > 0) return true;
+            return (submission?.rubric_assessments || []).some(assessment =>
+              (assessment.assessmentRatings || []).some(rating =>
+                this.hasCommentContent(rating.comments, rating.commentsHtml)
+              )
+            );
+          },
+          hasCommentContent(text, html) {
+            if (typeof text === 'string' && text.trim().length > 0) return true;
+            if (typeof html !== 'string') return false;
+            // Inspect content without inserting instructor-authored HTML into the live page.
+            const content = html.replace(/<!--[\s\S]*?-->/g, '');
+            if (/<(?:img|audio|video|iframe)\b/i.test(content)) return true;
+            return content.replace(/<[^>]*>/g, '')
+              .replace(/&(?:nbsp|#0*160|#x0*a0);/gi, ' ')
+              .replace(/[\s\u200b-\u200d\ufeff]/g, '').length > 0;
           },
           getSubmissionDate(submission) {
             let date = submission.submittedAt;
@@ -522,6 +552,10 @@
                           nodes {
                             score
                             assessmentType
+                            assessmentRatings {
+                              comments
+                              commentsHtml
+                            }
                           }
                         }` : ''}
                       }
@@ -531,7 +565,16 @@
               `;
 
               const res = await $.post(`/api/graphql`, { query });
-              const connection = res.data.assignment.submissionsConnection;
+              if (res?.errors?.length) {
+                throw new Error(res.errors.map(error => error.message).join('; '));
+              }
+              const connection = res?.data?.assignment?.submissionsConnection;
+              if (!Array.isArray(connection?.nodes) ||
+                  typeof connection?.pageInfo?.hasNextPage !== 'boolean' ||
+                  (connection.pageInfo.hasNextPage &&
+                    (!connection.pageInfo.endCursor || connection.pageInfo.endCursor === after))) {
+                throw new Error('Canvas returned incomplete submission data.');
+              }
               allSubmissions = allSubmissions.concat(connection.nodes);
               hasNextPage = connection.pageInfo.hasNextPage;
               after = connection.pageInfo.endCursor;
@@ -765,56 +808,46 @@
             return title;
           },
           async downloadRubric(iframe, content, data) {
-            let app = this;
-            let title = this.getTitle(data) + " submission rubric";
-            // Wait for the iframe to load
-            await new Promise(resolve => {
-              $(iframe).on('load', function() {
-                let iframeContent = $(this).contents();
-    
-                // Check if #rubric_holder is present
-                let rubricHolder = iframeContent.find("#rubric_holder");
-                if (rubricHolder.length > 0) {
-                  rubricHolder.show();
-                  app.addRequiredInformation(rubricHolder, data.submission, data.assignment);
-                  // rubricHolder.prepend(`<div>${data.submission.body}</div>`);
-                  let commentEl = app.getComments(data.submission);
-                  rubricHolder.append(commentEl);
-                  rubricHolder.css({
-                    'max-height': '',
-                    'overflow': 'visible'
-                  });
-                  let comments = rubricHolder.find('[data-selenium="criterion_comments_text"]');
-                  for (let c = 0; c < comments.length; c++) {
-                      let comment = comments[c];
-                      $(comment).css({
-                        'height': '10rem',
-                        'width': '30rem'
-                      });
-                  }
-  
-                  // Continue with the rest of your function
-                  let ogTitle = $('title').text();
-                  $('title').text(title);
-                  rubricHolder.printThis({
-                    pageTitle: title,
-                    afterPrint: function () {
-                      $('title').text(ogTitle);
-                      app.preparingDocument = false;
-                      app.checkLTI(data.submission);
-                      iframe.remove();
-                    }
-                  });
-  
-                  resolve(); // Resolve the promise once everything is done
-                } else {
-                  console.error("#rubric_holder not found");
-                  resolve(); // Resolve the promise even if #rubric_holder is not found
-                }
-              });
-            });
+            const app = this;
+            const title = this.getTitle(data) + ' submission rubric';
+            const sourceWindow = iframe[0].contentWindow;
+            const sourceDocument = sourceWindow.document;
+            const originalTitle = document.title;
+            const cleanup = () => {
+              document.title = originalTitle;
+              app.preparingDocument = false;
+              iframe.remove();
+            };
+            try {
+              let holder;
+              try {
+                holder = await waitForRubric(sourceDocument);
+              } catch (renderError) {
+                holder = await loadAssessedRubric(sourceDocument, {
+                  courseId: app.courseId,
+                  assignmentId: data.assignment.id,
+                  userId: data.submission.user.id
+                });
+              }
+              const printable = $(prepareRubricDocument(sourceDocument, holder));
+              app.addRequiredInformation(printable, data.submission, data.assignment);
+              printable.append(app.getComments(data.submission));
+              sourceDocument.title = title;
+              await waitForPrintAssets(sourceDocument);
+              document.title = title;
+              sourceWindow.onafterprint = () => {
+                cleanup();
+                app.checkLTI(data.submission);
+              };
+              sourceWindow.focus();
+              sourceWindow.print();
+            } catch (error) {
+              cleanup();
+              console.error('Unable to prepare rubric export', error);
+              alert('Unable to prepare this rubric for printing. ' + error.message);
+            }
           },
-        
+
           //Not currently working because of CORS
           async downloadNewQuiz(iframe, content, data) {
             let app = this;
@@ -948,16 +981,17 @@
           },
 
           async createIframe(url, func = null, data = {}) {
-            let id = genId();
-            let elId = 'btech-content-' + id
+            let elId;
+            do {
+              elId = 'btech-content-' + ++nextIframeId;
+            } while (document.getElementById(elId));
             let iframe = $('<iframe id="' + elId + '" style="width: 1200px;" src="' + url + '"></iframe>');
             iframe.hide();
 
             $("#content").append(iframe);
-            //This is unused. was for trying to convert an html element to a canvas then to a data url then to image then to pdf, but ran into cors issues.
-            // $("#content").append("<div id='btech-export-" + id + "'></div>");
             let window = document.getElementById(elId).contentWindow;
             window.onload = function () {
+              initialisePrintMediaLinks(window.document);
               let content = $(window.document.getElementsByTagName('body')[0]);
               let imgs = content.find('img'); // I believe this was done just to make sure the images were fully loaded. Was running into issues with quizzes where images didn't have a chance to load all the way. 
               if (func !== null) {
@@ -967,21 +1001,32 @@
             return iframe;
           },
 
-          async openModal(assignment) {
+          async openModal(assignment, { force = false } = {}) {
             let app = this;
+            const requestId = ++app.assignmentDetailsRequestId;
             app.showModal = true;
             app.currentAssignment = assignment;
             app.submissions = [];
-            if (assignment.submissionDetailsLoaded !== true) {
+            app.assignmentDetailsError = '';
+            app.loadingAssignmentDetails = false;
+            if (force || assignment.submissionDetailsLoaded !== true) {
+              assignment.submissionDetailsLoaded = false;
               app.loadingAssignmentDetails = true;
               try {
                 const submissions = await app.getSubmissions(assignment.id, { includeDetails: true });
-                assignment.submissions = submissions.map(sub => app.normalizeSubmission(sub, true));
+                const detailedSubmissions = submissions.map(sub => app.normalizeSubmission(sub, true));
+                if (requestId !== app.assignmentDetailsRequestId) return;
+                assignment.submissions = detailedSubmissions;
                 assignment.submissionDetailsLoaded = true;
               } catch (err) {
                 console.error(err);
+                if (requestId !== app.assignmentDetailsRequestId) return;
+                app.assignmentDetailsError = 'Unable to load assignment details. Comments and rubrics could not be verified. Please retry.';
+                return;
               } finally {
-                app.loadingAssignmentDetails = false;
+                if (requestId === app.assignmentDetailsRequestId) {
+                  app.loadingAssignmentDetails = false;
+                }
               }
             }
             app.submissions = assignment.submissions;
@@ -1003,6 +1048,8 @@
           close() {
             let app = this;
             app.showModal = false;
+            app.assignmentDetailsRequestId += 1;
+            app.loadingAssignmentDetails = false;
           }
         }
       });

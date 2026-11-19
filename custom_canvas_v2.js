@@ -1,9 +1,8 @@
 /*
  * Canvas theme bootstrap v2
  *
- * This is intentionally parallel to custom_canvas.js.  It can be tested by
- * replacing the theme's custom JavaScript URL with this file; it does not
- * modify or depend on the existing bootstrap.
+ * Canonical bootstrap for both theme entry points. custom_canvas.js delegates
+ * here so existing theme URLs use the same v2 loader and feature registry.
  */
 (function () {
   'use strict';

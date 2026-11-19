@@ -1,3 +1,5 @@
+import './components/report-mixins.entry.js';
+
 // reports/combined/report.js
 (async function () {
   window.ReportColumn = ReportColumn;
@@ -51,6 +53,10 @@
     new Vue({
       el: '#canvas-instructor-report-vue-app',
       template: vueString,
+
+      provide() {
+        return { reportAnonymization: this.anonymization };
+      },
 
       data: function () {
         const reportOrder = [
@@ -196,11 +202,18 @@
             title: 'Students Report',
             subMenus: [
               {
-                value: 'at-a-glance',
-                label: 'At a Glance',
+                value: 'at-a-glance-cs',
+                label: 'At A Glance - CS',
                 component: 'reports-students-at-a-glance',
                 dataset: 'student_majors',
-                filters: {}
+                filters: { enrollment_type: { value: 'CS' } }
+              },
+              {
+                value: 'at-a-glance-hs',
+                label: 'At A Glance - HS',
+                component: 'reports-students-at-a-glance',
+                dataset: 'student_majors',
+                filters: { enrollment_type: { value: 'HS' } }
               },
               {
                 value: 'probations',
@@ -351,6 +364,7 @@
         ].sort((a, b) => reportOrder.indexOf(a.value) - reportOrder.indexOf(b.value));
 
         return {
+          anonymization: window.ReportUtils.createAnonymizationState(),
           reportTypes: IS_ME ? reports : reports.filter(report => !['graduation', 'placements'].includes(report.value)),
           settings: {
             reportType: 'students',
@@ -360,7 +374,7 @@
               instructors: 'department-summary',
               admissions: 'overview',
               outcomes: 'cpl',
-              students: 'at-a-glance',
+              students: 'at-a-glance-cs',
               evaluations: 'course-evals-summary'
             }
           },
@@ -529,8 +543,6 @@
 
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js") : "https://bridgetools.dev/canvas/external-libraries/vue.2.6.12.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/external-libraries/d3.v7.js") : "https://bridgetools.dev/canvas/external-libraries/d3.v7.js");
-
-    await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-mixins.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-mixins.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/submission-history-graph.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/submission-history-graph.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/message-template-menu.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/message-template-menu.js");
     await $.getScript(window.btechAssetUrl ? window.btechAssetUrl("https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-table-shell.js") : "https://bridgetools.dev/canvas/custom_features_v2/reports_combined/components/report-table-shell.js");

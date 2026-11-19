@@ -22,9 +22,7 @@
         $("#unenroll-progress-bar-buttons button.yes").click(async function() {
             $("#unenroll-progress-bar").empty();
             $("#unenroll-progress-bar-buttons").remove();
-            $("#unenroll-progress-bar").progressbar({
-                value: 0
-            });
+            $("#unenroll-progress-bar").append('<progress max="100" value="0" aria-label="Unenroll user progress" style="width: 100%;"></progress>');
             let enrollments = await canvasGet("/api/v1/users/" + ENV.USER_ID + "/enrollments?state[]=active&state[]=inactive&state[]=invited&state[]=rejected&state[]=completed&type[]=TeacherEnrollment&type[]=TaEnrollment");
             let adminRights = await canvasGet("/api/v1/manageable_accounts?as_user_id=" + ENV.USER_ID);
             let finishedCount = 0;
@@ -38,9 +36,7 @@
                   console.error(err);
                 }
                 finishedCount += 1;
-                $("#unenroll-progress-bar").progressbar({
-                    value: (finishedCount / totalCount) * 100
-                })
+                $("#unenroll-progress-bar").find("progress").val((finishedCount / totalCount) * 100);
             }
 
             $("#unenroll-progress-message").html("Removing admin access. Do <strong>NOT</strong> close the page.")
@@ -52,9 +48,7 @@
                 console.error(`Probably not really in this account ${account}`);
               }
               finishedCount += 1;
-              $("#unenroll-progress-bar").progressbar({
-                  value: (finishedCount / totalCount) * 100
-              })
+              $("#unenroll-progress-bar").find("progress").val((finishedCount / totalCount) * 100);
             }
             $.post("/api/v1/conversations", {
                 recipients: [1893418],

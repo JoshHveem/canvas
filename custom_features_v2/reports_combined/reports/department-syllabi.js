@@ -1,7 +1,12 @@
 // department-syllabi.js
 Vue.component('reports-department-syllabi', {
   mixins: [
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.departmentScoped({
       optionsDataset: 'department_syllabi_summary',
       emptySelectionMessage: 'Select a department from the summary report to view details.',
@@ -117,7 +122,7 @@ Vue.component('reports-department-syllabi', {
     titleText() {
       if (this.anonymous) return 'DEPARTMENT - Syllabi';
       const name = this.loadedDepartmentName || this.getDepartmentName() || 'Department';
-      return `${this.escapeHtml(name)} - Syllabi`;
+      return `${this.escapeHtml(this.displayName(name, 'department_name', 'Department'))} - Syllabi`;
     }
   },
 
@@ -222,7 +227,7 @@ Vue.component('reports-department-syllabi', {
             v-for="option in departmentOptions"
             :key="option.value"
             :value="option.value"
-          >{{ option.label }}</option>
+          >{{ displayFilterOption(option, 'department_name', 'Department') }}</option>
         </select>
       </div>
 

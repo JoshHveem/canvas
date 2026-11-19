@@ -1,6 +1,12 @@
 Vue.component('reports-employment-skills', {
   mixins: [
+    window.ReportMixins.anonymization,
+    window.ReportMixins.requests,
     window.ReportMixins.formatting,
+    window.ReportMixins.students,
+    window.ReportMixins.filters,
+    window.ReportMixins.datasets,
+    window.ReportMixins.canvasProfiles,
     window.ReportMixins.programScoped({
       optionsDataset: 'student_employment_skills_current',
       hydrate_sis_user_id: true,
@@ -119,7 +125,7 @@ Vue.component('reports-employment-skills', {
         ''
       ).trim();
       const suffix = programName || 'Employment Skills Submissions';
-      return `${this.escapeHtml(suffix)} - Employment Skills Submissions`;
+      return `${this.escapeHtml(programName ? this.displayName(programName, 'program_name', 'Program') : suffix)} - Employment Skills Submissions`;
     }
   },
 
@@ -254,24 +260,6 @@ Vue.component('reports-employment-skills', {
 
     getEnrollmentTypeCode(row) {
       return String(row?.enrollment_type_code ?? '').trim().toUpperCase();
-    },
-
-    getStudentName(row) {
-      const firstName = this.getStudentFirstName(row);
-      const lastName = this.getStudentLastName(row);
-      return [firstName, lastName].filter(name => name && name !== '-').join(' ') || '-';
-    },
-
-    getStudentFirstName(row) {
-      const firstName = String(row?.first_name ?? '').trim();
-      if (firstName) return firstName;
-
-      const canvasUserId = String(row?.canvas_user_id ?? '').trim();
-      return canvasUserId ? `Canvas User ${canvasUserId}` : '-';
-    },
-
-    getStudentLastName(row) {
-      return String(row?.last_name ?? '').trim() || '-';
     },
 
     getProgramLabel(row) {
@@ -446,22 +434,28 @@ Vue.component('reports-employment-skills', {
 
     async loadData() {
       const programCode = String(this.selectedProgramCode || '').trim();
-      if (!programCode) {
-        this.rows = [];
-        this.gradedOutByKey = {};
-        this.majorProgressByStudentKey = {};
-        this.loadedProgramName = '';
-        this.loadError = this.getEmptySelectionMessage();
-        return;
-      }
+      return this.runReportRequest('data', {
+        onError: e => {
+          console.warn('Failed to load employment skills detail dataset', e);
+          this.rows = [];
+          this.gradedOutByKey = {};
+          this.majorProgressByStudentKey = {};
+          this.loadedProgramName = this.programOptions.find(option => option.value === programCode)?.label || this.getProgramName();
+          this.loadError = this.getLoadErrorMessage();
+        }
+      }, async request => {
+        if (!programCode) {
+          this.rows = [];
+          this.gradedOutByKey = {};
+          this.majorProgressByStudentKey = {};
+          this.loadedProgramName = '';
+          this.loadError = this.getEmptySelectionMessage();
+          return;
+        }
 
-      const requestId = ++this.loadRequestId;
-      try {
-        this.loading = true;
-        this.loadError = '';
         this.gradeOutStateByKey = {};
 
-        const [rows, gradeOutRows, majorRows] = await Promise.all([
+        const [rows, gradeOutRows, majorRows] = await request.wait(Promise.all([
           this.fetchReportDataset(
             this.getRequestFilters(),
             { dataset: this.getDataset() }
@@ -480,13 +474,10 @@ Vue.component('reports-employment-skills', {
             console.warn('Failed to load student major progress for employment skills grade-out', error);
             return [];
           })
-        ]);
-
-        if (requestId !== this.loadRequestId) return;
+        ]));
 
         const normalizedRows = this.normalizeRows(rows);
-        const hydratedRows = await this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true });
-        if (requestId !== this.loadRequestId) return;
+        const hydratedRows = await request.wait(this.hydrateSisUserIds(normalizedRows, { hydrate_sis_user_id: true }));
 
         this.gradedOutByKey = (Array.isArray(gradeOutRows) ? gradeOutRows : []).reduce((recordsByKey, record) => {
           recordsByKey[this.getGradeOutRecordKey(record)] = this.isGradeOutProcessed(record)
@@ -511,18 +502,7 @@ Vue.component('reports-employment-skills', {
           this.programOptions.find(option => option.value === programCode)?.label ??
           this.getProgramName()
         ).trim();
-      } catch (e) {
-        console.warn('Failed to load employment skills detail dataset', e);
-        this.rows = [];
-        this.gradedOutByKey = {};
-        this.majorProgressByStudentKey = {};
-        this.loadedProgramName = this.programOptions.find(option => option.value === programCode)?.label || this.getProgramName();
-        this.loadError = this.getLoadErrorMessage();
-      } finally {
-        if (requestId === this.loadRequestId) {
-          this.loading = false;
-        }
-      }
+      });
     },
 
     mapRows(rows) {
@@ -595,7 +575,7 @@ Vue.component('reports-employment-skills', {
         <select v-model="selectedProgramCode" v-bind="filterAttrs('program_code')" style="font-size:.75rem; min-width:220px; max-width:320px;">
           <option value="">Select a Program</option>
           <option v-for="option in programOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
+            {{ displayFilterOption(option, 'program_name', 'Program') }}
           </option>
         </select>
       </div>
