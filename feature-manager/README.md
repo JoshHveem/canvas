@@ -4,6 +4,8 @@ This local Node application discovers v2 features from `custom_features_v2/**/ma
 
 ## Use
 
+To rebuild all v2 feature bundles and loaders, double-click `Build Canvas V2 Bundles.bat` in the repository root. It installs build dependencies when needed and keeps the window open so you can see the result. Deploy the changed generated files using the existing Git workflow. The batch file does not change the cache version or upload the Canvas theme script.
+
 Double-click `Launch Canvas Feature Manager.bat`. It installs dependencies when needed, starts the local server, and opens `http://localhost:4173`.
 
 Alternatively:

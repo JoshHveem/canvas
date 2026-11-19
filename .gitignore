@@ -1,5 +1,6 @@
 *.swp
 *.bat
+!Build Canvas V2 Bundles.bat
 !feature-manager/Launch Canvas Feature Manager.bat
 *.py
 *.exe
