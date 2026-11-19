@@ -39,9 +39,9 @@ async function setup(file) {
     return content;
   };
   $.getScript = async () => {};
-  $.put = async () => {};
+  $.put = $.ajax = async () => {};
   const context = vm.createContext({
-    document: { title: 'BTECH Accreditation', getElementById: id => elements.get(id) || null },
+    document: { querySelector: () => ({}), title: 'BTECH Accreditation', getElementById: id => elements.get(id) || null },
     window: { location: { pathname: '/courses/99107' } },
     $,
     Vue: function (options) { definition = options; },

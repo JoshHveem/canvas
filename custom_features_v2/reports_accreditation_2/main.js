@@ -15,23 +15,29 @@ import { initialisePrintMediaLinks } from './print-media-links.js';
     if ($('#accreditation').length > 0) return;
     let rCheckInCourse = /^\/courses\/([0-9]+)/;
     if (rCheckInCourse.test(window.location.pathname)) {
-      // Vue is supplied by the v2 loader. Await export libraries locally;
-      // the legacy add_javascript_library helper is not available in v2.
-      await Promise.all([
-        "https://html2canvas.hertzen.com/dist/html2canvas.min.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.1.1/jspdf.umd.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js",
-        "https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"
-      ].map(url => $.getScript(window.btechAssetUrl ? window.btechAssetUrl(url) : url)));
+      // Vue is supplied by the v2 loader. The former PDF/ZIP libraries are
+      // unused by the current iframe printing workflow; do not gate startup on them.
+      if (!document.querySelector('#content')) return;
+      let startupWarning = '';
       let CURRENT_COURSE_ID = parseInt(window.location.pathname.match(rCheckInCourse)[1]);
-        await $.put(`https://btech.instructure.com/api/v1/courses/${CURRENT_COURSE_ID}/gradebook_settings`, {
-            gradebook_settings: {
-                show_concluded_enrollments: true
-            }
+      try {
+        await $.ajax({
+          url: `/api/v1/courses/${CURRENT_COURSE_ID}/gradebook_settings`,
+          type: 'PUT',
+          timeout: 10000,
+          data: { gradebook_settings: { show_concluded_enrollments: true } }
         });
+      } catch (error) {
+        console.warn('[Accreditation] Could not update gradebook preference:', error);
+        startupWarning = 'Could not enable concluded enrollments. The tool will continue, but concluded students may be missing.';
+      }
       //add in a selector for all students with their grade then only show assignments they've submitted so far???
       const accreditationTemplate = `
       <div>
+        <p v-if="startupWarning" role="status">{{startupWarning}}</p>
+        <div v-if="loadError" role="alert">
+          {{loadError}} <button type="button" @click="reloadTool">Reload tool</button>
+        </div>
         <div>
           If the pdf cuts off part of your evidence and you're using Chrome, try changing the layout to Landscape and/or adjusting the Scale (under More Settings) until everything fits.
         </div>
@@ -180,106 +186,115 @@ import { initialisePrintMediaLinks } from './print-media-links.js';
         el: "#accreditation-app",
         template: accreditationTemplate,
         mounted: async function () {
-          this.courseId = CURRENT_COURSE_ID;
-          let data = await this.getGraphQLData(this.courseId);
-          this.courseData = {
-            name: data.name,
-            course_code: data.course_code
-          }
-          let courseCode = this.courseData.course_code;
-          this.assignmentGroups = data.assignment_groups;
-          this.loadingCourse = false;
-
-          let sections = await canvasGet("/api/v1/courses/" + this.courseId + "/sections?include[]=students")
-          this.sections = sections;
-
-          const normalizeCampus = (enrollment) => {
-            if (enrollment?.sis_data__is_distance_approved) return 'Online';
-
-            const campusCode = String(enrollment?.sis_data__campus_code || '').trim().toUpperCase();
-            if (campusCode === 'L') return 'Logan Campus';
-            if (campusCode === 'B') return 'Brigham City Campus';
-            return campusCode;
-          };
-
-          const normalizeEnrollmentType = (enrollment, campus) => {
-            const courseType = String(enrollment?.sis_data__course_type || '').trim().toUpperCase();
-            if (courseType) return courseType;
-            if (campus.toLowerCase().includes('hs')) return 'HS';
-            if (campus !== '') return 'CS';
-            return '';
-          };
-
-          const getEnrollmentRank = (enrollment) => {
-            let rank = 0;
-            if (!enrollment?.is_deleted) rank += 100;
-            if (enrollment?.is_active) rank += 50;
-            if (!enrollment?.is_concluded) rank += 25;
-            if (!enrollment?.exit_date) rank += 10;
-            return rank;
-          };
-
-          const enrollmentsByUser = {};
           try {
-            let req = await bridgetools.req3('reports', {
-              canvas_course_id: { op: '=', value: this.courseId }
-            }, {
-              dataset: 'canvas_enrollments'
-            });
-            let enrollments = Array.isArray(req) ? req : [];
+            this.courseId = CURRENT_COURSE_ID;
+            let data = await this.getGraphQLData(this.courseId);
+            this.courseData = {
+              name: data.name,
+              course_code: data.course_code
+            }
+            let courseCode = this.courseData.course_code;
+            this.assignmentGroups = data.assignment_groups;
+            this.loadingCourse = false;
 
-            for (let i = 0; i < enrollments.length; i++) {
-              let enrollment = enrollments[i];
-              let userId = enrollment?.canvas_user_id;
-              if (userId == null) continue;
+            let sections = await canvasGet("/api/v1/courses/" + this.courseId + "/sections?include[]=students")
+            this.sections = sections;
 
-              let current = enrollmentsByUser[userId];
-              if (!current) {
-                enrollmentsByUser[userId] = enrollment;
-                continue;
-              }
+            const normalizeCampus = (enrollment) => {
+              if (enrollment?.sis_data__is_distance_approved) return 'Online';
 
-              let currentRank = getEnrollmentRank(current);
-              let nextRank = getEnrollmentRank(enrollment);
-              if (nextRank > currentRank) {
-                enrollmentsByUser[userId] = enrollment;
-                continue;
-              }
+              const campusCode = String(enrollment?.sis_data__campus_code || '').trim().toUpperCase();
+              if (campusCode === 'L') return 'Logan Campus';
+              if (campusCode === 'B') return 'Brigham City Campus';
+              return campusCode;
+            };
 
-              if (nextRank === currentRank) {
-                let currentEntry = Date.parse(current?.entry_date || current?.last_active_at || 0) || 0;
-                let nextEntry = Date.parse(enrollment?.entry_date || enrollment?.last_active_at || 0) || 0;
-                if (nextEntry > currentEntry) {
+            const normalizeEnrollmentType = (enrollment, campus) => {
+              const courseType = String(enrollment?.sis_data__course_type || '').trim().toUpperCase();
+              if (courseType) return courseType;
+              if (campus.toLowerCase().includes('hs')) return 'HS';
+              if (campus !== '') return 'CS';
+              return '';
+            };
+
+            const getEnrollmentRank = (enrollment) => {
+              let rank = 0;
+              if (!enrollment?.is_deleted) rank += 100;
+              if (enrollment?.is_active) rank += 50;
+              if (!enrollment?.is_concluded) rank += 25;
+              if (!enrollment?.exit_date) rank += 10;
+              return rank;
+            };
+
+            const enrollmentsByUser = {};
+            try {
+              let req = await bridgetools.req3('reports', {
+                canvas_course_id: { op: '=', value: this.courseId }
+              }, {
+                dataset: 'canvas_enrollments'
+              });
+              let enrollments = Array.isArray(req) ? req : [];
+
+              for (let i = 0; i < enrollments.length; i++) {
+                let enrollment = enrollments[i];
+                let userId = enrollment?.canvas_user_id;
+                if (userId == null) continue;
+
+                let current = enrollmentsByUser[userId];
+                if (!current) {
                   enrollmentsByUser[userId] = enrollment;
+                  continue;
+                }
+
+                let currentRank = getEnrollmentRank(current);
+                let nextRank = getEnrollmentRank(enrollment);
+                if (nextRank > currentRank) {
+                  enrollmentsByUser[userId] = enrollment;
+                  continue;
+                }
+
+                if (nextRank === currentRank) {
+                  let currentEntry = Date.parse(current?.entry_date || current?.last_active_at || 0) || 0;
+                  let nextEntry = Date.parse(enrollment?.entry_date || enrollment?.last_active_at || 0) || 0;
+                  if (nextEntry > currentEntry) {
+                    enrollmentsByUser[userId] = enrollment;
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Failed to load accreditation enrollment data', err);
+            }
+
+            for (let s in sections) {
+              let section = sections[s];
+              for (let st in section.students) {
+                let student = section.students[st];
+                if ((student.id in this.campuses)) continue;
+
+                this.campuses[student.id] = '';
+                let enrollment = enrollmentsByUser[student.id];
+                if (!enrollment) continue;
+
+                let campus = normalizeCampus(enrollment);
+                this.campuses[student.id] = campus;
+
+                let enrollmentType = normalizeEnrollmentType(enrollment, campus);
+                if (enrollmentType !== '') {
+                  this.enrollmentTypes[student.id] = enrollmentType;
                 }
               }
             }
-          } catch (err) {
-            console.error('Failed to load accreditation enrollment data', err);
-          }
-
-          for (let s in sections) {
-            let section = sections[s];
-            for (let st in section.students) {
-              let student = section.students[st];
-              if ((student.id in this.campuses)) continue;
-
-              this.campuses[student.id] = '';
-              let enrollment = enrollmentsByUser[student.id];
-              if (!enrollment) continue;
-
-              let campus = normalizeCampus(enrollment);
-              this.campuses[student.id] = campus;
-
-              let enrollmentType = normalizeEnrollmentType(enrollment, campus);
-              if (enrollmentType !== '') {
-                this.enrollmentTypes[student.id] = enrollmentType;
-              }
-            }
+          } catch (error) {
+            console.error('[Accreditation] Course loading failed:', error);
+            this.loadError = 'Some course data could not be loaded. Reload the tool to try again.';
+          } finally {
+            this.loadingCourse = false;
           }
         },
         data: function () {
           return {
+            startupWarning,
+            loadError: '',
             anonymous: false,
             assignmentGroups: {},
             courseData: {},
@@ -305,6 +320,7 @@ import { initialisePrintMediaLinks } from './print-media-links.js';
           }
         },
         methods: {
+          reloadTool() { window.location.reload(); },
           async mapWithConcurrency(items, limit, worker) {
             const results = new Array(items.length);
             let nextIndex = 0;
@@ -613,10 +629,7 @@ import { initialisePrintMediaLinks } from './print-media-links.js';
               };
             } catch (err) {
               console.error(err);
-              return {
-                name: '',
-                assignment_groups: [],
-              };
+              throw err;
             }
           },
 
@@ -1060,4 +1073,18 @@ import { initialisePrintMediaLinks } from './print-media-links.js';
       }
     }
   }
-})();
+})().catch(error => {
+  console.error('[Accreditation] Startup failed:', error);
+  const content = document.querySelector('#content');
+  if (!content || document.getElementById('btech-accreditation-error')) return;
+  const notice = document.createElement('div');
+  notice.id = 'btech-accreditation-error';
+  notice.setAttribute('role', 'alert');
+  notice.textContent = 'The accreditation tool could not start. Reload to try again. ';
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.textContent = 'Reload tool';
+  retry.addEventListener('click', () => window.location.reload());
+  notice.appendChild(retry);
+  content.prepend(notice);
+});

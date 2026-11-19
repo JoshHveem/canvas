@@ -5,15 +5,19 @@ const vm = require('node:vm');
 const { test } = require('node:test');
 const { buildSync } = require('../../../feature-manager/node_modules/esbuild');
 
-async function setup(file) {
+async function setup(file, settingsError = null) {
   let definition;
   const $ = () => ({ length: 0, html() {} });
-  $.getScript = $.put = async () => {};
+  $.getScript = async () => { throw new Error('External CDN unavailable'); };
+  $.ajax = async options => {
+    assert.equal(options.timeout, 10000);
+    if (settingsError) throw settingsError;
+  };
   const context = vm.createContext({
-    document: { title: 'BTECH Accreditation' },
+    document: { querySelector: () => ({}), title: 'BTECH Accreditation' },
     window: { location: { pathname: '/courses/1' } },
     $, Vue: function(options) { definition = options; },
-    console: { error() {} }
+    console: { error() {}, warn() {} }
   });
   const entry = path.resolve(__dirname, '..', file);
   const source = file === 'main.js'
@@ -22,7 +26,7 @@ async function setup(file) {
   await vm.runInContext(source, context);
   await new Promise(setImmediate);
   assert.ok(definition);
-  return { app: { ...definition.data(), ...definition.methods }, $ };
+  return { app: { ...definition.data(), ...definition.methods }, $, definition };
 }
 
 const raw = (id, comments = []) => ({
@@ -201,5 +205,18 @@ for (const file of ['main.js', 'main.bundle.js']) {
     await app.openModal(a);
     assert.equal(app.submissions[0].comments.length, 0);
     assert.equal(app.assignmentDetailsError, '');
+  });
+}
+
+for (const file of ['main.js', 'main.bundle.js']) {
+  test(`${file}: CDN failures and denied gradebook settings do not block startup`, async () => {
+    const { app, definition } = await setup(file, new Error('403 Forbidden'));
+    assert.match(app.startupWarning, /concluded students may be missing/);
+    app.getGraphQLData = async () => { throw new Error('Course API unavailable'); };
+    await definition.mounted.call(app);
+    assert.equal(app.loadingCourse, false);
+    assert.match(app.loadError, /Reload the tool/);
+    assert.match(definition.template, /role="alert"/);
+    assert.match(definition.template, /@click="reloadTool"/);
   });
 }
