@@ -12,17 +12,8 @@
     if ($('#accreditation').length > 0) return;
     let rCheckInCourse = /^\/courses\/([0-9]+)/;
     if (rCheckInCourse.test(window.location.pathname)) {
-      add_javascript_library("https://cdn.jsdelivr.net/npm/vue@2.6.12");
-      //Allows printing of an element, may be obsolete
+      // Required by the legacy rubric-printing workflow.
       add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js");
-      //convert html to a canvas which can then be converted to a blob...
-      add_javascript_library("https://html2canvas.hertzen.com/dist/html2canvas.min.js");
-      //and converted to a pdf
-      add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.1.1/jspdf.umd.js");
-      //which can then be zipped into a file using this library
-      add_javascript_library("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js");
-      //and then saved
-      add_javascript_library("https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js");
       let CURRENT_COURSE_ID = parseInt(window.location.pathname.match(rCheckInCourse)[1]);
         await $.put(`https://btech.instructure.com/api/v1/courses/${CURRENT_COURSE_ID}/gradebook_settings`, {
             gradebook_settings: {
@@ -170,7 +161,9 @@
         </div>
       </div>`;
       $("#content").html("<div id='accreditation'><div id='accreditation-app'></div></div>");
-      await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
+      if (typeof Vue === 'undefined') {
+        await $.getScript("https://cdn.jsdelivr.net/npm/vue@2.6.12");
+      }
       new Vue({
         el: "#accreditation-app",
         template: accreditationTemplate,
